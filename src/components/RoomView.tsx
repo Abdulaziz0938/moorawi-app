@@ -89,6 +89,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
   const chatBoxRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const joinedRef = useRef(false);
   const publishedRef = useRef(false);
@@ -131,13 +132,34 @@ export default function RoomView({ roomId, onLeave }: Props) {
   useEffect(() => {
     if (latestGift && latestGift._id !== activeGift?._id) {
       setActiveGift(latestGift);
-      const timer = setTimeout(() => {
-        setActiveGift(null);
-        setLastGiftSeen(Date.now());
-      }, 5000);
-      return () => clearTimeout(timer);
     }
   }, [latestGift]);
+
+  // Clear for images after 3s (videos clear via onEnded)
+  useEffect(() => {
+    if (activeGift && activeGift.mediaType === "image") {
+      const t = setTimeout(() => {
+        setActiveGift(null);
+        setLastGiftSeen(Date.now());
+      }, 3000);
+      return () => clearTimeout(t);
+    }
+  }, [activeGift]);
+
+  // Sound: try to play with sound, fallback to muted
+  useEffect(() => {
+    if (activeGift?.mediaType === "video" && videoRef.current) {
+      const vid = videoRef.current;
+      vid.volume = 1;
+      vid.muted = false;
+      vid.play().catch(() => { if (videoRef.current) videoRef.current.muted = true; });
+    }
+  }, [activeGift]);
+
+  const handleVideoEnd = () => {
+    setActiveGift(null);
+    setLastGiftSeen(Date.now());
+  };
 
   useEffect(() => {
     if (chatBoxRef.current) chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
@@ -157,7 +179,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const layout = room.micLayout || "m18";
   const layoutRows = LAYOUT_ROWS[layout] ?? LAYOUT_ROWS["m18"];
   const maxRowCount = Math.max(...layoutRows);
-  const cellWidth = `calc((100% - ${(maxRowCount - 1) * 6}px) / ${maxRowCount})`;
+  const cellWidth = `min(calc((100% - ${(maxRowCount - 1) * 6}px) / ${maxRowCount}), 62px)`;
   const gridHeight = Math.min(80 + layoutRows.length * 55, 340);
 
   const handleSeatClick = (seatIndex: number, userId: string | undefined) => {
@@ -461,15 +483,14 @@ export default function RoomView({ roomId, onLeave }: Props) {
 
       {/* Gift Animation Overlay — Full Screen */}
       {activeGift && (
-        <div className="fixed inset-0 z-[60] flex flex-col pointer-events-none" dir="rtl">
+        <div className="fixed inset-0 z-[60] flex flex-col" dir="rtl">
           {/* Dark backdrop */}
-          <div className="absolute inset-0 bg-black/80" />
+          <div className="absolute inset-0 bg-black/95" />
 
           {/* TOP BANNER */}
-          <div className="relative z-10 mx-3 mt-3 bg-gradient-to-r from-pink-600/90 via-purple-600/90 to-pink-600/90 rounded-2xl p-2 flex items-center gap-2 shadow-2xl border border-white/20 backdrop-blur">
-            {/* Sender */}
+          <div className="relative z-10 mx-2 mt-2 bg-gradient-to-r from-pink-600/95 via-purple-600/95 to-pink-600/95 rounded-2xl p-2 flex items-center gap-2 shadow-2xl border border-white/30 backdrop-blur-md flex-shrink-0">
             <div className="flex items-center gap-1.5 flex-shrink-0">
-              <div className="w-9 h-9 rounded-full overflow-hidden bg-purple-500 ring-2 ring-white/40">
+              <div className="w-9 h-9 rounded-full overflow-hidden bg-purple-500 ring-2 ring-white/50">
                 {activeGift.fromAvatar ? (
                   <img src={activeGift.fromAvatar} alt="" className="w-full h-full object-cover" />
                 ) : (
@@ -480,34 +501,15 @@ export default function RoomView({ roomId, onLeave }: Props) {
               </div>
               <span className="text-white text-[11px] font-bold max-w-[70px] truncate">{activeGift.fromName}</span>
             </div>
-
-            {/* Arrow */}
             <span className="text-white/80 text-lg flex-shrink-0">←</span>
-
-            {/* Gift icon + name + quantity */}
             <div className="flex-1 flex items-center justify-center gap-1.5 min-w-0">
-              <div className="w-9 h-9 rounded-lg overflow-hidden bg-black/30 flex items-center justify-center flex-shrink-0">
-                {activeGift.mediaType === "video" && activeGift.mediaUrl ? (
-                  <video src={activeGift.mediaUrl} className="w-full h-full object-cover" muted loop autoPlay playsInline />
-                ) : activeGift.mediaUrl ? (
-                  <img src={activeGift.mediaUrl} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  <span>🎁</span>
-                )}
-              </div>
-              <div className="flex flex-col items-center min-w-0">
-                <span className="text-white text-[10px] font-bold truncate max-w-[80px]">{activeGift.giftName}</span>
-                <span className="text-yellow-300 text-[10px] font-bold">×{activeGift.quantity}</span>
-              </div>
+              <span className="text-white text-[10px] font-bold truncate max-w-[80px]">{activeGift.giftName}</span>
+              <span className="text-yellow-300 text-[10px] font-bold">×{activeGift.quantity}</span>
             </div>
-
-            {/* Arrow */}
             <span className="text-white/80 text-lg flex-shrink-0">→</span>
-
-            {/* Receiver */}
             <div className="flex items-center gap-1.5 flex-shrink-0">
               <span className="text-white text-[11px] font-bold max-w-[70px] truncate">{activeGift.toName}</span>
-              <div className="w-9 h-9 rounded-full overflow-hidden bg-purple-500 ring-2 ring-white/40">
+              <div className="w-9 h-9 rounded-full overflow-hidden bg-purple-500 ring-2 ring-white/50">
                 {activeGift.toAvatar ? (
                   <img src={activeGift.toAvatar} alt="" className="w-full h-full object-cover" />
                 ) : (
@@ -519,23 +521,23 @@ export default function RoomView({ roomId, onLeave }: Props) {
             </div>
           </div>
 
-          {/* FULL-SCREEN MEDIA (video/image) */}
-          <div className="flex-1 flex items-center justify-center p-3">
+          {/* FULL-SCREEN MEDIA */}
+          <div className="relative z-10 flex-1 flex items-center justify-center overflow-hidden p-2">
             {activeGift.mediaType === "video" && activeGift.mediaUrl ? (
               <video
+                ref={videoRef}
                 key={activeGift._id}
                 src={activeGift.mediaUrl}
                 autoPlay
-                muted
-                loop
                 playsInline
-                className="w-full h-full max-w-[95vw] max-h-[70vh] object-contain"
+                onEnded={handleVideoEnd}
+                className="w-full h-full object-contain"
               />
             ) : activeGift.mediaUrl ? (
               <img
                 src={activeGift.mediaUrl}
                 alt=""
-                className="w-full h-full max-w-[95vw] max-h-[70vh] object-contain"
+                className="w-full h-full object-contain"
               />
             ) : null}
           </div>
