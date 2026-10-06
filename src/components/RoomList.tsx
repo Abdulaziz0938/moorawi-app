@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
-import { Mic, Users, Plus, X, Copy, Check } from "lucide-react";
+import { Mic, Users, Plus, X, Check } from "lucide-react";
 import { getDeviceId } from "../lib/device";
 
 interface Props {
@@ -27,7 +27,7 @@ export default function RoomList({ onEnter }: Props) {
     try {
       const roomId = await createRoom({ name: newName.trim(), isPrivate: false, tokenOverride: deviceId });
       setNewName(""); setShowCreate(false); onEnter(roomId);
-    } catch (e: any) { alert("خطأ: " + (e.message || "غير معروف")); }
+    } catch (e: any) { alert(e.message || "خطأ"); }
     finally { setIsCreating(false); }
   };
 
@@ -35,26 +35,21 @@ export default function RoomList({ onEnter }: Props) {
     try {
       await joinRoom({ roomId, tokenOverride: deviceId });
       onEnter(roomId);
-    } catch (e: any) { alert("خطأ: " + (e.message || "غير معروف")); }
+    } catch (e: any) { alert(e.message || "خطأ"); }
   };
 
   const handleCopyId = async () => {
     if (!me?.userNumber) return;
+    const value = String(me.userNumber);
     try {
-      await navigator.clipboard.writeText(String(me.userNumber));
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
+      await navigator.clipboard.writeText(value);
     } catch {
-      // Fallback for older browsers
-      const textarea = document.createElement("textarea");
-      textarea.value = String(me.userNumber);
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand("copy");
-      document.body.removeChild(textarea);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
+      const ta = document.createElement("textarea");
+      ta.value = value; document.body.appendChild(ta); ta.select();
+      document.execCommand("copy"); document.body.removeChild(ta);
     }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
   };
 
   return (
@@ -74,16 +69,11 @@ export default function RoomList({ onEnter }: Props) {
             {me.userNumber && (
               <button
                 onClick={handleCopyId}
-                className="inline-flex items-center gap-2 mt-2 bg-white/20 hover:bg-white/30 px-3 py-1 rounded-full transition active:scale-95"
+                className="mt-2 bg-white/20 hover:bg-white/30 px-4 py-1.5 rounded-full transition active:scale-95 flex items-center gap-2"
+                title="اضغط لنسخ المعرف"
               >
-                <span className="text-xs font-bold">
-                  ID: {me.userNumber}
-                </span>
-                {copied ? (
-                  <Check size={14} className="text-green-300" />
-                ) : (
-                  <Copy size={14} className="opacity-80" />
-                )}
+                <span className="text-xs font-bold" dir="ltr">ID: {me.userNumber}</span>
+                {copied && <Check size={14} className="text-green-300" />}
               </button>
             )}
           </div>

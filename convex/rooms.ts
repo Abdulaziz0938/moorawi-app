@@ -76,3 +76,31 @@ export const join = mutation({
     return null;
   },
 });
+
+export const members = query({
+  args: { roomId: v.id("rooms") },
+  handler: async (ctx, args) => {
+    const members = await ctx.db
+      .query("roomMembers")
+      .withIndex("by_room_and_user", (q) => q.eq("roomId", args.roomId))
+      .take(100);
+    const enriched = await Promise.all(
+      members.map(async (m) => {
+        const user = await ctx.db.get("users", m.userId);
+        const avatarUrl = user?.avatarId
+          ? await ctx.storage.getUrl(user.avatarId)
+          : null;
+        return {
+          _id: m._id,
+          userId: m.userId,
+          role: m.role,
+          name: user?.name ?? "ضيف",
+          username: user?.username ?? null,
+          userNumber: user?.userNumber ?? null,
+          avatarUrl,
+        };
+      }),
+    );
+    return enriched;
+  },
+});

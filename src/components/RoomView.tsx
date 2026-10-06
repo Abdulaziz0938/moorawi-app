@@ -2,7 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
-import { Mic, MicOff, LogOut, Loader2 } from "lucide-react";
+import {
+  Mic, MicOff, LogOut, Loader2, Heart, Trophy, MoreVertical,
+  MessageCircle, Gift, Grid2x2, Share2, Minimize2, ArrowRight,
+  Send, Image as ImageIcon,
+} from "lucide-react";
 import { agoraManager } from "../lib/agora";
 import { getDeviceId } from "../lib/device";
 
@@ -15,6 +19,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const deviceId = getDeviceId();
   const room = useQuery(api.rooms.get, { roomId });
   const seats = useQuery(api.mics.state, { roomId });
+  const members = useQuery(api.rooms.members, { roomId });
   const myInfo = useQuery(api.mics.myInfo, { roomId, tokenOverride: deviceId });
   const takeSeat = useMutation(api.mics.takeSeat);
   const leaveSeat = useMutation(api.mics.leaveSeat);
@@ -25,22 +30,26 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const [isMuted, setIsMuted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [remoteCount, setRemoteCount] = useState(0);
+
+  // UI state
+  const [showBackMenu, setShowBackMenu] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [showChatBar, setShowChatBar] = useState(false);
+  const [chatText, setChatText] = useState("");
+  const [showSettings, setShowSettings] = useState(false);
+  const [showGifts, setShowGifts] = useState(false);
+
   const joinedRef = useRef(false);
   const publishedRef = useRef(false);
 
-  // Connect to Agora
   useEffect(() => {
     if (!room || joinedRef.current) return;
     joinedRef.current = true;
-
     (async () => {
       try {
         const tokenData = await getToken({ roomId, tokenOverride: deviceId });
         await agoraManager.join(
-          tokenData.appId,
-          roomId,
-          tokenData.token,
-          tokenData.account,
+          tokenData.appId, roomId, tokenData.token, tokenData.account,
           () => setRemoteCount((c) => c + 1),
           () => setRemoteCount((c) => Math.max(0, c - 1)),
         );
@@ -49,7 +58,6 @@ export default function RoomView({ roomId, onLeave }: Props) {
         setError(e?.message || "فشل الاتصال بالصوت");
       }
     })();
-
     return () => {
       agoraManager.leave();
       joinedRef.current = false;
@@ -60,34 +68,24 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const mySeat = seats?.find((s) => myInfo?.userId && s.userId === myInfo.userId);
   const isOnMic = !!mySeat;
 
-  // Publish/unpublish microphone
   useEffect(() => {
     if (!agoraConnected) return;
     if (isOnMic && !publishedRef.current) {
       publishedRef.current = true;
-      agoraManager.publishMicrophone().catch((e: any) => {
-        console.error(e);
-        setError("فشل تفعيل الميكروفون: " + (e?.message || ""));
-      });
+      agoraManager.publishMicrophone().catch((e: any) => setError("فشل تفعيل الميكروفون"));
     } else if (!isOnMic && publishedRef.current) {
       publishedRef.current = false;
       agoraManager.unpublishMicrophone().catch(console.error);
     }
   }, [agoraConnected, isOnMic]);
 
-  // Cleanup on browser close / tab switch
   useEffect(() => {
-    const handleBeforeUnload = () => {
-      if (myInfo?.userId) {
-        // Fire-and-forget; may not complete but attempts cleanup
-        clearMySeats({ roomId, tokenOverride: deviceId }).catch(() => {});
-      }
-    };
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+    const h = () => { if (myInfo?.userId) clearMySeats({ roomId, tokenOverride: deviceId }).catch(() => {}); };
+    window.addEventListener("beforeunload", h);
+    return () => window.removeEventListener("beforeunload", h);
   }, [roomId, deviceId, myInfo, clearMySeats]);
 
-  if (!room || !seats || myInfo === undefined) {
+  if (!room || !seats || myInfo === undefined || members === undefined) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="animate-spin text-white" size={40} />
@@ -95,13 +93,13 @@ export default function RoomView({ roomId, onLeave }: Props) {
     );
   }
 
+  const owner = members.find((m) => m.role === "owner");
+  const topMembers = members.slice(0, 3);
+
   const handleSeatClick = async (seatIndex: number, userId: string | undefined) => {
-    try {
-      if (userId) return;
-      await takeSeat({ roomId, seatIndex, tokenOverride: deviceId });
-    } catch (e: any) {
-      alert(e?.message || "خطأ");
-    }
+    if (userId) return;
+    try { await takeSeat({ roomId, seatIndex, tokenOverride: deviceId }); }
+    catch (e: any) { alert(e?.message || "خطأ"); }
   };
 
   const handleLeaveSeat = async () => {
@@ -109,9 +107,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
       await leaveSeat({ roomId, tokenOverride: deviceId });
       await agoraManager.unpublishMicrophone();
       publishedRef.current = false;
-    } catch (e: any) {
-      alert(e?.message || "خطأ");
-    }
+    } catch (e: any) { alert(e?.message || "خطأ"); }
   };
 
   const handleToggleMute = () => {
@@ -121,12 +117,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
   };
 
   const handleLeave = async () => {
-    try {
-      // Clean up seats BEFORE leaving
-      await clearMySeats({ roomId, tokenOverride: deviceId });
-    } catch (e) {
-      console.error(e);
-    }
+    try { await clearMySeats({ roomId, tokenOverride: deviceId }); } catch {}
     await agoraManager.leave();
     publishedRef.current = false;
     joinedRef.current = false;
@@ -136,75 +127,184 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const isOnMicRole = myInfo?.role === "speaker" || myInfo?.role === "owner" || myInfo?.role === "moderator";
 
   return (
-    <div className="max-w-md mx-auto p-4">
-      <header className="flex items-center justify-between text-white mb-6 pt-4">
-        <button onClick={handleLeave} className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition">
-          <LogOut size={20} />
-        </button>
-        <div className="text-center">
-          <h1 className="text-xl font-bold">{room.name}</h1>
-          <p className="text-xs opacity-70">{room.memberCount} عضو</p>
-          {agoraConnected && (
-            <p className="text-[10px] text-green-300 mt-1">● متصل بالصوت ({remoteCount} بعيد)</p>
+    <div className="max-w-md mx-auto flex flex-col h-screen" dir="rtl">
+      {/* TOP BAR */}
+      <header className="flex items-center justify-between px-3 py-2 text-white border-b border-white/10">
+        {/* Left: Back + Owner */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowBackMenu((v) => !v)}
+            className="p-1.5 rounded-full hover:bg-white/10 transition"
+          >
+            <ArrowRight size={20} />
+          </button>
+          {owner && (
+            <div className="flex items-center gap-1.5 bg-white/10 px-2 py-1 rounded-full">
+              <div className="w-6 h-6 rounded-full overflow-hidden bg-purple-500 flex items-center justify-center text-xs font-bold">
+                {owner.avatarUrl
+                  ? <img src={owner.avatarUrl} alt="" className="w-full h-full object-cover" />
+                  : (owner.name?.[0] || "?")}
+              </div>
+              <span className="text-[10px] font-bold" dir="ltr">ID: {owner.userNumber ?? "—"}</span>
+            </div>
           )}
-          {error && <p className="text-[10px] text-red-300 mt-1">{error}</p>}
         </div>
-        <div className="w-10" />
+
+        {/* Right: Member avatars + count + fav + leaderboard */}
+        <div className="flex items-center gap-1.5">
+          <div className="flex -space-x-2">
+            {topMembers.map((m) => (
+              <div key={m._id} className="w-6 h-6 rounded-full border-2 border-purple-900 overflow-hidden bg-purple-500 flex items-center justify-center text-[10px] font-bold">
+                {m.avatarUrl
+                  ? <img src={m.avatarUrl} alt="" className="w-full h-full object-cover" />
+                  : (m.name?.[0] || "?")}
+              </div>
+            ))}
+          </div>
+          <span className="text-xs font-bold bg-white/10 px-1.5 py-0.5 rounded-full">
+            {members.length}
+          </span>
+          <button
+            onClick={() => setIsFavorite(!isFavorite)}
+            className="p-1.5 rounded-full hover:bg-white/10 transition"
+          >
+            <Heart size={18} className={isFavorite ? "fill-red-500 text-red-500" : ""} />
+          </button>
+          <button className="p-1.5 rounded-full hover:bg-white/10 transition">
+            <Trophy size={18} />
+          </button>
+        </div>
       </header>
 
-      <div className="bg-white/5 rounded-2xl p-4 mb-6">
-        <h2 className="text-white text-sm mb-4 flex items-center gap-2">
-          <Mic size={16} /> المايكات
-        </h2>
-        <div className="grid grid-cols-4 gap-3">
-          {seats.map((seat) => (
-            <div
-              key={seat._id}
-              onClick={() => handleSeatClick(seat.seatIndex, seat.userId)}
-              className={`aspect-square rounded-full flex flex-col items-center justify-center text-white border-2 transition cursor-pointer ${
-                seat.userId
-                  ? "bg-purple-500 border-purple-300"
-                  : "bg-white/10 border-white/30 hover:bg-white/20"
-              }`}
-            >
-              {seat.userId ? (
-                <>
-                  <Mic size={18} />
-                  <span className="text-[10px] mt-1 truncate max-w-full px-1">
-                    {seat.userName ?? "..."}
-                  </span>
-                </>
-              ) : (
-                <span className="text-2xl opacity-50">+</span>
-              )}
-            </div>
-          ))}
+      {/* Back dropdown */}
+      {showBackMenu && (
+        <div className="absolute top-12 right-3 z-30 bg-gray-900/95 backdrop-blur rounded-xl shadow-2xl border border-white/10 py-1 w-44">
+          <button onClick={handleLeave} className="w-full flex items-center gap-3 px-4 py-2.5 text-white hover:bg-white/10 text-sm">
+            <LogOut size={16} /> مغادرة الغرفة
+          </button>
+          <button className="w-full flex items-center gap-3 px-4 py-2.5 text-white hover:bg-white/10 text-sm">
+            <Minimize2 size={16} /> تصغير
+          </button>
+          <button className="w-full flex items-center gap-3 px-4 py-2.5 text-white hover:bg-white/10 text-sm">
+            <Share2 size={16} /> مشاركة
+          </button>
         </div>
-      </div>
+      )}
 
-      {isOnMicRole ? (
-        <div className="flex gap-3">
+      {/* MAIN: Mics + Chat */}
+      <main className="flex-1 overflow-y-auto px-3 py-3">
+        {/* Room title */}
+        <div className="text-center text-white mb-4">
+          <h1 className="text-lg font-bold">{room.name}</h1>
+          {agoraConnected && (
+            <p className="text-[10px] text-green-300">متصل بالصوت ({remoteCount} بعيد)</p>
+          )}
+          {error && <p className="text-[10px] text-red-300">{error}</p>}
+        </div>
+
+        {/* Mic grid */}
+        <div className="bg-white/5 rounded-2xl p-3 mb-3">
+          <div className="grid grid-cols-4 gap-2.5">
+            {seats.map((seat) => (
+              <div
+                key={seat._id}
+                onClick={() => handleSeatClick(seat.seatIndex, seat.userId)}
+                className={`aspect-square rounded-full flex flex-col items-center justify-center text-white border-2 transition cursor-pointer ${
+                  seat.userId ? "bg-purple-500 border-purple-300" : "bg-white/10 border-white/30 hover:bg-white/20"
+                }`}
+              >
+                {seat.userId ? (
+                  <>
+                    <Mic size={16} />
+                    <span className="text-[9px] mt-0.5 truncate max-w-full px-1">
+                      {seat.userName ?? "..."}
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-xl opacity-50">+</span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Chat preview area */}
+        <div className="bg-white/5 rounded-2xl p-3 min-h-[120px]">
+          <p className="text-white/50 text-xs text-center py-6">لا توجد رسائل بعد</p>
+        </div>
+      </main>
+
+      {/* Chat input bar */}
+      {showChatBar && (
+        <div className="px-3 pb-2">
+          <div className="flex items-center gap-2 bg-white/10 rounded-full px-2 py-1.5">
+            <button className="p-1.5 text-white/80 hover:text-white">
+              <ImageIcon size={18} />
+            </button>
+            <input
+              type="text"
+              value={chatText}
+              onChange={(e) => setChatText(e.target.value)}
+              placeholder="اكتب رسالة..."
+              className="flex-1 bg-transparent text-white text-sm outline-none placeholder-white/40"
+            />
+            <button className="p-1.5 bg-purple-600 rounded-full text-white">
+              <Send size={16} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* On mic controls */}
+      {isOnMicRole && (
+        <div className="px-3 pb-2 flex gap-2">
           <button
             onClick={handleToggleMute}
-            className={`flex-1 py-3 rounded-xl font-bold text-white transition ${
-              isMuted ? "bg-yellow-600 hover:bg-yellow-700" : "bg-green-600 hover:bg-green-700"
-            }`}
+            className={`flex-1 py-2 rounded-xl text-sm font-bold text-white transition ${isMuted ? "bg-yellow-600" : "bg-green-600"}`}
           >
-            {isMuted ? <MicOff className="inline mr-2" size={18} /> : <Mic className="inline mr-2" size={18} />}
-            {isMuted ? "إلغاء الكتم" : "كتم الصوت"}
+            {isMuted ? <MicOff size={16} className="inline mr-1" /> : <Mic size={16} className="inline mr-1" />}
+            {isMuted ? "إلغاء الكتم" : "كتم"}
           </button>
           <button
             onClick={handleLeaveSeat}
-            className="flex-1 bg-red-500/80 hover:bg-red-600 text-white py-3 rounded-xl font-bold transition"
+            className="flex-1 bg-red-500/80 py-2 rounded-xl text-sm font-bold text-white"
           >
             مغادرة المايك
           </button>
         </div>
-      ) : (
-        <p className="text-white text-center text-sm opacity-70">
-          اضغط على أي مايك للانضمام إلى الحديث
-        </p>
       )}
+
+      {/* BOTTOM BAR */}
+      <footer className="border-t border-white/10 px-3 py-2 flex items-center justify-around">
+        <button
+          onClick={() => setShowChatBar((v) => !v)}
+          className={`p-2 rounded-full transition ${showChatBar ? "bg-purple-600" : "hover:bg-white/10"} text-white`}
+        >
+          <MessageCircle size={22} />
+        </button>
+
+        <button
+          onClick={handleToggleMute}
+          disabled={!isOnMicRole}
+          className={`p-2 rounded-full transition ${isMuted ? "bg-yellow-600" : "hover:bg-white/10"} text-white disabled:opacity-30`}
+        >
+          {isMuted ? <MicOff size={22} /> : <Mic size={22} />}
+        </button>
+
+        <button
+          onClick={() => setShowSettings(true)}
+          className="p-2 rounded-full hover:bg-white/10 text-white"
+        >
+          <Grid2x2 size={22} />
+        </button>
+
+        <button
+          onClick={() => setShowGifts(true)}
+          className="p-2 rounded-full hover:bg-white/10 text-white"
+        >
+          <Gift size={22} />
+        </button>
+      </footer>
     </div>
   );
 }
