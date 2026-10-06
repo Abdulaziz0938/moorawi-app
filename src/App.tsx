@@ -1,17 +1,17 @@
-import { useQuery } from "convex/react";
-import { api } from "../convex/_generated/api";
+import { useState } from "react";
+import type { Id } from "../convex/_generated/dataModel";
+import RoomList from "./components/RoomList";
+import RoomView from "./components/RoomView";
 
 function App() {
-  const rooms = useQuery(api.rooms.listPublic);
+  const [currentRoomId, setCurrentRoomId] = useState<Id<"rooms"> | null>(null);
 
   return (
-    <div className="p-8 text-center" dir="rtl">
-      <h1 className="text-3xl font-bold mb-4">الدولة العمراوية</h1>
-      <p className="mb-4">جاري الاتصال بقاعدة البيانات...</p>
-      {rooms === undefined ? (
-        <p>جاري التحميل...</p>
+    <div className="min-h-screen bg-gradient-to-br from-purple-700 via-purple-800 to-purple-900" dir="rtl">
+      {currentRoomId ? (
+        <RoomView roomId={currentRoomId} onLeave={() => setCurrentRoomId(null)} />
       ) : (
-        <p>تم الاتصال بنجاح! عدد الغرف المتاحة: {rooms.length}</p>
+        <RoomList onEnter={setCurrentRoomId} />
       )}
     </div>
   );
