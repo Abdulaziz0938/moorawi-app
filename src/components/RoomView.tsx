@@ -118,7 +118,6 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const isOnMicRole = myInfo?.role === "speaker" || myInfo?.role === "owner" || myInfo?.role === "moderator";
   const isOwnerOrMod = myInfo?.role === "owner" || myInfo?.role === "moderator";
 
-  // Room avatar: use room cover if set, otherwise fall back to owner's avatar (initial state)
   const roomAvatar = room.coverUrl || owner?.avatarUrl || null;
 
   const layout = (room.micLayout as "4" | "5" | "6") || "5";
@@ -171,10 +170,10 @@ export default function RoomView({ roomId, onLeave }: Props) {
 
   return (
     <div
-      className="flex flex-col overflow-hidden fixed inset-0 md:left-1/2 md:-translate-x-1/2 md:w-[28rem]"
+      className="flex flex-col overflow-hidden fixed inset-0 mx-auto"
       dir="rtl"
       style={{
-        height: "100dvh",
+        maxWidth: "28rem",
         backgroundImage: room.backgroundUrl ? `url(${room.backgroundUrl})` : undefined,
         backgroundSize: "cover",
         backgroundPosition: "center",
@@ -183,14 +182,13 @@ export default function RoomView({ roomId, onLeave }: Props) {
       {room.backgroundUrl && <div className="absolute inset-0 bg-black/55 pointer-events-none" />}
 
       <div className="relative z-10 flex flex-col h-full min-h-0">
-        {/* ============ TOP BAR ============ */}
+        {/* TOP BAR */}
         <header className="flex items-center justify-between gap-1 px-2 py-1.5 flex-shrink-0 bg-black/40 backdrop-blur-md border-b border-white/10">
           <div className="flex items-center gap-1 flex-1 min-w-0">
             <button onClick={() => setShowBackMenu((v) => !v)} className="p-1.5 rounded-full hover:bg-white/10 flex-shrink-0 text-white">
               <ArrowRight size={16} />
             </button>
 
-            {/* CAPSULE: room avatar + name + owner ID */}
             <div className="flex items-center gap-1.5 bg-white/10 rounded-full pl-2 pr-1 py-0.5 min-w-0 flex-1">
               <div className="w-6 h-6 rounded-full overflow-hidden bg-purple-500 flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0">
                 {roomAvatar ? (
@@ -240,7 +238,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
           {error && <p className="text-[8px] text-red-300">{error}</p>}
         </div>
 
-        {/* ============ MIC GRID (fixed) ============ */}
+        {/* MIC GRID */}
         <div className="mx-2 flex-shrink-0 relative" style={{ height: `${gridHeight}px` }}>
           <div
             className="grid gap-1 h-full"
@@ -328,8 +326,8 @@ export default function RoomView({ roomId, onLeave }: Props) {
           )}
         </div>
 
-        {/* ============ CHAT (only scrollable) ============ */}
-        <div ref={chatBoxRef} className="thin-scroll flex-1 min-h-0 overflow-y-auto" px-2 py-2 mx-2 mt-1 bg-black/30 backdrop-blur rounded-2xl">
+        {/* CHAT */}
+        <div ref={chatBoxRef} className="thin-scroll flex-1 min-h-0 overflow-y-auto px-2 py-2 mx-2 mt-1 bg-black/30 backdrop-blur rounded-2xl">
           {messages === undefined ? (
             <div className="flex justify-center py-6"><Loader2 className="animate-spin text-white/40" size={18} /></div>
           ) : messages.length === 0 ? (
@@ -366,7 +364,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
           </div>
         )}
 
-        {/* ============ BOTTOM BAR ============ */}
+        {/* BOTTOM BAR */}
         <footer className="border-t border-white/10 px-2 py-1.5 flex items-center justify-around flex-shrink-0 backdrop-blur-md bg-black/40">
           <button onClick={() => setShowChatInput((v) => !v)} className={`p-2 rounded-full text-white ${showChatInput ? "bg-purple-600" : "hover:bg-white/10"}`}>
             <MessageCircle size={20} />
