@@ -88,6 +88,10 @@ export default function RoomView({ roomId, onLeave }: Props) {
 
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [bannerY, setBannerY] = useState(0);
+  const [bannerOpacity, setBannerOpacity] = useState(1);
+  const [dragging, setDragging] = useState(false);
+  const [touchStartY, setTouchStartY] = useState(0);
   const chatBoxRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
