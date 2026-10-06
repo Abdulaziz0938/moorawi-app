@@ -16,7 +16,7 @@ export const list = query({
     const enriched = await Promise.all(rows.map(async (m) => {
       const sender = await ctx.db.get("users", m.senderId);
       const avatarUrl = sender?.avatarId ? await ctx.storage.getUrl(sender.avatarId) : null;
-      const imageUrl = m.imageId ? await ctx.storage.getUrl(m.imageId) : null;
+      const imageUrl = m.imageUrl ?? (m.imageId ? await ctx.storage.getUrl(m.imageId) : null);
       const vip = vipLevelFromTotalSent(sender?.totalSent ?? 0);
       return { _id: m._id, senderId: m.senderId, senderName: m.senderName, senderNumber: sender?.userNumber ?? null, senderVip: vip, avatarUrl, text: m.text ?? null, imageUrl, system: m.system ?? false, createdAt: m._creationTime };
     }));
@@ -24,10 +24,7 @@ export const list = query({
   },
 });
 
-export const generateUploadUrl = mutation({
-  args: { tokenOverride: v.optional(v.string()) },
-  handler: async (ctx, args) => { await requireUser(ctx, args.tokenOverride); return await ctx.storage.generateUploadUrl(); },
-});
+// (تم حذف generateUploadUrl — نستخدم Cloudinary)
 
 export const send = mutation({
   args: { roomId: v.id("rooms"), text: v.optional(v.string()), imageId: v.optional(v.id("_storage")), tokenOverride: v.optional(v.string()) },

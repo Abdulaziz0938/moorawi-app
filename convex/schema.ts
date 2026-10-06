@@ -8,7 +8,8 @@ export default defineSchema({
     username: v.optional(v.string()),
     name: v.optional(v.string()),
     email: v.optional(v.string()),
-    avatarId: v.optional(v.id("_storage")),
+    avatarId: v.optional(v.id("_storage")),  // legacy
+    avatarUrl: v.optional(v.string()),       // Cloudinary
     age: v.optional(v.number()),
     gender: v.optional(v.union(v.literal("male"), v.literal("female"), v.literal("other"))),
     country: v.optional(v.string()),
@@ -42,8 +43,10 @@ export default defineSchema({
     micCount: v.number(),
     memberCount: v.number(),
     micLayout: v.optional(v.string()),
-    coverImageId: v.optional(v.id("_storage")),
-    backgroundImageId: v.optional(v.id("_storage")),
+    coverImageId: v.optional(v.id("_storage")),        // legacy
+    backgroundImageId: v.optional(v.id("_storage")),   // legacy
+    coverUrl: v.optional(v.string()),                  // Cloudinary
+    backgroundUrl: v.optional(v.string()),             // Cloudinary
   })
     .index("by_isPrivate", ["isPrivate"])
     .index("by_owner", ["ownerId"]),
@@ -71,7 +74,8 @@ export default defineSchema({
     senderId: v.id("users"),
     senderName: v.string(),
     text: v.optional(v.string()),
-    imageId: v.optional(v.id("_storage")),
+    imageId: v.optional(v.id("_storage")),  // legacy
+    imageUrl: v.optional(v.string()),       // Cloudinary
     system: v.optional(v.boolean()),
   }).index("by_room", ["roomId"]),
 
@@ -90,7 +94,8 @@ export default defineSchema({
     name: v.string(),
     price: v.number(),
     category: v.string(),
-    mediaId: v.id("_storage"),
+    mediaId: v.optional(v.id("_storage")),   // legacy
+    mediaUrl: v.optional(v.string()),        // Cloudinary
     mediaType: v.union(v.literal("image"), v.literal("video")),
     hasSound: v.optional(v.boolean()),
     isGlobal: v.optional(v.boolean()),

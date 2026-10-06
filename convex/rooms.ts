@@ -7,7 +7,7 @@ export const listPublic = query({
   handler: async (ctx) => {
     const rooms = await ctx.db.query("rooms").withIndex("by_isPrivate", (q) => q.eq("isPrivate", false)).order("desc").take(50);
     const enriched = await Promise.all(rooms.map(async (r) => {
-      const coverUrl = r.coverImageId ? await ctx.storage.getUrl(r.coverImageId) : null;
+      const coverUrl = r.coverUrl ?? (r.coverImageId ? await ctx.storage.getUrl(r.coverImageId) : null);
       return { ...r, coverUrl };
     }));
     return enriched;
@@ -19,8 +19,8 @@ export const get = query({
   handler: async (ctx, args) => {
     const room = await ctx.db.get("rooms", args.roomId);
     if (!room) return null;
-    const coverUrl = room.coverImageId ? await ctx.storage.getUrl(room.coverImageId) : null;
-    const backgroundUrl = room.backgroundImageId ? await ctx.storage.getUrl(room.backgroundImageId) : null;
+    const coverUrl = room.coverUrl ?? (room.coverImageId ? await ctx.storage.getUrl(room.coverImageId) : null);
+    const backgroundUrl = room.backgroundUrl ?? (room.backgroundImageId ? await ctx.storage.getUrl(room.backgroundImageId) : null);
     return { ...room, coverUrl, backgroundUrl };
   },
 });
@@ -81,13 +81,10 @@ export const updateLayout = mutation({
   },
 });
 
-export const generateRoomUploadUrl = mutation({
-  args: { tokenOverride: v.optional(v.string()) },
-  handler: async (ctx, args) => { await requireUser(ctx, args.tokenOverride); return await ctx.storage.generateUploadUrl(); },
-});
+// (تم حذف generateRoomUploadUrl — نستخدم Cloudinary)
 
 export const updateRoomInfo = mutation({
-  args: { roomId: v.id("rooms"), name: v.optional(v.string()), welcomeMessage: v.optional(v.string()), coverImageId: v.optional(v.id("_storage")), tokenOverride: v.optional(v.string()) },
+  args: { roomId: v.id("rooms"), name: v.optional(v.string()), welcomeMessage: v.optional(v.string()), coverUrl: v.optional(v.string()), tokenOverride: v.optional(v.string()) },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx, args.tokenOverride);
     const room = await ctx.db.get("rooms", args.roomId);
@@ -101,25 +98,21 @@ export const updateRoomInfo = mutation({
       patch.name = n;
     }
     if (args.welcomeMessage !== undefined) patch.welcomeMessage = args.welcomeMessage.trim().slice(0, 200);
-    if (args.coverImageId) {
-      if (room.coverImageId) { try { await ctx.storage.delete(room.coverImageId); } catch {} }
-      patch.coverImageId = args.coverImageId;
-    }
+    if (args.coverUrl) patch.coverUrl = args.coverUrl;
     await ctx.db.patch("rooms", args.roomId, patch);
     return null;
   },
 });
 
 export const updateRoomBackground = mutation({
-  args: { roomId: v.id("rooms"), backgroundImageId: v.optional(v.id("_storage")), tokenOverride: v.optional(v.string()) },
+  args: { roomId: v.id("rooms"), backgroundUrl: v.optional(v.string()), tokenOverride: v.optional(v.string()) },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx, args.tokenOverride);
     const room = await ctx.db.get("rooms", args.roomId);
     if (!room) throw new ConvexError({ code: "NOT_FOUND", message: "Room not found" });
     const member = await getMember(ctx, args.roomId, user._id);
     if (!member || (member.role !== "owner" && member.role !== "moderator")) throw new ConvexError({ code: "FORBIDDEN", message: "Only owner" });
-    if (room.backgroundImageId) { try { await ctx.storage.delete(room.backgroundImageId); } catch {} }
-    await ctx.db.patch("rooms", args.roomId, { backgroundImageId: args.backgroundImageId });
+    await ctx.db.patch("rooms", args.roomId, { backgroundUrl: args.backgroundUrl });
     return null;
   },
 });

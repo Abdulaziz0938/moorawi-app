@@ -21,9 +21,7 @@ export const me = query({
   handler: async (ctx, args) => {
     try {
       const user = await requireUser(ctx, args.tokenOverride);
-      const avatarUrl = user.avatarId
-        ? await ctx.storage.getUrl(user.avatarId)
-        : null;
+      const avatarUrl = user.avatarUrl ?? (user.avatarId ? await ctx.storage.getUrl(user.avatarId) : null);
       return {
         _id: user._id,
         userNumber: user.userNumber ?? null,
@@ -62,28 +60,18 @@ export const isUsernameAvailable = query({
 });
 
 // Generate upload URL for avatar
-export const generateAvatarUploadUrl = mutation({
-  args: { tokenOverride: v.optional(v.string()) },
-  handler: async (ctx, args) => {
-    await requireUser(ctx, args.tokenOverride);
-    return await ctx.storage.generateUploadUrl();
-  },
-});
+// (تم حذف generateAvatarUploadUrl — نستخدم Cloudinary)
 
 // Save the avatar after upload
 export const saveAvatar = mutation({
   args: {
-    storageId: v.id("_storage"),
+    avatarUrl: v.string(),
     tokenOverride: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx, args.tokenOverride);
-    // Delete old avatar if exists
-    if (user.avatarId) {
-      try { await ctx.storage.delete(user.avatarId); } catch {}
-    }
-    await ctx.db.patch("users", user._id, { avatarId: args.storageId });
-    return await ctx.storage.getUrl(args.storageId);
+    await ctx.db.patch("users", user._id, { avatarUrl: args.avatarUrl });
+    return args.avatarUrl;
   },
 });
 

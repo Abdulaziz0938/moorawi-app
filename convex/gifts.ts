@@ -17,7 +17,7 @@ export const createGift = mutation({
     name: v.string(),
     price: v.number(),
     category: v.string(),
-    mediaId: v.id("_storage"),
+    mediaUrl: v.string(),
     mediaType: v.union(v.literal("image"), v.literal("video")),
     forceGlobal: v.optional(v.boolean()),
     tokenOverride: v.optional(v.string()),
@@ -37,14 +37,13 @@ export const createGift = mutation({
     const isVideo = args.mediaType === "video";
     const isRelationship = args.category === "relation";
     const isGlobal = args.price >= 30000 || !!args.forceGlobal;
-    const showsBanner =
-      args.price >= 1000 && isVideo && (isVideo || isRelationship);
+    const showsBanner = args.price >= 1000 && isVideo;
 
     const id = await ctx.db.insert("gifts", {
       name,
       price: args.price,
       category: args.category,
-      mediaId: args.mediaId,
+      mediaUrl: args.mediaUrl,
       mediaType: args.mediaType,
       hasSound: isVideo,
       isGlobal,
@@ -67,7 +66,6 @@ export const removeGift = mutation({
     }
     const gift = await ctx.db.get("gifts", args.giftId);
     if (!gift) return null;
-    try { await ctx.storage.delete(gift.mediaId); } catch {}
     await ctx.db.delete(gift._id);
     return null;
   },
@@ -81,13 +79,7 @@ export const listActive = query({
       .query("gifts")
       .withIndex("by_active", (q) => q.eq("active", true))
       .take(200);
-    const enriched = await Promise.all(
-      gifts.map(async (g) => {
-        const mediaUrl = await ctx.storage.getUrl(g.mediaId);
-        return { ...g, mediaUrl };
-      }),
-    );
-    return enriched.sort((a, b) => a.price - b.price);
+    return gifts.sort((a, b) => a.price - b.price);
   },
 });
 
@@ -99,13 +91,7 @@ export const listAllAdmin = query({
       const user = await requireUser(ctx, args.tokenOverride);
       if (!user.isAdmin && user.adminRole !== "super" && user.adminRole !== "moderator") return [];
       const gifts = await ctx.db.query("gifts").take(300);
-      const enriched = await Promise.all(
-        gifts.map(async (g) => {
-          const mediaUrl = await ctx.storage.getUrl(g.mediaId);
-          return { ...g, mediaUrl };
-        }),
-      );
-      return enriched.sort((a, b) => a.price - b.price);
+      return gifts.sort((a, b) => a.price - b.price);
     } catch { return []; }
   },
 });
@@ -227,7 +213,7 @@ export const latestGift = query({
     if (!recent) return null;
     const gift = await ctx.db.get("gifts", recent.giftId);
     if (!gift) return null;
-    const mediaUrl = await ctx.storage.getUrl(gift.mediaId);
+    const mediaUrl = gift.mediaUrl ?? (gift.mediaId ? await ctx.storage.getUrl(gift.mediaId) : null);
     return {
       _id: recent._id,
       fromName: recent.fromName,
@@ -260,7 +246,7 @@ export const latestGiftFull = query({
       ctx.db.get("users", recent.toUserId),
     ]);
     const [mediaUrl, fromAvatar, toAvatar] = await Promise.all([
-      ctx.storage.getUrl(gift.mediaId),
+      gift.mediaUrl ?? (gift.mediaId ? await ctx.storage.getUrl(gift.mediaId) : null),
       fromUser?.avatarId ? ctx.storage.getUrl(fromUser.avatarId) : Promise.resolve(null),
       toUser?.avatarId ? ctx.storage.getUrl(toUser.avatarId) : Promise.resolve(null),
     ]);
