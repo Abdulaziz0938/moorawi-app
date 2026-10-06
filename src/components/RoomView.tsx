@@ -189,16 +189,20 @@ export default function RoomView({ roomId, onLeave }: Props) {
     if (!activeGift || !seats) { setGiftTarget(null); return; }
     const seat = seats.find((s) => s.userId === activeGift.toUserId);
     if (!seat) { setGiftTarget(null); return; }
-    const el = document.querySelector(`[data-mic-seat="${seat.seatIndex}"]`);
-    if (el) {
-      const rect = el.getBoundingClientRect();
-      setGiftTarget({
-        x: rect.left + rect.width / 2 - window.innerWidth / 2,
-        y: rect.top + rect.height / 2 - window.innerHeight * 0.35,
-      });
-    } else {
-      setGiftTarget(null);
-    }
+    // Wait one frame for DOM to render the mic grid
+    const compute = () => {
+      const el = document.querySelector(`[data-mic-seat="${seat.seatIndex}"]`);
+      if (el) {
+        const rect = el.getBoundingClientRect();
+        setGiftTarget({
+          x: rect.left + rect.width / 2 - window.innerWidth / 2,
+          y: rect.top + rect.height / 2 - window.innerHeight / 2,
+        });
+      }
+    };
+    compute();
+    const t = setTimeout(compute, 100);
+    return () => clearTimeout(t);
   }, [activeGift, seats]);
 
   useEffect(() => {
@@ -524,9 +528,17 @@ export default function RoomView({ roomId, onLeave }: Props) {
       {/* Gift Animation Overlay */}
       {activeGift && (
         <>
-          {/* ====== VIDEO (with sound): constrained, centered ====== */}
-          {activeGift.hasSound && activeGift.mediaType === "video" && activeGift.mediaUrl && (
-            <div className="fixed inset-0 z-[68] pointer-events-none flex items-center justify-center">
+          {/* ====== VIDEO / IMAGE — single centered element with unified animation ====== */}
+          <div
+            className="fixed z-[68] pointer-events-none gift-emerge-anim"
+            style={{
+              left: "50%",
+              top: "50%",
+              ["--target-x" as any]: giftTarget ? `${giftTarget.x}px` : "0px",
+              ["--target-y" as any]: giftTarget ? `${giftTarget.y}px` : "0px",
+            }}
+          >
+            {activeGift.mediaType === "video" && activeGift.mediaUrl ? (
               <video
                 ref={videoRef}
                 key={activeGift._id}
@@ -544,74 +556,46 @@ export default function RoomView({ roomId, onLeave }: Props) {
                   }
                 }}
                 onEnded={handleVideoEnd}
-                className="max-w-[55vw] max-h-[55vh] object-contain rounded-2xl"
+                className="max-w-[70vw] max-h-[60vh] object-contain"
               />
-            </div>
-          )}
+            ) : activeGift.mediaUrl ? (
+              <img
+                src={activeGift.mediaUrl}
+                alt=""
+                className="max-w-[45vw] max-h-[45vh] object-contain"
+              />
+            ) : null}
+          </div>
 
-          {/* ====== IMAGE (no sound): flies to mic, transparent ====== */}
-          {!activeGift.hasSound && activeGift.mediaUrl && (
-            <div
-              className="fixed z-[68] pointer-events-none"
-              style={{
-                left: "50%",
-                top: "35%",
-                transform: "translate(-50%, -50%)",
-                animation: giftTarget ? "flyToMic 2.5s ease-out forwards" : "none",
-                ["--target-x" as any]: giftTarget ? `${giftTarget.x}px` : "0px",
-                ["--target-y" as any]: giftTarget ? `${giftTarget.y}px` : "0px",
-              }}
-            >
-              {activeGift.mediaType === "video" ? (
-                <video
-                  src={activeGift.mediaUrl}
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  className="max-w-[40vw] max-h-[40vh] object-contain"
-                  style={{ mixBlendMode: "screen" }}
-                />
-              ) : (
-                <img
-                  src={activeGift.mediaUrl}
-                  alt=""
-                  className="max-w-[40vw] max-h-[40vh] object-contain"
-                  style={{ mixBlendMode: "screen" }}
-                />
-              )}
-            </div>
-          )}
-
-          {/* ====== TOP BANNER (sound only) — constrained width ====== */}
+          {/* ====== TOP BANNER — glass, own layer, small ====== */}
           {activeGift.hasSound && (
-            <div className="fixed top-2 left-0 right-0 z-[70] flex justify-center pointer-events-none">
-              <div className="max-w-[340px] w-[calc(100%-16px)] overflow-hidden bg-gradient-to-r from-pink-500 via-fuchsia-500 to-purple-600 rounded-2xl px-2 py-1.5 shadow-2xl border-2 border-white/30 flex items-center gap-1.5">
+            <div className="fixed top-3 left-0 right-0 z-[70] flex justify-center pointer-events-none">
+              <div className="max-w-[320px] w-[calc(100%-24px)] bg-white/10 backdrop-blur-xl rounded-full px-3 py-1.5 border border-white/25 shadow-2xl flex items-center gap-1.5">
                 <div className="flex items-center gap-1 flex-shrink-0">
-                  <div className="w-8 h-8 rounded-full overflow-hidden bg-purple-500 ring-2 ring-yellow-300">
+                  <div className="w-7 h-7 rounded-full overflow-hidden bg-purple-500/70 ring-1 ring-white/40">
                     {activeGift.fromAvatar ? (
                       <img src={activeGift.fromAvatar} alt="" className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-white text-xs font-bold">
+                      <div className="w-full h-full flex items-center justify-center text-white text-[10px] font-bold">
                         {activeGift.fromName?.[0] || "?"}
                       </div>
                     )}
                   </div>
-                  <span className="text-white text-[10px] font-black max-w-[50px] truncate">{activeGift.fromName}</span>
+                  <span className="text-white text-[10px] font-bold max-w-[48px] truncate">{activeGift.fromName}</span>
                 </div>
-                <span className="text-yellow-300 text-base font-black flex-shrink-0">⟶</span>
+                <span className="text-pink-300 text-sm font-black flex-shrink-0">⟶</span>
                 <div className="flex-1 flex flex-col items-center justify-center min-w-0">
                   <span className="text-white text-[9px] font-black truncate max-w-full">{activeGift.giftName}</span>
                   <span className="text-yellow-300 text-[10px] font-black">×{activeGift.quantity}</span>
                 </div>
-                <span className="text-yellow-300 text-base font-black flex-shrink-0">⟵</span>
+                <span className="text-pink-300 text-sm font-black flex-shrink-0">⟵</span>
                 <div className="flex items-center gap-1 flex-shrink-0">
-                  <span className="text-white text-[10px] font-black max-w-[50px] truncate">{activeGift.toName}</span>
-                  <div className="w-8 h-8 rounded-full overflow-hidden bg-purple-500 ring-2 ring-yellow-300">
+                  <span className="text-white text-[10px] font-bold max-w-[48px] truncate">{activeGift.toName}</span>
+                  <div className="w-7 h-7 rounded-full overflow-hidden bg-purple-500/70 ring-1 ring-white/40">
                     {activeGift.toAvatar ? (
                       <img src={activeGift.toAvatar} alt="" className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-white text-xs font-bold">
+                      <div className="w-full h-full flex items-center justify-center text-white text-[10px] font-bold">
                         {activeGift.toName?.[0] || "?"}
                       </div>
                     )}
@@ -621,27 +605,27 @@ export default function RoomView({ roomId, onLeave }: Props) {
             </div>
           )}
 
-          {/* ====== BOTTOM BANNER (no sound) — small, centered, like lollipop ====== */}
+          {/* ====== BOTTOM BANNER — glass pill, small ====== */}
           {!activeGift.hasSound && (
             <div className="fixed left-0 right-0 z-[70] pointer-events-none flex justify-center" style={{ bottom: "48vh" }}>
-              <div className="max-w-[280px] w-auto bg-gradient-to-r from-emerald-500/95 to-emerald-600/95 backdrop-blur-md rounded-full px-3 py-1.5 shadow-xl border border-white/20 flex items-center gap-2">
-                <span className="text-yellow-300 text-[11px] font-black flex-shrink-0">×{activeGift.quantity}</span>
-                <div className="w-7 h-7 flex items-center justify-center flex-shrink-0">
+              <div className="max-w-[240px] bg-white/10 backdrop-blur-xl rounded-full px-3 py-1.5 border border-white/25 shadow-2xl flex items-center gap-2">
+                <span className="text-yellow-300 text-[10px] font-black flex-shrink-0">×{activeGift.quantity}</span>
+                <div className="w-6 h-6 flex items-center justify-center flex-shrink-0">
                   {activeGift.mediaUrl ? (
                     activeGift.mediaType === "video" ? (
-                      <video src={activeGift.mediaUrl} className="w-full h-full object-contain pointer-events-none" muted playsInline style={{ mixBlendMode: "screen" }} />
+                      <video src={activeGift.mediaUrl} className="w-full h-full object-contain pointer-events-none" muted playsInline />
                     ) : (
-                      <img src={activeGift.mediaUrl} alt="" className="w-full h-full object-contain" style={{ mixBlendMode: "screen" }} />
+                      <img src={activeGift.mediaUrl} alt="" className="w-full h-full object-contain" />
                     )
                   ) : (
-                    <span className="text-lg">🎁</span>
+                    <span className="text-base">🎁</span>
                   )}
                 </div>
                 <div className="flex flex-col items-end min-w-0">
-                  <span className="text-white text-[11px] font-black truncate max-w-[100px]">{activeGift.fromName}</span>
-                  <span className="text-white/80 text-[8px] truncate max-w-[100px]">إلى {activeGift.toName}</span>
+                  <span className="text-white text-[10px] font-bold truncate max-w-[90px]">{activeGift.fromName}</span>
+                  <span className="text-white/70 text-[8px] truncate max-w-[90px]">إلى {activeGift.toName}</span>
                 </div>
-                <div className="w-7 h-7 rounded-full overflow-hidden bg-purple-500 ring-1 ring-white/40 flex-shrink-0">
+                <div className="w-6 h-6 rounded-full overflow-hidden bg-purple-500/70 ring-1 ring-white/40 flex-shrink-0">
                   {activeGift.fromAvatar ? (
                     <img src={activeGift.fromAvatar} alt="" className="w-full h-full object-cover" />
                   ) : (
