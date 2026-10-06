@@ -5,7 +5,7 @@ import type { Id } from "../../convex/_generated/dataModel";
 import {
   Mic, MicOff, LogOut, Loader2, Heart, Trophy,
   MessageCircle, Gift, Grid2x2, Share2, Minimize2, ArrowRight,
-  Send, Image as ImageIcon,
+  Send, Image as ImageIcon, Lock, Unlock, UserPlus, Move, X, Check,
 } from "lucide-react";
 import { agoraManager } from "../lib/agora";
 import { getDeviceId } from "../lib/device";
@@ -22,9 +22,16 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const members = useQuery(api.rooms.members, { roomId });
   const myInfo = useQuery(api.mics.myInfo, { roomId, tokenOverride: deviceId });
   const messages = useQuery(api.messages.list, { roomId });
+  const listeners = useQuery(api.mics.listeners, { roomId });
+  const myInvite = useQuery(api.mics.myInvite, { roomId, tokenOverride: deviceId });
+
   const takeSeat = useMutation(api.mics.takeSeat);
   const leaveSeat = useMutation(api.mics.leaveSeat);
   const clearMySeats = useMutation(api.mics.clearMySeats);
+  const toggleLock = useMutation(api.mics.toggleLock);
+  const toggleMuteSeat = useMutation(api.mics.toggleMuteSeat);
+  const inviteToSeat = useMutation(api.mics.inviteToSeat);
+  const respondInvite = useMutation(api.mics.respondInvite);
   const sendMsg = useMutation(api.messages.send);
   const genUpload = useMutation(api.messages.generateUploadUrl);
   const getToken = useAction(api.voice.getToken);
@@ -34,17 +41,24 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [remoteCount, setRemoteCount] = useState(0);
 
-  // UI state
   const [showBackMenu, setShowBackMenu] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showGifts, setShowGifts] = useState(false);
 
-  // Chat state
+  // Mic dropdown
+  const [openSeatMenu, setOpenSeatMenu] = useState<number | null>(null);
+
+  // Invite modal
+  const [inviteSeatIndex, setInviteSeatIndex] = useState<number | null>(null);
+
+  // Chat
   const [chatText, setChatText] = useState("");
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const chatInputRef = useRef<HTMLInputElement>(null);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+  const chatBoxRef = useRef<HTMLDivElement>(null);
 
   const joinedRef = useRef(false);
   const publishedRef = useRef(false);
@@ -92,9 +106,11 @@ export default function RoomView({ roomId, onLeave }: Props) {
     return () => window.removeEventListener("beforeunload", h);
   }, [roomId, deviceId, myInfo, clearMySeats]);
 
-  // Auto-scroll chat
+  // Scroll chat to bottom on new messages (only chat box, not page)
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (chatBoxRef.current) {
+      chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
+    }
   }, [messages?.length]);
 
   if (!room || !seats || myInfo === undefined || members === undefined) {
@@ -107,19 +123,17 @@ export default function RoomView({ roomId, onLeave }: Props) {
 
   const owner = members.find((m) => m.role === "owner");
   const topMembers = members.slice(0, 3);
+  const isOnMicRole = myInfo?.role === "speaker" || myInfo?.role === "owner" || myInfo?.role === "moderator";
+  const isOwnerOrMod = myInfo?.role === "owner" || myInfo?.role === "moderator";
 
-  const handleSeatClick = async (seatIndex: number, userId: string | undefined) => {
-    if (userId) return;
-    try { await takeSeat({ roomId, seatIndex, tokenOverride: deviceId }); }
-    catch (e: any) { alert(e?.message || "خطأ"); }
-  };
-
-  const handleLeaveSeat = async () => {
-    try {
-      await leaveSeat({ roomId, tokenOverride: deviceId });
-      await agoraManager.unpublishMicrophone();
-      publishedRef.current = false;
-    } catch (e: any) { alert(e?.message || "خطأ"); }
+  const handleSeatClick = (seatIndex: number, userId: string | undefined) => {
+    if (userId === myInfo.userId) {
+      setOpenSeatMenu(seatIndex);
+    } else if (userId) {
+      setOpenSeatMenu(seatIndex);
+    } else {
+      takeSeat({ roomId, seatIndex, tokenOverride: deviceId }).catch((e: any) => alert(e?.message || "خطأ"));
+    }
   };
 
   const handleToggleMute = () => {
@@ -143,11 +157,9 @@ export default function RoomView({ roomId, onLeave }: Props) {
     try {
       await sendMsg({ roomId, text: clean, tokenOverride: deviceId });
       setChatText("");
-    } catch (e: any) {
-      alert(e?.message || "خطأ");
-    } finally {
-      setSending(false);
-    }
+      chatInputRef.current?.focus();
+    } catch (e: any) { alert(e?.message || "خطأ"); }
+    finally { setSending(false); }
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -156,18 +168,15 @@ export default function RoomView({ roomId, onLeave }: Props) {
     setUploading(true);
     try {
       const url = await genUpload({ tokenOverride: deviceId });
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": file.type },
-        body: file,
-      });
+      const res = await fetch(url, { method: "POST", headers: { "Content-Type": file.type }, body: file });
       const { storageId } = await res.json();
       await sendMsg({ roomId, imageId: storageId, tokenOverride: deviceId });
-    } catch (e: any) {
-      alert(e?.message || "فشل رفع الصورة");
-    } finally {
-      setUploading(false);
-    }
+    } catch (e: any) { alert(e?.message || "فشل رفع الصورة"); }
+    finally { setUploading(false); }
+  };
+
+  const handleChatBtnClick = () => {
+    chatInputRef.current?.focus();
   };
 
   const formatTime = (t: number) => {
@@ -175,53 +184,39 @@ export default function RoomView({ roomId, onLeave }: Props) {
     return `${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`;
   };
 
-  const isOnMicRole = myInfo?.role === "speaker" || myInfo?.role === "owner" || myInfo?.role === "moderator";
+  const currentSeatMenuData = openSeatMenu !== null ? seats.find((s) => s.seatIndex === openSeatMenu) : null;
+  const isMySeat = currentSeatMenuData?.userId === myInfo.userId;
 
   return (
     <div className="max-w-md mx-auto flex flex-col h-screen relative" dir="rtl">
       {/* TOP BAR */}
-      <header className="flex items-center justify-between px-3 py-2 text-white border-b border-white/10">
+      <header className="flex items-center justify-between px-3 py-2 text-white border-b border-white/10 flex-shrink-0">
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowBackMenu((v) => !v)}
-            className="p-1.5 rounded-full hover:bg-white/10 transition"
-          >
+          <button onClick={() => setShowBackMenu((v) => !v)} className="p-1.5 rounded-full hover:bg-white/10">
             <ArrowRight size={20} />
           </button>
           {owner && (
             <div className="flex items-center gap-1.5 bg-white/10 px-2 py-1 rounded-full">
               <div className="w-6 h-6 rounded-full overflow-hidden bg-purple-500 flex items-center justify-center text-xs font-bold">
-                {owner.avatarUrl
-                  ? <img src={owner.avatarUrl} alt="" className="w-full h-full object-cover" />
-                  : (owner.name?.[0] || "?")}
+                {owner.avatarUrl ? <img src={owner.avatarUrl} alt="" className="w-full h-full object-cover" /> : (owner.name?.[0] || "?")}
               </div>
               <span className="text-[10px] font-bold" dir="ltr">ID: {owner.userNumber ?? "—"}</span>
             </div>
           )}
         </div>
-
         <div className="flex items-center gap-1.5">
           <div className="flex -space-x-2">
             {topMembers.map((m) => (
               <div key={m._id} className="w-6 h-6 rounded-full border-2 border-purple-900 overflow-hidden bg-purple-500 flex items-center justify-center text-[10px] font-bold">
-                {m.avatarUrl
-                  ? <img src={m.avatarUrl} alt="" className="w-full h-full object-cover" />
-                  : (m.name?.[0] || "?")}
+                {m.avatarUrl ? <img src={m.avatarUrl} alt="" className="w-full h-full object-cover" /> : (m.name?.[0] || "?")}
               </div>
             ))}
           </div>
-          <span className="text-xs font-bold bg-white/10 px-1.5 py-0.5 rounded-full">
-            {members.length}
-          </span>
-          <button
-            onClick={() => setIsFavorite(!isFavorite)}
-            className="p-1.5 rounded-full hover:bg-white/10 transition"
-          >
+          <span className="text-xs font-bold bg-white/10 px-1.5 py-0.5 rounded-full">{members.length}</span>
+          <button onClick={() => setIsFavorite(!isFavorite)} className="p-1.5 rounded-full hover:bg-white/10">
             <Heart size={18} className={isFavorite ? "fill-red-500 text-red-500" : ""} />
           </button>
-          <button className="p-1.5 rounded-full hover:bg-white/10 transition">
-            <Trophy size={18} />
-          </button>
+          <button className="p-1.5 rounded-full hover:bg-white/10"><Trophy size={18} /></button>
         </div>
       </header>
 
@@ -243,102 +238,141 @@ export default function RoomView({ roomId, onLeave }: Props) {
         </>
       )}
 
-      {/* MAIN scrollable: title + mics + chat */}
-      <main className="flex-1 overflow-y-auto px-3 py-3 space-y-3">
-        {/* Room title */}
-        <div className="text-center text-white">
-          <h1 className="text-lg font-bold">{room.name}</h1>
-          {agoraConnected && (
-            <p className="text-[10px] text-green-300">متصل بالصوت ({remoteCount} بعيد)</p>
-          )}
-          {error && <p className="text-[10px] text-red-300">{error}</p>}
-        </div>
+      {/* Room title (fixed) */}
+      <div className="text-center text-white py-2 flex-shrink-0">
+        <h1 className="text-base font-bold">{room.name}</h1>
+        {agoraConnected && <p className="text-[10px] text-green-300">متصل بالصوت ({remoteCount} بعيد)</p>}
+        {error && <p className="text-[10px] text-red-300">{error}</p>}
+      </div>
 
-        {/* Mic grid */}
-        <div className="bg-white/5 rounded-2xl p-3">
-          <div className="grid grid-cols-4 gap-2.5">
-            {seats.map((seat) => (
+      {/* Mic grid (fixed) */}
+      <div className="bg-white/5 rounded-2xl p-3 mx-3 flex-shrink-0 relative">
+        <div className="grid grid-cols-4 gap-2.5">
+          {seats.map((seat) => (
+            <div key={seat._id} className="relative">
               <div
-                key={seat._id}
                 onClick={() => handleSeatClick(seat.seatIndex, seat.userId)}
                 className={`aspect-square rounded-full flex flex-col items-center justify-center text-white border-2 transition cursor-pointer ${
-                  seat.userId ? "bg-purple-500 border-purple-300" : "bg-white/10 border-white/30 hover:bg-white/20"
+                  seat.userId ? "bg-purple-500 border-purple-300" : seat.locked ? "bg-gray-600 border-gray-400" : "bg-white/10 border-white/30 hover:bg-white/20"
                 }`}
               >
                 {seat.userId ? (
                   <>
-                    <Mic size={16} />
-                    <span className="text-[9px] mt-0.5 truncate max-w-full px-1">
-                      {seat.userName ?? "..."}
-                    </span>
+                    {seat.muted ? <MicOff size={16} /> : <Mic size={16} />}
+                    <span className="text-[9px] mt-0.5 truncate max-w-full px-1">{seat.userName ?? "..."}</span>
                   </>
+                ) : seat.locked ? (
+                  <Lock size={16} className="opacity-60" />
                 ) : (
                   <span className="text-xl opacity-50">+</span>
                 )}
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
 
-        {/* Chat messages inline */}
-        <div className="bg-white/5 rounded-2xl p-3 min-h-[180px]">
-          <h2 className="text-white/60 text-xs mb-2 text-center">الدردشة</h2>
-          {messages === undefined ? (
-            <div className="flex justify-center py-6">
-              <Loader2 className="animate-spin text-white/40" size={20} />
+        {/* Seat dropdown */}
+        {openSeatMenu !== null && currentSeatMenuData && (
+          <>
+            <div className="fixed inset-0 z-40" onClick={() => setOpenSeatMenu(null)} />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-gray-900 rounded-xl shadow-2xl border border-white/20 py-2 w-56">
+              <p className="text-white/60 text-xs px-4 py-1">المايك رقم {currentSeatMenuData.seatIndex + 1}</p>
+              {isMySeat ? (
+                <>
+                  <button
+                    onClick={() => { toggleMuteSeat({ roomId, seatIndex: currentSeatMenuData.seatIndex, tokenOverride: deviceId }); setOpenSeatMenu(null); }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-white hover:bg-white/10 text-sm"
+                  >
+                    <MicOff size={16} /> {currentSeatMenuData.muted ? "إلغاء الكتم" : "كتم"}
+                  </button>
+                  <button
+                    onClick={() => { leaveSeat({ roomId, tokenOverride: deviceId }).then(() => agoraManager.unpublishMicrophone()); setOpenSeatMenu(null); }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-red-400 hover:bg-white/10 text-sm"
+                  >
+                    <LogOut size={16} /> انزل من المايك
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => { inviteToSeat; setInviteSeatIndex(currentSeatMenuData.seatIndex); setOpenSeatMenu(null); }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-white hover:bg-white/10 text-sm"
+                  >
+                    <UserPlus size={16} /> دعوة شخص للجلوس
+                  </button>
+                  {isOwnerOrMod && (
+                    <>
+                      <button
+                        onClick={() => { toggleLock({ roomId, seatIndex: currentSeatMenuData.seatIndex, tokenOverride: deviceId }); setOpenSeatMenu(null); }}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-white hover:bg-white/10 text-sm"
+                      >
+                        {currentSeatMenuData.locked ? <Unlock size={16} /> : <Lock size={16} />}
+                        {currentSeatMenuData.locked ? "فتح المايك" : "قفل المايك"}
+                      </button>
+                      <button
+                        onClick={() => { toggleMuteSeat({ roomId, seatIndex: currentSeatMenuData.seatIndex, tokenOverride: deviceId }); setOpenSeatMenu(null); }}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-white hover:bg-white/10 text-sm"
+                      >
+                        <MicOff size={16} /> {currentSeatMenuData.muted ? "إلغاء كتمه" : "اكتمه"}
+                      </button>
+                    </>
+                  )}
+                  {!currentSeatMenuData.userId && isOwnerOrMod && (
+                    <button
+                      onClick={() => { takeSeat({ roomId, seatIndex: currentSeatMenuData.seatIndex, tokenOverride: deviceId }); setOpenSeatMenu(null); }}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-white hover:bg-white/10 text-sm"
+                    >
+                      <Move size={16} /> اجلس هنا
+                    </button>
+                  )}
+                </>
+              )}
             </div>
-          ) : messages.length === 0 ? (
-            <p className="text-white/40 text-xs text-center py-6">لا توجد رسائل بعد. ابدأ الحديث!</p>
-          ) : (
-            <div className="space-y-2.5">
-              {messages.map((m) => (
-                <div key={m._id} className="flex gap-2 items-start">
-                  <div className="w-7 h-7 rounded-full overflow-hidden bg-purple-500 flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0">
-                    {m.avatarUrl
-                      ? <img src={m.avatarUrl} alt="" className="w-full h-full object-cover" />
-                      : (m.senderName?.[0] || "?")}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-[11px] font-bold text-purple-300">{m.senderName}</span>
-                      {m.senderNumber && (
-                        <span className="text-[9px] text-white/40" dir="ltr">ID:{m.senderNumber}</span>
-                      )}
-                      <span className="text-[9px] text-white/40">{formatTime(m.createdAt)}</span>
-                    </div>
-                    {m.text && (
-                      <p className="text-white text-sm break-words mt-0.5">{m.text}</p>
-                    )}
-                    {m.imageUrl && (
-                      <img
-                        src={m.imageUrl}
-                        alt=""
-                        className="mt-1 rounded-lg max-w-[180px] max-h-[180px] object-cover"
-                      />
-                    )}
-                  </div>
+          </>
+        )}
+      </div>
+
+      {/* Chat box — the ONLY scrollable part */}
+      <div
+        ref={chatBoxRef}
+        className="flex-1 overflow-y-auto px-3 py-2 mx-3 my-2 bg-white/5 rounded-2xl"
+      >
+        {messages === undefined ? (
+          <div className="flex justify-center py-6"><Loader2 className="animate-spin text-white/40" size={20} /></div>
+        ) : messages.length === 0 ? (
+          <p className="text-white/40 text-xs text-center py-6">لا توجد رسائل بعد. ابدأ الحديث!</p>
+        ) : (
+          <div className="space-y-2.5">
+            {messages.map((m) => (
+              <div key={m._id} className="flex gap-2 items-start">
+                <div className="w-7 h-7 rounded-full overflow-hidden bg-purple-500 flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0">
+                  {m.avatarUrl ? <img src={m.avatarUrl} alt="" className="w-full h-full object-cover" /> : (m.senderName?.[0] || "?")}
                 </div>
-              ))}
-            </div>
-          )}
-          <div ref={bottomRef} />
-        </div>
-      </main>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-[11px] font-bold text-purple-300">{m.senderName}</span>
+                    {m.senderNumber && <span className="text-[9px] text-white/40" dir="ltr">ID:{m.senderNumber}</span>}
+                    <span className="text-[9px] text-white/40">{formatTime(m.createdAt)}</span>
+                  </div>
+                  {m.text && <p className="text-white text-sm break-words mt-0.5">{m.text}</p>}
+                  {m.imageUrl && <img src={m.imageUrl} alt="" className="mt-1 rounded-lg max-w-[160px] max-h-[160px] object-cover" />}
+                </div>
+              </div>
+            ))}
+            <div ref={chatEndRef} />
+          </div>
+        )}
+      </div>
 
-      {/* Chat input (fixed above mic controls) */}
-      <div className="px-3 py-2 border-t border-white/10">
+      {/* Chat input (fixed above footer) */}
+      <div className="px-3 pb-2 flex-shrink-0">
         <div className="flex items-center gap-2 bg-white/10 rounded-full px-2 py-1.5">
           <label className="p-1.5 text-white/70 hover:text-white cursor-pointer">
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              className="hidden"
-              disabled={uploading}
-            />
+            <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" disabled={uploading} />
             {uploading ? <Loader2 size={18} className="animate-spin" /> : <ImageIcon size={18} />}
           </label>
           <input
+            ref={chatInputRef}
             type="text"
             value={chatText}
             onChange={(e) => setChatText(e.target.value)}
@@ -347,41 +381,17 @@ export default function RoomView({ roomId, onLeave }: Props) {
             className="flex-1 bg-transparent text-white text-sm outline-none placeholder-white/40"
             maxLength={500}
           />
-          <button
-            onClick={handleSendMsg}
-            disabled={sending || !chatText.trim()}
-            className="p-1.5 bg-purple-600 rounded-full text-white disabled:opacity-40"
-          >
+          <button onClick={handleSendMsg} disabled={sending || !chatText.trim()} className="p-1.5 bg-purple-600 rounded-full text-white disabled:opacity-40">
             <Send size={16} />
           </button>
         </div>
       </div>
 
-      {/* On mic controls */}
-      {isOnMicRole && (
-        <div className="px-3 pb-2 flex gap-2">
-          <button
-            onClick={handleToggleMute}
-            className={`flex-1 py-2 rounded-xl text-sm font-bold text-white transition ${isMuted ? "bg-yellow-600" : "bg-green-600"}`}
-          >
-            {isMuted ? <MicOff size={16} className="inline mr-1" /> : <Mic size={16} className="inline mr-1" />}
-            {isMuted ? "إلغاء الكتم" : "كتم"}
-          </button>
-          <button
-            onClick={handleLeaveSeat}
-            className="flex-1 bg-red-500/80 py-2 rounded-xl text-sm font-bold text-white"
-          >
-            مغادرة المايك
-          </button>
-        </div>
-      )}
-
-      {/* BOTTOM BAR */}
-      <footer className="border-t border-white/10 px-3 py-2 flex items-center justify-around">
-        <button className="p-2 rounded-full hover:bg-white/10 text-white">
+      {/* Bottom bar */}
+      <footer className="border-t border-white/10 px-3 py-2 flex items-center justify-around flex-shrink-0">
+        <button onClick={handleChatBtnClick} className="p-2 rounded-full hover:bg-white/10 text-white">
           <MessageCircle size={22} />
         </button>
-
         <button
           onClick={handleToggleMute}
           disabled={!isOnMicRole}
@@ -389,21 +399,78 @@ export default function RoomView({ roomId, onLeave }: Props) {
         >
           {isMuted ? <MicOff size={22} /> : <Mic size={22} />}
         </button>
-
-        <button
-          onClick={() => setShowSettings(true)}
-          className="p-2 rounded-full hover:bg-white/10 text-white"
-        >
+        <button onClick={() => setShowSettings(true)} className="p-2 rounded-full hover:bg-white/10 text-white">
           <Grid2x2 size={22} />
         </button>
-
-        <button
-          onClick={() => setShowGifts(true)}
-          className="p-2 rounded-full hover:bg-white/10 text-white"
-        >
+        <button onClick={() => setShowGifts(true)} className="p-2 rounded-full hover:bg-white/10 text-white">
           <Gift size={22} />
         </button>
       </footer>
+
+      {/* Invite picker modal */}
+      {inviteSeatIndex !== null && listeners && (
+        <>
+          <div className="fixed inset-0 bg-black/60 z-40" onClick={() => setInviteSeatIndex(null)} />
+          <div className="fixed bottom-0 left-0 right-0 z-50 max-w-md mx-auto bg-gray-950 rounded-t-2xl max-h-[60vh] flex flex-col" dir="rtl">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+              <h2 className="text-white font-bold text-sm">دعوة للجلوس على المايك {inviteSeatIndex + 1}</h2>
+              <button onClick={() => setInviteSeatIndex(null)} className="text-white/70"><X size={20} /></button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-3 space-y-2">
+              {listeners.length === 0 ? (
+                <p className="text-white/40 text-center py-8 text-sm">لا يوجد مستمعون حالياً</p>
+              ) : (
+                listeners.map((l) => (
+                  <button
+                    key={l._id}
+                    onClick={() => {
+                      inviteToSeat({ roomId, toUserId: l.userId, seatIndex: inviteSeatIndex, tokenOverride: deviceId });
+                      setInviteSeatIndex(null);
+                    }}
+                    className="w-full flex items-center gap-3 p-2 bg-white/5 hover:bg-white/10 rounded-xl transition"
+                  >
+                    <div className="w-10 h-10 rounded-full overflow-hidden bg-purple-500 flex items-center justify-center text-sm font-bold text-white">
+                      {l.avatarUrl ? <img src={l.avatarUrl} alt="" className="w-full h-full object-cover" /> : (l.name?.[0] || "?")}
+                    </div>
+                    <div className="flex-1 text-right">
+                      <p className="text-white text-sm font-bold">{l.name}</p>
+                      {l.userNumber && <p className="text-white/50 text-[10px]" dir="ltr">ID: {l.userNumber}</p>}
+                    </div>
+                    <UserPlus size={18} className="text-purple-300" />
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Invitation notification banner */}
+      {myInvite && (
+        <div className="fixed bottom-20 left-3 right-3 z-50 max-w-md mx-auto bg-gradient-to-r from-purple-600 to-purple-800 rounded-2xl p-3 shadow-2xl border border-white/20" dir="rtl">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex-1">
+              <p className="text-white text-sm font-bold">
+                {myInvite.fromName} يدعوك للصعود إلى المايك {myInvite.seatIndex + 1}
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => respondInvite({ inviteId: myInvite._id, accept: true, tokenOverride: deviceId })}
+                className="bg-white text-purple-800 p-2 rounded-full"
+              >
+                <Check size={18} />
+              </button>
+              <button
+                onClick={() => respondInvite({ inviteId: myInvite._id, accept: false, tokenOverride: deviceId })}
+                className="bg-red-500 text-white p-2 rounded-full"
+              >
+                <X size={18} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

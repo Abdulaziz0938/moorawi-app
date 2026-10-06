@@ -51,7 +51,8 @@ export default defineSchema({
     banned: v.optional(v.boolean()),
   })
     .index("by_room_and_user", ["roomId", "userId"])
-    .index("by_user", ["userId"]),
+    .index("by_user", ["userId"])
+    .index("by_room", ["roomId"]),
 
   micSeats: defineTable({
     roomId: v.id("rooms"),
@@ -68,7 +69,17 @@ export default defineSchema({
     text: v.optional(v.string()),
     imageId: v.optional(v.id("_storage")),
     system: v.optional(v.boolean()),
+  }).index("by_room", ["roomId"]),
+
+  micInvites: defineTable({
+    roomId: v.id("rooms"),
+    toUserId: v.id("users"),
+    fromUserId: v.id("users"),
+    fromName: v.string(),
+    seatIndex: v.number(),
+    status: v.union(v.literal("pending"), v.literal("accepted"), v.literal("declined")),
   })
+    .index("by_to_and_status", ["toUserId", "status"])
     .index("by_room", ["roomId"]),
 
   auditLogs: defineTable({
