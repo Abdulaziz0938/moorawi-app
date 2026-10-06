@@ -1,4 +1,5 @@
-import AgoraRTC, {
+import AgoraRTC from "agora-rtc-sdk-ng";
+import type {
   IAgoraRTCClient,
   IAgoraRTCRemoteUser,
   IMicrophoneAudioTrack,
@@ -7,7 +8,6 @@ import AgoraRTC, {
 class AgoraManager {
   client: IAgoraRTCClient | null = null;
   localAudioTrack: IMicrophoneAudioTrack | null = null;
-  onRemoteUserCallback: ((user: IAgoraRTCRemoteUser) => void) | null = null;
 
   async join(
     appId: string,
@@ -18,7 +18,6 @@ class AgoraManager {
     onUserLeft: (user: IAgoraRTCRemoteUser) => void,
   ) {
     await this.leave();
-    this.onRemoteUserCallback = onUserJoined;
 
     this.client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
 
@@ -27,7 +26,6 @@ class AgoraManager {
       try {
         await this.client.subscribe(user, mediaType);
         if (mediaType === "audio") {
-          // CRITICAL: Actually play the remote audio
           user.audioTrack?.play();
         }
         onUserJoined(user);
@@ -40,10 +38,6 @@ class AgoraManager {
       onUserLeft(user);
     });
 
-    this.client.on("user-joined", (user) => {
-      console.log("User joined channel:", user.uid);
-    });
-
     await this.client.join(appId, channel, token, uid);
   }
 
@@ -53,7 +47,6 @@ class AgoraManager {
     try {
       this.localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack();
       await this.client.publish([this.localAudioTrack]);
-      console.log("Microphone published");
     } catch (err) {
       console.error("Publish error:", err);
       throw err;
