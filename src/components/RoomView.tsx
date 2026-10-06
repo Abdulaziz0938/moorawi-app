@@ -15,17 +15,6 @@ import CompactChatInput from "./CompactChatInput";
 
 interface Props { roomId: Id<"rooms">; onLeave: () => void; }
 
-const LAYOUT_ROWS: Record<string, number[]> = {
-  m1: [1],
-  m2: [2],
-  m3: [3],
-  m5: [2, 3],
-  m7: [1, 6],
-  m12b: [6, 6],
-  m18: [6, 6, 6],
-  m24: [6, 6, 6, 6],
-};
-
 function bubbleClass(vip: number): string {
   if (vip <= 0) return "bg-white/5 border border-white/10";
   const g = [
@@ -42,14 +31,6 @@ function bubbleClass(vip: number): string {
 
 export default function RoomView({ roomId, onLeave }: Props) {
   const deviceId = getDeviceId();
-  const [enteredAt] = useState(() => {
-    const key = `entered_${roomId}`;
-    const existing = sessionStorage.getItem(key);
-    if (existing) return Number(existing);
-    const now = Date.now();
-    sessionStorage.setItem(key, String(now));
-    return now;
-  });
   const room = useQuery(api.rooms.get, { roomId });
   const seats = useQuery(api.mics.state, { roomId });
   const members = useQuery(api.rooms.members, { roomId });
@@ -69,6 +50,15 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const genUpload = useMutation(api.messages.generateUploadUrl);
   const getToken = useAction(api.voice.getToken);
 
+  const [enteredAt] = useState(() => {
+    const key = `entered_${roomId}`;
+    const existing = sessionStorage.getItem(key);
+    if (existing) return Number(existing);
+    const now = Date.now();
+    sessionStorage.setItem(key, String(now));
+    return now;
+  });
+
   const [agoraConnected, setAgoraConnected] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -79,24 +69,24 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const [showSettings, setShowSettings] = useState(false);
   const [showGifts, setShowGifts] = useState(false);
   const [showChatInput, setShowChatInput] = useState(false);
-
   const [openSeatMenu, setOpenSeatMenu] = useState<number | null>(null);
   const [inviteSeatIndex, setInviteSeatIndex] = useState<number | null>(null);
-
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
+
+  // Gift queue + combo
   const [activeGift, setActiveGift] = useState<any>(null);
   const [giftTarget, setGiftTarget] = useState<{x: number; y: number} | null>(null);
   const [giftQueue, setGiftQueue] = useState<any[]>([]);
-  const latestGift = useQuery(api.gifts.latestGiftFull, { roomId, since: 0 });
   const [comboCount, setComboCount] = useState(1);
   const [showComboPulse, setShowComboPulse] = useState(false);
   const [isGlobalBanner, setIsGlobalBanner] = useState(false);
   const lastGiftIdRef = useRef<string | null>(null);
   const comboTimeoutRef = useRef<any>(null);
+  const latestGift = useQuery(api.gifts.latestGiftFull, { roomId, since: 0 });
+
   const chatBoxRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-
   const joinedRef = useRef(false);
   const publishedRef = useRef(false);
 
@@ -104,7 +94,6 @@ export default function RoomView({ roomId, onLeave }: Props) {
     if (!room || joinedRef.current) return;
     joinedRef.current = true;
     let cancelled = false;
-
     (async () => {
       try {
         const tokenData = await getToken({ roomId, tokenOverride: deviceId });
@@ -118,14 +107,10 @@ export default function RoomView({ roomId, onLeave }: Props) {
       } catch (e: any) {
         if (cancelled) return;
         const msg = e?.message || "فشل الاتصال";
-        if (msg.includes("OPERATION_ABORTED") || msg.includes("cancel token")) {
-          // ignore benign cancellation
-          return;
-        }
+        if (msg.includes("OPERATION_ABORTED") || msg.includes("cancel token")) return;
         setError(msg);
       }
     })();
-
     return () => {
       cancelled = true;
       agoraManager.leave().catch(() => {});
@@ -154,35 +139,26 @@ export default function RoomView({ roomId, onLeave }: Props) {
     return () => window.removeEventListener("beforeunload", h);
   }, [roomId, deviceId, myInfo, clearMySeats]);
 
-  useEffect(() => {
-
-  // Sound: try to play with sound, fallback to muted
-  useEffect(() => {
-
-
-  // 1) استقبال الهدايا الجديدة → أضفها للطابور أو زد العداد
+  // Gift: combo detection
   useEffect(() => {
     if (!latestGift) return;
     const giftKey = `${latestGift.fromUserId}_${latestGift.giftId}`;
-    // لو نفس المرسل + نفس الهدية + العرض الحالي نفسه → Combo
     if (activeGift && `${activeGift.fromUserId}_${activeGift.giftId}` === giftKey) {
       setComboCount((c) => c + 1);
       setShowComboPulse(true);
       setTimeout(() => setShowComboPulse(false), 350);
-      // أعد ضبط المؤقت
       if (comboTimeoutRef.current) clearTimeout(comboTimeoutRef.current);
       comboTimeoutRef.current = setTimeout(() => finishActiveGift(), 3000);
       lastGiftIdRef.current = latestGift._id;
       return;
     }
-    // غير ذلك → ضع في الطابور
     if (lastGiftIdRef.current !== latestGift._id) {
       lastGiftIdRef.current = latestGift._id;
       setGiftQueue((q) => [...q, latestGift]);
     }
   }, [latestGift]);
 
-  // 2) معالجة الطابور
+  // Gift: queue processor
   useEffect(() => {
     if (activeGift || giftQueue.length === 0) return;
     const next = giftQueue[0];
@@ -190,11 +166,10 @@ export default function RoomView({ roomId, onLeave }: Props) {
     setActiveGift(next);
     setComboCount(next.quantity || 1);
     setIsGlobalBanner(next.isGlobal && next.price >= 30000);
-    // انتهِ تلقائياً بعد مدة
     comboTimeoutRef.current = setTimeout(() => finishActiveGift(), next.hasSound ? 3500 : 3200);
   }, [giftQueue, activeGift]);
 
-  // 3) حساب موضع المايك المستلم
+  // Gift: mic target position
   useEffect(() => {
     if (!activeGift || !seats) { setGiftTarget(null); return; }
     const seat = seats.find((s) => s.userId === activeGift.toUserId);
@@ -234,14 +209,17 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const topMembers = members.slice(0, 3);
   const isOnMicRole = myInfo?.role === "speaker" || myInfo?.role === "owner" || myInfo?.role === "moderator";
   const isOwnerOrMod = myInfo?.role === "owner" || myInfo?.role === "moderator";
-
   const roomAvatar = room.coverUrl || owner?.avatarUrl || null;
 
   const layout = room.micLayout || "m18";
+  const LAYOUT_ROWS: Record<string, number[]> = {
+    m1: [1], m2: [2], m3: [3], m5: [2, 3], m7: [1, 6],
+    m12b: [6, 6], m18: [6, 6, 6], m24: [6, 6, 6, 6],
+  };
   const layoutRows = LAYOUT_ROWS[layout] ?? LAYOUT_ROWS["m18"];
   const maxRowCount = Math.max(...layoutRows);
   const cellWidth = `min(calc((100% - ${(maxRowCount - 1) * 6}px) / ${maxRowCount}), 62px)`;
-  const gridHeight = Math.min(80 + layoutRows.length * 55, 340);
+  const gridHeight = layoutRows.length * 80 + 12;
 
   const handleSeatClick = (seatIndex: number, userId: string | undefined) => {
     if (userId) setOpenSeatMenu(seatIndex);
@@ -249,14 +227,16 @@ export default function RoomView({ roomId, onLeave }: Props) {
   };
 
   const handleToggleMute = () => {
-    const next = !isMuted; setIsMuted(next); agoraManager.muteMicrophone(next);
+    const next = !isMuted;
+    setIsMuted(next);
+    agoraManager.muteMicrophone(next);
   };
 
   const handleLeave = async () => {
-    sessionStorage.removeItem(`entered_${roomId}`);
     try { await clearMySeats({ roomId, tokenOverride: deviceId }); } catch {}
     await agoraManager.leave();
-    publishedRef.current = false; joinedRef.current = false;
+    publishedRef.current = false;
+    joinedRef.current = false;
     onLeave();
   };
 
@@ -287,43 +267,22 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const isMySeat = currentSeatMenuData?.userId === myInfo.userId;
 
   return (
-    <div
-      className="flex flex-col overflow-hidden fixed inset-0 mx-auto"
-      dir="rtl"
-      style={{
-        maxWidth: "28rem",
-        backgroundImage: room.backgroundUrl ? `url(${room.backgroundUrl})` : undefined,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-      }}
-    >
+    <div className="flex flex-col overflow-hidden fixed inset-0 mx-auto" dir="rtl"
+      style={{ maxWidth: "28rem", backgroundImage: room.backgroundUrl ? `url(${room.backgroundUrl})` : undefined, backgroundSize: "cover", backgroundPosition: "center" }}>
       {room.backgroundUrl && <div className="absolute inset-0 bg-black/55 pointer-events-none" />}
 
       <div className="relative z-10 flex flex-col h-full min-h-0">
-        {/* TOP BAR */}
         <header className="flex items-center justify-between gap-1 px-2 py-1.5 flex-shrink-0 bg-black/40 backdrop-blur-md border-b border-white/10">
           <div className="flex items-center gap-1 flex-1 min-w-0">
-            <button onClick={() => setShowBackMenu((v) => !v)} className="p-1.5 rounded-full hover:bg-white/10 flex-shrink-0 text-white">
-              <ArrowRight size={16} />
-            </button>
-
+            <button onClick={() => setShowBackMenu((v) => !v)} className="p-1.5 rounded-full hover:bg-white/10 flex-shrink-0 text-white"><ArrowRight size={16} /></button>
             <div className="flex items-center gap-1.5 bg-white/10 rounded-full pl-2 pr-1 py-0.5 min-w-0 flex-1">
               <div className="w-6 h-6 rounded-full overflow-hidden bg-purple-500 flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0">
-                {roomAvatar ? (
-                  <img src={roomAvatar} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  (room.name?.[0] || "?")
-                )}
+                {roomAvatar ? <img src={roomAvatar} alt="" className="w-full h-full object-cover" /> : (room.name?.[0] || "?")}
               </div>
               <span className="text-[10px] font-bold text-white truncate flex-1">{room.name}</span>
-              {owner && (
-                <span className="text-[9px] font-bold text-white/90 bg-black/40 rounded-full px-1.5 py-0.5 flex-shrink-0" dir="ltr">
-                  ID:{owner.userNumber ?? "—"}
-                </span>
-              )}
+              {owner && <span className="text-[9px] font-bold text-white/90 bg-black/40 rounded-full px-1.5 py-0.5 flex-shrink-0" dir="ltr">ID:{owner.userNumber ?? "—"}</span>}
             </div>
           </div>
-
           <div className="flex items-center gap-0.5 flex-shrink-0">
             <div className="flex -space-x-1.5">
               {topMembers.map((m) => (
@@ -333,9 +292,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
               ))}
             </div>
             <span className="text-[9px] font-bold bg-white/10 text-white px-1.5 py-0.5 rounded-full">{members.length}</span>
-            <button onClick={() => setIsFavorite(!isFavorite)} className="p-1 rounded-full hover:bg-white/10 text-white">
-              <Heart size={14} className={isFavorite ? "fill-red-500 text-red-500" : ""} />
-            </button>
+            <button onClick={() => setIsFavorite(!isFavorite)} className="p-1 rounded-full hover:bg-white/10 text-white"><Heart size={14} className={isFavorite ? "fill-red-500 text-red-500" : ""} /></button>
             <button className="p-1 rounded-full hover:bg-white/10 text-white"><Trophy size={14} /></button>
           </div>
         </header>
@@ -356,7 +313,6 @@ export default function RoomView({ roomId, onLeave }: Props) {
           {error && <p className="text-[8px] text-red-300">{error}</p>}
         </div>
 
-        {/* MIC GRID */}
         <div className="mx-2 flex-shrink-0 relative" style={{ height: `${gridHeight}px` }}>
           <div className="flex flex-col gap-1.5 h-full">
             {layoutRows.map((count, rowIdx) => {
@@ -369,29 +325,13 @@ export default function RoomView({ roomId, onLeave }: Props) {
                     const occupied = !!seat.userId;
                     return (
                       <div key={seat._id} className="flex flex-col items-center justify-start pt-0.5 min-w-0" style={{ width: cellWidth }}>
-                        <div
-                          data-mic-seat={seat.seatIndex}
-                    onClick={() => handleSeatClick(seat.seatIndex, seat.userId)}
-                          className={`relative w-full aspect-square rounded-full flex items-center justify-center text-white transition cursor-pointer overflow-hidden ${
-                            occupied ? "ring-2 ring-purple-300" : seat.locked ? "bg-gray-700 ring-2 ring-gray-500" : "bg-white/5 ring-1 ring-white/20 hover:bg-white/15"
-                          }`}
-                        >
+                        <div data-mic-seat={seat.seatIndex}
+                          onClick={() => handleSeatClick(seat.seatIndex, seat.userId)}
+                          className={`relative w-full aspect-square rounded-full flex-shrink-0 flex items-center justify-center text-white transition cursor-pointer overflow-hidden ${occupied ? "ring-2 ring-purple-300" : seat.locked ? "bg-gray-700 ring-2 ring-gray-500" : "bg-white/5 ring-1 ring-white/20 hover:bg-white/15"}`}>
                           {occupied ? (
-                            seat.avatarUrl ? (
-                              <img src={seat.avatarUrl} alt="" className="w-full h-full object-cover rounded-full" />
-                            ) : (
-                              <span className="text-[10px] font-bold">{(seat.userName ?? "?")[0]}</span>
-                            )
-                          ) : seat.locked ? (
-                            <Lock size={12} className="opacity-70" />
-                          ) : (
-                            <span className="text-[10px] font-bold text-white/60">{seat.seatIndex + 1}</span>
-                          )}
-                          {occupied && seat.muted && (
-                            <div className="absolute bottom-0 left-0 bg-black/80 rounded-full p-0.5">
-                              <MicOff size={8} className="text-white" />
-                            </div>
-                          )}
+                            seat.avatarUrl ? <img src={seat.avatarUrl} alt="" className="w-full h-full object-cover rounded-full" /> : <span className="text-[10px] font-bold">{(seat.userName ?? "?")[0]}</span>
+                          ) : seat.locked ? <Lock size={12} className="opacity-70" /> : <span className="text-[10px] font-bold text-white/60">{seat.seatIndex + 1}</span>}
+                          {occupied && seat.muted && <div className="absolute bottom-0 left-0 bg-black/80 rounded-full p-0.5"><MicOff size={8} className="text-white" /></div>}
                         </div>
                         {occupied && (
                           <>
@@ -409,7 +349,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
 
           {openSeatMenu !== null && currentSeatMenuData && (
             <>
-              <div className="fixed inset-0 z-40" />
+              <div className="fixed inset-0 z-40" onClick={() => setOpenSeatMenu(null)} />
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-gray-900 rounded-xl shadow-2xl border border-white/20 py-1.5 w-52">
                 <p className="text-white/60 text-[10px] px-3 py-1">المايك رقم {currentSeatMenuData.seatIndex + 1}</p>
                 {isMySeat ? (
@@ -448,7 +388,6 @@ export default function RoomView({ roomId, onLeave }: Props) {
           )}
         </div>
 
-        {/* CHAT */}
         <div ref={chatBoxRef} className="thin-scroll flex-1 min-h-0 overflow-y-auto px-2 py-2 mx-2 mt-1 bg-black/30 backdrop-blur rounded-2xl">
           {messages === undefined ? (
             <div className="flex justify-center py-6"><Loader2 className="animate-spin text-white/40" size={18} /></div>
@@ -456,7 +395,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
             <p className="text-white/40 text-xs text-center py-6">{room.welcomeMessage || "لا توجد رسائل بعد"}</p>
           ) : (
             <div className="space-y-2">
-              {messages.filter((m) => (m.createdAt ?? 0) >= enteredAt || m.system).map((m) => (
+              {messages.filter((m: any) => (m.createdAt ?? 0) >= enteredAt || m.system).map((m: any) => (
                 <div key={m._id} className="flex gap-2 items-start">
                   <div className="w-6 h-6 rounded-full overflow-hidden bg-purple-500 flex items-center justify-center text-[9px] font-bold text-white flex-shrink-0">
                     {m.avatarUrl ? <img src={m.avatarUrl} alt="" className="w-full h-full object-cover" /> : (m.senderName?.[0] || "?")}
@@ -486,11 +425,8 @@ export default function RoomView({ roomId, onLeave }: Props) {
           </div>
         )}
 
-        {/* BOTTOM BAR */}
         <footer className="border-t border-white/10 px-2 py-1.5 flex items-center justify-around flex-shrink-0 backdrop-blur-md bg-black/40">
-          <button onClick={() => setShowChatInput((v) => !v)} className={`p-2 rounded-full text-white ${showChatInput ? "bg-purple-600" : "hover:bg-white/10"}`}>
-            <MessageCircle size={20} />
-          </button>
+          <button onClick={() => setShowChatInput((v) => !v)} className={`p-2 rounded-full text-white ${showChatInput ? "bg-purple-600" : "hover:bg-white/10"}`}><MessageCircle size={20} /></button>
           <button onClick={handleToggleMute} disabled={!isOnMicRole} className={`p-2 rounded-full transition ${isMuted ? "bg-yellow-600" : "hover:bg-white/10"} text-white disabled:opacity-30`}>
             {isMuted ? <MicOff size={20} /> : <Mic size={20} />}
           </button>
@@ -498,6 +434,78 @@ export default function RoomView({ roomId, onLeave }: Props) {
           <button onClick={() => setShowGifts(true)} className="p-2 rounded-full hover:bg-white/10 text-white"><Gift size={20} /></button>
         </footer>
       </div>
+
+      {activeGift && (
+        <>
+          <div key={activeGift._id} className="fixed z-[68] pointer-events-none gift-anim"
+            style={{
+              left: "50%", top: "50%",
+              ["--target-x" as any]: giftTarget ? `${giftTarget.x}px` : "0px",
+              ["--target-y" as any]: giftTarget ? `${giftTarget.y}px` : "0px",
+            }}>
+            {activeGift.mediaType === "video" && activeGift.mediaUrl ? (
+              <video ref={videoRef} src={activeGift.mediaUrl} autoPlay preload="auto" playsInline
+                onCanPlayThrough={() => {
+                  if (videoRef.current) {
+                    videoRef.current.volume = 1;
+                    videoRef.current.muted = false;
+                    videoRef.current.play().catch(() => { if (videoRef.current) videoRef.current.muted = true; });
+                  }
+                }}
+                onEnded={finishActiveGift}
+                className={activeGift.hasSound ? "max-w-[70vw] max-h-[60vh] object-contain" : "max-w-[40vw] max-h-[40vh] object-contain"}
+              />
+            ) : activeGift.mediaUrl ? (
+              <img src={activeGift.mediaUrl} alt="" className={activeGift.hasSound ? "max-w-[70vw] max-h-[60vh] object-contain" : "max-w-[40vw] max-h-[40vh] object-contain"} />
+            ) : null}
+          </div>
+
+          {(activeGift.hasSound || isGlobalBanner) && (
+            <div className="fixed top-3 left-0 right-0 z-[70] flex justify-center pointer-events-none">
+              <div className={`max-w-[320px] w-[calc(100%-24px)] backdrop-blur-xl rounded-full px-3 py-1.5 border shadow-2xl flex items-center gap-1.5 ${isGlobalBanner ? "bg-gradient-to-r from-yellow-500/30 via-amber-400/30 to-yellow-500/30 border-yellow-300/60" : "bg-white/10 border-white/25"}`}>
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <div className="w-7 h-7 rounded-full overflow-hidden bg-purple-500/70 ring-1 ring-white/40">
+                    {activeGift.fromAvatar ? <img src={activeGift.fromAvatar} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-white text-[10px] font-bold">{activeGift.fromName?.[0] || "?"}</div>}
+                  </div>
+                  <span className="text-white text-[10px] font-bold max-w-[48px] truncate">{activeGift.fromName}</span>
+                </div>
+                <span className="text-pink-300 text-sm font-black flex-shrink-0">⟶</span>
+                <div className="flex-1 flex flex-col items-center justify-center min-w-0">
+                  <span className="text-white text-[9px] font-black truncate max-w-full">{activeGift.giftName}</span>
+                  <span className={`text-yellow-300 text-[11px] font-black ${showComboPulse ? "combo-pulse" : ""}`}>×{comboCount}</span>
+                </div>
+                <span className="text-pink-300 text-sm font-black flex-shrink-0">⟵</span>
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <span className="text-white text-[10px] font-bold max-w-[48px] truncate">{activeGift.toName}</span>
+                  <div className="w-7 h-7 rounded-full overflow-hidden bg-purple-500/70 ring-1 ring-white/40">
+                    {activeGift.toAvatar ? <img src={activeGift.toAvatar} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-white text-[10px] font-bold">{activeGift.toName?.[0] || "?"}</div>}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!activeGift.hasSound && !isGlobalBanner && (
+            <div className="fixed left-0 right-0 z-[70] pointer-events-none flex justify-center" style={{ bottom: "48vh" }}>
+              <div className="max-w-[240px] bg-white/10 backdrop-blur-xl rounded-full px-3 py-1.5 border border-white/25 shadow-2xl flex items-center gap-2">
+                <span className={`text-yellow-300 text-[11px] font-black flex-shrink-0 ${showComboPulse ? "combo-pulse" : ""}`}>×{comboCount}</span>
+                <div className="w-6 h-6 flex items-center justify-center flex-shrink-0">
+                  {activeGift.mediaUrl ? (
+                    activeGift.mediaType === "video" ? <video src={activeGift.mediaUrl} className="w-full h-full object-contain pointer-events-none" muted playsInline /> : <img src={activeGift.mediaUrl} alt="" className="w-full h-full object-contain" />
+                  ) : <span className="text-base">🎁</span>}
+                </div>
+                <div className="flex flex-col items-end min-w-0">
+                  <span className="text-white text-[10px] font-bold truncate max-w-[90px]">{activeGift.fromName}</span>
+                  <span className="text-white/70 text-[8px] truncate max-w-[90px]">إلى {activeGift.toName}</span>
+                </div>
+                <div className="w-6 h-6 rounded-full overflow-hidden bg-purple-500/70 ring-1 ring-white/40 flex-shrink-0">
+                  {activeGift.fromAvatar ? <img src={activeGift.fromAvatar} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-white text-[9px] font-bold">{activeGift.fromName?.[0] || "?"}</div>}
+                </div>
+              </div>
+            </div>
+          )}
+        </>
+      )}
 
       {inviteSeatIndex !== null && listeners && (
         <>
@@ -508,9 +516,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
               <button onClick={() => setInviteSeatIndex(null)} className="text-white/70"><X size={20} /></button>
             </div>
             <div className="flex-1 overflow-y-auto p-3 space-y-2">
-              {listeners.length === 0 ? (
-                <p className="text-white/40 text-center py-8 text-sm">لا يوجد مستمعون</p>
-              ) : listeners.map((l) => (
+              {listeners.length === 0 ? <p className="text-white/40 text-center py-8 text-sm">لا يوجد مستمعون</p> : listeners.map((l) => (
                 <button key={l._id} onClick={() => { inviteToSeat({ roomId, toUserId: l.userId, seatIndex: inviteSeatIndex, tokenOverride: deviceId }); setInviteSeatIndex(null); }} className="w-full flex items-center gap-3 p-2 bg-white/5 hover:bg-white/10 rounded-xl transition">
                   <div className="w-10 h-10 rounded-full overflow-hidden bg-purple-500 flex items-center justify-center text-sm font-bold text-white">
                     {l.avatarUrl ? <img src={l.avatarUrl} alt="" className="w-full h-full object-cover" /> : (l.name?.[0] || "?")}
@@ -539,143 +545,12 @@ export default function RoomView({ roomId, onLeave }: Props) {
         </div>
       )}
 
-      {showGifts && (
-        <GiftSheet roomId={roomId} onClose={() => setShowGifts(false)} />
-      )}
-
-      {/* ==================== GIFT LAYER (Layer 3 & 4 & 5) ==================== */}
-      {activeGift && (
-        <>
-          {/* L3: Flying gift (image/video) — animated */}
-          <div
-            key={activeGift._id}
-            className="fixed z-[68] pointer-events-none gift-anim"
-            style={{
-              left: "50%",
-              top: "50%",
-              ["--target-x" as any]: giftTarget ? `${giftTarget.x}px` : "0px",
-              ["--target-y" as any]: giftTarget ? `${giftTarget.y}px` : "0px",
-            }}
-          >
-            {activeGift.mediaType === "video" && activeGift.mediaUrl ? (
-              <video
-                ref={videoRef}
-                src={activeGift.mediaUrl}
-                autoPlay
-                preload="auto"
-                playsInline
-                onCanPlayThrough={() => {
-                  if (videoRef.current) {
-                    videoRef.current.volume = 1;
-                    videoRef.current.muted = false;
-                    videoRef.current.play().catch(() => {
-                      if (videoRef.current) videoRef.current.muted = true;
-                    });
-                  }
-                }}
-                onEnded={finishActiveGift}
-                className={activeGift.hasSound ? "max-w-[70vw] max-h-[60vh] object-contain" : "max-w-[40vw] max-h-[40vh] object-contain"}
-              />
-            ) : activeGift.mediaUrl ? (
-              <img
-                src={activeGift.mediaUrl}
-                alt=""
-                className={activeGift.hasSound ? "max-w-[70vw] max-h-[60vh] object-contain" : "max-w-[40vw] max-h-[40vh] object-contain"}
-              />
-            ) : null}
-          </div>
-
-          {/* L5: Top glass banner — sound or global */}
-          {(activeGift.hasSound || isGlobalBanner) && (
-            <div className="fixed top-3 left-0 right-0 z-[70] flex justify-center pointer-events-none">
-              <div className={`max-w-[320px] w-[calc(100%-24px)] backdrop-blur-xl rounded-full px-3 py-1.5 border shadow-2xl flex items-center gap-1.5 ${
-                isGlobalBanner
-                  ? "bg-gradient-to-r from-yellow-500/30 via-amber-400/30 to-yellow-500/30 border-yellow-300/60"
-                  : "bg-white/10 border-white/25"
-              }`}>
-                <div className="flex items-center gap-1 flex-shrink-0">
-                  <div className="w-7 h-7 rounded-full overflow-hidden bg-purple-500/70 ring-1 ring-white/40">
-                    {activeGift.fromAvatar ? (
-                      <img src={activeGift.fromAvatar} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-white text-[10px] font-bold">
-                        {activeGift.fromName?.[0] || "?"}
-                      </div>
-                    )}
-                  </div>
-                  <span className="text-white text-[10px] font-bold max-w-[48px] truncate">{activeGift.fromName}</span>
-                </div>
-                <span className="text-pink-300 text-sm font-black flex-shrink-0">⟶</span>
-                <div className="flex-1 flex flex-col items-center justify-center min-w-0">
-                  <span className="text-white text-[9px] font-black truncate max-w-full">{activeGift.giftName}</span>
-                  <span className={`text-yellow-300 text-[11px] font-black ${showComboPulse ? "combo-pulse" : ""}`}>
-                    ×{comboCount}
-                  </span>
-                </div>
-                <span className="text-pink-300 text-sm font-black flex-shrink-0">⟵</span>
-                <div className="flex items-center gap-1 flex-shrink-0">
-                  <span className="text-white text-[10px] font-bold max-w-[48px] truncate">{activeGift.toName}</span>
-                  <div className="w-7 h-7 rounded-full overflow-hidden bg-purple-500/70 ring-1 ring-white/40">
-                    {activeGift.toAvatar ? (
-                      <img src={activeGift.toAvatar} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-white text-[10px] font-bold">
-                        {activeGift.toName?.[0] || "?"}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* L2: Bottom glass pill — no-sound gifts */}
-          {!activeGift.hasSound && !isGlobalBanner && (
-            <div className="fixed left-0 right-0 z-[70] pointer-events-none flex justify-center" style={{ bottom: "48vh" }}>
-              <div className="max-w-[240px] bg-white/10 backdrop-blur-xl rounded-full px-3 py-1.5 border border-white/25 shadow-2xl flex items-center gap-2">
-                <span className={`text-yellow-300 text-[11px] font-black flex-shrink-0 ${showComboPulse ? "combo-pulse" : ""}`}>
-                  ×{comboCount}
-                </span>
-                <div className="w-6 h-6 flex items-center justify-center flex-shrink-0">
-                  {activeGift.mediaUrl ? (
-                    activeGift.mediaType === "video" ? (
-                      <video src={activeGift.mediaUrl} className="w-full h-full object-contain pointer-events-none" muted playsInline />
-                    ) : (
-                      <img src={activeGift.mediaUrl} alt="" className="w-full h-full object-contain" />
-                    )
-                  ) : (
-                    <span className="text-base">🎁</span>
-                  )}
-                </div>
-                <div className="flex flex-col items-end min-w-0">
-                  <span className="text-white text-[10px] font-bold truncate max-w-[90px]">{activeGift.fromName}</span>
-                  <span className="text-white/70 text-[8px] truncate max-w-[90px]">إلى {activeGift.toName}</span>
-                </div>
-                <div className="w-6 h-6 rounded-full overflow-hidden bg-purple-500/70 ring-1 ring-white/40 flex-shrink-0">
-                  {activeGift.fromAvatar ? (
-                    <img src={activeGift.fromAvatar} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-white text-[9px] font-bold">
-                      {activeGift.fromName?.[0] || "?"}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-        </>
-      )}
+      {showGifts && <GiftSheet roomId={roomId} onClose={() => setShowGifts(false)} />}
 
       {showSettings && (
-        <SettingsSheet
-          roomId={roomId}
-          currentLayout={layout}
-          isOwnerOrMod={isOwnerOrMod}
-          currentName={room.name}
-          currentWelcome={room.welcomeMessage ?? ""}
-          currentCoverUrl={room.coverUrl ?? null}
-          onClose={() => setShowSettings(false)}
-        />
+        <SettingsSheet roomId={roomId} currentLayout={layout} isOwnerOrMod={isOwnerOrMod}
+          currentName={room.name} currentWelcome={room.welcomeMessage ?? ""} currentCoverUrl={room.coverUrl ?? null}
+          onClose={() => setShowSettings(false)} />
       )}
     </div>
   );
