@@ -18,3 +18,16 @@ html, body {
 .thin-scroll::-webkit-scrollbar { width: 4px; }
 .thin-scroll::-webkit-scrollbar-track { background: transparent; }
 .thin-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+
+/* Animated gradient background for the app */
+.app-bg {
+  background: linear-gradient(-45deg, #1a0b3d, #2d1b69, #4c1d95, #701a75, #831843);
+  background-size: 400% 400%;
+  animation: gradientShift 20s ease infinite;
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}

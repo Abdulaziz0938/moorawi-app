@@ -216,3 +216,40 @@ export const latestGift = query({
     };
   },
 });
+
+// Latest gift in room WITH avatars for the banner
+export const latestGiftFull = query({
+  args: { roomId: v.id("rooms"), since: v.number() },
+  handler: async (ctx, args) => {
+    const txs = await ctx.db
+      .query("giftTransactions")
+      .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
+      .order("desc")
+      .take(5);
+    const recent = txs.find((t) => t._creationTime > args.since);
+    if (!recent) return null;
+    const gift = await ctx.db.get("gifts", recent.giftId);
+    if (!gift) return null;
+    const [fromUser, toUser] = await Promise.all([
+      ctx.db.get("users", recent.fromUserId),
+      ctx.db.get("users", recent.toUserId),
+    ]);
+    const [mediaUrl, fromAvatar, toAvatar] = await Promise.all([
+      ctx.storage.getUrl(gift.mediaId),
+      fromUser?.avatarId ? ctx.storage.getUrl(fromUser.avatarId) : Promise.resolve(null),
+      toUser?.avatarId ? ctx.storage.getUrl(toUser.avatarId) : Promise.resolve(null),
+    ]);
+    return {
+      _id: recent._id,
+      fromName: recent.fromName,
+      toName: recent.toName,
+      fromAvatar,
+      toAvatar,
+      giftName: recent.giftName,
+      quantity: recent.quantity,
+      mediaUrl,
+      mediaType: gift.mediaType,
+      createdAt: recent._creationTime,
+    };
+  },
+});

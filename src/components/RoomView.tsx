@@ -44,6 +44,14 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const deviceId = getDeviceId();
   const [lastGiftSeen, setLastGiftSeen] = useState(() => Date.now());
   const [activeGift, setActiveGift] = useState<any>(null);
+  const [enteredAt] = useState(() => {
+    const key = `entered_${roomId}`;
+    const existing = sessionStorage.getItem(key);
+    if (existing) return Number(existing);
+    const now = Date.now();
+    sessionStorage.setItem(key, String(now));
+    return now;
+  });
   const room = useQuery(api.rooms.get, { roomId });
   const seats = useQuery(api.mics.state, { roomId });
   const members = useQuery(api.rooms.members, { roomId });
@@ -51,7 +59,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const messages = useQuery(api.messages.list, { roomId });
   const listeners = useQuery(api.mics.listeners, { roomId });
   const myInvite = useQuery(api.mics.myInvite, { roomId, tokenOverride: deviceId });
-  const latestGift = useQuery(api.gifts.latestGift, { roomId, since: lastGiftSeen });
+  const latestGift = useQuery(api.gifts.latestGiftFull, { roomId, since: lastGiftSeen });
 
   const takeSeat = useMutation(api.mics.takeSeat);
   const leaveSeat = useMutation(api.mics.leaveSeat);
@@ -162,6 +170,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
   };
 
   const handleLeave = async () => {
+    sessionStorage.removeItem(`entered_${roomId}`);
     try { await clearMySeats({ roomId, tokenOverride: deviceId }); } catch {}
     await agoraManager.leave();
     publishedRef.current = false; joinedRef.current = false;
@@ -363,7 +372,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
             <p className="text-white/40 text-xs text-center py-6">{room.welcomeMessage || "لا توجد رسائل بعد"}</p>
           ) : (
             <div className="space-y-2">
-              {messages.map((m) => (
+              {messages.filter((m) => (m.createdAt ?? 0) >= enteredAt || m.system).map((m) => (
                 <div key={m._id} className="flex gap-2 items-start">
                   <div className="w-6 h-6 rounded-full overflow-hidden bg-purple-500 flex items-center justify-center text-[9px] font-bold text-white flex-shrink-0">
                     {m.avatarUrl ? <img src={m.avatarUrl} alt="" className="w-full h-full object-cover" /> : (m.senderName?.[0] || "?")}
@@ -450,35 +459,85 @@ export default function RoomView({ roomId, onLeave }: Props) {
         <GiftSheet roomId={roomId} onClose={() => setShowGifts(false)} />
       )}
 
-      {/* Gift Animation Overlay */}
+      {/* Gift Animation Overlay — Full Screen */}
       {activeGift && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center pointer-events-none" dir="rtl">
-          <div className="absolute inset-0 bg-black/30" />
-          <div className="relative flex flex-col items-center">
+        <div className="fixed inset-0 z-[60] flex flex-col pointer-events-none" dir="rtl">
+          {/* Dark backdrop */}
+          <div className="absolute inset-0 bg-black/80" />
+
+          {/* TOP BANNER */}
+          <div className="relative z-10 mx-3 mt-3 bg-gradient-to-r from-pink-600/90 via-purple-600/90 to-pink-600/90 rounded-2xl p-2 flex items-center gap-2 shadow-2xl border border-white/20 backdrop-blur">
+            {/* Sender */}
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <div className="w-9 h-9 rounded-full overflow-hidden bg-purple-500 ring-2 ring-white/40">
+                {activeGift.fromAvatar ? (
+                  <img src={activeGift.fromAvatar} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-white text-xs font-bold">
+                    {activeGift.fromName?.[0] || "?"}
+                  </div>
+                )}
+              </div>
+              <span className="text-white text-[11px] font-bold max-w-[70px] truncate">{activeGift.fromName}</span>
+            </div>
+
+            {/* Arrow */}
+            <span className="text-white/80 text-lg flex-shrink-0">←</span>
+
+            {/* Gift icon + name + quantity */}
+            <div className="flex-1 flex items-center justify-center gap-1.5 min-w-0">
+              <div className="w-9 h-9 rounded-lg overflow-hidden bg-black/30 flex items-center justify-center flex-shrink-0">
+                {activeGift.mediaType === "video" && activeGift.mediaUrl ? (
+                  <video src={activeGift.mediaUrl} className="w-full h-full object-cover" muted loop autoPlay playsInline />
+                ) : activeGift.mediaUrl ? (
+                  <img src={activeGift.mediaUrl} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <span>🎁</span>
+                )}
+              </div>
+              <div className="flex flex-col items-center min-w-0">
+                <span className="text-white text-[10px] font-bold truncate max-w-[80px]">{activeGift.giftName}</span>
+                <span className="text-yellow-300 text-[10px] font-bold">×{activeGift.quantity}</span>
+              </div>
+            </div>
+
+            {/* Arrow */}
+            <span className="text-white/80 text-lg flex-shrink-0">→</span>
+
+            {/* Receiver */}
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <span className="text-white text-[11px] font-bold max-w-[70px] truncate">{activeGift.toName}</span>
+              <div className="w-9 h-9 rounded-full overflow-hidden bg-purple-500 ring-2 ring-white/40">
+                {activeGift.toAvatar ? (
+                  <img src={activeGift.toAvatar} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-white text-xs font-bold">
+                    {activeGift.toName?.[0] || "?"}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* FULL-SCREEN MEDIA (video/image) */}
+          <div className="flex-1 flex items-center justify-center p-3">
             {activeGift.mediaType === "video" && activeGift.mediaUrl ? (
               <video
                 key={activeGift._id}
                 src={activeGift.mediaUrl}
                 autoPlay
                 muted
+                loop
                 playsInline
-                className="max-w-[70vw] max-h-[50vh] drop-shadow-2xl"
+                className="w-full h-full max-w-[95vw] max-h-[70vh] object-contain"
               />
             ) : activeGift.mediaUrl ? (
               <img
                 src={activeGift.mediaUrl}
                 alt=""
-                className="max-w-[70vw] max-h-[50vh] drop-shadow-2xl"
+                className="w-full h-full max-w-[95vw] max-h-[70vh] object-contain"
               />
             ) : null}
-            <div className="mt-3 bg-black/70 px-4 py-2 rounded-full text-white text-sm font-bold flex items-center gap-2">
-              <span>{activeGift.fromName}</span>
-              <span className="text-purple-300">أرسل</span>
-              <span className="text-pink-300">{activeGift.giftName}</span>
-              <span className="text-yellow-300">×{activeGift.quantity}</span>
-              <span className="text-purple-300">إلى</span>
-              <span>{activeGift.toName}</span>
-            </div>
           </div>
         </div>
       )}

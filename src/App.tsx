@@ -16,7 +16,7 @@ function App() {
 
   if (me === undefined) {
     return (
-      <div className="h-[100dvh] w-full flex items-center justify-center bg-gradient-to-br from-purple-700 via-purple-800 to-purple-900 overflow-hidden">
+      <div className="h-[100dvh] w-full flex items-center justify-center app-bg overflow-hidden">
         <Loader2 className="animate-spin text-white" size={48} />
       </div>
     );
@@ -24,14 +24,14 @@ function App() {
 
   if (me && !me.profileComplete) {
     return (
-      <div className="h-[100dvh] w-full overflow-y-auto bg-gradient-to-br from-purple-700 via-purple-800 to-purple-900" dir="rtl">
+      <div className="h-[100dvh] w-full overflow-y-auto app-bg" dir="rtl">
         <Onboarding onComplete={() => setRefreshKey((k) => k + 1)} />
       </div>
     );
   }
 
   return (
-    <div key={refreshKey} className="h-[100dvh] w-full overflow-hidden bg-gradient-to-br from-purple-700 via-purple-800 to-purple-900" dir="rtl">
+    <div key={refreshKey} className="h-[100dvh] w-full overflow-hidden app-bg" dir="rtl">
       {currentRoomId ? (
         <RoomView roomId={currentRoomId} onLeave={() => setCurrentRoomId(null)} />
       ) : (

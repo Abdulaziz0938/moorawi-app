@@ -34,6 +34,7 @@ export default function GiftSheet({ roomId, onClose }: Props) {
   const [quantity, setQuantity] = useState(1);
   const [sending, setSending] = useState(false);
   const [showQtyMenu, setShowQtyMenu] = useState(false);
+  const [showRecharge, setShowRecharge] = useState(false);
 
   // Enrich members with avatar
   const membersList = (members ?? []).map((m) => {
@@ -71,10 +72,14 @@ export default function GiftSheet({ roomId, onClose }: Props) {
         <div className="flex items-center justify-between px-4 py-2 border-b border-white/10">
           <h2 className="text-white font-bold text-sm">الهدايا</h2>
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1 bg-yellow-500/20 px-2 py-0.5 rounded-full">
+            <button
+              onClick={() => setShowRecharge(true)}
+              className="flex items-center gap-1 bg-yellow-500/20 hover:bg-yellow-500/30 px-2.5 py-1 rounded-full transition"
+            >
               <Coins size={12} className="text-yellow-400" />
               <span className="text-yellow-300 text-xs font-bold">{balance ?? 0}</span>
-            </div>
+              <span className="text-yellow-300 text-[10px] font-bold">+</span>
+            </button>
             <button onClick={onClose} className="text-white/70 hover:text-white"><X size={18} /></button>
           </div>
         </div>
@@ -194,6 +199,34 @@ export default function GiftSheet({ roomId, onClose }: Props) {
           </button>
         </div>
       </div>
+
+      {showRecharge && (
+        <div className="absolute inset-0 bg-black/70 flex items-center justify-center p-4" onClick={() => setShowRecharge(false)}>
+          <div className="bg-gray-900 rounded-2xl p-6 max-w-sm w-full border border-white/20" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-white font-bold text-lg mb-3 text-center">شحن الرصيد</h3>
+            <p className="text-white/60 text-sm text-center mb-4">اختر باقة الشحن</p>
+            <div className="grid grid-cols-3 gap-2 mb-4">
+              {[1000, 5000, 10000, 25000, 50000, 100000].map((amt) => (
+                <button
+                  key={amt}
+                  onClick={() => alert(`سيتم شحن ${amt} عملة قريباً`)}
+                  className="bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-500/40 rounded-xl p-3 flex flex-col items-center gap-1"
+                >
+                  <Coins size={18} className="text-yellow-400" />
+                  <span className="text-yellow-300 text-xs font-bold">{amt}</span>
+                </button>
+              ))}
+            </div>
+            <p className="text-white/40 text-[10px] text-center">قريباً: الدفع عبر Google Play / Apple Pay</p>
+            <button
+              onClick={() => setShowRecharge(false)}
+              className="w-full mt-4 bg-white/10 py-2 rounded-xl text-white text-sm font-bold"
+            >
+              إغلاق
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
