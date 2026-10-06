@@ -4,6 +4,7 @@ import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { getDeviceId } from "../lib/device";
+import { uploadToCloudinary } from "../lib/cloudinary";
 import {
   X, Sparkles, Palette, LayoutGrid, Settings, Lock,
   Briefcase, Activity, Music, Coins, MessageCircle,
@@ -57,8 +58,7 @@ export default function SettingsSheet({
   const updateLayout = useMutation(api.rooms.updateLayout);
   const updateRoomInfo = useMutation(api.rooms.updateRoomInfo);
   const updateBackground = useMutation(api.rooms.updateRoomBackground);
-  const genUpload = useMutation(api.rooms.generateRoomUploadUrl);
-
+  
   const [tab, setTab] = useState<Tab>("main");
   const [name, setName] = useState(currentName);
   const [welcome, setWelcome] = useState(currentWelcome);
@@ -76,11 +76,9 @@ export default function SettingsSheet({
   const handleCoverUpload = async (file: File) => {
     setUploading(true);
     try {
-      const url = await genUpload({ tokenOverride: deviceId });
-      const res = await fetch(url, { method: "POST", headers: { "Content-Type": file.type }, body: file });
-      const { storageId } = await res.json();
-      await updateRoomInfo({ roomId, coverImageId: storageId, tokenOverride: deviceId });
-      setCoverUrl(URL.createObjectURL(file));
+      const result = await uploadToCloudinary(file, "image");
+      await updateRoomInfo({ roomId, coverUrl: result.url, tokenOverride: deviceId });
+      setCoverUrl(result.url);
     } catch (e: any) { alert(e?.message || "فشل"); }
     finally { setUploading(false); }
   };
@@ -88,10 +86,8 @@ export default function SettingsSheet({
   const handleBackgroundUpload = async (file: File) => {
     setUploading(true);
     try {
-      const url = await genUpload({ tokenOverride: deviceId });
-      const res = await fetch(url, { method: "POST", headers: { "Content-Type": file.type }, body: file });
-      const { storageId } = await res.json();
-      await updateBackground({ roomId, backgroundImageId: storageId, tokenOverride: deviceId });
+      const result = await uploadToCloudinary(file, "image");
+      await updateBackground({ roomId, backgroundUrl: result.url, tokenOverride: deviceId });
       alert("تم تغيير الخلفية");
     } catch (e: any) { alert(e?.message || "فشل"); }
     finally { setUploading(false); }
@@ -266,7 +262,6 @@ export default function SettingsSheet({
 function GiftsAdmin() {
   const deviceId = getDeviceId();
   const gifts = useQuery(api.gifts.listAllAdmin, { tokenOverride: deviceId });
-  const genUpload = useMutation(api.gifts.generateGiftUploadUrl);
   const createGift = useMutation(api.gifts.createGift);
   const removeGift = useMutation(api.gifts.removeGift);
 
@@ -285,21 +280,15 @@ function GiftsAdmin() {
     }
     setUploading(true);
     try {
-      // 1) Upload media
-      const mediaUploadUrl = await genUpload({ tokenOverride: deviceId });
-      const mediaRes = await fetch(mediaUploadUrl, {
-        method: "POST",
-        headers: { "Content-Type": mediaFile.type },
-        body: mediaFile,
-      });
-      const { storageId: mediaId } = await mediaRes.json();
+      // 1) Upload to Cloudinary
       const mediaType: "image" | "video" = mediaFile.type.startsWith("video") ? "video" : "image";
+      const result = await uploadToCloudinary(mediaFile, mediaType === "video" ? "video" : "image");
 
       await createGift({
         name: name.trim(),
         price,
         category,
-        mediaId,
+        mediaUrl: result.url,
         mediaType,
         forceGlobal,
         tokenOverride: deviceId,

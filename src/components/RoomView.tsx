@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { agoraManager } from "../lib/agora";
 import { getDeviceId } from "../lib/device";
+import { uploadToCloudinary } from "../lib/cloudinary";
 import SettingsSheet from "./SettingsSheet";
 import GiftSheet from "./GiftSheet";
 import CompactChatInput from "./CompactChatInput";
@@ -47,8 +48,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const inviteToSeat = useMutation(api.mics.inviteToSeat);
   const respondInvite = useMutation(api.mics.respondInvite);
   const sendMsg = useMutation(api.messages.send);
-  const genUpload = useMutation(api.messages.generateUploadUrl);
-  const getToken = useAction(api.voice.getToken);
+    const getToken = useAction(api.voice.getToken);
 
   const [enteredAt] = useState(() => {
     const key = `entered_${roomId}`;
@@ -292,10 +292,8 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const handleImageUpload = async (file: File) => {
     setUploading(true);
     try {
-      const url = await genUpload({ tokenOverride: deviceId });
-      const res = await fetch(url, { method: "POST", headers: { "Content-Type": file.type }, body: file });
-      const { storageId } = await res.json();
-      await sendMsg({ roomId, imageId: storageId, tokenOverride: deviceId });
+      const result = await uploadToCloudinary(file, "image");
+      await sendMsg({ roomId, imageUrl: result.url, tokenOverride: deviceId });
     } catch (e: any) { alert(e?.message || "فشل رفع الصورة"); }
     finally { setUploading(false); }
   };

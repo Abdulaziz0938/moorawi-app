@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { getDeviceId } from "../lib/device";
+import { uploadToCloudinary } from "../lib/cloudinary";
 import { Camera, Check, Loader2, ChevronLeft } from "lucide-react";
 
 interface Props {
@@ -13,8 +14,7 @@ type Gender = "male" | "female" | "other";
 export default function Onboarding({ onComplete }: Props) {
   const deviceId = getDeviceId();
   const options = useQuery(api.profiles.getOptions);
-  const generateUploadUrl = useMutation(api.profiles.generateAvatarUploadUrl);
-  const saveAvatar = useMutation(api.profiles.saveAvatar);
+    const saveAvatar = useMutation(api.profiles.saveAvatar);
   const completeProfile = useMutation(api.profiles.completeProfile);
 
   const [step, setStep] = useState(1);
@@ -41,14 +41,8 @@ export default function Onboarding({ onComplete }: Props) {
     setLoading(true);
     setError(null);
     try {
-      const uploadUrl = await generateUploadUrl({ tokenOverride: deviceId });
-      const res = await fetch(uploadUrl, {
-        method: "POST",
-        headers: { "Content-Type": file.type },
-        body: file,
-      });
-      const { storageId } = await res.json();
-      const url = await saveAvatar({ storageId, tokenOverride: deviceId });
+      const result = await uploadToCloudinary(file, "image");
+      const url = await saveAvatar({ avatarUrl: result.url, tokenOverride: deviceId });
       setAvatarPreview(url);
     } catch (e: any) {
       setError(e?.message || "فشل رفع الصورة");
