@@ -27,13 +27,13 @@ export const list = query({
 // (تم حذف generateUploadUrl — نستخدم Cloudinary)
 
 export const send = mutation({
-  args: { roomId: v.id("rooms"), text: v.optional(v.string()), imageId: v.optional(v.id("_storage")), tokenOverride: v.optional(v.string()) },
+  args: { roomId: v.id("rooms"), text: v.optional(v.string()), imageUrl: v.optional(v.string()), tokenOverride: v.optional(v.string()) },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx, args.tokenOverride);
     const text = args.text?.trim() ?? "";
-    if (!text && !args.imageId) throw new ConvexError({ code: "BAD_REQUEST", message: "الرسالة فارغة" });
+    if (!text && !args.imageUrl) throw new ConvexError({ code: "BAD_REQUEST", message: "الرسالة فارغة" });
     if (text.length > MAX_LEN) throw new ConvexError({ code: "BAD_REQUEST", message: "الرسالة طويلة" });
-    await ctx.db.insert("messages", { roomId: args.roomId, senderId: user._id, senderName: user.name ?? "ضيف", text: text || undefined, imageId: args.imageId, system: false });
+    await ctx.db.insert("messages", { roomId: args.roomId, senderId: user._id, senderName: user.name ?? "ضيف", text: text || undefined, imageUrl: args.imageUrl, system: false });
     return null;
   },
 });

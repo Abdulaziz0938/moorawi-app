@@ -2,14 +2,7 @@ import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { requireUser } from "./lib/auth";
 
-// ============ ADMIN: Upload URLs ============
-export const generateGiftUploadUrl = mutation({
-  args: { tokenOverride: v.optional(v.string()) },
-  handler: async (ctx, args) => {
-    await requireUser(ctx, args.tokenOverride);
-    return await ctx.storage.generateUploadUrl();
-  },
-});
+// (تم حذف generateGiftUploadUrl — نستخدم Cloudinary)
 
 // ============ ADMIN: Create gift ============
 export const createGift = mutation({

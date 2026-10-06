@@ -280,10 +280,8 @@ function GiftsAdmin() {
     }
     setUploading(true);
     try {
-      // 1) Upload to Cloudinary
       const mediaType: "image" | "video" = mediaFile.type.startsWith("video") ? "video" : "image";
-      const result = await uploadToCloudinary(mediaFile, mediaType === "video" ? "video" : "image");
-
+      const result = await uploadToCloudinary(mediaFile, mediaType);
       await createGift({
         name: name.trim(),
         price,
@@ -293,7 +291,6 @@ function GiftsAdmin() {
         forceGlobal,
         tokenOverride: deviceId,
       });
-
       setName(""); setPrice(100); setCategory("classic");
       setForceGlobal(false);
       setMediaFile(null);
