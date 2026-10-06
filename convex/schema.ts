@@ -92,7 +92,9 @@ export default defineSchema({
     category: v.string(),
     mediaId: v.id("_storage"),
     mediaType: v.union(v.literal("image"), v.literal("video")),
-    thumbnailId: v.optional(v.id("_storage")),
+    hasSound: v.optional(v.boolean()),
+    isGlobal: v.optional(v.boolean()),
+    isRelationship: v.optional(v.boolean()),
     active: v.boolean(),
   }).index("by_active", ["active"]),
 

@@ -33,12 +33,16 @@ export const createGift = mutation({
     if (args.price < 1 || args.price > 1000000) {
       throw new ConvexError({ code: "BAD_REQUEST", message: "السعر غير صالح" });
     }
+    const isVideo = args.mediaType === "video";
     const id = await ctx.db.insert("gifts", {
       name,
       price: args.price,
       category: args.category,
       mediaId: args.mediaId,
       mediaType: args.mediaType,
+      hasSound: isVideo,                    // video → sound badge
+      isGlobal: args.price >= 1000,         // price >= 1000 → global
+      isRelationship: args.category === "relation", // relation category
       active: true,
     });
     return id;
@@ -56,7 +60,6 @@ export const removeGift = mutation({
     const gift = await ctx.db.get("gifts", args.giftId);
     if (!gift) return null;
     try { await ctx.storage.delete(gift.mediaId); } catch {}
-    if (gift.thumbnailId) { try { await ctx.storage.delete(gift.thumbnailId); } catch {} }
     await ctx.db.delete(gift._id);
     return null;
   },
@@ -73,8 +76,7 @@ export const listActive = query({
     const enriched = await Promise.all(
       gifts.map(async (g) => {
         const mediaUrl = await ctx.storage.getUrl(g.mediaId);
-        const thumbnailUrl = g.thumbnailId ? await ctx.storage.getUrl(g.thumbnailId) : null;
-        return { ...g, mediaUrl, thumbnailUrl };
+        return { ...g, mediaUrl };
       }),
     );
     return enriched.sort((a, b) => a.price - b.price);
@@ -251,5 +253,26 @@ export const latestGiftFull = query({
       mediaType: gift.mediaType,
       createdAt: recent._creationTime,
     };
+  },
+});
+
+// Migration: backfill badges for old gifts
+export const migrateGiftBadges = mutation({
+  args: { tokenOverride: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    await requireUser(ctx, args.tokenOverride);
+    const gifts = await ctx.db.query("gifts").take(500);
+    let updated = 0;
+    for (const g of gifts) {
+      if (g.hasSound === undefined || g.isGlobal === undefined || g.isRelationship === undefined) {
+        await ctx.db.patch("gifts", g._id, {
+          hasSound: g.mediaType === "video",
+          isGlobal: g.price >= 1000,
+          isRelationship: g.category === "relation",
+        });
+        updated++;
+      }
+    }
+    return { updated };
   },
 });
