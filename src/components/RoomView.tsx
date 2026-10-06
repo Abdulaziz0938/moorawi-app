@@ -10,6 +10,7 @@ import {
 import { agoraManager } from "../lib/agora";
 import { getDeviceId } from "../lib/device";
 import SettingsSheet from "./SettingsSheet";
+import GiftSheet from "./GiftSheet";
 import CompactChatInput from "./CompactChatInput";
 
 interface Props { roomId: Id<"rooms">; onLeave: () => void; }
@@ -429,6 +430,10 @@ export default function RoomView({ roomId, onLeave }: Props) {
             </div>
           </div>
         </div>
+      )}
+
+      {showGifts && (
+        <GiftSheet roomId={roomId} onClose={() => setShowGifts(false)} />
       )}
 
       {showSettings && (

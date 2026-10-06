@@ -16,14 +16,17 @@ export default defineSchema({
     bio: v.optional(v.string()),
     profileComplete: v.optional(v.boolean()),
     charms: v.optional(v.number()),
+    coins: v.optional(v.number()),
     totalSent: v.optional(v.number()),
+    totalReceived: v.optional(v.number()),
     isAdmin: v.optional(v.boolean()),
     banned: v.optional(v.boolean()),
     adminRole: v.optional(v.union(v.literal("super"), v.literal("moderator"))),
   })
     .index("by_token", ["tokenIdentifier"])
     .index("by_userNumber", ["userNumber"])
-    .index("by_username", ["username"]),
+    .index("by_username", ["username"])
+    .index("by_totalReceived", ["totalReceived"]),
 
   counters: defineTable({
     name: v.string(),
@@ -82,6 +85,32 @@ export default defineSchema({
   })
     .index("by_to_and_status", ["toUserId", "status"])
     .index("by_room", ["roomId"]),
+
+  gifts: defineTable({
+    name: v.string(),
+    price: v.number(),
+    category: v.string(),
+    mediaId: v.id("_storage"),
+    mediaType: v.union(v.literal("image"), v.literal("video")),
+    thumbnailId: v.optional(v.id("_storage")),
+    active: v.boolean(),
+  }).index("by_active", ["active"]),
+
+  giftTransactions: defineTable({
+    roomId: v.id("rooms"),
+    fromUserId: v.id("users"),
+    fromName: v.string(),
+    toUserId: v.id("users"),
+    toName: v.string(),
+    giftId: v.id("gifts"),
+    giftName: v.string(),
+    giftIcon: v.string(),
+    quantity: v.number(),
+    totalPrice: v.number(),
+  })
+    .index("by_room", ["roomId"])
+    .index("by_to", ["toUserId"])
+    .index("by_from", ["fromUserId"]),
 
   auditLogs: defineTable({
     adminId: v.id("users"),

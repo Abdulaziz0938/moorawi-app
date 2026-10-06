@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { useQuery } from "convex/react";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
@@ -32,7 +33,7 @@ interface Props {
   onClose: () => void;
 }
 
-type Tab = "main" | "layout" | "editRoom" | "background";
+type Tab = "main" | "layout" | "editRoom" | "background" | "gifts";
 
 function LayoutPreview({ layoutKey }: { layoutKey: string }) {
   const rows = LAYOUT_ROWS[layoutKey] ?? [6, 6, 6];
@@ -113,6 +114,7 @@ export default function SettingsSheet({
     { icon: Activity, label: "نشاط الغرفة", key: "activity" },
     { icon: Music, label: "موسيقى", key: "music" },
     { icon: Coins, label: "صرف", key: "spend" },
+    { icon: Gift, label: "إدارة الهدايا", key: "gifts" },
   ];
 
   const quickTools = [
@@ -130,6 +132,7 @@ export default function SettingsSheet({
     if (key === "layout") setTab("layout");
     else if (key === "editRoom") setTab("editRoom");
     else if (key === "background") setTab("background");
+    else if (key === "gifts") setTab("gifts");
     else alert(`"${key}" - قيد التطوير`);
   };
 
@@ -138,6 +141,7 @@ export default function SettingsSheet({
     layout: "تخطيط المايكات",
     editRoom: "تعديل الغرفة",
     background: "الخلفية",
+    gifts: "إدارة الهدايا",
   };
 
   return (
@@ -235,6 +239,8 @@ export default function SettingsSheet({
           </div>
         )}
 
+        {tab === "gifts" && <GiftsAdmin />}
+
         {tab === "background" && (
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {!isOwnerOrMod && <p className="text-yellow-300 text-xs text-center bg-yellow-500/10 p-2 rounded-lg">للمالك/المشرف فقط</p>}
@@ -250,6 +256,148 @@ export default function SettingsSheet({
               حذف الخلفية
             </button>
           </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ============ Gifts Admin Panel ============
+function GiftsAdmin() {
+  const deviceId = getDeviceId();
+  const gifts = useQuery(api.gifts.listAllAdmin, { tokenOverride: deviceId });
+  const genUpload = useMutation(api.gifts.generateGiftUploadUrl);
+  const createGift = useMutation(api.gifts.createGift);
+  const removeGift = useMutation(api.gifts.removeGift);
+
+  const [name, setName] = useState("");
+  const [price, setPrice] = useState(100);
+  const [category, setCategory] = useState("classic");
+  const [file, setFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const handleUpload = async () => {
+    if (!name.trim() || !file || price < 1) {
+      alert("أكمل البيانات (اسم + سعر + ملف)");
+      return;
+    }
+    setUploading(true);
+    try {
+      const uploadUrl = await genUpload({ tokenOverride: deviceId });
+      const res = await fetch(uploadUrl, {
+        method: "POST",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+      const { storageId } = await res.json();
+      const mediaType: "image" | "video" = file.type.startsWith("video") ? "video" : "image";
+      await createGift({
+        name: name.trim(),
+        price,
+        category,
+        mediaId: storageId,
+        mediaType,
+        tokenOverride: deviceId,
+      });
+      setName("");
+      setPrice(100);
+      setFile(null);
+      if (fileRef.current) fileRef.current.value = "";
+      alert("✅ تم إضافة الهدية");
+    } catch (e: any) {
+      alert(e?.message || "فشل الرفع");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="flex-1 overflow-y-auto p-4 space-y-4" dir="rtl">
+      <div className="bg-white/5 rounded-2xl p-4 space-y-3">
+        <h3 className="text-white text-sm font-bold">إضافة هدية جديدة</h3>
+        <input
+          type="text"
+          placeholder="اسم الهدية"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          maxLength={30}
+          className="w-full bg-white/10 border border-white/20 rounded-xl p-2.5 outline-none focus:border-white text-white text-sm"
+        />
+        <input
+          type="number"
+          placeholder="السعر"
+          value={price}
+          onChange={(e) => setPrice(Number(e.target.value))}
+          min={1}
+          className="w-full bg-white/10 border border-white/20 rounded-xl p-2.5 outline-none focus:border-white text-white text-sm"
+        />
+        <select
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          className="w-full bg-white/10 border border-white/20 rounded-xl p-2.5 outline-none focus:border-white text-white text-sm"
+        >
+          <option value="classic" className="text-black">كلاسيكي</option>
+          <option value="vip" className="text-black">VIP</option>
+          <option value="relation" className="text-black">العلاقة</option>
+          <option value="fun" className="text-black">مرح</option>
+        </select>
+        <label className="block cursor-pointer">
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*,video/webm,video/mp4"
+            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            className="hidden"
+          />
+          <div className="w-full p-3 bg-white/10 border-2 border-dashed border-white/30 rounded-xl text-center text-white text-xs hover:bg-white/15">
+            {file ? `📎 ${file.name}` : "اختر ملف (PNG / WEBM / MP4)"}
+          </div>
+        </label>
+        <button
+          onClick={handleUpload}
+          disabled={uploading}
+          className="w-full bg-purple-600 py-2.5 rounded-xl text-white font-bold text-sm disabled:opacity-50 flex items-center justify-center gap-2"
+        >
+          {uploading ? <Loader2 size={16} className="animate-spin" /> : null}
+          {uploading ? "جاري الرفع..." : "إضافة"}
+        </button>
+      </div>
+
+      <div className="space-y-2">
+        <h3 className="text-white/70 text-xs">الهدايا الحالية ({gifts?.length ?? 0})</h3>
+        {gifts === undefined ? (
+          <div className="flex justify-center py-6"><Loader2 className="animate-spin text-white/40" size={20} /></div>
+        ) : gifts.length === 0 ? (
+          <p className="text-white/40 text-xs text-center py-4">لا توجد هدايا بعد</p>
+        ) : (
+          gifts.map((g) => (
+            <div key={g._id} className="flex items-center gap-3 bg-white/5 rounded-xl p-2">
+              <div className="w-12 h-12 rounded-lg overflow-hidden bg-black/30 flex items-center justify-center">
+                {g.mediaType === "video" ? (
+                  <video src={g.mediaUrl} className="w-full h-full object-cover" muted loop autoPlay playsInline />
+                ) : g.mediaUrl ? (
+                  <img src={g.mediaUrl} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <span>🎁</span>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-white text-sm font-bold truncate">{g.name}</p>
+                <p className="text-yellow-400 text-[10px]">{g.price} 💰 • {g.category}</p>
+              </div>
+              <button
+                onClick={() => {
+                  if (confirm("حذف هذه الهدية؟")) {
+                    removeGift({ giftId: g._id, tokenOverride: deviceId }).catch((e) => alert(e?.message));
+                  }
+                }}
+                className="p-2 text-red-400 hover:bg-red-500/20 rounded-full"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          ))
         )}
       </div>
     </div>
