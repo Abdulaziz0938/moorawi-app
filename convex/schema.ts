@@ -5,7 +5,6 @@ export default defineSchema({
   users: defineTable({
     tokenIdentifier: v.string(),
     userNumber: v.optional(v.number()),
-    // Profile fields
     username: v.optional(v.string()),
     name: v.optional(v.string()),
     email: v.optional(v.string()),
@@ -16,7 +15,6 @@ export default defineSchema({
     interests: v.optional(v.array(v.string())),
     bio: v.optional(v.string()),
     profileComplete: v.optional(v.boolean()),
-    // Admin
     isAdmin: v.optional(v.boolean()),
     banned: v.optional(v.boolean()),
     adminRole: v.optional(v.union(v.literal("super"), v.literal("moderator"))),
@@ -62,6 +60,16 @@ export default defineSchema({
     locked: v.boolean(),
     muted: v.boolean(),
   }).index("by_room_and_seatIndex", ["roomId", "seatIndex"]),
+
+  messages: defineTable({
+    roomId: v.id("rooms"),
+    senderId: v.id("users"),
+    senderName: v.string(),
+    text: v.optional(v.string()),
+    imageId: v.optional(v.id("_storage")),
+    system: v.optional(v.boolean()),
+  })
+    .index("by_room", ["roomId"]),
 
   auditLogs: defineTable({
     adminId: v.id("users"),

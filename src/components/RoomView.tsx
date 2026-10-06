@@ -3,12 +3,12 @@ import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import {
-  Mic, MicOff, LogOut, Loader2, Heart, Trophy, MoreVertical,
+  Mic, MicOff, LogOut, Loader2, Heart, Trophy,
   MessageCircle, Gift, Grid2x2, Share2, Minimize2, ArrowRight,
-  Send, Image as ImageIcon,
 } from "lucide-react";
 import { agoraManager } from "../lib/agora";
 import { getDeviceId } from "../lib/device";
+import ChatSheet from "./ChatSheet";
 
 interface Props {
   roomId: Id<"rooms">;
@@ -21,6 +21,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const seats = useQuery(api.mics.state, { roomId });
   const members = useQuery(api.rooms.members, { roomId });
   const myInfo = useQuery(api.mics.myInfo, { roomId, tokenOverride: deviceId });
+  const messages = useQuery(api.messages.list, { roomId });
   const takeSeat = useMutation(api.mics.takeSeat);
   const leaveSeat = useMutation(api.mics.leaveSeat);
   const clearMySeats = useMutation(api.mics.clearMySeats);
@@ -34,8 +35,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
   // UI state
   const [showBackMenu, setShowBackMenu] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
-  const [showChatBar, setShowChatBar] = useState(false);
-  const [chatText, setChatText] = useState("");
+  const [showChatSheet, setShowChatSheet] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showGifts, setShowGifts] = useState(false);
 
@@ -72,7 +72,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
     if (!agoraConnected) return;
     if (isOnMic && !publishedRef.current) {
       publishedRef.current = true;
-      agoraManager.publishMicrophone().catch((e: any) => setError("فشل تفعيل الميكروفون"));
+      agoraManager.publishMicrophone().catch(() => setError("فشل تفعيل الميكروفون"));
     } else if (!isOnMic && publishedRef.current) {
       publishedRef.current = false;
       agoraManager.unpublishMicrophone().catch(console.error);
@@ -95,6 +95,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
 
   const owner = members.find((m) => m.role === "owner");
   const topMembers = members.slice(0, 3);
+  const lastMessages = (messages ?? []).slice(-3);
 
   const handleSeatClick = async (seatIndex: number, userId: string | undefined) => {
     if (userId) return;
@@ -127,10 +128,9 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const isOnMicRole = myInfo?.role === "speaker" || myInfo?.role === "owner" || myInfo?.role === "moderator";
 
   return (
-    <div className="max-w-md mx-auto flex flex-col h-screen" dir="rtl">
+    <div className="max-w-md mx-auto flex flex-col h-screen relative" dir="rtl">
       {/* TOP BAR */}
       <header className="flex items-center justify-between px-3 py-2 text-white border-b border-white/10">
-        {/* Left: Back + Owner */}
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowBackMenu((v) => !v)}
@@ -150,7 +150,6 @@ export default function RoomView({ roomId, onLeave }: Props) {
           )}
         </div>
 
-        {/* Right: Member avatars + count + fav + leaderboard */}
         <div className="flex items-center gap-1.5">
           <div className="flex -space-x-2">
             {topMembers.map((m) => (
@@ -178,23 +177,25 @@ export default function RoomView({ roomId, onLeave }: Props) {
 
       {/* Back dropdown */}
       {showBackMenu && (
-        <div className="absolute top-12 right-3 z-30 bg-gray-900/95 backdrop-blur rounded-xl shadow-2xl border border-white/10 py-1 w-44">
-          <button onClick={handleLeave} className="w-full flex items-center gap-3 px-4 py-2.5 text-white hover:bg-white/10 text-sm">
-            <LogOut size={16} /> مغادرة الغرفة
-          </button>
-          <button className="w-full flex items-center gap-3 px-4 py-2.5 text-white hover:bg-white/10 text-sm">
-            <Minimize2 size={16} /> تصغير
-          </button>
-          <button className="w-full flex items-center gap-3 px-4 py-2.5 text-white hover:bg-white/10 text-sm">
-            <Share2 size={16} /> مشاركة
-          </button>
-        </div>
+        <>
+          <div className="fixed inset-0 z-20" onClick={() => setShowBackMenu(false)} />
+          <div className="absolute top-12 right-3 z-30 bg-gray-900/95 backdrop-blur rounded-xl shadow-2xl border border-white/10 py-1 w-44">
+            <button onClick={handleLeave} className="w-full flex items-center gap-3 px-4 py-2.5 text-white hover:bg-white/10 text-sm">
+              <LogOut size={16} /> مغادرة الغرفة
+            </button>
+            <button className="w-full flex items-center gap-3 px-4 py-2.5 text-white hover:bg-white/10 text-sm">
+              <Minimize2 size={16} /> تصغير
+            </button>
+            <button className="w-full flex items-center gap-3 px-4 py-2.5 text-white hover:bg-white/10 text-sm">
+              <Share2 size={16} /> مشاركة
+            </button>
+          </div>
+        </>
       )}
 
-      {/* MAIN: Mics + Chat */}
+      {/* MAIN */}
       <main className="flex-1 overflow-y-auto px-3 py-3">
-        {/* Room title */}
-        <div className="text-center text-white mb-4">
+        <div className="text-center text-white mb-3">
           <h1 className="text-lg font-bold">{room.name}</h1>
           {agoraConnected && (
             <p className="text-[10px] text-green-300">متصل بالصوت ({remoteCount} بعيد)</p>
@@ -202,7 +203,6 @@ export default function RoomView({ roomId, onLeave }: Props) {
           {error && <p className="text-[10px] text-red-300">{error}</p>}
         </div>
 
-        {/* Mic grid */}
         <div className="bg-white/5 rounded-2xl p-3 mb-3">
           <div className="grid grid-cols-4 gap-2.5">
             {seats.map((seat) => (
@@ -228,32 +228,25 @@ export default function RoomView({ roomId, onLeave }: Props) {
           </div>
         </div>
 
-        {/* Chat preview area */}
-        <div className="bg-white/5 rounded-2xl p-3 min-h-[120px]">
-          <p className="text-white/50 text-xs text-center py-6">لا توجد رسائل بعد</p>
-        </div>
+        {/* Chat preview */}
+        <button
+          onClick={() => setShowChatSheet(true)}
+          className="w-full bg-white/5 hover:bg-white/10 rounded-2xl p-3 min-h-[120px] text-right transition"
+        >
+          {lastMessages.length === 0 ? (
+            <p className="text-white/50 text-xs text-center py-6">لا توجد رسائل بعد</p>
+          ) : (
+            <div className="space-y-1.5">
+              {lastMessages.map((m) => (
+                <div key={m._id} className="text-white text-xs">
+                  <span className="font-bold text-purple-300">{m.senderName}: </span>
+                  <span className="opacity-90">{m.text || "[صورة]"}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </button>
       </main>
-
-      {/* Chat input bar */}
-      {showChatBar && (
-        <div className="px-3 pb-2">
-          <div className="flex items-center gap-2 bg-white/10 rounded-full px-2 py-1.5">
-            <button className="p-1.5 text-white/80 hover:text-white">
-              <ImageIcon size={18} />
-            </button>
-            <input
-              type="text"
-              value={chatText}
-              onChange={(e) => setChatText(e.target.value)}
-              placeholder="اكتب رسالة..."
-              className="flex-1 bg-transparent text-white text-sm outline-none placeholder-white/40"
-            />
-            <button className="p-1.5 bg-purple-600 rounded-full text-white">
-              <Send size={16} />
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* On mic controls */}
       {isOnMicRole && (
@@ -277,8 +270,8 @@ export default function RoomView({ roomId, onLeave }: Props) {
       {/* BOTTOM BAR */}
       <footer className="border-t border-white/10 px-3 py-2 flex items-center justify-around">
         <button
-          onClick={() => setShowChatBar((v) => !v)}
-          className={`p-2 rounded-full transition ${showChatBar ? "bg-purple-600" : "hover:bg-white/10"} text-white`}
+          onClick={() => setShowChatSheet(true)}
+          className="p-2 rounded-full hover:bg-white/10 text-white"
         >
           <MessageCircle size={22} />
         </button>
@@ -305,6 +298,11 @@ export default function RoomView({ roomId, onLeave }: Props) {
           <Gift size={22} />
         </button>
       </footer>
+
+      {/* Chat Sheet */}
+      {showChatSheet && (
+        <ChatSheet roomId={roomId} onClose={() => setShowChatSheet(false)} />
+      )}
     </div>
   );
 }
