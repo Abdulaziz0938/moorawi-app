@@ -3,12 +3,12 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { getDeviceId } from "../lib/device";
-import { X, Coins, Loader2, Music, Heart, Globe } from "lucide-react";
+import { X, Coins, Loader2, Music, Heart, Globe, Mic, Users, Check } from "lucide-react";
 
 interface Props {
   roomId: Id<"rooms">;
   onClose: () => void;
-  }
+}
 
 const CATEGORIES = [
   { key: "all",      label: "الكل" },
@@ -17,6 +17,8 @@ const CATEGORIES = [
   { key: "relation", label: "العلاقة" },
   { key: "fun",      label: "مرح" },
 ];
+
+type RecipientMode = "mic" | "room" | "individual";
 
 export default function GiftSheet({ roomId, onClose }: Props) {
   const deviceId = getDeviceId();
@@ -27,9 +29,11 @@ export default function GiftSheet({ roomId, onClose }: Props) {
   const sendGift = useMutation(api.gifts.send);
 
   const [category, setCategory] = useState("all");
-  const [selectedUserId, setSelectedUserId] = useState<Id<"users"> | null>(null);
   const [selectedGiftId, setSelectedGiftId] = useState<Id<"gifts"> | null>(null);
+  const [selectedUserIds, setSelectedUserIds] = useState<Set<Id<"users">>>(new Set());
+  const [recipientMode, setRecipientMode] = useState<RecipientMode>("mic");
   const [showRecharge, setShowRecharge] = useState(false);
+  const [sending, setSending] = useState(false);
 
   // Drag to dismiss
   const [dragY, setDragY] = useState(0);
@@ -47,28 +51,70 @@ export default function GiftSheet({ roomId, onClose }: Props) {
     isOnMic: !!seats?.find((s) => s.userId === m.userId),
   }));
 
+  const micMembers = membersList.filter((m) => m.isOnMic);
+
+  // Auto-select based on mode
+  useEffect(() => {
+    if (recipientMode === "mic") {
+      setSelectedUserIds(new Set(micMembers.map((m) => m.userId)));
+    } else if (recipientMode === "room") {
+      setSelectedUserIds(new Set(membersList.map((m) => m.userId)));
+    }
+    // eslint-disable-next-line
+  }, [recipientMode, seats?.length, members?.length]);
+
+  const toggleUser = (userId: Id<"users">) => {
+    const next = new Set(selectedUserIds);
+    if (next.has(userId)) next.delete(userId);
+    else next.add(userId);
+    setSelectedUserIds(next);
+    setRecipientMode("individual");
+  };
+
   const filteredGifts = (gifts ?? []).filter(
     (g) => category === "all" || g.category === category
   );
 
   const selectedGift = gifts?.find((g) => g._id === selectedGiftId);
-  const insufficient = selectedGift ? (balance ?? 0) < selectedGift.price : false;
+  const totalCost = selectedGift ? selectedGift.price * selectedUserIds.size : 0;
+  const insufficient = totalCost > (balance ?? 0);
 
-  const [sendingGiftId, setSendingGiftId] = useState<Id<"gifts"> | null>(null);
+  // ============ ضغطة على الهدية: اختيار أو إلغاء ============
+  const handleGiftTap = (giftId: Id<"gifts">) => {
+    if (selectedGiftId === giftId) {
+      setSelectedGiftId(null);
+    } else {
+      setSelectedGiftId(giftId);
+    }
+  };
 
-  const handleSelectGiftAndSend = async (giftId: Id<"gifts">) => {
-    if (!selectedUserId) { alert("اختر المستلم أولاً"); return; }
+  // ============ ضغطة على زر الإرسال داخل البطاقة: إرسال فوري (مع Combo) ============
+  const handleSendClick = async (e: React.MouseEvent, giftId: Id<"gifts">) => {
+    e.stopPropagation();
+    if (selectedUserIds.size === 0) { alert("اختر مستلماً واحداً على الأقل"); return; }
     const gift = gifts?.find((g) => g._id === giftId);
     if (!gift) return;
-    if ((balance ?? 0) < gift.price) { alert("رصيدك غير كافٍ"); return; }
-    setSendingGiftId(giftId);
+    const cost = gift.price * selectedUserIds.size;
+    if (cost > (balance ?? 0)) { alert("رصيدك غير كافٍ"); return; }
+
+    setSending(true);
     try {
-      await sendGift({ roomId, toUserId: selectedUserId, giftId, quantity: 1, tokenOverride: deviceId });
+      // إرسال لكل المستخدمين المحددين
+      for (const userId of Array.from(selectedUserIds)) {
+        await sendGift({
+          roomId,
+          toUserId: userId,
+          giftId,
+          quantity: 1,
+          tokenOverride: deviceId,
+        });
+      }
+      // لا نغلق الشيت → يمكن للمستخدم إرسال مرة أخرى (Combo)
     } catch (e: any) {
       const msg = typeof e?.data === "object" ? (e.data?.message || e?.message) : e?.message;
       alert(msg || "فشل الإرسال");
     } finally {
-      setSendingGiftId(null);
+      setSending(false);
     }
   };
 
@@ -89,7 +135,7 @@ export default function GiftSheet({ roomId, onClose }: Props) {
       <div
         className="w-full max-w-md mx-auto bg-gray-950/98 backdrop-blur-md rounded-t-3xl flex flex-col select-none overflow-hidden"
         style={{
-          height: "40vh",
+          height: "45vh",
           transform: `translateY(${dragY}px)`,
           transition: dragging ? "none" : "transform 0.3s",
         }}
@@ -116,30 +162,94 @@ export default function GiftSheet({ roomId, onClose }: Props) {
           </div>
         </div>
 
+        {/* Recipient mode buttons */}
+        <div className="flex gap-1 px-2 py-1 border-b border-white/10 flex-shrink-0">
+          <button
+            onClick={() => setRecipientMode("mic")}
+            className={`flex-1 flex items-center justify-center gap-1 py-1 rounded-lg text-[10px] font-bold transition ${
+              recipientMode === "mic" ? "bg-purple-600 text-white" : "bg-white/10 text-white/70 hover:bg-white/20"
+            }`}
+          >
+            <Mic size={11} />
+            المايكات ({micMembers.length})
+          </button>
+          <button
+            onClick={() => setRecipientMode("room")}
+            className={`flex-1 flex items-center justify-center gap-1 py-1 rounded-lg text-[10px] font-bold transition ${
+              recipientMode === "room" ? "bg-purple-600 text-white" : "bg-white/10 text-white/70 hover:bg-white/20"
+            }`}
+          >
+            <Users size={11} />
+            الغرفة ({membersList.length})
+          </button>
+          <button
+            onClick={() => setRecipientMode("individual")}
+            className={`flex-1 flex items-center justify-center gap-1 py-1 rounded-lg text-[10px] font-bold transition ${
+              recipientMode === "individual" ? "bg-purple-600 text-white" : "bg-white/10 text-white/70 hover:bg-white/20"
+            }`}
+          >
+            <Check size={11} />
+            محدد ({selectedUserIds.size})
+          </button>
+        </div>
+
         {/* Recipients */}
-        <div className="border-b border-white/10 py-0.5 flex-shrink-0 mt-0.5">
+        <div className="border-b border-white/10 py-1 flex-shrink-0">
           <div className="flex gap-1.5 px-2 overflow-x-auto thin-scroll">
             {membersList.length === 0 ? (
               <p className="text-white/40 text-[9px] py-0.5 px-2">لا يوجد أعضاء</p>
-            ) : membersList.map((m) => (
-              <button key={m._id} onClick={() => setSelectedUserId(m.userId)}
-                className={`flex-shrink-0 flex flex-col items-center gap-0.5 w-9 transition ${selectedUserId === m.userId ? "opacity-100" : "opacity-50"}`}>
-                <div className={`w-7 h-7 rounded-full overflow-hidden bg-purple-500 flex items-center justify-center text-[9px] font-bold text-white border-2 ${selectedUserId === m.userId ? "border-purple-400" : "border-transparent"}`}>
-                  {m.avatarUrl ? <img src={m.avatarUrl} alt="" className="w-full h-full object-cover" /> : (m.name?.[0] || "?")}
-                </div>
-                <span className="text-white text-[7px] truncate max-w-full">{m.name}</span>
-              </button>
-            ))}
+            ) : membersList.map((m) => {
+              const isSelected = selectedUserIds.has(m.userId);
+              return (
+                <button
+                  key={m._id}
+                  onClick={() => toggleUser(m.userId)}
+                  className={`flex-shrink-0 flex flex-col items-center gap-0.5 w-11 transition ${
+                    isSelected ? "opacity-100" : "opacity-50"
+                  }`}
+                >
+                  <div className="relative">
+                    <div className={`w-9 h-9 rounded-full overflow-hidden bg-purple-500 flex items-center justify-center text-[10px] font-bold text-white border-2 transition ${
+                      isSelected ? "border-emerald-400" : "border-transparent"
+                    }`}>
+                      {m.avatarUrl ? (
+                        <img src={m.avatarUrl} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        m.name?.[0] || "?"
+                      )}
+                    </div>
+                    {m.isOnMic && (
+                      <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-purple-600 rounded-full border border-white flex items-center justify-center">
+                        <Mic size={6} className="text-white" />
+                      </div>
+                    )}
+                    {isSelected && (
+                      <div className="absolute -top-0.5 -left-0.5 w-3 h-3 bg-emerald-500 rounded-full border border-white flex items-center justify-center">
+                        <Check size={7} className="text-white" />
+                      </div>
+                    )}
+                  </div>
+                  <span className="text-white text-[7px] truncate max-w-full">{m.name}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
         {/* Categories */}
         <div className="flex flex-row-reverse gap-1 px-2 py-1 border-b border-white/10 overflow-x-auto thin-scroll flex-shrink-0">
           {CATEGORIES.map((c) => (
-            <button key={c.key} onClick={() => setCategory(c.key)}
-              className={`px-2 py-0.5 rounded-md text-[10px] whitespace-nowrap transition relative ${category === c.key ? "text-white font-bold" : "text-white/60"}`}>
+            <button
+              key={c.key}
+              onClick={() => setCategory(c.key)}
+              className={`px-2 py-0.5 rounded-md text-[10px] whitespace-nowrap transition relative ${
+                category === c.key ? "text-white font-bold" : "text-white/60"
+              }`}
+            >
               {c.label}
-              {category === c.key && <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-emerald-400 rounded-full" />}
+              {category === c.key && (
+                <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-emerald-400 rounded-full" />
+              )}
             </button>
           ))}
         </div>
@@ -152,34 +262,69 @@ export default function GiftSheet({ roomId, onClose }: Props) {
             <p className="text-white/40 text-[9px] text-center py-3">لا توجد هدايا</p>
           ) : (
             <div className="grid grid-cols-5 gap-1">
-              {filteredGifts.map((g) => (
-                <button
-                  key={g._id}
-                  onClick={() => handleSelectGiftAndSend(g._id)}
-                  onContextMenu={(e) => e.preventDefault()}
-                  className="relative rounded-md flex flex-col overflow-hidden transition active:scale-95 bg-white/5 hover:bg-white/15"
-                  style={{ WebkitTouchCallout: "none", WebkitUserSelect: "none" }}
-                >
-                  <div className="w-full aspect-square overflow-hidden bg-black/20 relative">
-                    {g.mediaUrl ? (
-                      g.mediaType === "video" ? (
-                        <video src={g.mediaUrl} className="w-full h-full object-cover pointer-events-none" preload="metadata" muted playsInline disablePictureInPicture controlsList="nodownload noplaybackrate" />
-                      ) : (
-                        <img src={g.mediaUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
-                      )
-                    ) : <div className="w-full h-full flex items-center justify-center"><span className="text-base">🎁</span></div>}
-                    <div className="absolute top-0.5 right-0.5 flex flex-col gap-0.5 pointer-events-none">
-                      {g.isRelationship && <div className="w-3 h-3 rounded-sm bg-pink-500/95 flex items-center justify-center"><Heart size={7} className="text-white fill-white" /></div>}
-                      {g.isGlobal && <div className="w-3 h-3 rounded-sm bg-blue-500/95 flex items-center justify-center"><Globe size={7} className="text-white" /></div>}
-                      {g.hasSound && <div className="w-3 h-3 rounded-sm bg-purple-500/95 flex items-center justify-center"><Music size={7} className="text-white" /></div>}
-                    </div>
+              {filteredGifts.map((g) => {
+                const isSelected = selectedGiftId === g._id;
+                return (
+                  <div key={g._id} className="relative flex flex-col">
+                    {/* Gift card */}
+                    <button
+                      onClick={() => handleGiftTap(g._id)}
+                      onContextMenu={(e) => e.preventDefault()}
+                      className={`relative rounded-md flex flex-col overflow-hidden transition active:scale-95 border-2 ${
+                        isSelected ? "border-emerald-400 bg-purple-600/20" : "border-transparent bg-white/5 hover:bg-white/15"
+                      }`}
+                      style={{ WebkitTouchCallout: "none", WebkitUserSelect: "none" }}
+                    >
+                      <div className="w-full aspect-square overflow-hidden bg-black/20 relative">
+                        {g.mediaUrl ? (
+                          g.mediaType === "video" ? (
+                            <video src={g.mediaUrl} className="w-full h-full object-cover pointer-events-none" preload="metadata" muted playsInline disablePictureInPicture controlsList="nodownload noplaybackrate" />
+                          ) : (
+                            <img src={g.mediaUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
+                          )
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center"><span className="text-base">🎁</span></div>
+                        )}
+                        <div className="absolute top-0.5 right-0.5 flex flex-col gap-0.5 pointer-events-none">
+                          {g.isRelationship && <div className="w-3 h-3 rounded-sm bg-pink-500/95 flex items-center justify-center"><Heart size={7} className="text-white fill-white" /></div>}
+                          {g.isGlobal && <div className="w-3 h-3 rounded-sm bg-blue-500/95 flex items-center justify-center"><Globe size={7} className="text-white" /></div>}
+                          {g.hasSound && <div className="w-3 h-3 rounded-sm bg-purple-500/95 flex items-center justify-center"><Music size={7} className="text-white" /></div>}
+                        </div>
+                        {isSelected && (
+                          <div className="absolute top-0.5 left-0.5 w-3.5 h-3.5 bg-emerald-500 rounded-full flex items-center justify-center">
+                            <Check size={9} className="text-white" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="px-0.5 py-0.5 text-center leading-tight">
+                        <p className="text-white text-[8px] truncate font-bold">{g.name}</p>
+                        <p className="text-yellow-400 text-[8px] font-bold flex items-center justify-center gap-0.5">{g.price}<Coins size={6} /></p>
+                      </div>
+                    </button>
+
+                    {/* Send button (only when this gift is selected) */}
+                    {isSelected && (
+                      <button
+                        onClick={(e) => handleSendClick(e, g._id)}
+                        disabled={sending || insufficient || selectedUserIds.size === 0}
+                        className={`mt-0.5 w-full rounded-md text-white text-[9px] font-bold py-1 flex items-center justify-center gap-1 active:scale-95 transition ${
+                          insufficient
+                            ? "bg-red-500/60"
+                            : "bg-gradient-to-r from-emerald-500 to-emerald-600"
+                        } disabled:opacity-50`}
+                      >
+                        {sending ? (
+                          <Loader2 className="animate-spin" size={9} />
+                        ) : insufficient ? (
+                          <>رصيد غير كافٍ</>
+                        ) : (
+                          <>إرسال ({totalCost})</>
+                        )}
+                      </button>
+                    )}
                   </div>
-                  <div className="px-0.5 py-0.5 text-center leading-tight">
-                    <p className="text-white text-[8px] truncate font-bold">{g.name}</p>
-                    <p className="text-yellow-400 text-[8px] font-bold flex items-center justify-center gap-0.5">{g.price}<Coins size={6} /></p>
-                  </div>
-                </button>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
