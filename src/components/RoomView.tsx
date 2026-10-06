@@ -5,10 +5,10 @@ import type { Id } from "../../convex/_generated/dataModel";
 import {
   Mic, MicOff, LogOut, Loader2, Heart, Trophy,
   MessageCircle, Gift, Grid2x2, Share2, Minimize2, ArrowRight,
+  Send, Image as ImageIcon,
 } from "lucide-react";
 import { agoraManager } from "../lib/agora";
 import { getDeviceId } from "../lib/device";
-import ChatSheet from "./ChatSheet";
 
 interface Props {
   roomId: Id<"rooms">;
@@ -25,6 +25,8 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const takeSeat = useMutation(api.mics.takeSeat);
   const leaveSeat = useMutation(api.mics.leaveSeat);
   const clearMySeats = useMutation(api.mics.clearMySeats);
+  const sendMsg = useMutation(api.messages.send);
+  const genUpload = useMutation(api.messages.generateUploadUrl);
   const getToken = useAction(api.voice.getToken);
 
   const [agoraConnected, setAgoraConnected] = useState(false);
@@ -35,9 +37,14 @@ export default function RoomView({ roomId, onLeave }: Props) {
   // UI state
   const [showBackMenu, setShowBackMenu] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
-  const [showChatSheet, setShowChatSheet] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showGifts, setShowGifts] = useState(false);
+
+  // Chat state
+  const [chatText, setChatText] = useState("");
+  const [sending, setSending] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const bottomRef = useRef<HTMLDivElement>(null);
 
   const joinedRef = useRef(false);
   const publishedRef = useRef(false);
@@ -85,6 +92,11 @@ export default function RoomView({ roomId, onLeave }: Props) {
     return () => window.removeEventListener("beforeunload", h);
   }, [roomId, deviceId, myInfo, clearMySeats]);
 
+  // Auto-scroll chat
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages?.length]);
+
   if (!room || !seats || myInfo === undefined || members === undefined) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -95,7 +107,6 @@ export default function RoomView({ roomId, onLeave }: Props) {
 
   const owner = members.find((m) => m.role === "owner");
   const topMembers = members.slice(0, 3);
-  const lastMessages = (messages ?? []).slice(-3);
 
   const handleSeatClick = async (seatIndex: number, userId: string | undefined) => {
     if (userId) return;
@@ -123,6 +134,45 @@ export default function RoomView({ roomId, onLeave }: Props) {
     publishedRef.current = false;
     joinedRef.current = false;
     onLeave();
+  };
+
+  const handleSendMsg = async () => {
+    const clean = chatText.trim();
+    if (!clean) return;
+    setSending(true);
+    try {
+      await sendMsg({ roomId, text: clean, tokenOverride: deviceId });
+      setChatText("");
+    } catch (e: any) {
+      alert(e?.message || "خطأ");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const url = await genUpload({ tokenOverride: deviceId });
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+      const { storageId } = await res.json();
+      await sendMsg({ roomId, imageId: storageId, tokenOverride: deviceId });
+    } catch (e: any) {
+      alert(e?.message || "فشل رفع الصورة");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const formatTime = (t: number) => {
+    const d = new Date(t);
+    return `${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`;
   };
 
   const isOnMicRole = myInfo?.role === "speaker" || myInfo?.role === "owner" || myInfo?.role === "moderator";
@@ -193,9 +243,10 @@ export default function RoomView({ roomId, onLeave }: Props) {
         </>
       )}
 
-      {/* MAIN */}
-      <main className="flex-1 overflow-y-auto px-3 py-3">
-        <div className="text-center text-white mb-3">
+      {/* MAIN scrollable: title + mics + chat */}
+      <main className="flex-1 overflow-y-auto px-3 py-3 space-y-3">
+        {/* Room title */}
+        <div className="text-center text-white">
           <h1 className="text-lg font-bold">{room.name}</h1>
           {agoraConnected && (
             <p className="text-[10px] text-green-300">متصل بالصوت ({remoteCount} بعيد)</p>
@@ -203,7 +254,8 @@ export default function RoomView({ roomId, onLeave }: Props) {
           {error && <p className="text-[10px] text-red-300">{error}</p>}
         </div>
 
-        <div className="bg-white/5 rounded-2xl p-3 mb-3">
+        {/* Mic grid */}
+        <div className="bg-white/5 rounded-2xl p-3">
           <div className="grid grid-cols-4 gap-2.5">
             {seats.map((seat) => (
               <div
@@ -228,25 +280,82 @@ export default function RoomView({ roomId, onLeave }: Props) {
           </div>
         </div>
 
-        {/* Chat preview */}
-        <button
-          onClick={() => setShowChatSheet(true)}
-          className="w-full bg-white/5 hover:bg-white/10 rounded-2xl p-3 min-h-[120px] text-right transition"
-        >
-          {lastMessages.length === 0 ? (
-            <p className="text-white/50 text-xs text-center py-6">لا توجد رسائل بعد</p>
+        {/* Chat messages inline */}
+        <div className="bg-white/5 rounded-2xl p-3 min-h-[180px]">
+          <h2 className="text-white/60 text-xs mb-2 text-center">الدردشة</h2>
+          {messages === undefined ? (
+            <div className="flex justify-center py-6">
+              <Loader2 className="animate-spin text-white/40" size={20} />
+            </div>
+          ) : messages.length === 0 ? (
+            <p className="text-white/40 text-xs text-center py-6">لا توجد رسائل بعد. ابدأ الحديث!</p>
           ) : (
-            <div className="space-y-1.5">
-              {lastMessages.map((m) => (
-                <div key={m._id} className="text-white text-xs">
-                  <span className="font-bold text-purple-300">{m.senderName}: </span>
-                  <span className="opacity-90">{m.text || "[صورة]"}</span>
+            <div className="space-y-2.5">
+              {messages.map((m) => (
+                <div key={m._id} className="flex gap-2 items-start">
+                  <div className="w-7 h-7 rounded-full overflow-hidden bg-purple-500 flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0">
+                    {m.avatarUrl
+                      ? <img src={m.avatarUrl} alt="" className="w-full h-full object-cover" />
+                      : (m.senderName?.[0] || "?")}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-[11px] font-bold text-purple-300">{m.senderName}</span>
+                      {m.senderNumber && (
+                        <span className="text-[9px] text-white/40" dir="ltr">ID:{m.senderNumber}</span>
+                      )}
+                      <span className="text-[9px] text-white/40">{formatTime(m.createdAt)}</span>
+                    </div>
+                    {m.text && (
+                      <p className="text-white text-sm break-words mt-0.5">{m.text}</p>
+                    )}
+                    {m.imageUrl && (
+                      <img
+                        src={m.imageUrl}
+                        alt=""
+                        className="mt-1 rounded-lg max-w-[180px] max-h-[180px] object-cover"
+                      />
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
           )}
-        </button>
+          <div ref={bottomRef} />
+        </div>
       </main>
+
+      {/* Chat input (fixed above mic controls) */}
+      <div className="px-3 py-2 border-t border-white/10">
+        <div className="flex items-center gap-2 bg-white/10 rounded-full px-2 py-1.5">
+          <label className="p-1.5 text-white/70 hover:text-white cursor-pointer">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
+              disabled={uploading}
+            />
+            {uploading ? <Loader2 size={18} className="animate-spin" /> : <ImageIcon size={18} />}
+          </label>
+          <input
+            type="text"
+            value={chatText}
+            onChange={(e) => setChatText(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSendMsg()}
+            placeholder="اكتب رسالة..."
+            className="flex-1 bg-transparent text-white text-sm outline-none placeholder-white/40"
+            maxLength={500}
+          />
+          <button
+            onClick={handleSendMsg}
+            disabled={sending || !chatText.trim()}
+            className="p-1.5 bg-purple-600 rounded-full text-white disabled:opacity-40"
+          >
+            <Send size={16} />
+          </button>
+        </div>
+      </div>
 
       {/* On mic controls */}
       {isOnMicRole && (
@@ -269,10 +378,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
 
       {/* BOTTOM BAR */}
       <footer className="border-t border-white/10 px-3 py-2 flex items-center justify-around">
-        <button
-          onClick={() => setShowChatSheet(true)}
-          className="p-2 rounded-full hover:bg-white/10 text-white"
-        >
+        <button className="p-2 rounded-full hover:bg-white/10 text-white">
           <MessageCircle size={22} />
         </button>
 
@@ -298,11 +404,6 @@ export default function RoomView({ roomId, onLeave }: Props) {
           <Gift size={22} />
         </button>
       </footer>
-
-      {/* Chat Sheet */}
-      {showChatSheet && (
-        <ChatSheet roomId={roomId} onClose={() => setShowChatSheet(false)} />
-      )}
     </div>
   );
 }
