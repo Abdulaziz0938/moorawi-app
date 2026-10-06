@@ -113,7 +113,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
     }
   }, [messages?.length]);
 
-  if (!room || !seats || myInfo === undefined || members === undefined) {
+  if (!room || !seats || !myInfo || members === undefined) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="animate-spin text-white" size={40} />
