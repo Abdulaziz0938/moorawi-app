@@ -220,6 +220,7 @@ export const latestGift = query({
       toName: recent.toName,
       giftName: recent.giftName,
       quantity: recent.quantity,
+      price: gift.price,
       mediaUrl,
       mediaType: gift.mediaType,
       createdAt: recent._creationTime,
@@ -260,6 +261,7 @@ export const latestGiftFull = query({
       toAvatar,
       giftName: recent.giftName,
       quantity: recent.quantity,
+      price: gift.price,
       mediaUrl,
       mediaType: gift.mediaType,
       hasSound: gift.hasSound ?? false,
@@ -291,5 +293,45 @@ export const migrateGiftBadges = mutation({
       updated++;
     }
     return { updated };
+  },
+});
+
+// استعلام عام لجميع الغرف للاستماع للشريط الذهبي (≥ 30000)
+export const latestGlobalBroadcast = query({
+  args: { since: v.number() },
+  handler: async (ctx, args) => {
+    const txs = await ctx.db
+      .query("giftTransactions")
+      .order("desc")
+      .take(10);
+    const recent = txs.find((t) => t._creationTime > args.since);
+    if (!recent) return null;
+    const gift = await ctx.db.get("gifts", recent.giftId);
+    if (!gift) return null;
+    if ((gift.price ?? 0) < 30000 && !gift.isGlobal) return null;
+
+    const [fromUser, toUser, room] = await Promise.all([
+      ctx.db.get("users", recent.fromUserId),
+      ctx.db.get("users", recent.toUserId),
+      ctx.db.get("rooms", recent.roomId),
+    ]);
+    const [fromAvatar, toAvatar] = await Promise.all([
+      fromUser?.avatarId ? ctx.storage.getUrl(fromUser.avatarId) : Promise.resolve(null),
+      toUser?.avatarId ? ctx.storage.getUrl(toUser.avatarId) : Promise.resolve(null),
+    ]);
+
+    return {
+      _id: recent._id,
+      giftName: recent.giftName,
+      quantity: recent.quantity,
+      price: gift.price,
+      roomId: recent.roomId,
+      roomName: room?.name ?? "غرفة",
+      fromName: recent.fromName,
+      fromAvatar,
+      toName: recent.toName,
+      toAvatar,
+      createdAt: recent._creationTime,
+    };
   },
 });

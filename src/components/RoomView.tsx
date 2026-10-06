@@ -83,7 +83,10 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const [isGlobalBanner, setIsGlobalBanner] = useState(false);
   const lastGiftIdRef = useRef<string | null>(null);
   const comboTimeoutRef = useRef<any>(null);
-  const latestGift = useQuery(api.gifts.latestGiftFull, { roomId, since: 0 });
+  const targetCoordsRef = useRef<{x: number; y: number} | null>(null);
+  const latestGift = useQuery(api.gifts.latestGiftFull, { roomId, since: enteredAt });
+  const globalBroadcast = useQuery(api.gifts.latestGlobalBroadcast, { since: enteredAt });
+  const [activeGlobalBanner, setActiveGlobalBanner] = useState<any>(null);
 
   const chatBoxRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -158,40 +161,56 @@ export default function RoomView({ roomId, onLeave }: Props) {
     }
   }, [latestGift]);
 
+  // Global broadcast effect (≥ 30000 in any room)
+  useEffect(() => {
+    if (!globalBroadcast) return;
+    if (globalBroadcast.roomId === roomId && activeGift) return;
+    setActiveGlobalBanner(globalBroadcast);
+    const timer = setTimeout(() => setActiveGlobalBanner(null), 6000);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line
+  }, [globalBroadcast]);
+
   // Gift: queue processor
   useEffect(() => {
     if (activeGift || giftQueue.length === 0) return;
     const next = giftQueue[0];
     setGiftQueue((q) => q.slice(1));
+
+    // Snapshot: موضع المايك المستهدف
+    targetCoordsRef.current = null;
+    if (seats && next.toUserId) {
+      const seat = seats.find((s) => s.userId === next.toUserId);
+      if (seat) {
+        const el = document.querySelector(`[data-mic-seat="${seat.seatIndex}"]`);
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          targetCoordsRef.current = {
+            x: rect.left + rect.width / 2 - window.innerWidth / 2,
+            y: rect.top + rect.height / 2 - window.innerHeight / 2,
+          };
+        }
+      }
+    }
+
     setActiveGift(next);
     setComboCount(next.quantity || 1);
-    setIsGlobalBanner(next.isGlobal && next.price >= 30000);
-    comboTimeoutRef.current = setTimeout(() => finishActiveGift(), next.hasSound ? 3500 : 3200);
+    setIsGlobalBanner(next.isGlobal && (next.price ?? 0) >= 30000);
+
+    // إخفاء الهدية
+    if (next.mediaType !== "video") {
+      comboTimeoutRef.current = setTimeout(() => finishActiveGift(), 1800);
+    } else {
+      // مؤقت أمان للفيديو (12s) في حال فشل onEnded
+      comboTimeoutRef.current = setTimeout(() => finishActiveGift(), 12000);
+    }
   }, [giftQueue, activeGift]);
 
-  // Gift: mic target position
-  useEffect(() => {
-    if (!activeGift || !seats) { setGiftTarget(null); return; }
-    const seat = seats.find((s) => s.userId === activeGift.toUserId);
-    if (!seat) { setGiftTarget(null); return; }
-    const compute = () => {
-      const el = document.querySelector(`[data-mic-seat="${seat.seatIndex}"]`);
-      if (el) {
-        const rect = el.getBoundingClientRect();
-        setGiftTarget({
-          x: rect.left + rect.width / 2 - window.innerWidth / 2,
-          y: rect.top + rect.height / 2 - window.innerHeight / 2,
-        });
-      }
-    };
-    compute();
-    const t = setTimeout(compute, 100);
-    return () => clearTimeout(t);
-  }, [activeGift, seats]);
+  // (mic target position now handled via targetCoordsRef in queue processor)
 
-  const finishActiveGift = () => {
+    const finishActiveGift = () => {
     setActiveGift(null);
-    setGiftTarget(null);
+    targetCoordsRef.current = null;
     setIsGlobalBanner(false);
     setComboCount(1);
     if (comboTimeoutRef.current) clearTimeout(comboTimeoutRef.current);
@@ -435,72 +454,166 @@ export default function RoomView({ roomId, onLeave }: Props) {
         </footer>
       </div>
 
+      {/* ==================== GLOBAL MARQUEE (≥ 30000) ==================== */}
+      {activeGlobalBanner && !(isGlobalBanner && activeGift?.roomId === roomId) && (
+        <div className="fixed top-2 left-0 right-0 z-[100] flex justify-center pointer-events-none animate-marquee-slide">
+          <div className="max-w-[360px] w-[calc(100%-16px)] bg-gradient-to-r from-amber-600 via-yellow-400 to-amber-600 p-[1.5px] rounded-full golden-glow">
+            <div className="bg-black/90 backdrop-blur-xl rounded-full px-3 py-1.5 flex items-center justify-between text-white border border-yellow-300/40">
+              <div className="flex items-center gap-1 min-w-0">
+                <div className="w-7 h-7 rounded-full overflow-hidden ring-2 ring-yellow-400 flex-shrink-0">
+                  {activeGlobalBanner.fromAvatar ? (
+                    <img src={activeGlobalBanner.fromAvatar} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-white text-[10px] font-bold">{activeGlobalBanner.fromName?.[0] || "?"}</div>
+                  )}
+                </div>
+                <span className="text-[11px] font-black text-yellow-300 truncate max-w-[65px]">{activeGlobalBanner.fromName}</span>
+              </div>
+              <div className="flex flex-col items-center px-1">
+                <span className="text-[9px] font-bold text-white/90 truncate">أهدى {activeGlobalBanner.giftName}</span>
+                <span className="text-xs font-black text-yellow-400">×{activeGlobalBanner.quantity}</span>
+              </div>
+              <div className="flex items-center gap-1 min-w-0">
+                <span className="text-[11px] font-black text-yellow-300 truncate max-w-[65px]">{activeGlobalBanner.toName}</span>
+                <div className="w-7 h-7 rounded-full overflow-hidden ring-2 ring-yellow-400 flex-shrink-0">
+                  {activeGlobalBanner.toAvatar ? (
+                    <img src={activeGlobalBanner.toAvatar} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-white text-[10px] font-bold">{activeGlobalBanner.toName?.[0] || "?"}</div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {activeGift && (
         <>
-          <div key={activeGift._id} className="fixed z-[68] pointer-events-none gift-anim"
-            style={{
-              left: "50%", top: "50%",
-              ["--target-x" as any]: giftTarget ? `${giftTarget.x}px` : "0px",
-              ["--target-y" as any]: giftTarget ? `${giftTarget.y}px` : "0px",
-            }}>
-            {activeGift.mediaType === "video" && activeGift.mediaUrl ? (
-              <video ref={videoRef} src={activeGift.mediaUrl} autoPlay preload="auto" playsInline
+          {/* ============ VIDEO FULLSCREEN (≥ 1000) ============ */}
+          {(activeGift.price ?? 0) >= 1000 && activeGift.mediaType === "video" && activeGift.mediaUrl && (
+            <div className="fixed inset-0 z-[80] pointer-events-none flex items-center justify-center">
+              <video
+                ref={videoRef}
+                key={activeGift._id}
+                src={activeGift.mediaUrl}
+                autoPlay
+                playsInline
+                preload="auto"
                 onCanPlayThrough={() => {
                   if (videoRef.current) {
                     videoRef.current.volume = 1;
                     videoRef.current.muted = false;
-                    videoRef.current.play().catch(() => { if (videoRef.current) videoRef.current.muted = true; });
+                    videoRef.current.play().catch(() => {
+                      if (videoRef.current) videoRef.current.muted = true;
+                    });
                   }
                 }}
                 onEnded={finishActiveGift}
-                className={activeGift.hasSound ? "max-w-[70vw] max-h-[60vh] object-contain" : "max-w-[40vw] max-h-[40vh] object-contain"}
+                onError={finishActiveGift}
+                className="w-full h-full object-contain pointer-events-none"
               />
-            ) : activeGift.mediaUrl ? (
-              <img src={activeGift.mediaUrl} alt="" className={activeGift.hasSound ? "max-w-[70vw] max-h-[60vh] object-contain" : "max-w-[40vw] max-h-[40vh] object-contain"} />
-            ) : null}
-          </div>
+            </div>
+          )}
 
-          {(activeGift.hasSound || isGlobalBanner) && (
-            <div className="fixed top-3 left-0 right-0 z-[70] flex justify-center pointer-events-none">
-              <div className={`max-w-[320px] w-[calc(100%-24px)] backdrop-blur-xl rounded-full px-3 py-1.5 border shadow-2xl flex items-center gap-1.5 ${isGlobalBanner ? "bg-gradient-to-r from-yellow-500/30 via-amber-400/30 to-yellow-500/30 border-yellow-300/60" : "bg-white/10 border-white/25"}`}>
-                <div className="flex items-center gap-1 flex-shrink-0">
-                  <div className="w-7 h-7 rounded-full overflow-hidden bg-purple-500/70 ring-1 ring-white/40">
-                    {activeGift.fromAvatar ? <img src={activeGift.fromAvatar} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-white text-[10px] font-bold">{activeGift.fromName?.[0] || "?"}</div>}
+          {/* ============ ROOM BANNER (1000 - 29999) ============ */}
+          {(activeGift.price ?? 0) >= 1000 && (activeGift.price ?? 0) < 30000 && (
+            <div className={`fixed top-4 left-0 right-0 z-[85] flex justify-center pointer-events-none transition-all duration-300 ${showComboPulse ? "scale-[1.03]" : "scale-100"}`}>
+              <div className="max-w-[330px] w-[calc(100%-24px)] bg-gradient-to-r from-purple-900/90 via-black/90 to-purple-900/90 backdrop-blur-md rounded-full px-3 py-1.5 border border-purple-400/50 shadow-2xl flex items-center justify-between">
+                <div className="flex items-center gap-1.5 truncate">
+                  <div className="w-7 h-7 rounded-full overflow-hidden ring-1 ring-purple-400 flex-shrink-0">
+                    {activeGift.fromAvatar ? (
+                      <img src={activeGift.fromAvatar} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-white text-[10px] font-bold">{activeGift.fromName?.[0] || "?"}</div>
+                    )}
                   </div>
-                  <span className="text-white text-[10px] font-bold max-w-[48px] truncate">{activeGift.fromName}</span>
+                  <span className="text-white text-xs font-bold truncate max-w-[60px]">{activeGift.fromName}</span>
                 </div>
-                <span className="text-pink-300 text-sm font-black flex-shrink-0">⟶</span>
-                <div className="flex-1 flex flex-col items-center justify-center min-w-0">
-                  <span className="text-white text-[9px] font-black truncate max-w-full">{activeGift.giftName}</span>
-                  <span className={`text-yellow-300 text-[11px] font-black ${showComboPulse ? "combo-pulse" : ""}`}>×{comboCount}</span>
+                <div className="flex flex-col items-center px-2 min-w-0">
+                  <span className="text-purple-300 text-[10px] font-bold truncate max-w-[100px]">{activeGift.giftName}</span>
+                  <span className={`text-yellow-300 text-xs font-black ${showComboPulse ? "combo-pulse" : ""}`}>×{comboCount}</span>
                 </div>
-                <span className="text-pink-300 text-sm font-black flex-shrink-0">⟵</span>
-                <div className="flex items-center gap-1 flex-shrink-0">
-                  <span className="text-white text-[10px] font-bold max-w-[48px] truncate">{activeGift.toName}</span>
-                  <div className="w-7 h-7 rounded-full overflow-hidden bg-purple-500/70 ring-1 ring-white/40">
-                    {activeGift.toAvatar ? <img src={activeGift.toAvatar} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-white text-[10px] font-bold">{activeGift.toName?.[0] || "?"}</div>}
+                <div className="flex items-center gap-1.5 truncate">
+                  <span className="text-white text-xs font-bold truncate max-w-[60px]">{activeGift.toName}</span>
+                  <div className="w-7 h-7 rounded-full overflow-hidden ring-1 ring-purple-400 flex-shrink-0">
+                    {activeGift.toAvatar ? (
+                      <img src={activeGift.toAvatar} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-white text-[10px] font-bold">{activeGift.toName?.[0] || "?"}</div>
+                    )}
                   </div>
                 </div>
               </div>
             </div>
           )}
 
-          {!activeGift.hasSound && !isGlobalBanner && (
-            <div className="fixed left-0 right-0 z-[70] pointer-events-none flex justify-center" style={{ bottom: "48vh" }}>
-              <div className="max-w-[240px] bg-white/10 backdrop-blur-xl rounded-full px-3 py-1.5 border border-white/25 shadow-2xl flex items-center gap-2">
-                <span className={`text-yellow-300 text-[11px] font-black flex-shrink-0 ${showComboPulse ? "combo-pulse" : ""}`}>×{comboCount}</span>
-                <div className="w-6 h-6 flex items-center justify-center flex-shrink-0">
-                  {activeGift.mediaUrl ? (
-                    activeGift.mediaType === "video" ? <video src={activeGift.mediaUrl} className="w-full h-full object-contain pointer-events-none" muted playsInline /> : <img src={activeGift.mediaUrl} alt="" className="w-full h-full object-contain" />
-                  ) : <span className="text-base">🎁</span>}
+          {/* ============ GLOBAL GOLDEN BANNER (≥ 30000 — in-room) ============ */}
+          {isGlobalBanner && (
+            <div className="fixed top-2 left-0 right-0 z-[95] flex justify-center pointer-events-none">
+              <div className="max-w-[360px] w-[calc(100%-16px)] bg-gradient-to-r from-amber-600 via-yellow-400 to-amber-600 p-[1.5px] rounded-full golden-glow">
+                <div className="bg-black/90 backdrop-blur-xl rounded-full px-3 py-1.5 flex items-center justify-between text-white border border-yellow-300/40">
+                  <div className="flex items-center gap-1 min-w-0">
+                    <div className="w-7 h-7 rounded-full overflow-hidden ring-2 ring-yellow-400 flex-shrink-0">
+                      {activeGift.fromAvatar ? (
+                        <img src={activeGift.fromAvatar} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-white text-[10px] font-bold">{activeGift.fromName?.[0] || "?"}</div>
+                      )}
+                    </div>
+                    <span className="text-[11px] font-black text-yellow-300 truncate max-w-[65px]">{activeGift.fromName}</span>
+                  </div>
+                  <div className="flex flex-col items-center px-1">
+                    <span className="text-[9px] font-bold text-white/90 truncate">أهدى {activeGift.giftName}</span>
+                    <span className={`text-xs font-black text-yellow-400 ${showComboPulse ? "combo-pulse" : ""}`}>×{comboCount}</span>
+                  </div>
+                  <div className="flex items-center gap-1 min-w-0">
+                    <span className="text-[11px] font-black text-yellow-300 truncate max-w-[65px]">{activeGift.toName}</span>
+                    <div className="w-7 h-7 rounded-full overflow-hidden ring-2 ring-yellow-400 flex-shrink-0">
+                      {activeGift.toAvatar ? (
+                        <img src={activeGift.toAvatar} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-white text-[10px] font-bold">{activeGift.toName?.[0] || "?"}</div>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div className="flex flex-col items-end min-w-0">
-                  <span className="text-white text-[10px] font-bold truncate max-w-[90px]">{activeGift.fromName}</span>
-                  <span className="text-white/70 text-[8px] truncate max-w-[90px]">إلى {activeGift.toName}</span>
+              </div>
+            </div>
+          )}
+
+          {/* ============ MICRO GIFT (< 1000) — flies to mic ============ */}
+          {(activeGift.price ?? 0) < 1000 && activeGift.mediaUrl && (
+            <div
+              key={`${activeGift._id}_${comboCount}`}
+              className="fixed z-[75] pointer-events-none gift-fly-anim"
+              style={{
+                left: "50%",
+                top: "50%",
+                ["--target-x" as any]: targetCoordsRef.current ? `${targetCoordsRef.current.x}px` : "0px",
+                ["--target-y" as any]: targetCoordsRef.current ? `${targetCoordsRef.current.y}px` : "-20vh",
+              }}
+            >
+              <img src={activeGift.mediaUrl} alt="" className="w-24 h-24 object-contain drop-shadow-2xl" />
+            </div>
+          )}
+
+          {/* ============ MICRO GIFT BOTTOM PILL (< 1000) ============ */}
+          {(activeGift.price ?? 0) < 1000 && (
+            <div className={`fixed left-3 z-[70] pointer-events-none flex items-center transition-transform duration-200 ${showComboPulse ? "scale-110" : "scale-100"}`} style={{ bottom: "42vh" }}>
+              <div className="bg-black/70 backdrop-blur-md rounded-full pl-2 pr-3 py-1 border border-white/20 shadow-xl flex items-center gap-2">
+                <div className="w-6 h-6 rounded-full overflow-hidden bg-purple-500 ring-1 ring-white/50 flex-shrink-0">
+                  {activeGift.fromAvatar ? (
+                    <img src={activeGift.fromAvatar} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-white text-[9px] font-bold">{activeGift.fromName?.[0] || "?"}</div>
+                  )}
                 </div>
-                <div className="w-6 h-6 rounded-full overflow-hidden bg-purple-500/70 ring-1 ring-white/40 flex-shrink-0">
-                  {activeGift.fromAvatar ? <img src={activeGift.fromAvatar} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-white text-[9px] font-bold">{activeGift.fromName?.[0] || "?"}</div>}
+                <div className="flex flex-col text-right min-w-0">
+                  <span className="text-white text-[10px] font-bold truncate max-w-[70px]">{activeGift.fromName}</span>
+                  <span className="text-white/60 text-[8px] truncate max-w-[70px]">أرسل إلى {activeGift.toName}</span>
                 </div>
+                <span className="text-yellow-300 text-xs font-black italic">×{comboCount}</span>
               </div>
             </div>
           )}
@@ -544,6 +657,8 @@ export default function RoomView({ roomId, onLeave }: Props) {
           </div>
         </div>
       )}
+
+
 
       {showGifts && <GiftSheet roomId={roomId} onClose={() => setShowGifts(false)} />}
 
