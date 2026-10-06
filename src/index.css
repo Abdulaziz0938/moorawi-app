@@ -39,3 +39,23 @@ html, body {
 .animate-shimmer {
   animation: shimmer 2.5s infinite;
 }
+
+/* Gift fly animation - center then fly up-right toward mic */
+@keyframes giftFlyUp {
+  0% { opacity: 0; transform: translate(0, 0) scale(0.3); }
+  20% { opacity: 1; transform: translate(0, 0) scale(1); }
+  80% { opacity: 1; transform: translate(20vw, -25vh) scale(0.6); }
+  100% { opacity: 0; transform: translate(30vw, -40vh) scale(0.4); }
+}
+.gift-fly-animation {
+  animation: giftFlyUp 3.5s ease-out forwards;
+}
+
+/* Banner slide down */
+@keyframes bannerSlideDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-banner-slide-down {
+  animation: bannerSlideDown 0.4s ease-out;
+}

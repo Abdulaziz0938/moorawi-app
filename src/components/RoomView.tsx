@@ -504,99 +504,17 @@ export default function RoomView({ roomId, onLeave }: Props) {
         <GiftSheet roomId={roomId} onClose={() => setShowGifts(false)} />
       )}
 
-      {/* Gift Animation Overlay — Full Screen */}
+      {/* Gift Animation Overlay */}
       {activeGift && (
-        <div className="fixed inset-0 z-[70] flex flex-col" dir="rtl">
-          {/* Dark backdrop */}
-          <div className="absolute inset-0 bg-black/95" />
-
-          {/* TOP BANNER (draggable to dismiss) */}
-          <div
-            className="relative z-10 mx-2 mt-2 flex-shrink-0"
-            style={{
-              transform: `translateY(${bannerY}px)`,
-              opacity: bannerOpacity,
-              transition: dragging ? "none" : "transform 0.3s, opacity 0.3s",
-            }}
-            onTouchStart={(e) => {
-              if (!activeGift) return;
-              setDragging(true);
-              setTouchStartY(e.touches[0].clientY);
-            }}
-            onTouchMove={(e) => {
-              if (!dragging) return;
-              const delta = e.touches[0].clientY - touchStartY;
-              if (delta > 0) {
-                setBannerY(delta);
-                setBannerOpacity(Math.max(0.2, 1 - delta / 200));
-              }
-            }}
-            onTouchEnd={() => {
-              setDragging(false);
-              if (bannerY > 60) {
-                // dismiss
-                setActiveGift(null);
-                setLastGiftSeen(Date.now());
-              }
-              setBannerY(0);
-              setBannerOpacity(1);
-            }}
-          >
-            {/* Drag handle */}
-            <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-12 h-1 bg-white/40 rounded-full" />
-
-            {/* Glowing banner */}
-            <div className="relative overflow-hidden bg-gradient-to-r from-pink-500 via-fuchsia-500 to-purple-600 rounded-2xl p-2 pt-3 shadow-[0_0_30px_rgba(236,72,153,0.5)] border-2 border-white/30 flex items-center gap-2">
-              {/* Shimmer */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
-
-              {/* Sender */}
-              <div className="relative flex items-center gap-1.5 flex-shrink-0">
-                <div className="w-10 h-10 rounded-full overflow-hidden bg-purple-500 ring-2 ring-yellow-300 shadow-lg">
-                  {activeGift.fromAvatar ? (
-                    <img src={activeGift.fromAvatar} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-white text-xs font-bold">
-                      {activeGift.fromName?.[0] || "?"}
-                    </div>
-                  )}
-                </div>
-                <span className="text-white text-[11px] font-black max-w-[70px] truncate drop-shadow">{activeGift.fromName}</span>
-              </div>
-
-              <span className="text-yellow-300 text-xl font-black drop-shadow-lg flex-shrink-0">⟶</span>
-
-              {/* Center - gift */}
-              <div className="relative flex-1 flex flex-col items-center justify-center min-w-0">
-                <span className="text-white text-[11px] font-black truncate max-w-[100px] drop-shadow">{activeGift.giftName}</span>
-                <span className="text-yellow-300 text-[13px] font-black drop-shadow">×{activeGift.quantity}</span>
-              </div>
-
-              <span className="text-yellow-300 text-xl font-black drop-shadow-lg flex-shrink-0">⟵</span>
-
-              {/* Receiver */}
-              <div className="relative flex items-center gap-1.5 flex-shrink-0">
-                <span className="text-white text-[11px] font-black max-w-[70px] truncate drop-shadow">{activeGift.toName}</span>
-                <div className="w-10 h-10 rounded-full overflow-hidden bg-purple-500 ring-2 ring-yellow-300 shadow-lg">
-                  {activeGift.toAvatar ? (
-                    <img src={activeGift.toAvatar} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-white text-xs font-bold">
-                      {activeGift.toName?.[0] || "?"}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* FULL-SCREEN MEDIA */}
-          <div className="relative z-10 flex-1 flex items-center justify-center overflow-hidden p-2">
+        <>
+          {/* Media — no background, flies toward mic */}
+          <div className="fixed inset-0 z-[68] pointer-events-none flex items-center justify-center">
             {activeGift.mediaType === "video" && activeGift.mediaUrl ? (
               <video
                 ref={videoRef}
                 key={activeGift._id}
                 src={activeGift.mediaUrl}
+                autoPlay
                 preload="auto"
                 playsInline
                 onCanPlayThrough={() => {
@@ -609,17 +527,93 @@ export default function RoomView({ roomId, onLeave }: Props) {
                   }
                 }}
                 onEnded={handleVideoEnd}
-                className="w-full h-full object-contain"
+                className={`object-contain drop-shadow-2xl ${activeGift.hasSound ? "max-w-[70vw] max-h-[60vh] gift-fly-animation" : "max-w-[40vw] max-h-[40vh] gift-fly-animation"}`}
               />
             ) : activeGift.mediaUrl ? (
               <img
                 src={activeGift.mediaUrl}
                 alt=""
-                className="w-full h-full object-contain"
+                className={`object-contain drop-shadow-2xl ${activeGift.hasSound ? "max-w-[70vw] max-h-[60vh] gift-fly-animation" : "max-w-[40vw] max-h-[40vh] gift-fly-animation"}`}
               />
             ) : null}
           </div>
-        </div>
+
+          {/* Top banner — ONLY for gifts with sound */}
+          {activeGift.hasSound && (
+            <div className="fixed top-2 left-2 right-2 z-[70] animate-banner-slide-down">
+              <div className="relative overflow-hidden bg-gradient-to-r from-pink-500 via-fuchsia-500 to-purple-600 rounded-2xl px-2 py-1.5 shadow-2xl border-2 border-white/30 flex items-center gap-2">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
+                <div className="relative flex items-center gap-1.5 flex-shrink-0">
+                  <div className="w-9 h-9 rounded-full overflow-hidden bg-purple-500 ring-2 ring-yellow-300 shadow-lg">
+                    {activeGift.fromAvatar ? (
+                      <img src={activeGift.fromAvatar} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-white text-xs font-bold">
+                        {activeGift.fromName?.[0] || "?"}
+                      </div>
+                    )}
+                  </div>
+                  <span className="text-white text-[11px] font-black max-w-[70px] truncate">{activeGift.fromName}</span>
+                </div>
+                <span className="text-yellow-300 text-lg font-black">⟶</span>
+                <div className="relative flex-1 flex flex-col items-center justify-center min-w-0">
+                  <span className="text-white text-[10px] font-black truncate max-w-[90px]">{activeGift.giftName}</span>
+                  <span className="text-yellow-300 text-[11px] font-black">×{activeGift.quantity}</span>
+                </div>
+                <span className="text-yellow-300 text-lg font-black">⟵</span>
+                <div className="relative flex items-center gap-1.5 flex-shrink-0">
+                  <span className="text-white text-[11px] font-black max-w-[70px] truncate">{activeGift.toName}</span>
+                  <div className="w-9 h-9 rounded-full overflow-hidden bg-purple-500 ring-2 ring-yellow-300 shadow-lg">
+                    {activeGift.toAvatar ? (
+                      <img src={activeGift.toAvatar} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-white text-xs font-bold">
+                        {activeGift.toName?.[0] || "?"}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Small bottom banner — for gifts WITHOUT sound */}
+          {!activeGift.hasSound && (
+            <div className="fixed bottom-24 left-3 right-3 z-[70] pointer-events-none animate-banner-slide-down">
+              <div className="bg-gradient-to-r from-emerald-500/90 to-emerald-600/90 backdrop-blur-md rounded-2xl px-3 py-2 shadow-xl border border-white/20 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="w-10 h-10 rounded-full overflow-hidden bg-purple-500 ring-2 ring-white/40 flex-shrink-0">
+                    {activeGift.fromAvatar ? (
+                      <img src={activeGift.fromAvatar} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-white text-xs font-bold">
+                        {activeGift.fromName?.[0] || "?"}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-white text-[12px] font-black truncate">{activeGift.fromName}</span>
+                    <span className="text-white/80 text-[9px] truncate">إلى {activeGift.toName}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  <div className="w-8 h-8 flex items-center justify-center">
+                    {activeGift.mediaUrl ? (
+                      activeGift.mediaType === "video" ? (
+                        <video src={activeGift.mediaUrl} className="w-full h-full object-contain pointer-events-none" muted playsInline />
+                      ) : (
+                        <img src={activeGift.mediaUrl} alt="" className="w-full h-full object-contain" />
+                      )
+                    ) : (
+                      <span className="text-xl">🎁</span>
+                    )}
+                  </div>
+                  <span className="text-yellow-300 text-[11px] font-black">×{activeGift.quantity}</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {showSettings && (

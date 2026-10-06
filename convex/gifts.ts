@@ -259,6 +259,9 @@ export const latestGiftFull = query({
       quantity: recent.quantity,
       mediaUrl,
       mediaType: gift.mediaType,
+      hasSound: gift.hasSound ?? false,
+      isGlobal: gift.isGlobal ?? false,
+      isRelationship: gift.isRelationship ?? false,
       createdAt: recent._creationTime,
     };
   },
