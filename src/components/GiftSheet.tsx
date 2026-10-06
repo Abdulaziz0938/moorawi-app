@@ -3,12 +3,12 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { getDeviceId } from "../lib/device";
-import { X, Coins, Loader2, Music, Globe, Heart } from "lucide-react";
+import { X, Coins, Loader2, Music, Heart, Globe } from "lucide-react";
 
 interface Props { roomId: Id<"rooms">; onClose: () => void; }
 
 const CATEGORIES = [
-  { key: "all",      label: "الأحداث" },
+  { key: "all",      label: "الكل" },
   { key: "classic",  label: "كلاسيكي" },
   { key: "vip",      label: "VIP" },
   { key: "relation", label: "العلاقة" },
@@ -43,6 +43,18 @@ export default function GiftSheet({ roomId, onClose }: Props) {
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = prev; };
   }, []);
+
+  // Preload video metadata
+  useEffect(() => {
+    if (!gifts) return;
+    gifts.forEach((g) => {
+      if (g.mediaType === "video" && g.mediaUrl) {
+        const v = document.createElement("video");
+        v.src = g.mediaUrl;
+        v.preload = "metadata";
+      }
+    });
+  }, [gifts]);
 
   const membersList = (members ?? []).map((m) => ({
     ...m,
@@ -103,15 +115,12 @@ export default function GiftSheet({ roomId, onClose }: Props) {
     setDragY(0);
   };
 
-  const selectedGift = gifts?.find((g) => g._id === selectedGiftId);
-  const columns = Math.ceil(filteredGifts.length / 2);
-
   return (
     <div className="fixed inset-0 z-[80] bg-black/70 flex items-end" onClick={onClose}>
       <div
-        className="w-full max-w-md mx-auto bg-gray-950/90 backdrop-blur-md rounded-t-3xl flex flex-col select-none overflow-hidden"
+        className="w-full max-w-md mx-auto bg-gray-950/98 backdrop-blur-md rounded-t-3xl flex flex-col select-none overflow-hidden"
         style={{
-          maxHeight: "42vh",
+          height: "40vh",
           transform: `translateY(${dragY}px)`,
           transition: dragging ? "none" : "transform 0.3s",
         }}
@@ -119,72 +128,71 @@ export default function GiftSheet({ roomId, onClose }: Props) {
         onContextMenu={(e) => e.preventDefault()}
         dir="rtl"
       >
-        {/* Drag handle */}
+        {/* Drag handle (for scroll/close) */}
         <div className="pt-1.5 pb-0.5 flex justify-center cursor-grab touch-none flex-shrink-0"
           onTouchStart={onDragStart} onTouchMove={onDragMove} onTouchEnd={onDragEnd}>
           <div className="w-10 h-1 bg-white/30 rounded-full" />
         </div>
 
-        {/* Header */}
-        <div className="flex items-center justify-between px-3 py-1 border-b border-white/10 flex-shrink-0">
-          <h2 className="text-white font-bold text-xs">الهدايا</h2>
-          <div className="flex items-center gap-1.5">
-            <button onClick={() => setShowRecharge(true)}
-              className="flex items-center gap-0.5 bg-yellow-500/20 hover:bg-yellow-500/30 px-2 py-0.5 rounded-full">
-              <Coins size={10} className="text-yellow-400" />
-              <span className="text-yellow-300 text-[10px] font-bold">{balance ?? 0}</span>
-              <span className="text-yellow-300 text-[9px] font-bold">+</span>
+        {/* Header: X (right) + title + balance with arrow (left) */}
+        <div className="flex items-center justify-between px-3 py-0.5 flex-shrink-0">
+          <button onClick={onClose} className="text-white/70 hover:text-white p-0.5"><X size={16} /></button>
+          <h2 className="text-white font-bold text-[11px]">الهدايا</h2>
+          {/* Balance → opens recharge on arrow click */}
+          <div className="flex items-center gap-0.5 bg-gray-800/80 border border-white/20 rounded-full overflow-hidden">
+            <button
+              onClick={(e) => { e.stopPropagation(); setShowRecharge(true); }}
+              className="px-1.5 py-0.5 hover:bg-gray-700"
+            >
+              <span className="text-yellow-300 text-[11px] font-bold">‹</span>
             </button>
-            <button onClick={onClose} className="text-white/70 hover:text-white p-0.5"><X size={14} /></button>
+            <span className="text-yellow-300 text-[10px] font-bold">{balance ?? 0}</span>
+            <div className="px-1.5 py-0.5"><Coins size={9} className="text-yellow-400" /></div>
           </div>
         </div>
 
         {/* Recipients */}
-        <div className="border-b border-white/10 py-1 flex-shrink-0">
+        <div className="border-b border-white/10 py-0.5 flex-shrink-0 mt-0.5">
           <div className="flex gap-1.5 px-2 overflow-x-auto thin-scroll">
             {membersList.length === 0 ? (
-              <p className="text-white/40 text-[10px] py-1 px-2">لا يوجد أعضاء</p>
+              <p className="text-white/40 text-[9px] py-0.5 px-2">لا يوجد أعضاء</p>
             ) : membersList.map((m) => (
               <button key={m._id} onClick={() => setSelectedUserId(m.userId)}
-                className={`flex-shrink-0 flex flex-col items-center gap-0.5 w-10 transition ${selectedUserId === m.userId ? "opacity-100" : "opacity-55"}`}>
-                <div className={`w-8 h-8 rounded-full overflow-hidden bg-purple-500 flex items-center justify-center text-[10px] font-bold text-white border-2 ${selectedUserId === m.userId ? "border-purple-400 ring-1 ring-purple-400/40" : "border-transparent"}`}>
+                className={`flex-shrink-0 flex flex-col items-center gap-0.5 w-9 transition ${selectedUserId === m.userId ? "opacity-100" : "opacity-50"}`}>
+                <div className={`w-7 h-7 rounded-full overflow-hidden bg-purple-500 flex items-center justify-center text-[9px] font-bold text-white border-2 ${selectedUserId === m.userId ? "border-purple-400" : "border-transparent"}`}>
                   {m.avatarUrl ? <img src={m.avatarUrl} alt="" className="w-full h-full object-cover" /> : (m.name?.[0] || "?")}
                 </div>
-                <span className="text-white text-[8px] truncate max-w-full">{m.name}</span>
+                <span className="text-white text-[7px] truncate max-w-full">{m.name}</span>
               </button>
             ))}
           </div>
         </div>
 
         {/* Categories */}
-        <div className="flex gap-1 px-2 py-1 border-b border-white/10 overflow-x-auto thin-scroll flex-shrink-0">
+        <div className="flex flex-row-reverse gap-1 px-2 py-1 border-b border-white/10 overflow-x-auto thin-scroll flex-shrink-0">
           {CATEGORIES.map((c) => (
             <button key={c.key} onClick={() => setCategory(c.key)}
-              className={`px-2 py-0.5 rounded-full text-[10px] whitespace-nowrap transition ${category === c.key ? "bg-purple-600 text-white font-bold" : "bg-white/10 text-white/70 hover:bg-white/20"}`}>
+              className={`px-2 py-0.5 rounded-md text-[10px] whitespace-nowrap transition relative ${category === c.key ? "text-white font-bold" : "text-white/60"}`}>
               {c.label}
+              {category === c.key && (
+                <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-emerald-400 rounded-full" />
+              )}
             </button>
           ))}
         </div>
 
-        {/* Gifts grid — compact 2 rows horizontal scroll */}
-        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-2 py-1.5">
+        {/* Gifts grid */}
+        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-1.5 py-1.5 thin-scroll">
           {gifts === undefined ? (
-            <div className="flex justify-center py-4"><Loader2 className="animate-spin text-white/40" size={18} /></div>
+            <div className="flex justify-center py-3"><Loader2 className="animate-spin text-white/40" size={16} /></div>
           ) : filteredGifts.length === 0 ? (
-            <p className="text-white/40 text-[10px] text-center py-4">لا توجد هدايا</p>
+            <p className="text-white/40 text-[9px] text-center py-3">لا توجد هدايا</p>
           ) : (
-            <div
-              className="grid gap-1.5 w-max"
-              style={{
-                gridTemplateColumns: `repeat(${columns}, 60px)`,
-                gridTemplateRows: "repeat(2, 78px)",
-                gridAutoFlow: "column",
-              }}
-            >
+            <div className="grid grid-cols-4 gap-1.5">
               {filteredGifts.map((g) => {
                 const isSelected = selectedGiftId === g._id;
                 return (
-                  <button
+                  <div
                     key={g._id}
                     onClick={() => handleGiftClick(g._id)}
                     onTouchStart={(e) => startLongPress(g._id, e)}
@@ -194,15 +202,12 @@ export default function GiftSheet({ roomId, onClose }: Props) {
                     onMouseUp={cancelLongPress}
                     onMouseLeave={cancelLongPress}
                     onContextMenu={(e) => e.preventDefault()}
-                    className={`w-[60px] h-[78px] relative rounded-lg flex flex-col overflow-hidden transition border-2 ${
-                      isSelected
-                        ? "bg-purple-600/40 border-purple-400"
-                        : "bg-white/5 border-white/10"
+                    className={`relative rounded-lg flex flex-col overflow-hidden transition cursor-pointer ${
+                      isSelected ? "bg-purple-600/30 ring-2 ring-purple-400" : "bg-white/5"
                     }`}
                     style={{ WebkitTouchCallout: "none", WebkitUserSelect: "none" }}
                   >
-                    {/* Media: static first frame for video, img for images */}
-                    <div className="w-[60px] h-[60px] flex-shrink-0 overflow-hidden bg-black/20 relative">
+                    <div className="w-full aspect-square overflow-hidden bg-black/20 relative">
                       {g.mediaUrl ? (
                         g.mediaType === "video" ? (
                           <video
@@ -218,70 +223,65 @@ export default function GiftSheet({ roomId, onClose }: Props) {
                           <img src={g.mediaUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
                         )
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center"><span className="text-lg">🎁</span></div>
+                        <div className="w-full h-full flex items-center justify-center"><span className="text-xl">🎁</span></div>
                       )}
 
-                      {/* Badges */}
-                      <div className="absolute top-0.5 left-0.5 flex flex-col gap-0.5 pointer-events-none">
+                      <div className="absolute top-1 right-1 flex flex-col gap-0.5 pointer-events-none">
+                        {g.isRelationship && (
+                          <div className="w-3.5 h-3.5 rounded-sm bg-pink-500/95 flex items-center justify-center shadow">
+                            <Heart size={8} className="text-white fill-white" />
+                          </div>
+                        )}
                         {g.isGlobal && (
-                          <div className="w-3 h-3 rounded bg-blue-500/95 flex items-center justify-center shadow">
-                            <Globe size={7} className="text-white" />
+                          <div className="w-3.5 h-3.5 rounded-sm bg-blue-500/95 flex items-center justify-center shadow">
+                            <Globe size={8} className="text-white" />
                           </div>
                         )}
                         {g.hasSound && (
-                          <div className="w-3 h-3 rounded bg-purple-500/95 flex items-center justify-center shadow">
-                            <Music size={7} className="text-white" />
-                          </div>
-                        )}
-                        {g.isRelationship && (
-                          <div className="w-3 h-3 rounded bg-pink-500/95 flex items-center justify-center shadow">
-                            <Heart size={7} className="text-white fill-white" />
+                          <div className="w-3.5 h-3.5 rounded-sm bg-purple-500/95 flex items-center justify-center shadow">
+                            <Music size={8} className="text-white" />
                           </div>
                         )}
                       </div>
                     </div>
 
-                    {/* Name + price (compact) */}
-                    <div className="w-full flex-1 flex flex-col items-center justify-center px-0.5 leading-none">
-                      <p className="text-white text-[8px] truncate max-w-full font-bold">{g.name}</p>
-                      <p className="text-yellow-400 text-[8px] font-bold flex items-center gap-0.5">
-                        <Coins size={7} />{g.price}
+                    <div className="px-0.5 py-0.5 text-center leading-tight">
+                      <p className="text-white text-[9px] truncate font-bold">{g.name}</p>
+                      <p className="text-yellow-400 text-[9px] font-bold flex items-center justify-center gap-0.5">
+                        {g.price}
+                        <Coins size={7} />
                       </p>
                     </div>
-                  </button>
+
+                    {isSelected && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleSend(g._id, 1); }}
+                        disabled={sendingId === g._id || (balance ?? 0) < g.price}
+                        className="w-full bg-gradient-to-r from-pink-500 to-pink-600 text-white text-[10px] font-bold py-1 flex items-center justify-center gap-1 disabled:opacity-50"
+                      >
+                        {sendingId === g._id ? <Loader2 className="animate-spin" size={10} /> : null}
+                        إرسال
+                      </button>
+                    )}
+                  </div>
                 );
               })}
             </div>
           )}
         </div>
 
-        {/* Send button — only when gift selected */}
-        {selectedGift && (
-          <div className="border-t border-white/10 p-1.5 flex-shrink-0 bg-gray-950">
-            <button
-              onClick={() => handleSend(selectedGift._id, 1)}
-              disabled={sendingId === selectedGift._id || (balance ?? 0) < selectedGift.price}
-              className="w-full py-2 rounded-xl text-white font-bold text-xs bg-gradient-to-r from-pink-600 to-purple-600 disabled:opacity-40 flex items-center justify-center gap-2"
-            >
-              {sendingId === selectedGift._id ? <Loader2 className="animate-spin" size={14} /> : <Coins size={12} />}
-              إرسال {selectedGift.name} ({selectedGift.price})
-            </button>
-          </div>
-        )}
-
         {/* Quantity menu */}
         {qtyMenu && (
           <>
             <div className="fixed inset-0 z-[85]" onClick={() => setQtyMenu(null)} />
             <div
-              className="fixed z-[90] bg-gray-900 rounded-xl shadow-2xl border border-white/20 py-1 w-20"
+              className="fixed z-[90] bg-gray-900 rounded-lg shadow-2xl border border-white/20 py-0.5 w-16"
               style={{
-                left: Math.min(qtyMenu.x, window.innerWidth - 90),
-                top: Math.max(50, qtyMenu.y - 220),
+                left: Math.min(qtyMenu.x, window.innerWidth - 80),
+                top: Math.max(50, qtyMenu.y - 200),
               }}
               onContextMenu={(e) => e.preventDefault()}
             >
-              <p className="text-white/50 text-[9px] px-2 py-0.5 border-b border-white/10">العدد</p>
               {QUANTITIES.map((q) => (
                 <button key={q}
                   onClick={() => { const id = qtyMenu.giftId; setQtyMenu(null); handleSend(id, q); }}
