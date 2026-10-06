@@ -4,6 +4,7 @@ import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { Mic, MicOff, LogOut, Loader2 } from "lucide-react";
 import { agoraManager } from "../lib/agora";
+import { getDeviceId } from "../lib/device";
 
 interface Props {
   roomId: Id<"rooms">;
@@ -11,9 +12,10 @@ interface Props {
 }
 
 export default function RoomView({ roomId, onLeave }: Props) {
+  const deviceId = getDeviceId();
   const room = useQuery(api.rooms.get, { roomId });
   const seats = useQuery(api.mics.state, { roomId });
-  const myRole = useQuery(api.mics.myRole, { roomId });
+  const myRole = useQuery(api.mics.myRole, { roomId, tokenOverride: deviceId });
   const takeSeat = useMutation(api.mics.takeSeat);
   const leaveSeat = useMutation(api.mics.leaveSeat);
   const getToken = useAction(api.voice.getToken);
@@ -22,16 +24,16 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const [isMuted, setIsMuted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const joinedRef = useRef(false);
+  const publishedRef = useRef(false);
 
-  const mySeat = seats?.find((s) => s.userName !== null && s.userName !== undefined && s.userId);
-
+  // Connect to Agora
   useEffect(() => {
     if (!room || joinedRef.current) return;
     joinedRef.current = true;
 
     (async () => {
       try {
-        const tokenData = await getToken({ roomId });
+        const tokenData = await getToken({ roomId, tokenOverride: deviceId });
         await agoraManager.join(
           tokenData.appId,
           roomId,
@@ -49,19 +51,22 @@ export default function RoomView({ roomId, onLeave }: Props) {
     return () => {
       agoraManager.leave();
       joinedRef.current = false;
+      publishedRef.current = false;
     };
-  }, [room, roomId, getToken]);
+  }, [room, roomId, getToken, deviceId]);
 
-  // Publish/unpublish microphone based on seat status
+  // Auto publish microphone when on a seat
   useEffect(() => {
-    if (!agoraConnected) return;
-    const onSeat = seats?.some((s) => s.userId && s.userName && myRole === "speaker");
-    if (onSeat && !isMuted) {
+    if (!agoraConnected || !myRole || !seats) return;
+    const onSeat = seats.some((s) => s.userId && s.userId === seats.find((x) => x.userName)?.userId);
+    const isOnMic = myRole === "speaker" || myRole === "owner" || myRole === "moderator";
+    if (isOnMic && !isMuted && !publishedRef.current) {
+      publishedRef.current = true;
       agoraManager.publishMicrophone().catch((e) => console.error(e));
+    } else if (!isOnMic && publishedRef.current) {
+      publishedRef.current = false;
+      agoraManager.unpublishMicrophone().catch((e) => console.error(e));
     }
-    return () => {
-      // Cleanup on unmount
-    };
   }, [agoraConnected, myRole, isMuted, seats]);
 
   if (!room || !seats) {
@@ -75,15 +80,16 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const handleSeatClick = async (seatIndex: number, userId: string | undefined) => {
     try {
       if (userId) return;
-      await takeSeat({ roomId, seatIndex });
+      await takeSeat({ roomId, seatIndex, tokenOverride: deviceId });
     } catch (e: any) {
       alert(e?.message || "خطأ");
     }
   };
 
   const handleLeaveSeat = async () => {
-    await leaveSeat({ roomId });
+    await leaveSeat({ roomId, tokenOverride: deviceId });
     await agoraManager.unpublishMicrophone();
+    publishedRef.current = false;
   };
 
   const handleToggleMute = () => {
@@ -96,6 +102,8 @@ export default function RoomView({ roomId, onLeave }: Props) {
     await agoraManager.leave();
     onLeave();
   };
+
+  const isOnMic = myRole === "speaker" || myRole === "owner" || myRole === "moderator";
 
   return (
     <div className="max-w-md mx-auto p-4">
@@ -146,7 +154,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
         </div>
       </div>
 
-      {myRole === "speaker" || myRole === "owner" || myRole === "moderator" ? (
+      {isOnMic ? (
         <div className="flex gap-3">
           <button
             onClick={handleToggleMute}

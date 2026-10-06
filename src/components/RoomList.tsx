@@ -3,12 +3,14 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { Mic, Users, Plus, X } from "lucide-react";
+import { getDeviceId } from "../lib/device";
 
 interface Props {
   onEnter: (roomId: Id<"rooms">) => void;
 }
 
 export default function RoomList({ onEnter }: Props) {
+  const deviceId = getDeviceId();
   const rooms = useQuery(api.rooms.listPublic);
   const createRoom = useMutation(api.rooms.create);
   const joinRoom = useMutation(api.rooms.join);
@@ -21,7 +23,11 @@ export default function RoomList({ onEnter }: Props) {
     if (!newName.trim()) return;
     setIsCreating(true);
     try {
-      const roomId = await createRoom({ name: newName.trim(), isPrivate: false });
+      const roomId = await createRoom({
+        name: newName.trim(),
+        isPrivate: false,
+        tokenOverride: deviceId,
+      });
       setNewName("");
       setShowCreate(false);
       onEnter(roomId);
@@ -34,7 +40,7 @@ export default function RoomList({ onEnter }: Props) {
 
   const handleJoin = async (roomId: Id<"rooms">) => {
     try {
-      await joinRoom({ roomId });
+      await joinRoom({ roomId, tokenOverride: deviceId });
       onEnter(roomId);
     } catch (e: any) {
       alert("خطأ: " + (e.message || "غير معروف"));
@@ -46,6 +52,7 @@ export default function RoomList({ onEnter }: Props) {
       <header className="text-center py-6 text-white">
         <h1 className="text-3xl font-bold mb-2">الدولة العمراوية</h1>
         <p className="text-sm opacity-80">غرف صوتية للجميع</p>
+        <p className="text-[10px] opacity-50 mt-1">معرف الجهاز: {deviceId}</p>
       </header>
 
       <button
@@ -93,7 +100,7 @@ export default function RoomList({ onEnter }: Props) {
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               placeholder="اسم الغرفة"
-              className="w-full border-2 border-gray-200 rounded-lg p-3 mb-4 focus:border-purple-500 outline-none"
+              className="w-full border-2 border-gray-200 rounded-lg p-3 mb-4 focus:border-purple-500 outline-none text-gray-800"
               maxLength={40}
             />
             <button
