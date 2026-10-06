@@ -253,6 +253,8 @@ export const latestGiftFull = query({
       _id: recent._id,
       fromName: recent.fromName,
       toName: recent.toName,
+      fromUserId: recent.fromUserId,
+      toUserId: recent.toUserId,
       fromAvatar,
       toAvatar,
       giftName: recent.giftName,
