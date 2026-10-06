@@ -9,6 +9,7 @@ export default defineSchema({
     isAdmin: v.optional(v.boolean()),
     banned: v.optional(v.boolean()),
     bio: v.optional(v.string()),
+    adminRole: v.optional(v.union(v.literal("super"), v.literal("moderator"))),
   }).index("by_token", ["tokenIdentifier"]),
 
   rooms: defineTable({
