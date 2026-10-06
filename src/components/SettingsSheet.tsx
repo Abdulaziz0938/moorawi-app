@@ -9,9 +9,22 @@ import {
   Wand2, Gift, Volume2, Mic2, ImageIcon, Monitor, VolumeX, Check, Loader2,
 } from "lucide-react";
 
+export const LAYOUT_ROWS: Record<string, number[]> = { "m1": [1], "m2": [2], "m3": [3], "m5": [2,3], "m7": [1,6], "m18": [6,6,6], "m24": [6,6,6,6], "m12b": [6,6] };
+
+const LAYOUT_OPTIONS: { key: string; label: string }[] = [
+  { key: "m1",   label: "1 مايك" },
+  { key: "m2",   label: "2 مايك" },
+  { key: "m3",   label: "3 مايك" },
+  { key: "m5",   label: "5 مايك" },
+  { key: "m7",   label: "7 مايك" },
+  { key: "m18",  label: "18 مايك (6×3)" },
+  { key: "m24",  label: "24 مايك (6×4)" },
+  { key: "m12b", label: "12 مايك (6×2)" },
+];
+
 interface Props {
   roomId: Id<"rooms">;
-  currentLayout: "4" | "5" | "6";
+  currentLayout: string;
   isOwnerOrMod: boolean;
   currentName: string;
   currentWelcome: string;
@@ -21,7 +34,24 @@ interface Props {
 
 type Tab = "main" | "layout" | "editRoom" | "background";
 
-export default function SettingsSheet({ roomId, currentLayout, isOwnerOrMod, currentName, currentWelcome, currentCoverUrl, onClose }: Props) {
+function LayoutPreview({ layoutKey }: { layoutKey: string }) {
+  const rows = LAYOUT_ROWS[layoutKey] ?? [6, 6, 6];
+  return (
+    <div className="flex flex-col items-center gap-0.5">
+      {rows.map((count, i) => (
+        <div key={i} className="flex gap-0.5">
+          {Array.from({ length: count }).map((_, j) => (
+            <div key={j} className="w-1.5 h-1.5 rounded-full bg-white/50" />
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export default function SettingsSheet({
+  roomId, currentLayout, isOwnerOrMod, currentName, currentWelcome, currentCoverUrl, onClose,
+}: Props) {
   const deviceId = getDeviceId();
   const updateLayout = useMutation(api.rooms.updateLayout);
   const updateRoomInfo = useMutation(api.rooms.updateRoomInfo);
@@ -37,7 +67,7 @@ export default function SettingsSheet({ roomId, currentLayout, isOwnerOrMod, cur
   const coverFileRef = useRef<HTMLInputElement>(null);
   const bgFileRef = useRef<HTMLInputElement>(null);
 
-  const handleLayoutChange = async (layout: "4" | "5" | "6") => {
+  const handleLayoutChange = async (layout: string) => {
     try { await updateLayout({ roomId, micLayout: layout, tokenOverride: deviceId }); }
     catch (e: any) { alert(e?.message || "خطأ"); }
   };
@@ -49,8 +79,7 @@ export default function SettingsSheet({ roomId, currentLayout, isOwnerOrMod, cur
       const res = await fetch(url, { method: "POST", headers: { "Content-Type": file.type }, body: file });
       const { storageId } = await res.json();
       await updateRoomInfo({ roomId, coverImageId: storageId, tokenOverride: deviceId });
-      const newUrl = URL.createObjectURL(file);
-      setCoverUrl(newUrl);
+      setCoverUrl(URL.createObjectURL(file));
     } catch (e: any) { alert(e?.message || "فشل"); }
     finally { setUploading(false); }
   };
@@ -69,10 +98,8 @@ export default function SettingsSheet({ roomId, currentLayout, isOwnerOrMod, cur
 
   const handleSaveRoomInfo = async () => {
     setSaving(true);
-    try {
-      await updateRoomInfo({ roomId, name, welcomeMessage: welcome, tokenOverride: deviceId });
-      alert("تم الحفظ");
-    } catch (e: any) { alert(e?.message || "خطأ"); }
+    try { await updateRoomInfo({ roomId, name, welcomeMessage: welcome, tokenOverride: deviceId }); alert("تم الحفظ"); }
+    catch (e: any) { alert(e?.message || "خطأ"); }
     finally { setSaving(false); }
   };
 
@@ -151,21 +178,27 @@ export default function SettingsSheet({ roomId, currentLayout, isOwnerOrMod, cur
 
         {tab === "layout" && (
           <div className="flex-1 overflow-y-auto p-4">
-            <p className="text-white/70 text-sm mb-4 text-center">اختر عدد الأعمدة</p>
+            <p className="text-white/70 text-sm mb-4 text-center">اختر تخطيط المايكات</p>
             {!isOwnerOrMod && <p className="text-yellow-300 text-xs text-center mb-4 bg-yellow-500/10 p-2 rounded-lg">للمالك/المشرف فقط</p>}
-            <div className="space-y-3">
-              {(["4", "5", "6"] as const).map((l) => (
+            <div className="grid grid-cols-2 gap-3">
+              {LAYOUT_OPTIONS.map((opt) => (
                 <button
-                  key={l}
-                  onClick={() => isOwnerOrMod && handleLayoutChange(l)}
+                  key={opt.key}
+                  onClick={() => isOwnerOrMod && handleLayoutChange(opt.key)}
                   disabled={!isOwnerOrMod}
-                  className={`w-full p-4 rounded-2xl border-2 transition flex items-center justify-between ${currentLayout === l ? "border-purple-400 bg-purple-500/20" : "border-white/10 bg-white/5 hover:bg-white/10"} disabled:opacity-50`}
+                  className={`p-4 rounded-2xl border-2 transition flex flex-col items-center gap-3 ${
+                    currentLayout === opt.key
+                      ? "border-purple-400 bg-purple-500/20"
+                      : "border-white/10 bg-white/5 hover:bg-white/10"
+                  } disabled:opacity-50`}
                 >
-                  <div>
-                    <p className="text-white font-bold text-sm">{l} أعمدة</p>
-                    <p className="text-white/50 text-[10px] mt-0.5">{l === "4" ? "20 مايك (5 صفوف)" : l === "5" ? "20 مايك (4 صفوف)" : "18 مايك (3 صفوف)"}</p>
+                  <div className="h-10 flex items-center justify-center">
+                    <LayoutPreview layoutKey={opt.key} />
                   </div>
-                  {currentLayout === l && <Check size={20} className="text-purple-300" />}
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-white text-xs font-bold">{opt.label}</span>
+                    {currentLayout === opt.key && <Check size={14} className="text-purple-300" />}
+                  </div>
                 </button>
               ))}
             </div>

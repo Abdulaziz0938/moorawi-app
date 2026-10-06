@@ -14,6 +14,17 @@ import CompactChatInput from "./CompactChatInput";
 
 interface Props { roomId: Id<"rooms">; onLeave: () => void; }
 
+const LAYOUT_ROWS: Record<string, number[]> = {
+  m1: [1],
+  m2: [2],
+  m3: [3],
+  m5: [2, 3],
+  m7: [1, 6],
+  m12b: [6, 6],
+  m18: [6, 6, 6],
+  m24: [6, 6, 6, 6],
+};
+
 function bubbleClass(vip: number): string {
   if (vip <= 0) return "bg-white/5 border border-white/10";
   const g = [
@@ -120,11 +131,11 @@ export default function RoomView({ roomId, onLeave }: Props) {
 
   const roomAvatar = room.coverUrl || owner?.avatarUrl || null;
 
-  const layout = (room.micLayout as "4" | "5" | "6") || "5";
-  const cols = parseInt(layout);
-  const visibleSeats = layout === "6" ? seats.slice(0, 18) : seats;
-  const rows = layout === "6" ? 3 : layout === "4" ? 5 : 4;
-  const gridHeight = layout === "6" ? 200 : layout === "4" ? 330 : 270;
+  const layout = room.micLayout || "m18";
+  const layoutRows = LAYOUT_ROWS[layout] ?? LAYOUT_ROWS["m18"];
+  const maxRowCount = Math.max(...layoutRows);
+  const cellWidth = `calc((100% - ${(maxRowCount - 1) * 6}px) / ${maxRowCount})`;
+  const gridHeight = Math.min(80 + layoutRows.length * 55, 340);
 
   const handleSeatClick = (seatIndex: number, userId: string | undefined) => {
     if (userId) setOpenSeatMenu(seatIndex);
@@ -240,46 +251,49 @@ export default function RoomView({ roomId, onLeave }: Props) {
 
         {/* MIC GRID */}
         <div className="mx-2 flex-shrink-0 relative" style={{ height: `${gridHeight}px` }}>
-          <div
-            className="grid gap-1 h-full"
-            style={{
-              gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
-              gridTemplateRows: `repeat(${rows}, minmax(0, 1fr))`,
-            }}
-          >
-            {visibleSeats.map((seat) => {
-              const occupied = !!seat.userId;
+          <div className="flex flex-col gap-1.5 h-full">
+            {layoutRows.map((count, rowIdx) => {
+              const rowStart = layoutRows.slice(0, rowIdx).reduce((a, b) => a + b, 0);
               return (
-                <div key={seat._id} className="flex flex-col items-center justify-start pt-0.5">
-                  <div
-                    onClick={() => handleSeatClick(seat.seatIndex, seat.userId)}
-                    className={`relative w-full aspect-square rounded-full flex-shrink-0 flex items-center justify-center text-white transition cursor-pointer overflow-hidden ${
-                      occupied ? "ring-2 ring-purple-300" : seat.locked ? "bg-gray-700 ring-2 ring-gray-500" : "bg-white/5 ring-1 ring-white/20 hover:bg-white/15"
-                    }`}
-                  >
-                    {occupied ? (
-                      seat.avatarUrl ? (
-                        <img src={seat.avatarUrl} alt="" className="w-full h-full object-cover rounded-full" />
-                      ) : (
-                        <span className="text-[10px] font-bold">{(seat.userName ?? "?")[0]}</span>
-                      )
-                    ) : seat.locked ? (
-                      <Lock size={12} className="opacity-70" />
-                    ) : (
-                      <span className="text-[10px] font-bold text-white/60">{seat.seatIndex + 1}</span>
-                    )}
-                    {occupied && seat.muted && (
-                      <div className="absolute bottom-0 left-0 bg-black/80 rounded-full p-0.5">
-                        <MicOff size={8} className="text-white" />
+                <div key={rowIdx} className="flex justify-center gap-1.5 flex-1">
+                  {Array.from({ length: count }).map((_, i) => {
+                    const seat = seats[rowStart + i];
+                    if (!seat) return null;
+                    const occupied = !!seat.userId;
+                    return (
+                      <div key={seat._id} className="flex flex-col items-center justify-start pt-0.5 min-w-0" style={{ width: cellWidth }}>
+                        <div
+                          onClick={() => handleSeatClick(seat.seatIndex, seat.userId)}
+                          className={`relative w-full aspect-square rounded-full flex items-center justify-center text-white transition cursor-pointer overflow-hidden ${
+                            occupied ? "ring-2 ring-purple-300" : seat.locked ? "bg-gray-700 ring-2 ring-gray-500" : "bg-white/5 ring-1 ring-white/20 hover:bg-white/15"
+                          }`}
+                        >
+                          {occupied ? (
+                            seat.avatarUrl ? (
+                              <img src={seat.avatarUrl} alt="" className="w-full h-full object-cover rounded-full" />
+                            ) : (
+                              <span className="text-[10px] font-bold">{(seat.userName ?? "?")[0]}</span>
+                            )
+                          ) : seat.locked ? (
+                            <Lock size={12} className="opacity-70" />
+                          ) : (
+                            <span className="text-[10px] font-bold text-white/60">{seat.seatIndex + 1}</span>
+                          )}
+                          {occupied && seat.muted && (
+                            <div className="absolute bottom-0 left-0 bg-black/80 rounded-full p-0.5">
+                              <MicOff size={8} className="text-white" />
+                            </div>
+                          )}
+                        </div>
+                        {occupied && (
+                          <>
+                            <p className="text-[8px] text-white/90 mt-1 truncate max-w-full leading-tight">{seat.userName}</p>
+                            <p className="text-[8px] text-pink-300 leading-tight">{(seat.charms ?? 0)} ❤</p>
+                          </>
+                        )}
                       </div>
-                    )}
-                  </div>
-                  {occupied && (
-                    <>
-                      <p className="text-[8px] text-white/90 mt-1 truncate max-w-full leading-tight">{seat.userName}</p>
-                      <p className="text-[8px] text-pink-300 leading-tight">{(seat.charms ?? 0)} ❤</p>
-                    </>
-                  )}
+                    );
+                  })}
                 </div>
               );
             })}
@@ -377,7 +391,6 @@ export default function RoomView({ roomId, onLeave }: Props) {
         </footer>
       </div>
 
-      {/* Invite picker */}
       {inviteSeatIndex !== null && listeners && (
         <>
           <div className="fixed inset-0 bg-black/60 z-40" onClick={() => setInviteSeatIndex(null)} />

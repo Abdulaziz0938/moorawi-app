@@ -38,7 +38,7 @@ export default defineSchema({
     isPrivate: v.boolean(),
     micCount: v.number(),
     memberCount: v.number(),
-    micLayout: v.optional(v.union(v.literal("4"), v.literal("5"), v.literal("6"))),
+    micLayout: v.optional(v.string()),
     coverImageId: v.optional(v.id("_storage")),
     backgroundImageId: v.optional(v.id("_storage")),
   })

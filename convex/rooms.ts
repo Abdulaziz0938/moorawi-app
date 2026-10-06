@@ -69,7 +69,7 @@ export const members = query({
 });
 
 export const updateLayout = mutation({
-  args: { roomId: v.id("rooms"), micLayout: v.union(v.literal("4"), v.literal("5"), v.literal("6")), tokenOverride: v.optional(v.string()) },
+  args: { roomId: v.id("rooms"), micLayout: v.string(), tokenOverride: v.optional(v.string()) },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx, args.tokenOverride);
     const room = await ctx.db.get("rooms", args.roomId);
