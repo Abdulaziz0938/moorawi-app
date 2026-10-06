@@ -44,4 +44,11 @@ export default defineSchema({
     locked: v.boolean(),
     muted: v.boolean(),
   }).index("by_room_and_seatIndex", ["roomId", "seatIndex"]),
+
+  auditLogs: defineTable({
+    adminId: v.id("users"),
+    adminName: v.string(),
+    action: v.string(),
+    target: v.string(),
+  }),
 });

@@ -2,37 +2,28 @@ import { ConvexError } from "convex/values";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import type { Doc, Id } from "../_generated/dataModel";
 
-// TEMPORARY: dev mode - creates/returns a guest user without real auth.
 export async function requireUser(
   ctx: QueryCtx | MutationCtx,
 ): Promise<Doc<"users">> {
-  // Try real identity first
-  let tokenIdentifier: string | undefined;
-  try {
-    const identity = await ctx.auth.getUserIdentity();
-    tokenIdentifier = identity?.tokenIdentifier;
-  } catch {
-    tokenIdentifier = undefined;
-  }
-
-  // Fallback to dev guest
-  if (!tokenIdentifier) {
-    tokenIdentifier = "dev-guest-001";
-  }
-
+  const tokenIdentifier = "dev-guest-001";
   let user = await ctx.db
     .query("users")
-    .withIndex("by_token", (q) => q.eq("tokenIdentifier", tokenIdentifier!))
+    .withIndex("by_token", (q) => q.eq("tokenIdentifier", tokenIdentifier))
     .unique();
 
   if (!user) {
-    const id = await ctx.db.insert("users", {
-      tokenIdentifier: tokenIdentifier!,
-      name: "ضيف",
-      isAdmin: true,
-      adminRole: "super",
-    });
-    user = await ctx.db.get(id);
+    // Only create user if we are in a mutation context
+    if ("insert" in ctx.db) {
+      const id = await ctx.db.insert("users", {
+        tokenIdentifier,
+        name: "ضيف",
+        isAdmin: true,
+        adminRole: "super",
+      });
+      user = await ctx.db.get(id);
+    } else {
+      throw new ConvexError({ code: "NOT_FOUND", message: "User not found. Please create a room first." });
+    }
   }
 
   if (!user) throw new ConvexError({ code: "NOT_FOUND", message: "User not found" });
