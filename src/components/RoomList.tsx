@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
-import { Mic, Users, Plus, X, Hash } from "lucide-react";
+import { Mic, Users, Plus, X, Copy, Check } from "lucide-react";
 import { getDeviceId } from "../lib/device";
 
 interface Props {
@@ -19,6 +19,7 @@ export default function RoomList({ onEnter }: Props) {
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const handleCreate = async () => {
     if (!newName.trim()) return;
@@ -37,6 +38,25 @@ export default function RoomList({ onEnter }: Props) {
     } catch (e: any) { alert("خطأ: " + (e.message || "غير معروف")); }
   };
 
+  const handleCopyId = async () => {
+    if (!me?.userNumber) return;
+    try {
+      await navigator.clipboard.writeText(String(me.userNumber));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // Fallback for older browsers
+      const textarea = document.createElement("textarea");
+      textarea.value = String(me.userNumber);
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    }
+  };
+
   return (
     <div className="max-w-md mx-auto p-4">
       <header className="text-center py-6 text-white">
@@ -52,10 +72,19 @@ export default function RoomList({ onEnter }: Props) {
             <p className="font-bold text-lg">{me.name}</p>
             <p className="text-xs opacity-70" dir="ltr">@{me.username}</p>
             {me.userNumber && (
-              <div className="inline-flex items-center gap-1 mt-2 bg-white/20 px-3 py-0.5 rounded-full">
-                <Hash size={12} />
-                <span className="text-xs font-bold">{me.userNumber}</span>
-              </div>
+              <button
+                onClick={handleCopyId}
+                className="inline-flex items-center gap-2 mt-2 bg-white/20 hover:bg-white/30 px-3 py-1 rounded-full transition active:scale-95"
+              >
+                <span className="text-xs font-bold">
+                  ID: {me.userNumber}
+                </span>
+                {copied ? (
+                  <Check size={14} className="text-green-300" />
+                ) : (
+                  <Copy size={14} className="opacity-80" />
+                )}
+              </button>
             )}
           </div>
         )}
