@@ -21,13 +21,17 @@ export const state = query({
   },
 });
 
-export const myRole = query({
+export const myInfo = query({
   args: { roomId: v.id("rooms"), tokenOverride: v.optional(v.string()) },
   handler: async (ctx, args) => {
     try {
       const user = await requireUser(ctx, args.tokenOverride);
       const member = await getMember(ctx, args.roomId, user._id);
-      return member?.role ?? null;
+      return {
+        userId: user._id,
+        userName: user.name ?? "ضيف",
+        role: member?.role ?? null,
+      };
     } catch {
       return null;
     }
@@ -78,6 +82,24 @@ export const leaveSeat = mutation({
     const member = await getMember(ctx, args.roomId, user._id);
     if (member && member.role === "speaker") {
       await ctx.db.patch("roomMembers", member._id, { role: "listener" });
+    }
+    return null;
+  },
+});
+
+// Clean up ALL seats occupied by this user across the room (safety net)
+export const clearMySeats = mutation({
+  args: { roomId: v.id("rooms"), tokenOverride: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx, args.tokenOverride);
+    const seats = await ctx.db
+      .query("micSeats")
+      .withIndex("by_room_and_seatIndex", (q) => q.eq("roomId", args.roomId))
+      .take(MAX_SEATS);
+    for (const s of seats) {
+      if (s.userId === user._id) {
+        await ctx.db.patch("micSeats", s._id, { userId: undefined });
+      }
     }
     return null;
   },

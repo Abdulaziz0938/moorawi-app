@@ -15,15 +15,16 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const deviceId = getDeviceId();
   const room = useQuery(api.rooms.get, { roomId });
   const seats = useQuery(api.mics.state, { roomId });
-  const myRole = useQuery(api.mics.myRole, { roomId, tokenOverride: deviceId });
+  const myInfo = useQuery(api.mics.myInfo, { roomId, tokenOverride: deviceId });
   const takeSeat = useMutation(api.mics.takeSeat);
   const leaveSeat = useMutation(api.mics.leaveSeat);
+  const clearMySeats = useMutation(api.mics.clearMySeats);
   const getToken = useAction(api.voice.getToken);
 
   const [agoraConnected, setAgoraConnected] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [remoteUsers, setRemoteUsers] = useState<string[]>([]);
+  const [remoteCount, setRemoteCount] = useState(0);
   const joinedRef = useRef(false);
   const publishedRef = useRef(false);
 
@@ -40,14 +41,8 @@ export default function RoomView({ roomId, onLeave }: Props) {
           roomId,
           tokenData.token,
           tokenData.account,
-          (user) => {
-            setRemoteUsers((prev) =>
-              prev.includes(String(user.uid)) ? prev : [...prev, String(user.uid)]
-            );
-          },
-          (user) => {
-            setRemoteUsers((prev) => prev.filter((u) => u !== String(user.uid)));
-          },
+          () => setRemoteCount((c) => c + 1),
+          () => setRemoteCount((c) => Math.max(0, c - 1)),
         );
         setAgoraConnected(true);
       } catch (e: any) {
@@ -62,8 +57,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
     };
   }, [room, roomId, getToken, deviceId]);
 
-  // Determine if current user is on a mic
-  const mySeat = seats?.find((s) => s.userName?.includes(deviceId.slice(-4)));
+  const mySeat = seats?.find((s) => myInfo?.userId && s.userId === myInfo.userId);
   const isOnMic = !!mySeat;
 
   // Publish/unpublish microphone
@@ -81,7 +75,19 @@ export default function RoomView({ roomId, onLeave }: Props) {
     }
   }, [agoraConnected, isOnMic]);
 
-  if (!room || !seats) {
+  // Cleanup on browser close / tab switch
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (myInfo?.userId) {
+        // Fire-and-forget; may not complete but attempts cleanup
+        clearMySeats({ roomId, tokenOverride: deviceId }).catch(() => {});
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [roomId, deviceId, myInfo, clearMySeats]);
+
+  if (!room || !seats || myInfo === undefined) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="animate-spin text-white" size={40} />
@@ -99,9 +105,13 @@ export default function RoomView({ roomId, onLeave }: Props) {
   };
 
   const handleLeaveSeat = async () => {
-    await leaveSeat({ roomId, tokenOverride: deviceId });
-    await agoraManager.unpublishMicrophone();
-    publishedRef.current = false;
+    try {
+      await leaveSeat({ roomId, tokenOverride: deviceId });
+      await agoraManager.unpublishMicrophone();
+      publishedRef.current = false;
+    } catch (e: any) {
+      alert(e?.message || "خطأ");
+    }
   };
 
   const handleToggleMute = () => {
@@ -111,9 +121,19 @@ export default function RoomView({ roomId, onLeave }: Props) {
   };
 
   const handleLeave = async () => {
+    try {
+      // Clean up seats BEFORE leaving
+      await clearMySeats({ roomId, tokenOverride: deviceId });
+    } catch (e) {
+      console.error(e);
+    }
     await agoraManager.leave();
+    publishedRef.current = false;
+    joinedRef.current = false;
     onLeave();
   };
+
+  const isOnMicRole = myInfo?.role === "speaker" || myInfo?.role === "owner" || myInfo?.role === "moderator";
 
   return (
     <div className="max-w-md mx-auto p-4">
@@ -125,7 +145,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
           <h1 className="text-xl font-bold">{room.name}</h1>
           <p className="text-xs opacity-70">{room.memberCount} عضو</p>
           {agoraConnected && (
-            <p className="text-[10px] text-green-300 mt-1">● متصل بالصوت ({remoteUsers.length} بعيد)</p>
+            <p className="text-[10px] text-green-300 mt-1">● متصل بالصوت ({remoteCount} بعيد)</p>
           )}
           {error && <p className="text-[10px] text-red-300 mt-1">{error}</p>}
         </div>
@@ -162,7 +182,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
         </div>
       </div>
 
-      {isOnMic ? (
+      {isOnMicRole ? (
         <div className="flex gap-3">
           <button
             onClick={handleToggleMute}
