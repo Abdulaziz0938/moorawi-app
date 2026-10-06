@@ -53,7 +53,8 @@ export default function GiftSheet({ roomId, onClose }: Props) {
       await sendGift({ roomId, toUserId: selectedUserId, giftId: selectedGiftId, quantity, tokenOverride: deviceId });
       onClose();
     } catch (e: any) {
-      alert(e?.message || "فشل الإرسال");
+      const msg = typeof e?.data === "object" ? (e.data?.message || e?.message) : e?.message;
+      alert(msg || "فشل الإرسال");
     } finally {
       setSending(false);
     }

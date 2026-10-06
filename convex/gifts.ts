@@ -130,9 +130,7 @@ export const send = mutation({
 
     const target = await ctx.db.get("users", args.toUserId);
     if (!target) throw new ConvexError({ code: "NOT_FOUND", message: "المستلم غير موجود" });
-    if (target._id === user._id) {
-      throw new ConvexError({ code: "BAD_REQUEST", message: "لا يمكنك إرسال هدية لنفسك" });
-    }
+    
 
     const totalPrice = gift.price * args.quantity;
     const myCoins = user.coins ?? 0;
