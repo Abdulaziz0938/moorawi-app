@@ -4,13 +4,21 @@ import { v } from "convex/values";
 export default defineSchema({
   users: defineTable({
     tokenIdentifier: v.string(),
+    userNumber: v.optional(v.number()),
     name: v.optional(v.string()),
     email: v.optional(v.string()),
     isAdmin: v.optional(v.boolean()),
     banned: v.optional(v.boolean()),
     bio: v.optional(v.string()),
     adminRole: v.optional(v.union(v.literal("super"), v.literal("moderator"))),
-  }).index("by_token", ["tokenIdentifier"]),
+  })
+    .index("by_token", ["tokenIdentifier"])
+    .index("by_userNumber", ["userNumber"]),
+
+  counters: defineTable({
+    name: v.string(),
+    value: v.number(),
+  }).index("by_name", ["name"]),
 
   rooms: defineTable({
     name: v.string(),

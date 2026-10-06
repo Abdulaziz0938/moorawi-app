@@ -12,6 +12,7 @@ import type * as lib_auth from "../lib/auth.js";
 import type * as lib_vip from "../lib/vip.js";
 import type * as mics from "../mics.js";
 import type * as rooms from "../rooms.js";
+import type * as users from "../users.js";
 import type * as voice from "../voice.js";
 import type * as voiceAccess from "../voiceAccess.js";
 
@@ -26,6 +27,7 @@ declare const fullApi: ApiFromModules<{
   "lib/vip": typeof lib_vip;
   mics: typeof mics;
   rooms: typeof rooms;
+  users: typeof users;
   voice: typeof voice;
   voiceAccess: typeof voiceAccess;
 }>;
