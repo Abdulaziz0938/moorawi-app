@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
@@ -36,7 +36,11 @@ export default function GiftSheet({ roomId, onClose }: Props) {
   const [showQtyMenu, setShowQtyMenu] = useState(false);
   const [showRecharge, setShowRecharge] = useState(false);
 
-  // Enrich members with avatar
+  // Drag to dismiss
+  const [dragY, setDragY] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const [touchStartY, setTouchStartY] = useState(0);
+
   const membersList = (members ?? []).map((m) => {
     const seatInfo = seats?.find((s) => s.userId === m.userId);
     return { ...m, isOnMic: !!seatInfo };
@@ -61,13 +65,42 @@ export default function GiftSheet({ roomId, onClose }: Props) {
     }
   };
 
+  const handleDragStart = (e: React.TouchEvent) => {
+    setDragging(true);
+    setTouchStartY(e.touches[0].clientY);
+  };
+  const handleDragMove = (e: React.TouchEvent) => {
+    if (!dragging) return;
+    const delta = e.touches[0].clientY - touchStartY;
+    if (delta > 0) setDragY(delta);
+  };
+  const handleDragEnd = () => {
+    setDragging(false);
+    if (dragY > 100) onClose();
+    setDragY(0);
+  };
+
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 flex items-end" onClick={onClose}>
+    <div className="fixed inset-0 z-[80] bg-black/70 flex items-end" onClick={onClose}>
       <div
-        className="w-full max-w-md mx-auto bg-gray-950 rounded-t-2xl h-[80vh] flex flex-col"
+        className="w-full max-w-md mx-auto bg-gray-950 rounded-t-3xl h-[85vh] flex flex-col shadow-2xl border-t border-white/10"
+        style={{
+          transform: `translateY(${dragY}px)`,
+          transition: dragging ? "none" : "transform 0.3s",
+        }}
         onClick={(e) => e.stopPropagation()}
         dir="rtl"
       >
+        {/* Drag handle */}
+        <div
+          className="pt-2 pb-1 flex justify-center cursor-grab touch-none"
+          onTouchStart={handleDragStart}
+          onTouchMove={handleDragMove}
+          onTouchEnd={handleDragEnd}
+        >
+          <div className="w-12 h-1.5 bg-white/30 rounded-full" />
+        </div>
+
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-2 border-b border-white/10">
           <h2 className="text-white font-bold text-sm">الهدايا</h2>
@@ -95,11 +128,11 @@ export default function GiftSheet({ roomId, onClose }: Props) {
                 key={m._id}
                 onClick={() => setSelectedUserId(m.userId)}
                 className={`flex-shrink-0 flex flex-col items-center gap-0.5 w-14 transition ${
-                  selectedUserId === m.userId ? "opacity-100" : "opacity-60"
+                  selectedUserId === m.userId ? "opacity-100 scale-105" : "opacity-60"
                 }`}
               >
                 <div className={`w-11 h-11 rounded-full overflow-hidden bg-purple-500 flex items-center justify-center text-sm font-bold text-white border-2 ${
-                  selectedUserId === m.userId ? "border-purple-400" : "border-transparent"
+                  selectedUserId === m.userId ? "border-purple-400 ring-2 ring-purple-400/40" : "border-transparent"
                 }`}>
                   {m.avatarUrl ? <img src={m.avatarUrl} alt="" className="w-full h-full object-cover" /> : (m.name?.[0] || "?")}
                 </div>
@@ -110,7 +143,7 @@ export default function GiftSheet({ roomId, onClose }: Props) {
         </div>
 
         {/* Categories */}
-        <div className="flex gap-1 px-3 py-2 border-b border-white/10 overflow-x-auto thin-scroll">
+        <div className="flex gap-1 px-3 py-2 border-b border-white/10 overflow-x-auto thin-scroll flex-shrink-0">
           {CATEGORIES.map((c) => (
             <button
               key={c.key}
@@ -126,36 +159,45 @@ export default function GiftSheet({ roomId, onClose }: Props) {
           ))}
         </div>
 
-        {/* Gifts grid */}
-        <div className="flex-1 overflow-y-auto p-3">
+        {/* Gifts grid: 2 rows, horizontal scroll */}
+        <div className="flex-1 overflow-y-auto px-3 py-3">
           {gifts === undefined ? (
             <div className="flex justify-center py-8"><Loader2 className="animate-spin text-white/40" size={24} /></div>
           ) : filteredGifts.length === 0 ? (
             <p className="text-white/40 text-xs text-center py-8">لا توجد هدايا</p>
           ) : (
-            <div className="grid grid-cols-4 gap-2">
+            <div
+              className="grid grid-rows-2 grid-flow-col gap-2 overflow-x-auto thin-scroll pb-1"
+              style={{ gridAutoColumns: "90px" }}
+            >
               {filteredGifts.map((g) => (
                 <button
                   key={g._id}
                   onClick={() => setSelectedGiftId(g._id)}
-                  className={`aspect-square rounded-xl flex flex-col items-center justify-center p-1 transition border-2 ${
+                  className={`aspect-square rounded-xl flex flex-col items-center justify-center p-1 transition border-2 relative overflow-hidden ${
                     selectedGiftId === g._id
                       ? "bg-purple-600/30 border-purple-400"
                       : "bg-white/5 border-white/10 hover:bg-white/10"
                   }`}
                 >
-                  {/* media preview */}
-                  {g.mediaType === "video" ? (
-                    <video src={g.mediaUrl ?? undefined} className="w-12 h-12 rounded object-cover" muted loop autoPlay playsInline />
-                  ) : g.mediaUrl ? (
-                    <img src={g.mediaUrl ?? undefined} alt={g.name} className="w-12 h-12 rounded object-cover" />
-                  ) : (
-                    <span className="text-2xl">🎁</span>
-                  )}
-                  <span className="text-white text-[9px] mt-0.5 truncate max-w-full">{g.name}</span>
-                  <span className="text-yellow-400 text-[9px] font-bold flex items-center gap-0.5">
-                    <Coins size={8} />{g.price}
+                  <div className="w-14 h-14 flex items-center justify-center overflow-hidden rounded-lg">
+                    {g.mediaType === "video" && g.mediaUrl ? (
+                      <video src={g.mediaUrl ?? undefined} className="w-full h-full object-contain" muted loop autoPlay playsInline />
+                    ) : g.mediaUrl ? (
+                      <img src={g.mediaUrl ?? undefined} alt={g.name} className="w-full h-full object-contain" />
+                    ) : (
+                      <span className="text-2xl">🎁</span>
+                    )}
+                  </div>
+                  <span className="text-white text-[10px] mt-0.5 truncate max-w-full font-bold">{g.name}</span>
+                  <span className="text-yellow-400 text-[10px] font-bold flex items-center gap-0.5">
+                    <Coins size={9} />{g.price}
                   </span>
+                  {selectedGiftId === g._id && (
+                    <div className="absolute top-1 right-1 bg-purple-500 rounded-full p-0.5">
+                      <Check size={10} className="text-white" />
+                    </div>
+                  )}
                 </button>
               ))}
             </div>
@@ -163,26 +205,27 @@ export default function GiftSheet({ roomId, onClose }: Props) {
         </div>
 
         {/* Send bar */}
-        <div className="border-t border-white/10 p-2 flex items-center gap-2">
+        <div className="border-t border-white/10 p-2 flex items-center gap-2 flex-shrink-0">
           {/* Quantity selector */}
           <div className="relative">
             <button
               onClick={() => setShowQtyMenu((v) => !v)}
-              className="px-3 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-white text-sm font-bold"
+              className="px-3 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-white text-sm font-bold min-w-[50px]"
             >
               ×{quantity}
             </button>
             {showQtyMenu && (
               <>
-                <div className="fixed inset-0 z-40" onClick={() => setShowQtyMenu(false)} />
-                <div className="absolute bottom-12 left-0 z-50 bg-gray-900 rounded-xl shadow-2xl border border-white/20 py-1 w-20">
+                <div className="fixed inset-0 z-[85]" onClick={() => setShowQtyMenu(false)} />
+                <div className="absolute bottom-full left-0 mb-2 z-[90] bg-gray-900 rounded-xl shadow-2xl border border-white/20 py-1 w-24">
                   {QUANTITIES.map((q) => (
                     <button
                       key={q}
                       onClick={() => { setQuantity(q); setShowQtyMenu(false); }}
-                      className="w-full px-3 py-1.5 text-white text-sm hover:bg-white/10 flex items-center justify-between"
+                      className="w-full px-3 py-2 text-white text-sm hover:bg-white/10 flex items-center justify-between"
                     >
-                      {q} {quantity === q && <Check size={12} className="text-purple-300" />}
+                      <span>{q}</span>
+                      {quantity === q && <Check size={12} className="text-purple-300" />}
                     </button>
                   ))}
                 </div>
@@ -192,41 +235,39 @@ export default function GiftSheet({ roomId, onClose }: Props) {
           <button
             onClick={handleSend}
             disabled={!canSend}
-            className="flex-1 bg-gradient-to-r from-pink-600 to-purple-600 disabled:opacity-40 text-white font-bold py-2 rounded-xl flex items-center justify-center gap-2 text-sm"
+            className="flex-1 bg-gradient-to-r from-pink-600 to-purple-600 disabled:opacity-40 text-white font-bold py-2 rounded-xl flex items-center justify-center gap-2 text-sm active:scale-[0.98] transition"
           >
             {sending ? <Loader2 className="animate-spin" size={16} /> : <Coins size={14} />}
             {sending ? "جاري الإرسال..." : `إرسال (${totalPrice})`}
           </button>
         </div>
-      </div>
 
-      {showRecharge && (
-        <div className="absolute inset-0 bg-black/70 flex items-center justify-center p-4" onClick={() => setShowRecharge(false)}>
-          <div className="bg-gray-900 rounded-2xl p-6 max-w-sm w-full border border-white/20" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-white font-bold text-lg mb-3 text-center">شحن الرصيد</h3>
-            <p className="text-white/60 text-sm text-center mb-4">اختر باقة الشحن</p>
-            <div className="grid grid-cols-3 gap-2 mb-4">
-              {[1000, 5000, 10000, 25000, 50000, 100000].map((amt) => (
-                <button
-                  key={amt}
-                  onClick={() => alert(`سيتم شحن ${amt} عملة قريباً`)}
-                  className="bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-500/40 rounded-xl p-3 flex flex-col items-center gap-1"
-                >
-                  <Coins size={18} className="text-yellow-400" />
-                  <span className="text-yellow-300 text-xs font-bold">{amt}</span>
-                </button>
-              ))}
+        {/* Recharge modal */}
+        {showRecharge && (
+          <div className="absolute inset-0 bg-black/70 flex items-center justify-center p-4 rounded-t-3xl" onClick={() => setShowRecharge(false)}>
+            <div className="bg-gray-900 rounded-2xl p-6 max-w-sm w-full border border-white/20" onClick={(e) => e.stopPropagation()}>
+              <h3 className="text-white font-bold text-lg mb-3 text-center">شحن الرصيد</h3>
+              <p className="text-white/60 text-sm text-center mb-4">اختر باقة الشحن</p>
+              <div className="grid grid-cols-3 gap-2 mb-4">
+                {[1000, 5000, 10000, 25000, 50000, 100000].map((amt) => (
+                  <button
+                    key={amt}
+                    onClick={() => alert(`سيتم شحن ${amt} عملة قريباً`)}
+                    className="bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-500/40 rounded-xl p-3 flex flex-col items-center gap-1"
+                  >
+                    <Coins size={18} className="text-yellow-400" />
+                    <span className="text-yellow-300 text-xs font-bold">{amt}</span>
+                  </button>
+                ))}
+              </div>
+              <p className="text-white/40 text-[10px] text-center">قريباً: الدفع عبر Google Play / Apple Pay</p>
+              <button onClick={() => setShowRecharge(false)} className="w-full mt-4 bg-white/10 py-2 rounded-xl text-white text-sm font-bold">
+                إغلاق
+              </button>
             </div>
-            <p className="text-white/40 text-[10px] text-center">قريباً: الدفع عبر Google Play / Apple Pay</p>
-            <button
-              onClick={() => setShowRecharge(false)}
-              className="w-full mt-4 bg-white/10 py-2 rounded-xl text-white text-sm font-bold"
-            >
-              إغلاق
-            </button>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

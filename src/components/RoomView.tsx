@@ -97,16 +97,35 @@ export default function RoomView({ roomId, onLeave }: Props) {
   useEffect(() => {
     if (!room || joinedRef.current) return;
     joinedRef.current = true;
+    let cancelled = false;
+
     (async () => {
       try {
         const tokenData = await getToken({ roomId, tokenOverride: deviceId });
+        if (cancelled) return;
         await agoraManager.join(tokenData.appId, roomId, tokenData.token, tokenData.account,
           () => setRemoteCount((c) => c + 1),
           () => setRemoteCount((c) => Math.max(0, c - 1)));
+        if (cancelled) { agoraManager.leave(); return; }
         setAgoraConnected(true);
-      } catch (e: any) { setError(e?.message || "فشل الاتصال"); }
+        setError(null);
+      } catch (e: any) {
+        if (cancelled) return;
+        const msg = e?.message || "فشل الاتصال";
+        if (msg.includes("OPERATION_ABORTED") || msg.includes("cancel token")) {
+          // ignore benign cancellation
+          return;
+        }
+        setError(msg);
+      }
     })();
-    return () => { agoraManager.leave(); joinedRef.current = false; publishedRef.current = false; };
+
+    return () => {
+      cancelled = true;
+      agoraManager.leave().catch(() => {});
+      joinedRef.current = false;
+      publishedRef.current = false;
+    };
   }, [room, roomId, getToken, deviceId]);
 
   const mySeat = seats?.find((s) => myInfo?.userId && s.userId === myInfo.userId);
@@ -347,7 +366,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
 
           {openSeatMenu !== null && currentSeatMenuData && (
             <>
-              <div className="fixed inset-0 z-40" onClick={() => setOpenSeatMenu(null)} />
+              <div className="fixed inset-0 z-40" />
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-gray-900 rounded-xl shadow-2xl border border-white/20 py-1.5 w-52">
                 <p className="text-white/60 text-[10px] px-3 py-1">المايك رقم {currentSeatMenuData.seatIndex + 1}</p>
                 {isMySeat ? (
@@ -439,8 +458,8 @@ export default function RoomView({ roomId, onLeave }: Props) {
 
       {inviteSeatIndex !== null && listeners && (
         <>
-          <div className="fixed inset-0 bg-black/60 z-40" onClick={() => setInviteSeatIndex(null)} />
-          <div className="fixed bottom-0 left-0 right-0 z-50 max-w-md mx-auto bg-gray-950 rounded-t-2xl max-h-[60vh] flex flex-col" dir="rtl">
+          <div className="fixed inset-0 bg-black/60 z-[75]" onClick={() => setInviteSeatIndex(null)} />
+          <div className="fixed bottom-0 left-0 right-0 z-[80] max-w-md mx-auto bg-gray-950 rounded-t-2xl max-h-[70vh] flex flex-col" dir="rtl">
             <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
               <h2 className="text-white font-bold text-sm">دعوة للمايك {inviteSeatIndex + 1}</h2>
               <button onClick={() => setInviteSeatIndex(null)} className="text-white/70"><X size={20} /></button>
@@ -466,7 +485,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
       )}
 
       {myInvite && (
-        <div className="fixed bottom-20 left-3 right-3 z-50 max-w-md mx-auto bg-gradient-to-r from-purple-600 to-purple-800 rounded-2xl p-3 shadow-2xl border border-white/20" dir="rtl">
+        <div className="fixed bottom-20 left-3 right-3 z-[90] max-w-md mx-auto bg-gradient-to-r from-purple-600 to-purple-800 rounded-2xl p-3 shadow-2xl border border-white/20" dir="rtl">
           <div className="flex items-center justify-between gap-3">
             <p className="text-white text-sm font-bold flex-1">{myInvite.fromName} يدعوك للمايك {myInvite.seatIndex + 1}</p>
             <div className="flex gap-2">
@@ -483,40 +502,86 @@ export default function RoomView({ roomId, onLeave }: Props) {
 
       {/* Gift Animation Overlay — Full Screen */}
       {activeGift && (
-        <div className="fixed inset-0 z-[60] flex flex-col" dir="rtl">
+        <div className="fixed inset-0 z-[70] flex flex-col" dir="rtl">
           {/* Dark backdrop */}
           <div className="absolute inset-0 bg-black/95" />
 
-          {/* TOP BANNER */}
-          <div className="relative z-10 mx-2 mt-2 bg-gradient-to-r from-pink-600/95 via-purple-600/95 to-pink-600/95 rounded-2xl p-2 flex items-center gap-2 shadow-2xl border border-white/30 backdrop-blur-md flex-shrink-0">
-            <div className="flex items-center gap-1.5 flex-shrink-0">
-              <div className="w-9 h-9 rounded-full overflow-hidden bg-purple-500 ring-2 ring-white/50">
-                {activeGift.fromAvatar ? (
-                  <img src={activeGift.fromAvatar} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-white text-xs font-bold">
-                    {activeGift.fromName?.[0] || "?"}
-                  </div>
-                )}
+          {/* TOP BANNER (draggable to dismiss) */}
+          <div
+            className="relative z-10 mx-2 mt-2 flex-shrink-0"
+            style={{
+              transform: `translateY(${bannerY}px)`,
+              opacity: bannerOpacity,
+              transition: dragging ? "none" : "transform 0.3s, opacity 0.3s",
+            }}
+            onTouchStart={(e) => {
+              if (!activeGift) return;
+              setDragging(true);
+              setTouchStartY(e.touches[0].clientY);
+            }}
+            onTouchMove={(e) => {
+              if (!dragging) return;
+              const delta = e.touches[0].clientY - touchStartY;
+              if (delta > 0) {
+                setBannerY(delta);
+                setBannerOpacity(Math.max(0.2, 1 - delta / 200));
+              }
+            }}
+            onTouchEnd={() => {
+              setDragging(false);
+              if (bannerY > 60) {
+                // dismiss
+                setActiveGift(null);
+                setLastGiftSeen(Date.now());
+              }
+              setBannerY(0);
+              setBannerOpacity(1);
+            }}
+          >
+            {/* Drag handle */}
+            <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-12 h-1 bg-white/40 rounded-full" />
+
+            {/* Glowing banner */}
+            <div className="relative overflow-hidden bg-gradient-to-r from-pink-500 via-fuchsia-500 to-purple-600 rounded-2xl p-2 pt-3 shadow-[0_0_30px_rgba(236,72,153,0.5)] border-2 border-white/30 flex items-center gap-2">
+              {/* Shimmer */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
+
+              {/* Sender */}
+              <div className="relative flex items-center gap-1.5 flex-shrink-0">
+                <div className="w-10 h-10 rounded-full overflow-hidden bg-purple-500 ring-2 ring-yellow-300 shadow-lg">
+                  {activeGift.fromAvatar ? (
+                    <img src={activeGift.fromAvatar} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-white text-xs font-bold">
+                      {activeGift.fromName?.[0] || "?"}
+                    </div>
+                  )}
+                </div>
+                <span className="text-white text-[11px] font-black max-w-[70px] truncate drop-shadow">{activeGift.fromName}</span>
               </div>
-              <span className="text-white text-[11px] font-bold max-w-[70px] truncate">{activeGift.fromName}</span>
-            </div>
-            <span className="text-white/80 text-lg flex-shrink-0">←</span>
-            <div className="flex-1 flex items-center justify-center gap-1.5 min-w-0">
-              <span className="text-white text-[10px] font-bold truncate max-w-[80px]">{activeGift.giftName}</span>
-              <span className="text-yellow-300 text-[10px] font-bold">×{activeGift.quantity}</span>
-            </div>
-            <span className="text-white/80 text-lg flex-shrink-0">→</span>
-            <div className="flex items-center gap-1.5 flex-shrink-0">
-              <span className="text-white text-[11px] font-bold max-w-[70px] truncate">{activeGift.toName}</span>
-              <div className="w-9 h-9 rounded-full overflow-hidden bg-purple-500 ring-2 ring-white/50">
-                {activeGift.toAvatar ? (
-                  <img src={activeGift.toAvatar} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-white text-xs font-bold">
-                    {activeGift.toName?.[0] || "?"}
-                  </div>
-                )}
+
+              <span className="text-yellow-300 text-xl font-black drop-shadow-lg flex-shrink-0">⟶</span>
+
+              {/* Center - gift */}
+              <div className="relative flex-1 flex flex-col items-center justify-center min-w-0">
+                <span className="text-white text-[11px] font-black truncate max-w-[100px] drop-shadow">{activeGift.giftName}</span>
+                <span className="text-yellow-300 text-[13px] font-black drop-shadow">×{activeGift.quantity}</span>
+              </div>
+
+              <span className="text-yellow-300 text-xl font-black drop-shadow-lg flex-shrink-0">⟵</span>
+
+              {/* Receiver */}
+              <div className="relative flex items-center gap-1.5 flex-shrink-0">
+                <span className="text-white text-[11px] font-black max-w-[70px] truncate drop-shadow">{activeGift.toName}</span>
+                <div className="w-10 h-10 rounded-full overflow-hidden bg-purple-500 ring-2 ring-yellow-300 shadow-lg">
+                  {activeGift.toAvatar ? (
+                    <img src={activeGift.toAvatar} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-white text-xs font-bold">
+                      {activeGift.toName?.[0] || "?"}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
