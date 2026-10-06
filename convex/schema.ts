@@ -95,6 +95,8 @@ export default defineSchema({
     hasSound: v.optional(v.boolean()),
     isGlobal: v.optional(v.boolean()),
     isRelationship: v.optional(v.boolean()),
+    forceGlobal: v.optional(v.boolean()),
+    showsBanner: v.optional(v.boolean()),
     active: v.boolean(),
   }).index("by_active", ["active"]),
 

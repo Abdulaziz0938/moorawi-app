@@ -274,6 +274,7 @@ function GiftsAdmin() {
   const [price, setPrice] = useState(100);
   const [category, setCategory] = useState("classic");
   const [mediaFile, setMediaFile] = useState<File | null>(null);
+  const [forceGlobal, setForceGlobal] = useState(false);
   const [uploading, setUploading] = useState(false);
   const mediaRef = useRef<HTMLInputElement>(null);
 
@@ -300,10 +301,12 @@ function GiftsAdmin() {
         category,
         mediaId,
         mediaType,
+        forceGlobal,
         tokenOverride: deviceId,
       });
 
       setName(""); setPrice(100); setCategory("classic");
+      setForceGlobal(false);
       setMediaFile(null);
       if (mediaRef.current) mediaRef.current.value = "";
       alert("✅ تم إضافة الهدية");
@@ -338,10 +341,20 @@ function GiftsAdmin() {
           </div>
         </label>
 
+        <label className="flex items-center gap-2 cursor-pointer bg-white/5 p-2 rounded-xl">
+          <input
+            type="checkbox"
+            checked={forceGlobal}
+            onChange={(e) => setForceGlobal(e.target.checked)}
+            className="w-4 h-4 accent-purple-600"
+          />
+          <span className="text-white text-[11px]">🌍 فرض البانر العالمي (كل الغرف)</span>
+        </label>
+
         <div className="text-white/50 text-[10px] bg-black/30 p-2 rounded-lg space-y-0.5">
           <p>تُضاف الرموز تلقائياً:</p>
           <p>🎵 تلقائياً للفيديو</p>
-          <p>🌍 تلقائياً إذا السعر ≥ 1000</p>
+          <p>🌍 إذا السعر ≥ 30000 (أو بالخيار أعلاه)</p>
           <p>💕 تلقائياً إذا التصنيف "العلاقة"</p>
         </div>
 

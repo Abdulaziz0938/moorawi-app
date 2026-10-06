@@ -19,6 +19,7 @@ export const createGift = mutation({
     category: v.string(),
     mediaId: v.id("_storage"),
     mediaType: v.union(v.literal("image"), v.literal("video")),
+    forceGlobal: v.optional(v.boolean()),
     tokenOverride: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
@@ -34,15 +35,22 @@ export const createGift = mutation({
       throw new ConvexError({ code: "BAD_REQUEST", message: "السعر غير صالح" });
     }
     const isVideo = args.mediaType === "video";
+    const isRelationship = args.category === "relation";
+    const isGlobal = args.price >= 30000 || !!args.forceGlobal;
+    const showsBanner =
+      args.price >= 1000 && isVideo && (isVideo || isRelationship);
+
     const id = await ctx.db.insert("gifts", {
       name,
       price: args.price,
       category: args.category,
       mediaId: args.mediaId,
       mediaType: args.mediaType,
-      hasSound: isVideo,                    // video → sound badge
-      isGlobal: args.price >= 1000,         // price >= 1000 → global
-      isRelationship: args.category === "relation", // relation category
+      hasSound: isVideo,
+      isGlobal,
+      isRelationship,
+      forceGlobal: args.forceGlobal ?? false,
+      showsBanner,
       active: true,
     });
     return id;
@@ -264,14 +272,17 @@ export const migrateGiftBadges = mutation({
     const gifts = await ctx.db.query("gifts").take(500);
     let updated = 0;
     for (const g of gifts) {
-      if (g.hasSound === undefined || g.isGlobal === undefined || g.isRelationship === undefined) {
-        await ctx.db.patch("gifts", g._id, {
-          hasSound: g.mediaType === "video",
-          isGlobal: g.price >= 1000,
-          isRelationship: g.category === "relation",
-        });
-        updated++;
-      }
+      const isVideo = g.mediaType === "video";
+      const isRelationship = g.category === "relation";
+      const isGlobal = g.price >= 30000 || !!g.forceGlobal;
+      const showsBanner = g.price >= 1000 && isVideo;
+      await ctx.db.patch("gifts", g._id, {
+        hasSound: isVideo,
+        isGlobal,
+        isRelationship,
+        showsBanner,
+      });
+      updated++;
     }
     return { updated };
   },
