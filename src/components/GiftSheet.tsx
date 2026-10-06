@@ -28,11 +28,10 @@ export default function GiftSheet({ roomId, onClose }: Props) {
   const [category, setCategory] = useState("all");
   const [selectedUserId, setSelectedUserId] = useState<Id<"users"> | null>(null);
   const [selectedGiftId, setSelectedGiftId] = useState<Id<"gifts"> | null>(null);
-  const [qtyMenu, setQtyMenu] = useState<{ giftId: Id<"gifts">; x: number; y: number } | null>(null);
+  const [quantity, setQuantity] = useState(1);
+  const [showQtyMenu, setShowQtyMenu] = useState(false);
   const [sendingId, setSendingId] = useState<Id<"gifts"> | null>(null);
   const [showRecharge, setShowRecharge] = useState(false);
-  const longPressTimer = useRef<any>(null);
-  const longPressTriggered = useRef(false);
 
   const [dragY, setDragY] = useState(0);
   const [dragging, setDragging] = useState(false);
@@ -44,18 +43,6 @@ export default function GiftSheet({ roomId, onClose }: Props) {
     return () => { document.body.style.overflow = prev; };
   }, []);
 
-  // Preload video metadata
-  useEffect(() => {
-    if (!gifts) return;
-    gifts.forEach((g) => {
-      if (g.mediaType === "video" && g.mediaUrl) {
-        const v = document.createElement("video");
-        v.src = g.mediaUrl;
-        v.preload = "metadata";
-      }
-    });
-  }, [gifts]);
-
   const membersList = (members ?? []).map((m) => ({
     ...m,
     isOnMic: !!seats?.find((s) => s.userId === m.userId),
@@ -65,11 +52,11 @@ export default function GiftSheet({ roomId, onClose }: Props) {
     (g) => category === "all" || g.category === category
   );
 
-  const handleSend = async (giftId: Id<"gifts">, qty: number) => {
+  const handleSend = async (giftId: Id<"gifts">) => {
     if (!selectedUserId) { alert("اختر المستلم أولاً"); return; }
     setSendingId(giftId);
     try {
-      await sendGift({ roomId, toUserId: selectedUserId, giftId, quantity: qty, tokenOverride: deviceId });
+      await sendGift({ roomId, toUserId: selectedUserId, giftId, quantity, tokenOverride: deviceId });
       onClose();
     } catch (e: any) {
       const msg = typeof e?.data === "object" ? (e.data?.message || e?.message) : e?.message;
@@ -77,30 +64,6 @@ export default function GiftSheet({ roomId, onClose }: Props) {
     } finally {
       setSendingId(null);
     }
-  };
-
-  const startLongPress = (giftId: Id<"gifts">, e: React.TouchEvent | React.MouseEvent) => {
-    longPressTriggered.current = false;
-    clearTimeout(longPressTimer.current);
-    longPressTimer.current = setTimeout(() => {
-      longPressTriggered.current = true;
-      let x = 0, y = 0;
-      if ("touches" in e) {
-        x = e.touches[0]?.clientX ?? 0;
-        y = e.touches[0]?.clientY ?? 0;
-      } else {
-        x = (e as React.MouseEvent).clientX;
-        y = (e as React.MouseEvent).clientY;
-      }
-      setQtyMenu({ giftId, x, y });
-    }, 450);
-  };
-
-  const cancelLongPress = () => clearTimeout(longPressTimer.current);
-
-  const handleGiftClick = (giftId: Id<"gifts">) => {
-    if (longPressTriggered.current) { longPressTriggered.current = false; return; }
-    setSelectedGiftId(giftId === selectedGiftId ? null : giftId);
   };
 
   const onDragStart = (e: React.TouchEvent) => { setDragging(true); setTouchStartY(e.touches[0].clientY); };
@@ -128,17 +91,16 @@ export default function GiftSheet({ roomId, onClose }: Props) {
         onContextMenu={(e) => e.preventDefault()}
         dir="rtl"
       >
-        {/* Drag handle (for scroll/close) */}
+        {/* Drag handle */}
         <div className="pt-1.5 pb-0.5 flex justify-center cursor-grab touch-none flex-shrink-0"
           onTouchStart={onDragStart} onTouchMove={onDragMove} onTouchEnd={onDragEnd}>
           <div className="w-10 h-1 bg-white/30 rounded-full" />
         </div>
 
-        {/* Header: X (right) + title + balance with arrow (left) */}
+        {/* Header */}
         <div className="flex items-center justify-between px-3 py-0.5 flex-shrink-0">
           <button onClick={onClose} className="text-white/70 hover:text-white p-0.5"><X size={16} /></button>
           <h2 className="text-white font-bold text-[11px]">الهدايا</h2>
-          {/* Balance → opens recharge on arrow click */}
           <div className="flex items-center gap-0.5 bg-gray-800/80 border border-white/20 rounded-full overflow-hidden">
             <button
               onClick={(e) => { e.stopPropagation(); setShowRecharge(true); }}
@@ -168,41 +130,61 @@ export default function GiftSheet({ roomId, onClose }: Props) {
           </div>
         </div>
 
-        {/* Categories */}
-        <div className="flex flex-row-reverse gap-1 px-2 py-1 border-b border-white/10 overflow-x-auto thin-scroll flex-shrink-0">
-          {CATEGORIES.map((c) => (
-            <button key={c.key} onClick={() => setCategory(c.key)}
-              className={`px-2 py-0.5 rounded-md text-[10px] whitespace-nowrap transition relative ${category === c.key ? "text-white font-bold" : "text-white/60"}`}>
-              {c.label}
-              {category === c.key && (
-                <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-emerald-400 rounded-full" />
-              )}
+        {/* Categories + Persistent Quantity selector */}
+        <div className="flex items-center border-b border-white/10 flex-shrink-0">
+          <div className="flex flex-row-reverse gap-1 px-2 py-1 overflow-x-auto thin-scroll flex-1">
+            {CATEGORIES.map((c) => (
+              <button key={c.key} onClick={() => setCategory(c.key)}
+                className={`px-2 py-0.5 rounded-md text-[10px] whitespace-nowrap transition relative ${category === c.key ? "text-white font-bold" : "text-white/60"}`}>
+                {c.label}
+                {category === c.key && (
+                  <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-emerald-400 rounded-full" />
+                )}
+              </button>
+            ))}
+          </div>
+          {/* Quantity selector (always visible) */}
+          <div className="relative flex-shrink-0 px-2">
+            <button
+              onClick={() => setShowQtyMenu((v) => !v)}
+              className="flex items-center gap-0.5 bg-purple-600/30 hover:bg-purple-600/50 border border-purple-400/50 rounded-md px-2 py-0.5"
+            >
+              <span className="text-white text-[10px] font-bold">×{quantity}</span>
+              <span className="text-white/70 text-[8px]">▾</span>
             </button>
-          ))}
+            {showQtyMenu && (
+              <>
+                <div className="fixed inset-0 z-[85]" onClick={() => setShowQtyMenu(false)} />
+                <div className="absolute top-full right-0 mt-1 z-[90] bg-gray-900 rounded-lg shadow-2xl border border-white/20 py-0.5 w-16">
+                  {QUANTITIES.map((q) => (
+                    <button key={q}
+                      onClick={() => { setQuantity(q); setShowQtyMenu(false); }}
+                      className="w-full px-2 py-1 text-white text-[10px] hover:bg-white/10 text-center">
+                      ×{q}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
         </div>
 
-        {/* Gifts grid */}
+        {/* Gifts grid — 5 columns */}
         <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-1.5 py-1.5 thin-scroll">
           {gifts === undefined ? (
             <div className="flex justify-center py-3"><Loader2 className="animate-spin text-white/40" size={16} /></div>
           ) : filteredGifts.length === 0 ? (
             <p className="text-white/40 text-[9px] text-center py-3">لا توجد هدايا</p>
           ) : (
-            <div className="grid grid-cols-4 gap-1.5">
+            <div className="grid grid-cols-5 gap-1">
               {filteredGifts.map((g) => {
                 const isSelected = selectedGiftId === g._id;
                 return (
                   <div
                     key={g._id}
-                    onClick={() => handleGiftClick(g._id)}
-                    onTouchStart={(e) => startLongPress(g._id, e)}
-                    onTouchEnd={cancelLongPress}
-                    onTouchCancel={cancelLongPress}
-                    onMouseDown={(e) => startLongPress(g._id, e)}
-                    onMouseUp={cancelLongPress}
-                    onMouseLeave={cancelLongPress}
+                    onClick={() => setSelectedGiftId(isSelected ? null : g._id)}
                     onContextMenu={(e) => e.preventDefault()}
-                    className={`relative rounded-lg flex flex-col overflow-hidden transition cursor-pointer ${
+                    className={`relative rounded-md flex flex-col overflow-hidden transition cursor-pointer ${
                       isSelected ? "bg-purple-600/30 ring-2 ring-purple-400" : "bg-white/5"
                     }`}
                     style={{ WebkitTouchCallout: "none", WebkitUserSelect: "none" }}
@@ -213,7 +195,7 @@ export default function GiftSheet({ roomId, onClose }: Props) {
                           <video
                             src={g.mediaUrl}
                             className="w-full h-full object-cover pointer-events-none"
-                            preload="metadata"
+                            preload="none"
                             muted
                             playsInline
                             disablePictureInPicture
@@ -223,43 +205,43 @@ export default function GiftSheet({ roomId, onClose }: Props) {
                           <img src={g.mediaUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
                         )
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center"><span className="text-xl">🎁</span></div>
+                        <div className="w-full h-full flex items-center justify-center"><span className="text-base">🎁</span></div>
                       )}
 
-                      <div className="absolute top-1 right-1 flex flex-col gap-0.5 pointer-events-none">
+                      <div className="absolute top-0.5 right-0.5 flex flex-col gap-0.5 pointer-events-none">
                         {g.isRelationship && (
-                          <div className="w-3.5 h-3.5 rounded-sm bg-pink-500/95 flex items-center justify-center shadow">
-                            <Heart size={8} className="text-white fill-white" />
+                          <div className="w-3 h-3 rounded-sm bg-pink-500/95 flex items-center justify-center shadow">
+                            <Heart size={7} className="text-white fill-white" />
                           </div>
                         )}
                         {g.isGlobal && (
-                          <div className="w-3.5 h-3.5 rounded-sm bg-blue-500/95 flex items-center justify-center shadow">
-                            <Globe size={8} className="text-white" />
+                          <div className="w-3 h-3 rounded-sm bg-blue-500/95 flex items-center justify-center shadow">
+                            <Globe size={7} className="text-white" />
                           </div>
                         )}
                         {g.hasSound && (
-                          <div className="w-3.5 h-3.5 rounded-sm bg-purple-500/95 flex items-center justify-center shadow">
-                            <Music size={8} className="text-white" />
+                          <div className="w-3 h-3 rounded-sm bg-purple-500/95 flex items-center justify-center shadow">
+                            <Music size={7} className="text-white" />
                           </div>
                         )}
                       </div>
                     </div>
 
                     <div className="px-0.5 py-0.5 text-center leading-tight">
-                      <p className="text-white text-[9px] truncate font-bold">{g.name}</p>
-                      <p className="text-yellow-400 text-[9px] font-bold flex items-center justify-center gap-0.5">
+                      <p className="text-white text-[8px] truncate font-bold">{g.name}</p>
+                      <p className="text-yellow-400 text-[8px] font-bold flex items-center justify-center gap-0.5">
                         {g.price}
-                        <Coins size={7} />
+                        <Coins size={6} />
                       </p>
                     </div>
 
                     {isSelected && (
                       <button
-                        onClick={(e) => { e.stopPropagation(); handleSend(g._id, 1); }}
+                        onClick={(e) => { e.stopPropagation(); handleSend(g._id); }}
                         disabled={sendingId === g._id || (balance ?? 0) < g.price}
-                        className="w-full bg-gradient-to-r from-pink-500 to-pink-600 text-white text-[10px] font-bold py-1 flex items-center justify-center gap-1 disabled:opacity-50"
+                        className="w-full bg-gradient-to-r from-pink-500 to-pink-600 text-white text-[9px] font-bold py-0.5 flex items-center justify-center gap-1 disabled:opacity-50"
                       >
-                        {sendingId === g._id ? <Loader2 className="animate-spin" size={10} /> : null}
+                        {sendingId === g._id ? <Loader2 className="animate-spin" size={9} /> : null}
                         إرسال
                       </button>
                     )}
@@ -269,29 +251,6 @@ export default function GiftSheet({ roomId, onClose }: Props) {
             </div>
           )}
         </div>
-
-        {/* Quantity menu */}
-        {qtyMenu && (
-          <>
-            <div className="fixed inset-0 z-[85]" onClick={() => setQtyMenu(null)} />
-            <div
-              className="fixed z-[90] bg-gray-900 rounded-lg shadow-2xl border border-white/20 py-0.5 w-16"
-              style={{
-                left: Math.min(qtyMenu.x, window.innerWidth - 80),
-                top: Math.max(50, qtyMenu.y - 200),
-              }}
-              onContextMenu={(e) => e.preventDefault()}
-            >
-              {QUANTITIES.map((q) => (
-                <button key={q}
-                  onClick={() => { const id = qtyMenu.giftId; setQtyMenu(null); handleSend(id, q); }}
-                  className="w-full px-2 py-1 text-white text-[10px] hover:bg-white/10 text-center">
-                  ×{q}
-                </button>
-              ))}
-            </div>
-          </>
-        )}
 
         {/* Recharge modal */}
         {showRecharge && (
