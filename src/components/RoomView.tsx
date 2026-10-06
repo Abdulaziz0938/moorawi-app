@@ -79,13 +79,18 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const [giftTarget, setGiftTarget] = useState<{x: number; y: number} | null>(null);
   const [giftQueue, setGiftQueue] = useState<any[]>([]);
   const [comboCount, setComboCount] = useState(1);
+  const [totalQuantity, setTotalQuantity] = useState(0);
+  const [comboValue, setComboValue] = useState(0);
   const [showComboPulse, setShowComboPulse] = useState(false);
   const [isGlobalBanner, setIsGlobalBanner] = useState(false);
   const lastGiftIdRef = useRef<string | null>(null);
   const comboTimeoutRef = useRef<any>(null);
   const targetCoordsRef = useRef<{x: number; y: number} | null>(null);
-  const latestGift = useQuery(api.gifts.latestGiftFull, { roomId, since: enteredAt });
-  const globalBroadcast = useQuery(api.gifts.latestGlobalBroadcast, { since: enteredAt });
+  const [comboOverlay, setComboOverlay] = useState<{gift: any; count: number; id: number} | null>(null);
+  const comboOverlayTimerRef = useRef<any>(null);
+  const giftSinceRef = useRef(Date.now());
+  const latestGift = useQuery(api.gifts.latestGiftFull, { roomId, since: giftSinceRef.current });
+  const globalBroadcast = useQuery(api.gifts.latestGlobalBroadcast, { since: giftSinceRef.current });
   const [activeGlobalBanner, setActiveGlobalBanner] = useState<any>(null);
 
   const chatBoxRef = useRef<HTMLDivElement>(null);
@@ -148,6 +153,8 @@ export default function RoomView({ roomId, onLeave }: Props) {
     const giftKey = `${latestGift.fromUserId}_${latestGift.giftId}`;
     if (activeGift && `${activeGift.fromUserId}_${activeGift.giftId}` === giftKey) {
       setComboCount((c) => c + 1);
+      setTotalQuantity((q) => q + (latestGift.quantity || 1));
+      setComboValue((v) => v + (latestGift.quantity || 1) * (latestGift.price ?? 0));
       setShowComboPulse(true);
       setTimeout(() => setShowComboPulse(false), 350);
       if (comboTimeoutRef.current) clearTimeout(comboTimeoutRef.current);
@@ -170,6 +177,18 @@ export default function RoomView({ roomId, onLeave }: Props) {
     return () => clearTimeout(timer);
     // eslint-disable-next-line
   }, [globalBroadcast]);
+
+  // Combo Overlay effect (new layer, doesn't affect anything)
+  useEffect(() => {
+    if (!activeGift || comboCount < 2) return;
+    if ((activeGift.price ?? 0) >= 1000) return; // Only for Micro gifts
+
+    setComboOverlay({ gift: activeGift, count: totalQuantity, id: Date.now() });
+    if (comboOverlayTimerRef.current) clearTimeout(comboOverlayTimerRef.current);
+    comboOverlayTimerRef.current = setTimeout(() => {
+      setComboOverlay(null);
+    }, 1800);
+  }, [comboCount, activeGift]);
 
   // Gift: queue processor
   useEffect(() => {
@@ -194,7 +213,9 @@ export default function RoomView({ roomId, onLeave }: Props) {
     }
 
     setActiveGift(next);
-    setComboCount(next.quantity || 1);
+    setComboCount(1);
+    setTotalQuantity(next.quantity || 1);
+    setComboValue((next.quantity || 1) * (next.price ?? 0));
     setIsGlobalBanner(next.isGlobal && (next.price ?? 0) >= 30000);
 
     // إخفاء الهدية
@@ -213,6 +234,8 @@ export default function RoomView({ roomId, onLeave }: Props) {
     targetCoordsRef.current = null;
     setIsGlobalBanner(false);
     setComboCount(1);
+    setTotalQuantity(0);
+    setComboValue(0);
     if (comboTimeoutRef.current) clearTimeout(comboTimeoutRef.current);
   };
 
@@ -517,7 +540,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
           )}
 
           {/* ============ ROOM BANNER (1000 - 29999) ============ */}
-          {(activeGift.price ?? 0) >= 1000 && (activeGift.price ?? 0) < 30000 && (
+          {((activeGift.price ?? 0) >= 1000 || comboValue >= 950) && (activeGift.price ?? 0) < 30000 && (
             <div className={`fixed top-4 left-0 right-0 z-[85] flex justify-center pointer-events-none transition-all duration-300 ${showComboPulse ? "scale-[1.03]" : "scale-100"}`}>
               <div className="max-w-[330px] w-[calc(100%-24px)] bg-gradient-to-r from-purple-900/90 via-black/90 to-purple-900/90 backdrop-blur-md rounded-full px-3 py-1.5 border border-purple-400/50 shadow-2xl flex items-center justify-between">
                 <div className="flex items-center gap-1.5 truncate">
@@ -532,7 +555,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
                 </div>
                 <div className="flex flex-col items-center px-2 min-w-0">
                   <span className="text-purple-300 text-[10px] font-bold truncate max-w-[100px]">{activeGift.giftName}</span>
-                  <span className={`text-yellow-300 text-xs font-black ${showComboPulse ? "combo-pulse" : ""}`}>×{comboCount}</span>
+                  <span className={`text-yellow-300 text-xs font-black ${showComboPulse ? "combo-pulse" : ""}`}>×{totalQuantity}</span>
                 </div>
                 <div className="flex items-center gap-1.5 truncate">
                   <span className="text-white text-xs font-bold truncate max-w-[60px]">{activeGift.toName}</span>
@@ -565,7 +588,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
                   </div>
                   <div className="flex flex-col items-center px-1">
                     <span className="text-[9px] font-bold text-white/90 truncate">أهدى {activeGift.giftName}</span>
-                    <span className={`text-xs font-black text-yellow-400 ${showComboPulse ? "combo-pulse" : ""}`}>×{comboCount}</span>
+                    <span className={`text-xs font-black text-yellow-400 ${showComboPulse ? "combo-pulse" : ""}`}>×{totalQuantity}</span>
                   </div>
                   <div className="flex items-center gap-1 min-w-0">
                     <span className="text-[11px] font-black text-yellow-300 truncate max-w-[65px]">{activeGift.toName}</span>
@@ -598,8 +621,8 @@ export default function RoomView({ roomId, onLeave }: Props) {
             </div>
           )}
 
-          {/* ============ MICRO GIFT BOTTOM PILL (< 1000) ============ */}
-          {(activeGift.price ?? 0) < 1000 && (
+          {/* ============ BOTTOM PILL (always visible) ============ */}
+          {(
             <div className={`fixed left-3 z-[70] pointer-events-none flex items-center transition-transform duration-200 ${showComboPulse ? "scale-110" : "scale-100"}`} style={{ bottom: "42vh" }}>
               <div className="bg-black/70 backdrop-blur-md rounded-full pl-2 pr-3 py-1 border border-white/20 shadow-xl flex items-center gap-2">
                 <div className="w-6 h-6 rounded-full overflow-hidden bg-purple-500 ring-1 ring-white/50 flex-shrink-0">
@@ -613,7 +636,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
                   <span className="text-white text-[10px] font-bold truncate max-w-[70px]">{activeGift.fromName}</span>
                   <span className="text-white/60 text-[8px] truncate max-w-[70px]">أرسل إلى {activeGift.toName}</span>
                 </div>
-                <span className="text-yellow-300 text-xs font-black italic">×{comboCount}</span>
+                <span className="text-yellow-300 text-xs font-black italic">×{totalQuantity}</span>
               </div>
             </div>
           )}
@@ -659,6 +682,37 @@ export default function RoomView({ roomId, onLeave }: Props) {
       )}
 
 
+
+      {/* Combo Overlay (new layer, center) — doesn't affect anything */}
+      {comboOverlay && comboOverlay.gift?.mediaUrl && (
+        <div className="fixed inset-0 z-[72] pointer-events-none flex items-center justify-center" dir="rtl">
+          <div
+            key={comboOverlay.id}
+            className="combo-pop-in flex flex-col items-center"
+          >
+            <div className="w-32 h-32 flex items-center justify-center">
+              {comboOverlay.gift.mediaType === "video" ? (
+                <video
+                  src={comboOverlay.gift.mediaUrl}
+                  className="max-w-full max-h-full object-contain"
+                  autoPlay muted loop playsInline
+                />
+              ) : (
+                <img
+                  src={comboOverlay.gift.mediaUrl}
+                  alt=""
+                  className="max-w-full max-h-full object-contain"
+                />
+              )}
+            </div>
+            <div className="mt-1 bg-black/70 backdrop-blur-md rounded-full px-4 py-1 border border-yellow-400/40 shadow-2xl">
+              <span className="text-yellow-300 text-2xl font-black italic drop-shadow-lg">
+                ×{comboOverlay.count}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showGifts && <GiftSheet roomId={roomId} onClose={() => setShowGifts(false)} />}
 

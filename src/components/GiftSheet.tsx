@@ -3,7 +3,7 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { getDeviceId } from "../lib/device";
-import { X, Coins, Loader2, Music, Heart, Globe, Mic, Users, Check } from "lucide-react";
+import { X, Coins, Loader2, Music, Heart, Globe, Mic, Users, Check, ChevronUp } from "lucide-react";
 
 interface Props {
   roomId: Id<"rooms">;
@@ -20,6 +20,8 @@ const CATEGORIES = [
 
 type RecipientMode = "mic" | "room" | "individual";
 
+const QUANTITY_PRESETS = [1, 5, 10, 33, 66, 99];
+
 export default function GiftSheet({ roomId, onClose }: Props) {
   const deviceId = getDeviceId();
   const gifts = useQuery(api.gifts.listActive);
@@ -34,6 +36,13 @@ export default function GiftSheet({ roomId, onClose }: Props) {
   const [recipientMode, setRecipientMode] = useState<RecipientMode>("mic");
   const [showRecharge, setShowRecharge] = useState(false);
   const [sending, setSending] = useState(false);
+  const [selectedQuantity, setSelectedQuantity] = useState<number>(1);
+  const [showQtyMenu, setShowQtyMenu] = useState<boolean>(false);
+  const [comboCount, setComboCount] = useState(0);
+  const [comboProgress, setComboProgress] = useState(100);
+  const [showComboCircle, setShowComboCircle] = useState(false);
+  const comboTimeoutRef = useState<any>({ current: null })[0];
+  const comboIntervalRef = useState<any>({ current: null })[0];
 
   // Drag to dismiss
   const [dragY, setDragY] = useState(0);
@@ -76,7 +85,7 @@ export default function GiftSheet({ roomId, onClose }: Props) {
   );
 
   const selectedGift = gifts?.find((g) => g._id === selectedGiftId);
-  const totalCost = selectedGift ? selectedGift.price * selectedUserIds.size : 0;
+  const totalCost = selectedGift ? selectedGift.price * selectedQuantity * selectedUserIds.size : 0;
   const insufficient = totalCost > (balance ?? 0);
 
   // ============ ضغطة على الهدية: اختيار أو إلغاء ============
@@ -97,25 +106,49 @@ export default function GiftSheet({ roomId, onClose }: Props) {
     const cost = gift.price * selectedUserIds.size;
     if (cost > (balance ?? 0)) { alert("رصيدك غير كافٍ"); return; }
 
+    // Update combo UI immediately (optimistic)
+    setComboCount((c) => c + 1);
+    setComboProgress(100);
+    setShowComboCircle(true);
+    resetComboTimer();
+
     setSending(true);
     try {
-      // إرسال لكل المستخدمين المحددين
       for (const userId of Array.from(selectedUserIds)) {
         await sendGift({
           roomId,
           toUserId: userId,
           giftId,
-          quantity: 1,
+          quantity: selectedQuantity,
           tokenOverride: deviceId,
         });
       }
-      // لا نغلق الشيت → يمكن للمستخدم إرسال مرة أخرى (Combo)
     } catch (e: any) {
       const msg = typeof e?.data === "object" ? (e.data?.message || e?.message) : e?.message;
       alert(msg || "فشل الإرسال");
     } finally {
       setSending(false);
     }
+  };
+
+  const resetComboTimer = () => {
+    if (comboTimeoutRef.current) clearTimeout(comboTimeoutRef.current);
+    if (comboIntervalRef.current) clearInterval(comboIntervalRef.current);
+
+    const duration = 2500;
+    const startTime = Date.now();
+
+    comboIntervalRef.current = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      setComboProgress(Math.max(0, 100 - (elapsed / duration) * 100));
+    }, 30);
+
+    comboTimeoutRef.current = setTimeout(() => {
+      if (comboIntervalRef.current) clearInterval(comboIntervalRef.current);
+      setShowComboCircle(false);
+      setComboCount(0);
+      setComboProgress(100);
+    }, duration);
   };
 
   const onDragStart = (e: React.TouchEvent) => { setDragging(true); setTouchStartY(e.touches[0].clientY); };
@@ -302,25 +335,42 @@ export default function GiftSheet({ roomId, onClose }: Props) {
                       </div>
                     </button>
 
-                    {/* Send button (only when this gift is selected) */}
+                    {/* Send button — improved design */}
                     {isSelected && (
-                      <button
-                        onClick={(e) => handleSendClick(e, g._id)}
-                        disabled={sending || insufficient || selectedUserIds.size === 0}
-                        className={`mt-0.5 w-full rounded-md text-white text-[9px] font-bold py-1 flex items-center justify-center gap-1 active:scale-95 transition ${
-                          insufficient
-                            ? "bg-red-500/60"
-                            : "bg-gradient-to-r from-emerald-500 to-emerald-600"
-                        } disabled:opacity-50`}
-                      >
-                        {sending ? (
-                          <Loader2 className="animate-spin" size={9} />
-                        ) : insufficient ? (
-                          <>رصيد غير كافٍ</>
-                        ) : (
-                          <>إرسال ({totalCost})</>
-                        )}
-                      </button>
+                      <div className="mt-1 flex flex-col gap-0.5">
+                        {/* Send button */}
+                        <button
+                          onClick={(e) => handleSendClick(e, g._id)}
+                          disabled={sending || insufficient || selectedUserIds.size === 0}
+                          className={`group relative w-full rounded-lg py-1.5 flex items-center justify-center gap-1 active:scale-95 transition-all duration-200 overflow-hidden shadow-lg ${
+                            insufficient
+                              ? "bg-gradient-to-br from-red-500 to-red-700 shadow-red-500/30"
+                              : "bg-gradient-to-br from-emerald-400 via-emerald-500 to-teal-600 shadow-emerald-500/40"
+                          } disabled:opacity-60`}
+                        >
+                          {sending ? (
+                            <Loader2 className="animate-spin text-white" size={10} />
+                          ) : insufficient ? (
+                            <span className="text-white text-[9px] font-black">رصيد غير كافٍ</span>
+                          ) : (
+                            <>
+                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="text-white">
+                                <path d="M5 12l5 5L20 7" strokeLinecap="round" strokeLinejoin="round" />
+                              </svg>
+                              <span className="text-white text-[9px] font-black">إرسال</span>
+                            </>
+                          )}
+                        </button>
+
+                        {/* Quantity badge */}
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setShowQtyMenu(true); }}
+                          className="w-full bg-yellow-500/30 hover:bg-yellow-500/50 border border-yellow-400/50 rounded-lg py-0.5 flex items-center justify-center gap-1 active:scale-95 transition"
+                        >
+                          <ChevronUp size={9} className="text-yellow-300" />
+                          <span className="text-yellow-300 text-[9px] font-black">×{selectedQuantity}</span>
+                        </button>
+                      </div>
                     )}
                   </div>
                 );
@@ -328,6 +378,57 @@ export default function GiftSheet({ roomId, onClose }: Props) {
             </div>
           )}
         </div>
+
+        {/* Floating Combo Circle */}
+        {showComboCircle && comboCount > 0 && (
+          <div className="absolute bottom-2 left-2 z-[90] pointer-events-none">
+            <div className="relative w-14 h-14">
+              {/* Circular progress SVG */}
+              <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="45" fill="rgba(0,0,0,0.7)" />
+                <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="5" />
+                <circle
+                  cx="50" cy="50" r="45" fill="none" stroke="#fbbf24" strokeWidth="5"
+                  strokeDasharray={`${2 * Math.PI * 45}`}
+                  strokeDashoffset={`${2 * Math.PI * 45 * (1 - comboProgress / 100)}`}
+                  strokeLinecap="round"
+                  style={{ transition: "stroke-dashoffset 0.05s linear" }}
+                />
+              </svg>
+              {/* Count */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span key={comboCount} className="text-yellow-300 text-base font-black combo-pulse">
+                  ×{comboCount}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Qty Selector Popup */}
+        {showQtyMenu && (
+          <>
+            <div className="fixed inset-0 z-[85]" onClick={() => setShowQtyMenu(false)} />
+            <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-[90] bg-gray-900 rounded-2xl shadow-2xl border border-white/20 p-2 min-w-[140px]">
+              <p className="text-white/50 text-[9px] text-center mb-1 font-bold">اختر عدد الإرسال</p>
+              <div className="grid grid-cols-3 gap-1">
+                {QUANTITY_PRESETS.map((q) => (
+                  <button
+                    key={q}
+                    onClick={() => { setSelectedQuantity(q); setShowQtyMenu(false); }}
+                    className={`py-2 rounded-xl text-xs font-black transition ${
+                      selectedQuantity === q
+                        ? "bg-gradient-to-br from-yellow-400 to-amber-500 text-black shadow-lg"
+                        : "bg-white/10 text-white/80 hover:bg-white/20"
+                    }`}
+                  >
+                    ×{q}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
 
         {/* Recharge modal */}
         {showRecharge && (

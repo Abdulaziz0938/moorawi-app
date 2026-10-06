@@ -157,6 +157,17 @@ export const send = mutation({
       totalReceived: (target.totalReceived ?? 0) + totalPrice,
     });
 
+    // افحص آخر transaction — هل هي combo continuation؟
+    const lastTx = await ctx.db
+      .query("giftTransactions")
+      .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
+      .order("desc")
+      .first();
+    const isComboContinuation = lastTx &&
+      lastTx.fromUserId === user._id &&
+      lastTx.giftId === gift._id &&
+      (Date.now() - lastTx._creationTime) < 3000;
+
     await ctx.db.insert("giftTransactions", {
       roomId: args.roomId,
       fromUserId: user._id,
@@ -170,13 +181,16 @@ export const send = mutation({
       totalPrice,
     });
 
-    await ctx.db.insert("messages", {
-      roomId: args.roomId,
-      senderId: user._id,
-      senderName: user.name ?? "ضيف",
-      text: `${user.name ?? "ضيف"} أرسل ${gift.name} × ${args.quantity} إلى ${target.name ?? "ضيف"}`,
-      system: true,
-    });
+    // لا تنشئ رسالة جديدة إذا كانت استمرار كومبو
+    if (!isComboContinuation) {
+      await ctx.db.insert("messages", {
+        roomId: args.roomId,
+        senderId: user._id,
+        senderName: user.name ?? "ضيف",
+        text: `${user.name ?? "ضيف"} أرسل ${gift.name} × ${args.quantity} إلى ${target.name ?? "ضيف"}`,
+        system: true,
+      });
+    }
 
     return { success: true, remaining: myCoins - totalPrice };
   },
