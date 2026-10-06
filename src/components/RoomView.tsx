@@ -597,11 +597,9 @@ export default function RoomView({ roomId, onLeave }: Props) {
                 ref={videoRef}
                 key={activeGift._id}
                 src={activeGift.mediaUrl}
-                autoPlay
                 preload="auto"
                 playsInline
-                onEnded={handleVideoEnd}
-                onCanPlay={() => {
+                onCanPlayThrough={() => {
                   if (videoRef.current) {
                     videoRef.current.volume = 1;
                     videoRef.current.muted = false;
@@ -610,6 +608,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
                     });
                   }
                 }}
+                onEnded={handleVideoEnd}
                 className="w-full h-full object-contain"
               />
             ) : activeGift.mediaUrl ? (
