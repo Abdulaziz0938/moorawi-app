@@ -42,8 +42,6 @@ function bubbleClass(vip: number): string {
 
 export default function RoomView({ roomId, onLeave }: Props) {
   const deviceId = getDeviceId();
-  const [lastGiftSeen, setLastGiftSeen] = useState(() => Date.now());
-  const [activeGift, setActiveGift] = useState<any>(null);
   const [enteredAt] = useState(() => {
     const key = `entered_${roomId}`;
     const existing = sessionStorage.getItem(key);
@@ -59,7 +57,6 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const messages = useQuery(api.messages.list, { roomId });
   const listeners = useQuery(api.mics.listeners, { roomId });
   const myInvite = useQuery(api.mics.myInvite, { roomId, tokenOverride: deviceId });
-  const latestGift = useQuery(api.gifts.latestGiftFull, { roomId, since: lastGiftSeen });
 
   const takeSeat = useMutation(api.mics.takeSeat);
   const leaveSeat = useMutation(api.mics.leaveSeat);
@@ -88,11 +85,15 @@ export default function RoomView({ roomId, onLeave }: Props) {
 
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [activeGift, setActiveGift] = useState<any>(null);
   const [giftTarget, setGiftTarget] = useState<{x: number; y: number} | null>(null);
-  const [bannerY, setBannerY] = useState(0);
-  const [bannerOpacity, setBannerOpacity] = useState(1);
-  const [dragging, setDragging] = useState(false);
-  const [touchStartY, setTouchStartY] = useState(0);
+  const [giftQueue, setGiftQueue] = useState<any[]>([]);
+  const latestGift = useQuery(api.gifts.latestGiftFull, { roomId, since: 0 });
+  const [comboCount, setComboCount] = useState(1);
+  const [showComboPulse, setShowComboPulse] = useState(false);
+  const [isGlobalBanner, setIsGlobalBanner] = useState(false);
+  const lastGiftIdRef = useRef<string | null>(null);
+  const comboTimeoutRef = useRef<any>(null);
   const chatBoxRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -154,42 +155,50 @@ export default function RoomView({ roomId, onLeave }: Props) {
   }, [roomId, deviceId, myInfo, clearMySeats]);
 
   useEffect(() => {
-    if (latestGift && latestGift._id !== activeGift?._id) {
-      setActiveGift(latestGift);
-    }
-  }, [latestGift]);
-
-  // Clear for images after 3s (videos clear via onEnded)
-  useEffect(() => {
-    if (activeGift && activeGift.mediaType === "image") {
-      const t = setTimeout(() => {
-        setActiveGift(null);
-        setLastGiftSeen(Date.now());
-      }, 3000);
-      return () => clearTimeout(t);
-    }
-  }, [activeGift]);
 
   // Sound: try to play with sound, fallback to muted
   useEffect(() => {
-    if (activeGift?.mediaType === "video" && videoRef.current) {
-      const vid = videoRef.current;
-      vid.volume = 1;
-      vid.muted = false;
-      vid.play().catch(() => { if (videoRef.current) videoRef.current.muted = true; });
+
+
+  // 1) استقبال الهدايا الجديدة → أضفها للطابور أو زد العداد
+  useEffect(() => {
+    if (!latestGift) return;
+    const giftKey = `${latestGift.fromUserId}_${latestGift.giftId}`;
+    // لو نفس المرسل + نفس الهدية + العرض الحالي نفسه → Combo
+    if (activeGift && `${activeGift.fromUserId}_${activeGift.giftId}` === giftKey) {
+      setComboCount((c) => c + 1);
+      setShowComboPulse(true);
+      setTimeout(() => setShowComboPulse(false), 350);
+      // أعد ضبط المؤقت
+      if (comboTimeoutRef.current) clearTimeout(comboTimeoutRef.current);
+      comboTimeoutRef.current = setTimeout(() => finishActiveGift(), 3000);
+      lastGiftIdRef.current = latestGift._id;
+      return;
     }
-  }, [activeGift]);
+    // غير ذلك → ضع في الطابور
+    if (lastGiftIdRef.current !== latestGift._id) {
+      lastGiftIdRef.current = latestGift._id;
+      setGiftQueue((q) => [...q, latestGift]);
+    }
+  }, [latestGift]);
 
-  const handleVideoEnd = () => {
-    setActiveGift(null);
-    setLastGiftSeen(Date.now());
-  };
+  // 2) معالجة الطابور
+  useEffect(() => {
+    if (activeGift || giftQueue.length === 0) return;
+    const next = giftQueue[0];
+    setGiftQueue((q) => q.slice(1));
+    setActiveGift(next);
+    setComboCount(next.quantity || 1);
+    setIsGlobalBanner(next.isGlobal && next.price >= 30000);
+    // انتهِ تلقائياً بعد مدة
+    comboTimeoutRef.current = setTimeout(() => finishActiveGift(), next.hasSound ? 3500 : 3200);
+  }, [giftQueue, activeGift]);
 
+  // 3) حساب موضع المايك المستلم
   useEffect(() => {
     if (!activeGift || !seats) { setGiftTarget(null); return; }
     const seat = seats.find((s) => s.userId === activeGift.toUserId);
     if (!seat) { setGiftTarget(null); return; }
-    // Wait one frame for DOM to render the mic grid
     const compute = () => {
       const el = document.querySelector(`[data-mic-seat="${seat.seatIndex}"]`);
       if (el) {
@@ -204,6 +213,14 @@ export default function RoomView({ roomId, onLeave }: Props) {
     const t = setTimeout(compute, 100);
     return () => clearTimeout(t);
   }, [activeGift, seats]);
+
+  const finishActiveGift = () => {
+    setActiveGift(null);
+    setGiftTarget(null);
+    setIsGlobalBanner(false);
+    setComboCount(1);
+    if (comboTimeoutRef.current) clearTimeout(comboTimeoutRef.current);
+  };
 
   useEffect(() => {
     if (chatBoxRef.current) chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
@@ -353,7 +370,8 @@ export default function RoomView({ roomId, onLeave }: Props) {
                     return (
                       <div key={seat._id} className="flex flex-col items-center justify-start pt-0.5 min-w-0" style={{ width: cellWidth }}>
                         <div
-                          onClick={() => handleSeatClick(seat.seatIndex, seat.userId)}
+                          data-mic-seat={seat.seatIndex}
+                    onClick={() => handleSeatClick(seat.seatIndex, seat.userId)}
                           className={`relative w-full aspect-square rounded-full flex items-center justify-center text-white transition cursor-pointer overflow-hidden ${
                             occupied ? "ring-2 ring-purple-300" : seat.locked ? "bg-gray-700 ring-2 ring-gray-500" : "bg-white/5 ring-1 ring-white/20 hover:bg-white/15"
                           }`}
@@ -525,12 +543,13 @@ export default function RoomView({ roomId, onLeave }: Props) {
         <GiftSheet roomId={roomId} onClose={() => setShowGifts(false)} />
       )}
 
-      {/* Gift Animation Overlay */}
+      {/* ==================== GIFT LAYER (Layer 3 & 4 & 5) ==================== */}
       {activeGift && (
         <>
-          {/* ====== VIDEO / IMAGE — single centered element with unified animation ====== */}
+          {/* L3: Flying gift (image/video) — animated */}
           <div
-            className="fixed z-[68] pointer-events-none gift-emerge-anim"
+            key={activeGift._id}
+            className="fixed z-[68] pointer-events-none gift-anim"
             style={{
               left: "50%",
               top: "50%",
@@ -541,7 +560,6 @@ export default function RoomView({ roomId, onLeave }: Props) {
             {activeGift.mediaType === "video" && activeGift.mediaUrl ? (
               <video
                 ref={videoRef}
-                key={activeGift._id}
                 src={activeGift.mediaUrl}
                 autoPlay
                 preload="auto"
@@ -555,22 +573,26 @@ export default function RoomView({ roomId, onLeave }: Props) {
                     });
                   }
                 }}
-                onEnded={handleVideoEnd}
-                className="max-w-[70vw] max-h-[60vh] object-contain"
+                onEnded={finishActiveGift}
+                className={activeGift.hasSound ? "max-w-[70vw] max-h-[60vh] object-contain" : "max-w-[40vw] max-h-[40vh] object-contain"}
               />
             ) : activeGift.mediaUrl ? (
               <img
                 src={activeGift.mediaUrl}
                 alt=""
-                className="max-w-[45vw] max-h-[45vh] object-contain"
+                className={activeGift.hasSound ? "max-w-[70vw] max-h-[60vh] object-contain" : "max-w-[40vw] max-h-[40vh] object-contain"}
               />
             ) : null}
           </div>
 
-          {/* ====== TOP BANNER — glass, own layer, small ====== */}
-          {activeGift.hasSound && (
+          {/* L5: Top glass banner — sound or global */}
+          {(activeGift.hasSound || isGlobalBanner) && (
             <div className="fixed top-3 left-0 right-0 z-[70] flex justify-center pointer-events-none">
-              <div className="max-w-[320px] w-[calc(100%-24px)] bg-white/10 backdrop-blur-xl rounded-full px-3 py-1.5 border border-white/25 shadow-2xl flex items-center gap-1.5">
+              <div className={`max-w-[320px] w-[calc(100%-24px)] backdrop-blur-xl rounded-full px-3 py-1.5 border shadow-2xl flex items-center gap-1.5 ${
+                isGlobalBanner
+                  ? "bg-gradient-to-r from-yellow-500/30 via-amber-400/30 to-yellow-500/30 border-yellow-300/60"
+                  : "bg-white/10 border-white/25"
+              }`}>
                 <div className="flex items-center gap-1 flex-shrink-0">
                   <div className="w-7 h-7 rounded-full overflow-hidden bg-purple-500/70 ring-1 ring-white/40">
                     {activeGift.fromAvatar ? (
@@ -586,7 +608,9 @@ export default function RoomView({ roomId, onLeave }: Props) {
                 <span className="text-pink-300 text-sm font-black flex-shrink-0">⟶</span>
                 <div className="flex-1 flex flex-col items-center justify-center min-w-0">
                   <span className="text-white text-[9px] font-black truncate max-w-full">{activeGift.giftName}</span>
-                  <span className="text-yellow-300 text-[10px] font-black">×{activeGift.quantity}</span>
+                  <span className={`text-yellow-300 text-[11px] font-black ${showComboPulse ? "combo-pulse" : ""}`}>
+                    ×{comboCount}
+                  </span>
                 </div>
                 <span className="text-pink-300 text-sm font-black flex-shrink-0">⟵</span>
                 <div className="flex items-center gap-1 flex-shrink-0">
@@ -605,11 +629,13 @@ export default function RoomView({ roomId, onLeave }: Props) {
             </div>
           )}
 
-          {/* ====== BOTTOM BANNER — glass pill, small ====== */}
-          {!activeGift.hasSound && (
+          {/* L2: Bottom glass pill — no-sound gifts */}
+          {!activeGift.hasSound && !isGlobalBanner && (
             <div className="fixed left-0 right-0 z-[70] pointer-events-none flex justify-center" style={{ bottom: "48vh" }}>
               <div className="max-w-[240px] bg-white/10 backdrop-blur-xl rounded-full px-3 py-1.5 border border-white/25 shadow-2xl flex items-center gap-2">
-                <span className="text-yellow-300 text-[10px] font-black flex-shrink-0">×{activeGift.quantity}</span>
+                <span className={`text-yellow-300 text-[11px] font-black flex-shrink-0 ${showComboPulse ? "combo-pulse" : ""}`}>
+                  ×{comboCount}
+                </span>
                 <div className="w-6 h-6 flex items-center justify-center flex-shrink-0">
                   {activeGift.mediaUrl ? (
                     activeGift.mediaType === "video" ? (

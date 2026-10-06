@@ -235,7 +235,7 @@ export const latestGiftFull = query({
       .query("giftTransactions")
       .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
       .order("desc")
-      .take(5);
+      .take(20);
     const recent = txs.find((t) => t._creationTime > args.since);
     if (!recent) return null;
     const gift = await ctx.db.get("gifts", recent.giftId);
@@ -251,6 +251,7 @@ export const latestGiftFull = query({
     ]);
     return {
       _id: recent._id,
+      giftId: recent.giftId,
       fromName: recent.fromName,
       toName: recent.toName,
       fromUserId: recent.fromUserId,
