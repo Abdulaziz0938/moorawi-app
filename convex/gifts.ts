@@ -189,3 +189,30 @@ export const roomLeaderboard = query({
     return Object.values(totals).sort((a, b) => b.total - a.total).slice(0, 10);
   },
 });
+
+// Latest gift in room (for on-screen animation overlay)
+export const latestGift = query({
+  args: { roomId: v.id("rooms"), since: v.number() },
+  handler: async (ctx, args) => {
+    const txs = await ctx.db
+      .query("giftTransactions")
+      .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
+      .order("desc")
+      .take(5);
+    const recent = txs.find((t) => t._creationTime > args.since);
+    if (!recent) return null;
+    const gift = await ctx.db.get("gifts", recent.giftId);
+    if (!gift) return null;
+    const mediaUrl = await ctx.storage.getUrl(gift.mediaId);
+    return {
+      _id: recent._id,
+      fromName: recent.fromName,
+      toName: recent.toName,
+      giftName: recent.giftName,
+      quantity: recent.quantity,
+      mediaUrl,
+      mediaType: gift.mediaType,
+      createdAt: recent._creationTime,
+    };
+  },
+});

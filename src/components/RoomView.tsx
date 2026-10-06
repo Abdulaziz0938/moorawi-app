@@ -49,6 +49,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const messages = useQuery(api.messages.list, { roomId });
   const listeners = useQuery(api.mics.listeners, { roomId });
   const myInvite = useQuery(api.mics.myInvite, { roomId, tokenOverride: deviceId });
+  const latestGift = useQuery(api.gifts.latestGift, { roomId, since: lastGiftSeen });
 
   const takeSeat = useMutation(api.mics.takeSeat);
   const leaveSeat = useMutation(api.mics.leaveSeat);
@@ -76,6 +77,8 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const [inviteSeatIndex, setInviteSeatIndex] = useState<number | null>(null);
 
   const [sending, setSending] = useState(false);
+  const [lastGiftSeen, setLastGiftSeen] = useState(() => Date.now());
+  const [activeGift, setActiveGift] = useState<any>(null);
   const [uploading, setUploading] = useState(false);
   const chatBoxRef = useRef<HTMLDivElement>(null);
 
@@ -116,6 +119,17 @@ export default function RoomView({ roomId, onLeave }: Props) {
     window.addEventListener("beforeunload", h);
     return () => window.removeEventListener("beforeunload", h);
   }, [roomId, deviceId, myInfo, clearMySeats]);
+
+  useEffect(() => {
+    if (latestGift && latestGift._id !== activeGift?._id) {
+      setActiveGift(latestGift);
+      const timer = setTimeout(() => {
+        setActiveGift(null);
+        setLastGiftSeen(Date.now());
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [latestGift]);
 
   useEffect(() => {
     if (chatBoxRef.current) chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
@@ -434,6 +448,39 @@ export default function RoomView({ roomId, onLeave }: Props) {
 
       {showGifts && (
         <GiftSheet roomId={roomId} onClose={() => setShowGifts(false)} />
+      )}
+
+      {/* Gift Animation Overlay */}
+      {activeGift && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center pointer-events-none" dir="rtl">
+          <div className="absolute inset-0 bg-black/30" />
+          <div className="relative flex flex-col items-center">
+            {activeGift.mediaType === "video" && activeGift.mediaUrl ? (
+              <video
+                key={activeGift._id}
+                src={activeGift.mediaUrl}
+                autoPlay
+                muted
+                playsInline
+                className="max-w-[70vw] max-h-[50vh] drop-shadow-2xl"
+              />
+            ) : activeGift.mediaUrl ? (
+              <img
+                src={activeGift.mediaUrl}
+                alt=""
+                className="max-w-[70vw] max-h-[50vh] drop-shadow-2xl"
+              />
+            ) : null}
+            <div className="mt-3 bg-black/70 px-4 py-2 rounded-full text-white text-sm font-bold flex items-center gap-2">
+              <span>{activeGift.fromName}</span>
+              <span className="text-purple-300">أرسل</span>
+              <span className="text-pink-300">{activeGift.giftName}</span>
+              <span className="text-yellow-300">×{activeGift.quantity}</span>
+              <span className="text-purple-300">إلى</span>
+              <span>{activeGift.toName}</span>
+            </div>
+          </div>
+        </div>
       )}
 
       {showSettings && (
