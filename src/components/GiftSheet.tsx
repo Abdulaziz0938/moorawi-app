@@ -194,15 +194,15 @@ export default function GiftSheet({ roomId, onClose }: Props) {
                         g.mediaType === "video" ? (
                           <video
                             src={g.mediaUrl}
-                            className="w-full h-full object-cover pointer-events-none"
-                            preload="none"
+                            className="w-full h-full object-contain pointer-events-none"
+                            preload="metadata"
                             muted
                             playsInline
                             disablePictureInPicture
                             controlsList="nodownload noplaybackrate"
                           />
                         ) : (
-                          <img src={g.mediaUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
+                          <img src={g.mediaUrl} alt="" className="w-full h-full object-contain" />
                         )
                       ) : (
                         <div className="w-full h-full flex items-center justify-center"><span className="text-base">🎁</span></div>

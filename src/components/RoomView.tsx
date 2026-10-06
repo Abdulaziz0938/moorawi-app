@@ -524,7 +524,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
       {/* Gift Animation Overlay */}
       {activeGift && (
         <>
-          {/* ============ VIDEO with sound: centered, plays ============ */}
+          {/* ====== VIDEO (with sound): constrained, centered ====== */}
           {activeGift.hasSound && activeGift.mediaType === "video" && activeGift.mediaUrl && (
             <div className="fixed inset-0 z-[68] pointer-events-none flex items-center justify-center">
               <video
@@ -544,13 +544,12 @@ export default function RoomView({ roomId, onLeave }: Props) {
                   }
                 }}
                 onEnded={handleVideoEnd}
-                className="max-w-[80vw] max-h-[65vh] object-contain"
-                style={{ mixBlendMode: "screen" }}
+                className="max-w-[55vw] max-h-[55vh] object-contain rounded-2xl"
               />
             </div>
           )}
 
-          {/* ============ IMAGE (no sound): flies to mic ============ */}
+          {/* ====== IMAGE (no sound): flies to mic, transparent ====== */}
           {!activeGift.hasSound && activeGift.mediaUrl && (
             <div
               className="fixed z-[68] pointer-events-none"
@@ -570,26 +569,26 @@ export default function RoomView({ roomId, onLeave }: Props) {
                   muted
                   loop
                   playsInline
-                  className="max-w-[35vw] max-h-[35vh] object-contain"
+                  className="max-w-[40vw] max-h-[40vh] object-contain"
                   style={{ mixBlendMode: "screen" }}
                 />
               ) : (
                 <img
                   src={activeGift.mediaUrl}
                   alt=""
-                  className="max-w-[35vw] max-h-[35vh] object-contain"
+                  className="max-w-[40vw] max-h-[40vh] object-contain"
                   style={{ mixBlendMode: "screen" }}
                 />
               )}
             </div>
           )}
 
-          {/* Top banner — sound gifts only */}
+          {/* ====== TOP BANNER (sound only) — constrained width ====== */}
           {activeGift.hasSound && (
-            <div className="fixed top-2 left-2 right-2 z-[70]">
-              <div className="relative overflow-hidden bg-gradient-to-r from-pink-500 via-fuchsia-500 to-purple-600 rounded-2xl px-2 py-1.5 shadow-2xl border-2 border-white/30 flex items-center gap-2">
-                <div className="relative flex items-center gap-1.5 flex-shrink-0">
-                  <div className="w-9 h-9 rounded-full overflow-hidden bg-purple-500 ring-2 ring-yellow-300 shadow-lg">
+            <div className="fixed top-2 left-0 right-0 z-[70] flex justify-center pointer-events-none">
+              <div className="max-w-[340px] w-[calc(100%-16px)] overflow-hidden bg-gradient-to-r from-pink-500 via-fuchsia-500 to-purple-600 rounded-2xl px-2 py-1.5 shadow-2xl border-2 border-white/30 flex items-center gap-1.5">
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <div className="w-8 h-8 rounded-full overflow-hidden bg-purple-500 ring-2 ring-yellow-300">
                     {activeGift.fromAvatar ? (
                       <img src={activeGift.fromAvatar} alt="" className="w-full h-full object-cover" />
                     ) : (
@@ -598,17 +597,17 @@ export default function RoomView({ roomId, onLeave }: Props) {
                       </div>
                     )}
                   </div>
-                  <span className="text-white text-[11px] font-black max-w-[70px] truncate">{activeGift.fromName}</span>
+                  <span className="text-white text-[10px] font-black max-w-[50px] truncate">{activeGift.fromName}</span>
                 </div>
-                <span className="text-yellow-300 text-lg font-black">⟶</span>
-                <div className="relative flex-1 flex flex-col items-center justify-center min-w-0">
-                  <span className="text-white text-[10px] font-black truncate max-w-[90px]">{activeGift.giftName}</span>
-                  <span className="text-yellow-300 text-[11px] font-black">×{activeGift.quantity}</span>
+                <span className="text-yellow-300 text-base font-black flex-shrink-0">⟶</span>
+                <div className="flex-1 flex flex-col items-center justify-center min-w-0">
+                  <span className="text-white text-[9px] font-black truncate max-w-full">{activeGift.giftName}</span>
+                  <span className="text-yellow-300 text-[10px] font-black">×{activeGift.quantity}</span>
                 </div>
-                <span className="text-yellow-300 text-lg font-black">⟵</span>
-                <div className="relative flex items-center gap-1.5 flex-shrink-0">
-                  <span className="text-white text-[11px] font-black max-w-[70px] truncate">{activeGift.toName}</span>
-                  <div className="w-9 h-9 rounded-full overflow-hidden bg-purple-500 ring-2 ring-yellow-300 shadow-lg">
+                <span className="text-yellow-300 text-base font-black flex-shrink-0">⟵</span>
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <span className="text-white text-[10px] font-black max-w-[50px] truncate">{activeGift.toName}</span>
+                  <div className="w-8 h-8 rounded-full overflow-hidden bg-purple-500 ring-2 ring-yellow-300">
                     {activeGift.toAvatar ? (
                       <img src={activeGift.toAvatar} alt="" className="w-full h-full object-cover" />
                     ) : (
@@ -622,38 +621,34 @@ export default function RoomView({ roomId, onLeave }: Props) {
             </div>
           )}
 
-          {/* Small bottom banner — no-sound gifts */}
+          {/* ====== BOTTOM BANNER (no sound) — small, centered, like lollipop ====== */}
           {!activeGift.hasSound && (
-            <div className="fixed left-3 right-3 z-[70] pointer-events-none" style={{ bottom: "48vh" }}>
-              <div className="bg-gradient-to-r from-emerald-500/95 to-emerald-600/95 backdrop-blur-md rounded-2xl px-3 py-2 shadow-xl border border-white/20 flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 min-w-0">
-                  <div className="w-10 h-10 rounded-full overflow-hidden bg-purple-500 ring-2 ring-white/40 flex-shrink-0">
-                    {activeGift.fromAvatar ? (
-                      <img src={activeGift.fromAvatar} alt="" className="w-full h-full object-cover" />
+            <div className="fixed left-0 right-0 z-[70] pointer-events-none flex justify-center" style={{ bottom: "48vh" }}>
+              <div className="max-w-[280px] w-auto bg-gradient-to-r from-emerald-500/95 to-emerald-600/95 backdrop-blur-md rounded-full px-3 py-1.5 shadow-xl border border-white/20 flex items-center gap-2">
+                <span className="text-yellow-300 text-[11px] font-black flex-shrink-0">×{activeGift.quantity}</span>
+                <div className="w-7 h-7 flex items-center justify-center flex-shrink-0">
+                  {activeGift.mediaUrl ? (
+                    activeGift.mediaType === "video" ? (
+                      <video src={activeGift.mediaUrl} className="w-full h-full object-contain pointer-events-none" muted playsInline style={{ mixBlendMode: "screen" }} />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-white text-xs font-bold">
-                        {activeGift.fromName?.[0] || "?"}
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-white text-[12px] font-black truncate">{activeGift.fromName}</span>
-                    <span className="text-white/80 text-[9px] truncate">إلى {activeGift.toName}</span>
-                  </div>
+                      <img src={activeGift.mediaUrl} alt="" className="w-full h-full object-contain" style={{ mixBlendMode: "screen" }} />
+                    )
+                  ) : (
+                    <span className="text-lg">🎁</span>
+                  )}
                 </div>
-                <div className="flex items-center gap-1.5 flex-shrink-0">
-                  <div className="w-8 h-8 flex items-center justify-center">
-                    {activeGift.mediaUrl ? (
-                      activeGift.mediaType === "video" ? (
-                        <video src={activeGift.mediaUrl} className="w-full h-full object-contain pointer-events-none" muted playsInline style={{ mixBlendMode: "screen" }} />
-                      ) : (
-                        <img src={activeGift.mediaUrl} alt="" className="w-full h-full object-contain" style={{ mixBlendMode: "screen" }} />
-                      )
-                    ) : (
-                      <span className="text-xl">🎁</span>
-                    )}
-                  </div>
-                  <span className="text-yellow-300 text-[11px] font-black">×{activeGift.quantity}</span>
+                <div className="flex flex-col items-end min-w-0">
+                  <span className="text-white text-[11px] font-black truncate max-w-[100px]">{activeGift.fromName}</span>
+                  <span className="text-white/80 text-[8px] truncate max-w-[100px]">إلى {activeGift.toName}</span>
+                </div>
+                <div className="w-7 h-7 rounded-full overflow-hidden bg-purple-500 ring-1 ring-white/40 flex-shrink-0">
+                  {activeGift.fromAvatar ? (
+                    <img src={activeGift.fromAvatar} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-white text-[9px] font-bold">
+                      {activeGift.fromName?.[0] || "?"}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
