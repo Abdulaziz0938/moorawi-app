@@ -42,6 +42,8 @@ function bubbleClass(vip: number): string {
 
 export default function RoomView({ roomId, onLeave }: Props) {
   const deviceId = getDeviceId();
+  const [lastGiftSeen, setLastGiftSeen] = useState(() => Date.now());
+  const [activeGift, setActiveGift] = useState<any>(null);
   const room = useQuery(api.rooms.get, { roomId });
   const seats = useQuery(api.mics.state, { roomId });
   const members = useQuery(api.rooms.members, { roomId });
@@ -77,8 +79,6 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const [inviteSeatIndex, setInviteSeatIndex] = useState<number | null>(null);
 
   const [sending, setSending] = useState(false);
-  const [lastGiftSeen, setLastGiftSeen] = useState(() => Date.now());
-  const [activeGift, setActiveGift] = useState<any>(null);
   const [uploading, setUploading] = useState(false);
   const chatBoxRef = useRef<HTMLDivElement>(null);
 
