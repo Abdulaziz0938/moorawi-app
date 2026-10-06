@@ -11,17 +11,13 @@ export const state = query({
       .query("micSeats")
       .withIndex("by_room_and_seatIndex", (q) => q.eq("roomId", args.roomId))
       .take(MAX_SEATS);
-    // Enrich with user names
     const enriched = await Promise.all(
       seats.map(async (s) => {
         const user = s.userId ? await ctx.db.get("users", s.userId) : null;
-        return {
-          ...s,
-          userName: user?.name ?? null,
-        };
+        return { ...s, userName: user?.name ?? null };
       }),
     );
-    return enriched;
+    return enriched.sort((a, b) => a.seatIndex - b.seatIndex);
   },
 });
 
@@ -39,17 +35,28 @@ export const takeSeat = mutation({
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
     if (args.seatIndex < 0 || args.seatIndex >= MAX_SEATS) {
-      throw new ConvexError({ code: "BAD_REQUEST", message: "Invalid seat index" });
+      throw new ConvexError({ code: "BAD_REQUEST", message: "رقم المايك غير صحيح" });
     }
+    // Auto-leave previous seat if any
+    const allSeats = await ctx.db
+      .query("micSeats")
+      .withIndex("by_room_and_seatIndex", (q) => q.eq("roomId", args.roomId))
+      .take(MAX_SEATS);
+    const currentSeat = allSeats.find((s) => s.userId === user._id);
+    if (currentSeat && currentSeat.seatIndex === args.seatIndex) return null;
+    if (currentSeat) {
+      await ctx.db.patch("micSeats", currentSeat._id, { userId: undefined });
+    }
+    // Check target seat
     const seat = await ctx.db
       .query("micSeats")
       .withIndex("by_room_and_seatIndex", (q) =>
         q.eq("roomId", args.roomId).eq("seatIndex", args.seatIndex),
       )
       .unique();
-    if (!seat) throw new ConvexError({ code: "NOT_FOUND", message: "Seat not found" });
+    if (!seat) throw new ConvexError({ code: "NOT_FOUND", message: "المايك غير موجود" });
     if (seat.locked || seat.userId) {
-      throw new ConvexError({ code: "CONFLICT", message: "Seat is locked or occupied" });
+      throw new ConvexError({ code: "CONFLICT", message: "المايك محجوز" });
     }
     await ctx.db.patch("micSeats", seat._id, { userId: user._id });
     // Promote to speaker

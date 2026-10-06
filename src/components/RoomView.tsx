@@ -1,7 +1,9 @@
-import { useQuery, useMutation } from "convex/react";
+import { useEffect, useRef, useState } from "react";
+import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
-import { Mic, LogOut, Loader2 } from "lucide-react";
+import { Mic, MicOff, LogOut, Loader2 } from "lucide-react";
+import { agoraManager } from "../lib/agora";
 
 interface Props {
   roomId: Id<"rooms">;
@@ -11,38 +13,105 @@ interface Props {
 export default function RoomView({ roomId, onLeave }: Props) {
   const room = useQuery(api.rooms.get, { roomId });
   const seats = useQuery(api.mics.state, { roomId });
+  const myRole = useQuery(api.mics.myRole, { roomId });
   const takeSeat = useMutation(api.mics.takeSeat);
   const leaveSeat = useMutation(api.mics.leaveSeat);
+  const getToken = useAction(api.voice.getToken);
+
+  const [agoraConnected, setAgoraConnected] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const joinedRef = useRef(false);
+
+  const mySeat = seats?.find((s) => s.userName !== null && s.userName !== undefined && s.userId);
+
+  useEffect(() => {
+    if (!room || joinedRef.current) return;
+    joinedRef.current = true;
+
+    (async () => {
+      try {
+        const tokenData = await getToken({ roomId });
+        await agoraManager.join(
+          tokenData.appId,
+          roomId,
+          tokenData.token,
+          tokenData.account,
+          () => {},
+          () => {},
+        );
+        setAgoraConnected(true);
+      } catch (e: any) {
+        setError(e?.message || "فشل الاتصال بالصوت");
+      }
+    })();
+
+    return () => {
+      agoraManager.leave();
+      joinedRef.current = false;
+    };
+  }, [room, roomId, getToken]);
+
+  // Publish/unpublish microphone based on seat status
+  useEffect(() => {
+    if (!agoraConnected) return;
+    const onSeat = seats?.some((s) => s.userId && s.userName && myRole === "speaker");
+    if (onSeat && !isMuted) {
+      agoraManager.publishMicrophone().catch((e) => console.error(e));
+    }
+    return () => {
+      // Cleanup on unmount
+    };
+  }, [agoraConnected, myRole, isMuted, seats]);
 
   if (!room || !seats) {
     return (
-      <div className="flex items-center justify-center min-h-screen text-white">
-        <Loader2 className="animate-spin" size={40} />
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="animate-spin text-white" size={40} />
       </div>
     );
   }
 
   const handleSeatClick = async (seatIndex: number, userId: string | undefined) => {
     try {
-      if (userId) {
-        // Seat is occupied - for now, do nothing (or show profile)
-        return;
-      }
+      if (userId) return;
       await takeSeat({ roomId, seatIndex });
     } catch (e: any) {
-      alert("خطأ: " + (e.message || "غير معروف"));
+      alert(e?.message || "خطأ");
     }
+  };
+
+  const handleLeaveSeat = async () => {
+    await leaveSeat({ roomId });
+    await agoraManager.unpublishMicrophone();
+  };
+
+  const handleToggleMute = () => {
+    const next = !isMuted;
+    setIsMuted(next);
+    agoraManager.muteMicrophone(next);
+  };
+
+  const handleLeave = async () => {
+    await agoraManager.leave();
+    onLeave();
   };
 
   return (
     <div className="max-w-md mx-auto p-4">
       <header className="flex items-center justify-between text-white mb-6 pt-4">
-        <button onClick={onLeave} className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition">
+        <button onClick={handleLeave} className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition">
           <LogOut size={20} />
         </button>
         <div className="text-center">
           <h1 className="text-xl font-bold">{room.name}</h1>
           <p className="text-xs opacity-70">{room.memberCount} عضو</p>
+          {agoraConnected && (
+            <p className="text-[10px] text-green-300 mt-1">● متصل بالصوت</p>
+          )}
+          {error && (
+            <p className="text-[10px] text-red-300 mt-1">{error}</p>
+          )}
         </div>
         <div className="w-10" />
       </header>
@@ -77,12 +146,29 @@ export default function RoomView({ roomId, onLeave }: Props) {
         </div>
       </div>
 
-      <button
-        onClick={() => leaveSeat({ roomId })}
-        className="w-full bg-red-500/80 hover:bg-red-600 text-white py-3 rounded-xl font-bold transition"
-      >
-        مغادرة المايك
-      </button>
+      {myRole === "speaker" || myRole === "owner" || myRole === "moderator" ? (
+        <div className="flex gap-3">
+          <button
+            onClick={handleToggleMute}
+            className={`flex-1 py-3 rounded-xl font-bold text-white transition ${
+              isMuted ? "bg-yellow-600 hover:bg-yellow-700" : "bg-green-600 hover:bg-green-700"
+            }`}
+          >
+            {isMuted ? <MicOff className="inline mr-2" size={18} /> : <Mic className="inline mr-2" size={18} />}
+            {isMuted ? "إلغاء الكتم" : "كتم الصوت"}
+          </button>
+          <button
+            onClick={handleLeaveSeat}
+            className="flex-1 bg-red-500/80 hover:bg-red-600 text-white py-3 rounded-xl font-bold transition"
+          >
+            مغادرة المايك
+          </button>
+        </div>
+      ) : (
+        <p className="text-white text-center text-sm opacity-70">
+          اضغط على أي مايك للانضمام إلى الحديث
+        </p>
+      )}
     </div>
   );
 }
