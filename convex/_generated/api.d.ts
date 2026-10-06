@@ -10,6 +10,8 @@
 
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_vip from "../lib/vip.js";
+import type * as voice from "../voice.js";
+import type * as voiceAccess from "../voiceAccess.js";
 
 import type {
   ApiFromModules,
@@ -20,6 +22,8 @@ import type {
 declare const fullApi: ApiFromModules<{
   "lib/auth": typeof lib_auth;
   "lib/vip": typeof lib_vip;
+  voice: typeof voice;
+  voiceAccess: typeof voiceAccess;
 }>;
 
 /**
