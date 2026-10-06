@@ -124,7 +124,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const cols = parseInt(layout);
   const visibleSeats = layout === "6" ? seats.slice(0, 18) : seats;
   const rows = layout === "6" ? 3 : layout === "4" ? 5 : 4;
-  const gridHeight = layout === "6" ? 170 : layout === "4" ? 290 : 230;
+  const gridHeight = layout === "6" ? 200 : layout === "4" ? 330 : 270;
 
   const handleSeatClick = (seatIndex: number, userId: string | undefined) => {
     if (userId) setOpenSeatMenu(seatIndex);
@@ -250,10 +250,10 @@ export default function RoomView({ roomId, onLeave }: Props) {
             {visibleSeats.map((seat) => {
               const occupied = !!seat.userId;
               return (
-                <div key={seat._id} className="flex flex-col items-center justify-start min-h-0">
+                <div key={seat._id} className="flex flex-col items-center justify-start pt-0.5">
                   <div
                     onClick={() => handleSeatClick(seat.seatIndex, seat.userId)}
-                    className={`relative w-full aspect-square rounded-full flex items-center justify-center text-white transition cursor-pointer overflow-hidden ${
+                    className={`relative w-full aspect-square rounded-full flex-shrink-0 flex items-center justify-center text-white transition cursor-pointer overflow-hidden ${
                       occupied ? "ring-2 ring-purple-300" : seat.locked ? "bg-gray-700 ring-2 ring-gray-500" : "bg-white/5 ring-1 ring-white/20 hover:bg-white/15"
                     }`}
                   >
@@ -276,8 +276,8 @@ export default function RoomView({ roomId, onLeave }: Props) {
                   </div>
                   {occupied && (
                     <>
-                      <p className="text-[7px] text-white/85 mt-0.5 truncate max-w-full leading-tight">{seat.userName}</p>
-                      <p className="text-[7px] text-pink-300 leading-tight">{(seat.charms ?? 0)} ❤</p>
+                      <p className="text-[8px] text-white/90 mt-1 truncate max-w-full leading-tight">{seat.userName}</p>
+                      <p className="text-[8px] text-pink-300 leading-tight">{(seat.charms ?? 0)} ❤</p>
                     </>
                   )}
                 </div>
