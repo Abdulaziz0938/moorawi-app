@@ -14,26 +14,30 @@ function App() {
   const [currentRoomId, setCurrentRoomId] = useState<Id<"rooms"> | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // Loading state
   if (me === undefined) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-700 via-purple-800 to-purple-900 flex items-center justify-center">
+      <div className="h-[100dvh] w-full flex items-center justify-center bg-gradient-to-br from-purple-700 via-purple-800 to-purple-900 overflow-hidden">
         <Loader2 className="animate-spin text-white" size={48} />
       </div>
     );
   }
 
-  // Show onboarding if profile is incomplete
   if (me && !me.profileComplete) {
-    return <Onboarding onComplete={() => setRefreshKey((k) => k + 1)} />;
+    return (
+      <div className="h-[100dvh] w-full overflow-y-auto bg-gradient-to-br from-purple-700 via-purple-800 to-purple-900" dir="rtl">
+        <Onboarding onComplete={() => setRefreshKey((k) => k + 1)} />
+      </div>
+    );
   }
 
   return (
-    <div key={refreshKey} className="min-h-screen bg-gradient-to-br from-purple-700 via-purple-800 to-purple-900" dir="rtl">
+    <div key={refreshKey} className="h-[100dvh] w-full overflow-hidden bg-gradient-to-br from-purple-700 via-purple-800 to-purple-900" dir="rtl">
       {currentRoomId ? (
         <RoomView roomId={currentRoomId} onLeave={() => setCurrentRoomId(null)} />
       ) : (
-        <RoomList onEnter={setCurrentRoomId} />
+        <div className="h-full w-full overflow-y-auto">
+          <RoomList onEnter={setCurrentRoomId} />
+        </div>
       )}
     </div>
   );

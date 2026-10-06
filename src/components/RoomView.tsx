@@ -171,10 +171,9 @@ export default function RoomView({ roomId, onLeave }: Props) {
 
   return (
     <div
-      className="mx-auto flex flex-col overflow-hidden relative"
+      className="flex flex-col overflow-hidden fixed inset-0 md:left-1/2 md:-translate-x-1/2 md:w-[28rem]"
       dir="rtl"
       style={{
-        maxWidth: "28rem",
         height: "100dvh",
         backgroundImage: room.backgroundUrl ? `url(${room.backgroundUrl})` : undefined,
         backgroundSize: "cover",
@@ -330,7 +329,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
         </div>
 
         {/* ============ CHAT (only scrollable) ============ */}
-        <div ref={chatBoxRef} className="flex-1 min-h-0 overflow-y-auto px-2 py-2 mx-2 mt-1 bg-black/30 backdrop-blur rounded-2xl">
+        <div ref={chatBoxRef} className="thin-scroll flex-1 min-h-0 overflow-y-auto" px-2 py-2 mx-2 mt-1 bg-black/30 backdrop-blur rounded-2xl">
           {messages === undefined ? (
             <div className="flex justify-center py-6"><Loader2 className="animate-spin text-white/40" size={18} /></div>
           ) : messages.length === 0 ? (
