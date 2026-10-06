@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
-import { Mic, Users, Plus, X } from "lucide-react";
+import { Mic, Users, Plus, X, Hash } from "lucide-react";
 import { getDeviceId } from "../lib/device";
 
 interface Props {
@@ -12,6 +12,7 @@ interface Props {
 export default function RoomList({ onEnter }: Props) {
   const deviceId = getDeviceId();
   const rooms = useQuery(api.rooms.listPublic);
+  const me = useQuery(api.profiles.me, { tokenOverride: deviceId });
   const createRoom = useMutation(api.rooms.create);
   const joinRoom = useMutation(api.rooms.join);
 
@@ -23,36 +24,41 @@ export default function RoomList({ onEnter }: Props) {
     if (!newName.trim()) return;
     setIsCreating(true);
     try {
-      const roomId = await createRoom({
-        name: newName.trim(),
-        isPrivate: false,
-        tokenOverride: deviceId,
-      });
-      setNewName("");
-      setShowCreate(false);
-      onEnter(roomId);
-    } catch (e: any) {
-      alert("خطأ: " + (e.message || "غير معروف"));
-    } finally {
-      setIsCreating(false);
-    }
+      const roomId = await createRoom({ name: newName.trim(), isPrivate: false, tokenOverride: deviceId });
+      setNewName(""); setShowCreate(false); onEnter(roomId);
+    } catch (e: any) { alert("خطأ: " + (e.message || "غير معروف")); }
+    finally { setIsCreating(false); }
   };
 
   const handleJoin = async (roomId: Id<"rooms">) => {
     try {
       await joinRoom({ roomId, tokenOverride: deviceId });
       onEnter(roomId);
-    } catch (e: any) {
-      alert("خطأ: " + (e.message || "غير معروف"));
-    }
+    } catch (e: any) { alert("خطأ: " + (e.message || "غير معروف")); }
   };
 
   return (
     <div className="max-w-md mx-auto p-4">
       <header className="text-center py-6 text-white">
-        <h1 className="text-3xl font-bold mb-2">الدولة العمراوية</h1>
-        <p className="text-sm opacity-80">غرف صوتية للجميع</p>
-        <p className="text-[10px] opacity-50 mt-1">معرف الجهاز: {deviceId}</p>
+        {me && (
+          <div className="flex flex-col items-center mb-4">
+            <div className="w-20 h-20 rounded-full bg-white/20 border-2 border-white/40 overflow-hidden flex items-center justify-center mb-2">
+              {me.avatarUrl ? (
+                <img src={me.avatarUrl} alt="me" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-3xl font-bold">{me.name?.[0] || "?"}</span>
+              )}
+            </div>
+            <p className="font-bold text-lg">{me.name}</p>
+            <p className="text-xs opacity-70" dir="ltr">@{me.username}</p>
+            {me.userNumber && (
+              <div className="inline-flex items-center gap-1 mt-2 bg-white/20 px-3 py-0.5 rounded-full">
+                <Hash size={12} />
+                <span className="text-xs font-bold">{me.userNumber}</span>
+              </div>
+            )}
+          </div>
+        )}
       </header>
 
       <button
@@ -80,9 +86,7 @@ export default function RoomList({ onEnter }: Props) {
                   <Users size={14} /> {room.memberCount} عضو
                 </p>
               </div>
-              <div className="bg-purple-600 rounded-full p-2">
-                <Mic size={20} />
-              </div>
+              <div className="bg-purple-600 rounded-full p-2"><Mic size={20} /></div>
             </div>
           ))
         )}

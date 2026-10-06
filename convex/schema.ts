@@ -5,15 +5,25 @@ export default defineSchema({
   users: defineTable({
     tokenIdentifier: v.string(),
     userNumber: v.optional(v.number()),
+    // Profile fields
+    username: v.optional(v.string()),
     name: v.optional(v.string()),
     email: v.optional(v.string()),
+    avatarId: v.optional(v.id("_storage")),
+    age: v.optional(v.number()),
+    gender: v.optional(v.union(v.literal("male"), v.literal("female"), v.literal("other"))),
+    country: v.optional(v.string()),
+    interests: v.optional(v.array(v.string())),
+    bio: v.optional(v.string()),
+    profileComplete: v.optional(v.boolean()),
+    // Admin
     isAdmin: v.optional(v.boolean()),
     banned: v.optional(v.boolean()),
-    bio: v.optional(v.string()),
     adminRole: v.optional(v.union(v.literal("super"), v.literal("moderator"))),
   })
     .index("by_token", ["tokenIdentifier"])
-    .index("by_userNumber", ["userNumber"]),
+    .index("by_userNumber", ["userNumber"])
+    .index("by_username", ["username"]),
 
   counters: defineTable({
     name: v.string(),
