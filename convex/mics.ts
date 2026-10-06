@@ -13,8 +13,17 @@ export const state = query({
       .take(MAX_SEATS);
     const enriched = await Promise.all(
       seats.map(async (s) => {
-        const user = s.userId ? await ctx.db.get("users", s.userId) : null;
-        return { ...s, userName: user?.name ?? null };
+        if (!s.userId) return { ...s, userName: null, avatarUrl: null, charms: 0, frame: null };
+        const user = await ctx.db.get("users", s.userId);
+        const avatarUrl = user?.avatarId ? await ctx.storage.getUrl(user.avatarId) : null;
+        return {
+          ...s,
+          userName: user?.name ?? "ضيف",
+          userNumber: user?.userNumber ?? null,
+          avatarUrl,
+          charms: user?.charms ?? 0,
+          frame: null,
+        };
       }),
     );
     return enriched.sort((a, b) => a.seatIndex - b.seatIndex);
@@ -79,7 +88,6 @@ export const clearMySeats = mutation({
   },
 });
 
-// Owner/mod: lock/unlock a seat
 export const toggleLock = mutation({
   args: { roomId: v.id("rooms"), seatIndex: v.number(), tokenOverride: v.optional(v.string()) },
   handler: async (ctx, args) => {
@@ -91,7 +99,6 @@ export const toggleLock = mutation({
   },
 });
 
-// Toggle mute state (owner/moderator on any seat, or user on their own seat)
 export const toggleMuteSeat = mutation({
   args: { roomId: v.id("rooms"), seatIndex: v.number(), tokenOverride: v.optional(v.string()) },
   handler: async (ctx, args) => {
@@ -103,18 +110,11 @@ export const toggleMuteSeat = mutation({
   },
 });
 
-// Listener list (for invite picker)
 export const listeners = query({
   args: { roomId: v.id("rooms") },
   handler: async (ctx, args) => {
-    const members = await ctx.db
-      .query("roomMembers")
-      .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
-      .take(100);
-    const seats = await ctx.db
-      .query("micSeats")
-      .withIndex("by_room_and_seatIndex", (q) => q.eq("roomId", args.roomId))
-      .take(MAX_SEATS);
+    const members = await ctx.db.query("roomMembers").withIndex("by_room", (q) => q.eq("roomId", args.roomId)).take(100);
+    const seats = await ctx.db.query("micSeats").withIndex("by_room_and_seatIndex", (q) => q.eq("roomId", args.roomId)).take(MAX_SEATS);
     const onMicIds = new Set(seats.map((s) => s.userId).filter(Boolean));
     const listeners = members.filter((m) => !onMicIds.has(m.userId) && m.role !== "owner");
     const enriched = await Promise.all(
@@ -128,7 +128,6 @@ export const listeners = query({
   },
 });
 
-// Send invite to a listener for a specific seat
 export const inviteToSeat = mutation({
   args: { roomId: v.id("rooms"), toUserId: v.id("users"), seatIndex: v.number(), tokenOverride: v.optional(v.string()) },
   handler: async (ctx, args) => {
@@ -145,16 +144,12 @@ export const inviteToSeat = mutation({
   },
 });
 
-// Get my pending invite for this room
 export const myInvite = query({
   args: { roomId: v.id("rooms"), tokenOverride: v.optional(v.string()) },
   handler: async (ctx, args) => {
     try {
       const user = await requireUser(ctx, args.tokenOverride);
-      const invites = await ctx.db
-        .query("micInvites")
-        .withIndex("by_to_and_status", (q) => q.eq("toUserId", user._id).eq("status", "pending"))
-        .take(10);
+      const invites = await ctx.db.query("micInvites").withIndex("by_to_and_status", (q) => q.eq("toUserId", user._id).eq("status", "pending")).take(10);
       const roomInvite = invites.find((i) => i.roomId === args.roomId);
       if (!roomInvite) return null;
       return { _id: roomInvite._id, fromName: roomInvite.fromName, seatIndex: roomInvite.seatIndex };
@@ -162,7 +157,6 @@ export const myInvite = query({
   },
 });
 
-// Respond to an invite
 export const respondInvite = mutation({
   args: { inviteId: v.id("micInvites"), accept: v.boolean(), tokenOverride: v.optional(v.string()) },
   handler: async (ctx, args) => {
@@ -178,6 +172,19 @@ export const respondInvite = mutation({
         if (member && member.role === "listener") await ctx.db.patch("roomMembers", member._id, { role: "speaker" });
       }
     }
+    return null;
+  },
+});
+
+// Send a charm (+1) to a user (for testing gifts; will be replaced by gift system)
+export const sendCharm = mutation({
+  args: { toUserId: v.id("users"), amount: v.optional(v.number()), tokenOverride: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    await requireUser(ctx, args.tokenOverride);
+    const target = await ctx.db.get("users", args.toUserId);
+    if (!target) return null;
+    const amount = args.amount ?? 1;
+    await ctx.db.patch("users", args.toUserId, { charms: (target.charms ?? 0) + amount });
     return null;
   },
 });

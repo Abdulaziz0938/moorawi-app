@@ -15,6 +15,7 @@ export default defineSchema({
     interests: v.optional(v.array(v.string())),
     bio: v.optional(v.string()),
     profileComplete: v.optional(v.boolean()),
+    charms: v.optional(v.number()),
     isAdmin: v.optional(v.boolean()),
     banned: v.optional(v.boolean()),
     adminRole: v.optional(v.union(v.literal("super"), v.literal("moderator"))),
