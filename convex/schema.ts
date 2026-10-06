@@ -16,6 +16,7 @@ export default defineSchema({
     bio: v.optional(v.string()),
     profileComplete: v.optional(v.boolean()),
     charms: v.optional(v.number()),
+    totalSent: v.optional(v.number()),
     isAdmin: v.optional(v.boolean()),
     banned: v.optional(v.boolean()),
     adminRole: v.optional(v.union(v.literal("super"), v.literal("moderator"))),
@@ -32,12 +33,14 @@ export default defineSchema({
   rooms: defineTable({
     name: v.string(),
     description: v.optional(v.string()),
+    welcomeMessage: v.optional(v.string()),
     ownerId: v.id("users"),
     isPrivate: v.boolean(),
     micCount: v.number(),
     memberCount: v.number(),
     micLayout: v.optional(v.union(v.literal("4"), v.literal("5"), v.literal("6"))),
-    theme: v.optional(v.string()),
+    coverImageId: v.optional(v.id("_storage")),
+    backgroundImageId: v.optional(v.id("_storage")),
   })
     .index("by_isPrivate", ["isPrivate"])
     .index("by_owner", ["ownerId"]),
@@ -45,12 +48,7 @@ export default defineSchema({
   roomMembers: defineTable({
     roomId: v.id("rooms"),
     userId: v.id("users"),
-    role: v.union(
-      v.literal("owner"),
-      v.literal("moderator"),
-      v.literal("speaker"),
-      v.literal("listener")
-    ),
+    role: v.union(v.literal("owner"), v.literal("moderator"), v.literal("speaker"), v.literal("listener")),
     banned: v.optional(v.boolean()),
   })
     .index("by_room_and_user", ["roomId", "userId"])
