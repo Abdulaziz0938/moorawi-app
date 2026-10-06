@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { agoraManager } from "../lib/agora";
 import { getDeviceId } from "../lib/device";
+import SettingsSheet from "./SettingsSheet";
 
 interface Props {
   roomId: Id<"rooms">;
@@ -45,19 +46,15 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const [isFavorite, setIsFavorite] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showGifts, setShowGifts] = useState(false);
+  const [showChatInput, setShowChatInput] = useState(false);
 
-  // Mic dropdown
   const [openSeatMenu, setOpenSeatMenu] = useState<number | null>(null);
-
-  // Invite modal
   const [inviteSeatIndex, setInviteSeatIndex] = useState<number | null>(null);
 
-  // Chat
   const [chatText, setChatText] = useState("");
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
   const chatInputRef = useRef<HTMLInputElement>(null);
-  const chatEndRef = useRef<HTMLDivElement>(null);
   const chatBoxRef = useRef<HTMLDivElement>(null);
 
   const joinedRef = useRef(false);
@@ -106,12 +103,16 @@ export default function RoomView({ roomId, onLeave }: Props) {
     return () => window.removeEventListener("beforeunload", h);
   }, [roomId, deviceId, myInfo, clearMySeats]);
 
-  // Scroll chat to bottom on new messages (only chat box, not page)
   useEffect(() => {
     if (chatBoxRef.current) {
       chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
     }
-  }, [messages?.length]);
+  }, [messages?.length, showChatInput]);
+
+  // Focus chat input when it opens
+  useEffect(() => {
+    if (showChatInput) setTimeout(() => chatInputRef.current?.focus(), 100);
+  }, [showChatInput]);
 
   if (!room || !seats || !myInfo || members === undefined) {
     return (
@@ -125,6 +126,11 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const topMembers = members.slice(0, 3);
   const isOnMicRole = myInfo?.role === "speaker" || myInfo?.role === "owner" || myInfo?.role === "moderator";
   const isOwnerOrMod = myInfo?.role === "owner" || myInfo?.role === "moderator";
+
+  // Grid columns based on room layout (default 5)
+  const layout = (room.micLayout as "4" | "5" | "6") || "5";
+  const cols = parseInt(layout);
+  const visibleSeats = layout === "6" ? seats.slice(0, 18) : seats;
 
   const handleSeatClick = (seatIndex: number, userId: string | undefined) => {
     if (userId === myInfo.userId) {
@@ -173,10 +179,6 @@ export default function RoomView({ roomId, onLeave }: Props) {
       await sendMsg({ roomId, imageId: storageId, tokenOverride: deviceId });
     } catch (e: any) { alert(e?.message || "فشل رفع الصورة"); }
     finally { setUploading(false); }
-  };
-
-  const handleChatBtnClick = () => {
-    chatInputRef.current?.focus();
   };
 
   const formatTime = (t: number) => {
@@ -238,33 +240,40 @@ export default function RoomView({ roomId, onLeave }: Props) {
         </>
       )}
 
-      {/* Room title (fixed) */}
-      <div className="text-center text-white py-2 flex-shrink-0">
-        <h1 className="text-base font-bold">{room.name}</h1>
-        {agoraConnected && <p className="text-[10px] text-green-300">متصل بالصوت ({remoteCount} بعيد)</p>}
-        {error && <p className="text-[10px] text-red-300">{error}</p>}
+      {/* Room title */}
+      <div className="text-center text-white py-1 flex-shrink-0">
+        <h1 className="text-sm font-bold">{room.name}</h1>
+        {agoraConnected && <p className="text-[9px] text-green-300">متصل ({remoteCount} بعيد)</p>}
+        {error && <p className="text-[9px] text-red-300">{error}</p>}
       </div>
 
-      {/* Mic grid (fixed) */}
-      <div className="bg-white/5 rounded-2xl p-3 mx-3 flex-shrink-0 relative">
-        <div className="grid grid-cols-4 gap-2.5">
-          {seats.map((seat) => (
+      {/* Mic grid */}
+      <div className="bg-white/5 rounded-2xl p-2 mx-3 flex-shrink-0 relative">
+        <div
+          className="grid gap-2"
+          style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
+        >
+          {visibleSeats.map((seat) => (
             <div key={seat._id} className="relative">
               <div
                 onClick={() => handleSeatClick(seat.seatIndex, seat.userId)}
                 className={`aspect-square rounded-full flex flex-col items-center justify-center text-white border-2 transition cursor-pointer ${
-                  seat.userId ? "bg-purple-500 border-purple-300" : seat.locked ? "bg-gray-600 border-gray-400" : "bg-white/10 border-white/30 hover:bg-white/20"
+                  seat.userId
+                    ? "bg-purple-500 border-purple-300"
+                    : seat.locked
+                    ? "bg-gray-600 border-gray-400"
+                    : "bg-white/10 border-white/30 hover:bg-white/20"
                 }`}
               >
                 {seat.userId ? (
                   <>
-                    {seat.muted ? <MicOff size={16} /> : <Mic size={16} />}
-                    <span className="text-[9px] mt-0.5 truncate max-w-full px-1">{seat.userName ?? "..."}</span>
+                    {seat.muted ? <MicOff size={12} /> : <Mic size={12} />}
+                    <span className="text-[8px] mt-0.5 truncate max-w-full px-0.5">{seat.userName ?? "..."}</span>
                   </>
                 ) : seat.locked ? (
-                  <Lock size={16} className="opacity-60" />
+                  <Lock size={12} className="opacity-60" />
                 ) : (
-                  <span className="text-xl opacity-50">+</span>
+                  <span className="text-base opacity-50">+</span>
                 )}
               </div>
             </div>
@@ -295,7 +304,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
               ) : (
                 <>
                   <button
-                    onClick={() => { inviteToSeat; setInviteSeatIndex(currentSeatMenuData.seatIndex); setOpenSeatMenu(null); }}
+                    onClick={() => { setInviteSeatIndex(currentSeatMenuData.seatIndex); setOpenSeatMenu(null); }}
                     className="w-full flex items-center gap-3 px-4 py-2.5 text-white hover:bg-white/10 text-sm"
                   >
                     <UserPlus size={16} /> دعوة شخص للجلوس
@@ -332,64 +341,66 @@ export default function RoomView({ roomId, onLeave }: Props) {
         )}
       </div>
 
-      {/* Chat box — the ONLY scrollable part */}
+      {/* Chat box */}
       <div
         ref={chatBoxRef}
-        className="flex-1 overflow-y-auto px-3 py-2 mx-3 my-2 bg-white/5 rounded-2xl"
+        className="flex-1 overflow-y-auto px-3 py-2 mx-3 my-2 bg-white/5 rounded-2xl min-h-0"
       >
         {messages === undefined ? (
           <div className="flex justify-center py-6"><Loader2 className="animate-spin text-white/40" size={20} /></div>
         ) : messages.length === 0 ? (
-          <p className="text-white/40 text-xs text-center py-6">لا توجد رسائل بعد. ابدأ الحديث!</p>
+          <p className="text-white/40 text-xs text-center py-6">لا توجد رسائل بعد</p>
         ) : (
-          <div className="space-y-2.5">
+          <div className="space-y-2">
             {messages.map((m) => (
               <div key={m._id} className="flex gap-2 items-start">
-                <div className="w-7 h-7 rounded-full overflow-hidden bg-purple-500 flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0">
+                <div className="w-6 h-6 rounded-full overflow-hidden bg-purple-500 flex items-center justify-center text-[9px] font-bold text-white flex-shrink-0">
                   {m.avatarUrl ? <img src={m.avatarUrl} alt="" className="w-full h-full object-cover" /> : (m.senderName?.[0] || "?")}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-[11px] font-bold text-purple-300">{m.senderName}</span>
-                    {m.senderNumber && <span className="text-[9px] text-white/40" dir="ltr">ID:{m.senderNumber}</span>}
-                    <span className="text-[9px] text-white/40">{formatTime(m.createdAt)}</span>
+                    <span className="text-[10px] font-bold text-purple-300">{m.senderName}</span>
+                    {m.senderNumber && <span className="text-[8px] text-white/40" dir="ltr">ID:{m.senderNumber}</span>}
+                    <span className="text-[8px] text-white/40">{formatTime(m.createdAt)}</span>
                   </div>
-                  {m.text && <p className="text-white text-sm break-words mt-0.5">{m.text}</p>}
-                  {m.imageUrl && <img src={m.imageUrl} alt="" className="mt-1 rounded-lg max-w-[160px] max-h-[160px] object-cover" />}
+                  {m.text && <p className="text-white text-xs break-words mt-0.5">{m.text}</p>}
+                  {m.imageUrl && <img src={m.imageUrl} alt="" className="mt-1 rounded-lg max-w-[140px] max-h-[140px] object-cover" />}
                 </div>
               </div>
             ))}
-            <div ref={chatEndRef} />
           </div>
         )}
       </div>
 
-      {/* Chat input (fixed above footer) */}
-      <div className="px-3 pb-2 flex-shrink-0">
-        <div className="flex items-center gap-2 bg-white/10 rounded-full px-2 py-1.5">
-          <label className="p-1.5 text-white/70 hover:text-white cursor-pointer">
-            <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" disabled={uploading} />
-            {uploading ? <Loader2 size={18} className="animate-spin" /> : <ImageIcon size={18} />}
-          </label>
-          <input
-            ref={chatInputRef}
-            type="text"
-            value={chatText}
-            onChange={(e) => setChatText(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSendMsg()}
-            placeholder="اكتب رسالة..."
-            className="flex-1 bg-transparent text-white text-sm outline-none placeholder-white/40"
-            maxLength={500}
-          />
-          <button onClick={handleSendMsg} disabled={sending || !chatText.trim()} className="p-1.5 bg-purple-600 rounded-full text-white disabled:opacity-40">
-            <Send size={16} />
-          </button>
+      {/* Chat input (only when showChatInput) */}
+      {showChatInput && (
+        <div className="px-3 pb-2 flex-shrink-0">
+          <div className="flex items-center gap-2 bg-white/10 rounded-full px-2 py-1.5">
+            <label className="p-1.5 text-white/70 hover:text-white cursor-pointer">
+              <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" disabled={uploading} />
+              {uploading ? <Loader2 size={16} className="animate-spin" /> : <ImageIcon size={16} />}
+            </label>
+            <input
+              ref={chatInputRef}
+              type="text"
+              value={chatText}
+              onChange={(e) => setChatText(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSendMsg()}
+              onBlur={() => setTimeout(() => setShowChatInput(false), 150)}
+              placeholder="اكتب رسالة..."
+              className="flex-1 bg-transparent text-white text-sm outline-none placeholder-white/40"
+              maxLength={500}
+            />
+            <button onClick={handleSendMsg} disabled={sending || !chatText.trim()} className="p-1.5 bg-purple-600 rounded-full text-white disabled:opacity-40">
+              <Send size={14} />
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Bottom bar */}
       <footer className="border-t border-white/10 px-3 py-2 flex items-center justify-around flex-shrink-0">
-        <button onClick={handleChatBtnClick} className="p-2 rounded-full hover:bg-white/10 text-white">
+        <button onClick={() => setShowChatInput(true)} className="p-2 rounded-full hover:bg-white/10 text-white">
           <MessageCircle size={22} />
         </button>
         <button
@@ -445,15 +456,13 @@ export default function RoomView({ roomId, onLeave }: Props) {
         </>
       )}
 
-      {/* Invitation notification banner */}
+      {/* Invite banner */}
       {myInvite && (
         <div className="fixed bottom-20 left-3 right-3 z-50 max-w-md mx-auto bg-gradient-to-r from-purple-600 to-purple-800 rounded-2xl p-3 shadow-2xl border border-white/20" dir="rtl">
           <div className="flex items-center justify-between gap-3">
-            <div className="flex-1">
-              <p className="text-white text-sm font-bold">
-                {myInvite.fromName} يدعوك للصعود إلى المايك {myInvite.seatIndex + 1}
-              </p>
-            </div>
+            <p className="text-white text-sm font-bold flex-1">
+              {myInvite.fromName} يدعوك للمايك {myInvite.seatIndex + 1}
+            </p>
             <div className="flex gap-2">
               <button
                 onClick={() => respondInvite({ inviteId: myInvite._id, accept: true, tokenOverride: deviceId })}
@@ -470,6 +479,16 @@ export default function RoomView({ roomId, onLeave }: Props) {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Settings Sheet */}
+      {showSettings && (
+        <SettingsSheet
+          roomId={roomId}
+          currentLayout={layout}
+          isOwnerOrMod={isOwnerOrMod}
+          onClose={() => setShowSettings(false)}
+        />
       )}
     </div>
   );

@@ -35,6 +35,8 @@ export default defineSchema({
     isPrivate: v.boolean(),
     micCount: v.number(),
     memberCount: v.number(),
+    micLayout: v.optional(v.union(v.literal("4"), v.literal("5"), v.literal("6"))),
+    theme: v.optional(v.string()),
   })
     .index("by_isPrivate", ["isPrivate"])
     .index("by_owner", ["ownerId"]),

@@ -104,3 +104,41 @@ export const members = query({
     return enriched;
   },
 });
+
+export const updateLayout = mutation({
+  args: {
+    roomId: v.id("rooms"),
+    micLayout: v.union(v.literal("4"), v.literal("5"), v.literal("6")),
+    tokenOverride: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx, args.tokenOverride);
+    const room = await ctx.db.get("rooms", args.roomId);
+    if (!room) throw new ConvexError({ code: "NOT_FOUND", message: "Room not found" });
+    const member = await getMember(ctx, args.roomId, user._id);
+    if (!member || (member.role !== "owner" && member.role !== "moderator")) {
+      throw new ConvexError({ code: "FORBIDDEN", message: "Only owner can change layout" });
+    }
+    await ctx.db.patch("rooms", args.roomId, { micLayout: args.micLayout });
+    return null;
+  },
+});
+
+export const updateTheme = mutation({
+  args: {
+    roomId: v.id("rooms"),
+    theme: v.string(),
+    tokenOverride: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx, args.tokenOverride);
+    const room = await ctx.db.get("rooms", args.roomId);
+    if (!room) throw new ConvexError({ code: "NOT_FOUND", message: "Room not found" });
+    const member = await getMember(ctx, args.roomId, user._id);
+    if (!member || (member.role !== "owner" && member.role !== "moderator")) {
+      throw new ConvexError({ code: "FORBIDDEN", message: "Only owner can change theme" });
+    }
+    await ctx.db.patch("rooms", args.roomId, { theme: args.theme });
+    return null;
+  },
+});
