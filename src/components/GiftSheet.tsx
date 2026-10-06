@@ -140,9 +140,9 @@ export default function GiftSheet({ roomId, onClose }: Props) {
                 >
                   {/* media preview */}
                   {g.mediaType === "video" ? (
-                    <video src={g.mediaUrl} className="w-12 h-12 rounded object-cover" muted loop autoPlay playsInline />
+                    <video src={g.mediaUrl ?? undefined} className="w-12 h-12 rounded object-cover" muted loop autoPlay playsInline />
                   ) : g.mediaUrl ? (
-                    <img src={g.mediaUrl} alt={g.name} className="w-12 h-12 rounded object-cover" />
+                    <img src={g.mediaUrl ?? undefined} alt={g.name} className="w-12 h-12 rounded object-cover" />
                   ) : (
                     <span className="text-2xl">🎁</span>
                   )}

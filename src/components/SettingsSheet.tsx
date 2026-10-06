@@ -375,9 +375,9 @@ function GiftsAdmin() {
             <div key={g._id} className="flex items-center gap-3 bg-white/5 rounded-xl p-2">
               <div className="w-12 h-12 rounded-lg overflow-hidden bg-black/30 flex items-center justify-center">
                 {g.mediaType === "video" ? (
-                  <video src={g.mediaUrl} className="w-full h-full object-cover" muted loop autoPlay playsInline />
+                  <video src={g.mediaUrl ?? undefined} className="w-full h-full object-cover" muted loop autoPlay playsInline />
                 ) : g.mediaUrl ? (
-                  <img src={g.mediaUrl} alt="" className="w-full h-full object-cover" />
+                  <img src={g.mediaUrl ?? undefined} alt="" className="w-full h-full object-cover" />
                 ) : (
                   <span>🎁</span>
                 )}
