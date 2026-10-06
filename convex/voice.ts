@@ -8,7 +8,7 @@ import { internal } from "./_generated/api";
 const TOKEN_TTL_SECONDS = 3600;
 
 export const getToken = action({
-  args: { roomId: v.id("rooms") },
+  args: { roomId: v.id("rooms"), tokenOverride: v.optional(v.string()) },
   handler: async (
     ctx,
     args,
@@ -18,21 +18,15 @@ export const getToken = action({
     if (!appId || !cert) {
       throw new ConvexError({ code: "NOT_IMPLEMENTED", message: "Agora credentials missing" });
     }
-    
-    const access = await ctx.runQuery(internal.voiceAccess.check, { roomId: args.roomId });
+    const access = await ctx.runQuery(internal.voiceAccess.check, {
+      roomId: args.roomId,
+      tokenOverride: args.tokenOverride,
+    });
     const canPublish = access.onMic;
     const role = canPublish ? RtcRole.PUBLISHER : RtcRole.SUBSCRIBER;
-    
     const token = RtcTokenBuilder.buildTokenWithUserAccount(
-      appId,
-      cert,
-      args.roomId,
-      access.account,
-      role,
-      TOKEN_TTL_SECONDS,
-      TOKEN_TTL_SECONDS,
+      appId, cert, args.roomId, access.account, role, TOKEN_TTL_SECONDS, TOKEN_TTL_SECONDS,
     );
-    
     return { appId, token, account: access.account };
   },
 });

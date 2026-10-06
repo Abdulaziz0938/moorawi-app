@@ -22,22 +22,25 @@ export const state = query({
 });
 
 export const myRole = query({
-  args: { roomId: v.id("rooms") },
+  args: { roomId: v.id("rooms"), tokenOverride: v.optional(v.string()) },
   handler: async (ctx, args) => {
-    const user = await requireUser(ctx);
-    const member = await getMember(ctx, args.roomId, user._id);
-    return member?.role ?? null;
+    try {
+      const user = await requireUser(ctx, args.tokenOverride);
+      const member = await getMember(ctx, args.roomId, user._id);
+      return member?.role ?? null;
+    } catch {
+      return null;
+    }
   },
 });
 
 export const takeSeat = mutation({
-  args: { roomId: v.id("rooms"), seatIndex: v.number() },
+  args: { roomId: v.id("rooms"), seatIndex: v.number(), tokenOverride: v.optional(v.string()) },
   handler: async (ctx, args) => {
-    const user = await requireUser(ctx);
+    const user = await requireUser(ctx, args.tokenOverride);
     if (args.seatIndex < 0 || args.seatIndex >= MAX_SEATS) {
       throw new ConvexError({ code: "BAD_REQUEST", message: "رقم المايك غير صحيح" });
     }
-    // Auto-leave previous seat if any
     const allSeats = await ctx.db
       .query("micSeats")
       .withIndex("by_room_and_seatIndex", (q) => q.eq("roomId", args.roomId))
@@ -47,19 +50,12 @@ export const takeSeat = mutation({
     if (currentSeat) {
       await ctx.db.patch("micSeats", currentSeat._id, { userId: undefined });
     }
-    // Check target seat
-    const seat = await ctx.db
-      .query("micSeats")
-      .withIndex("by_room_and_seatIndex", (q) =>
-        q.eq("roomId", args.roomId).eq("seatIndex", args.seatIndex),
-      )
-      .unique();
+    const seat = allSeats.find((s) => s.seatIndex === args.seatIndex);
     if (!seat) throw new ConvexError({ code: "NOT_FOUND", message: "المايك غير موجود" });
     if (seat.locked || seat.userId) {
       throw new ConvexError({ code: "CONFLICT", message: "المايك محجوز" });
     }
     await ctx.db.patch("micSeats", seat._id, { userId: user._id });
-    // Promote to speaker
     const member = await getMember(ctx, args.roomId, user._id);
     if (member && member.role === "listener") {
       await ctx.db.patch("roomMembers", member._id, { role: "speaker" });
@@ -69,9 +65,9 @@ export const takeSeat = mutation({
 });
 
 export const leaveSeat = mutation({
-  args: { roomId: v.id("rooms") },
+  args: { roomId: v.id("rooms"), tokenOverride: v.optional(v.string()) },
   handler: async (ctx, args) => {
-    const user = await requireUser(ctx);
+    const user = await requireUser(ctx, args.tokenOverride);
     const seats = await ctx.db
       .query("micSeats")
       .withIndex("by_room_and_seatIndex", (q) => q.eq("roomId", args.roomId))

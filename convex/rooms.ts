@@ -15,9 +15,7 @@ export const listPublic = query({
 
 export const get = query({
   args: { roomId: v.id("rooms") },
-  handler: async (ctx, args) => {
-    return await ctx.db.get("rooms", args.roomId);
-  },
+  handler: async (ctx, args) => await ctx.db.get("rooms", args.roomId),
 });
 
 export const create = mutation({
@@ -25,9 +23,10 @@ export const create = mutation({
     name: v.string(),
     description: v.optional(v.string()),
     isPrivate: v.boolean(),
+    tokenOverride: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const user = await requireUser(ctx);
+    const user = await requireUser(ctx, args.tokenOverride);
     const name = args.name.trim();
     if (name.length < 2 || name.length > 40) {
       throw new ConvexError({ code: "BAD_REQUEST", message: "Room name must be 2-40 chars" });
@@ -45,7 +44,6 @@ export const create = mutation({
       userId: user._id,
       role: "owner",
     });
-    // Create 20 empty mic seats
     for (let i = 0; i < 20; i++) {
       await ctx.db.insert("micSeats", {
         roomId,
@@ -59,9 +57,9 @@ export const create = mutation({
 });
 
 export const join = mutation({
-  args: { roomId: v.id("rooms") },
+  args: { roomId: v.id("rooms"), tokenOverride: v.optional(v.string()) },
   handler: async (ctx, args) => {
-    const user = await requireUser(ctx);
+    const user = await requireUser(ctx, args.tokenOverride);
     const room = await ctx.db.get("rooms", args.roomId);
     if (!room) throw new ConvexError({ code: "NOT_FOUND", message: "Room not found" });
     const existing = await getMember(ctx, args.roomId, user._id);

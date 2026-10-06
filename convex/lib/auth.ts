@@ -2,21 +2,22 @@ import { ConvexError } from "convex/values";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import type { Doc, Id } from "../_generated/dataModel";
 
+// TEMP: Use tokenIdentifier passed via args for multi-device testing
 export async function requireUser(
   ctx: QueryCtx | MutationCtx,
+  tokenOverride?: string,
 ): Promise<Doc<"users">> {
-  const tokenIdentifier = "dev-guest-001";
+  const tokenIdentifier = tokenOverride || "dev-guest-001";
   let user = await ctx.db
     .query("users")
     .withIndex("by_token", (q) => q.eq("tokenIdentifier", tokenIdentifier))
     .unique();
 
   if (!user) {
-    // Only create user if we are in a mutation context
     if ("insert" in ctx.db) {
       const id = await ctx.db.insert("users", {
         tokenIdentifier,
-        name: "ضيف",
+        name: "ضيف-" + tokenIdentifier.slice(-4),
         isAdmin: true,
         adminRole: "super",
       });
@@ -32,13 +33,11 @@ export async function requireUser(
 }
 
 export async function requireAdmin(ctx: QueryCtx | MutationCtx) {
-  const user = await requireUser(ctx);
-  return user;
+  return await requireUser(ctx);
 }
 
 export async function requireSuperAdmin(ctx: QueryCtx | MutationCtx) {
-  const user = await requireUser(ctx);
-  return user;
+  return await requireUser(ctx);
 }
 
 export async function logAudit(
