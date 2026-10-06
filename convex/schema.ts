@@ -44,8 +44,8 @@ export default defineSchema({
     memberCount: v.number(),
     micLayout: v.optional(v.string()),
     coverImageId: v.optional(v.id("_storage")),        // legacy
-    backgroundImageId: v.optional(v.id("_storage")),   // legacy
     coverUrl: v.optional(v.string()),                  // Cloudinary
+    backgroundImageId: v.optional(v.id("_storage")),   // legacy
     backgroundUrl: v.optional(v.string()),             // Cloudinary
   })
     .index("by_isPrivate", ["isPrivate"])
