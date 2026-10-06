@@ -7,6 +7,7 @@ import AgoraRTC, {
 class AgoraManager {
   client: IAgoraRTCClient | null = null;
   localAudioTrack: IMicrophoneAudioTrack | null = null;
+  onRemoteUserCallback: ((user: IAgoraRTCRemoteUser) => void) | null = null;
 
   async join(
     appId: string,
@@ -16,16 +17,31 @@ class AgoraManager {
     onUserJoined: (user: IAgoraRTCRemoteUser) => void,
     onUserLeft: (user: IAgoraRTCRemoteUser) => void,
   ) {
-    // Cleanup any previous session
     await this.leave();
+    this.onRemoteUserCallback = onUserJoined;
 
     this.client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
+
     this.client.on("user-published", async (user, mediaType) => {
-      await this.client!.subscribe(user, mediaType);
-      onUserJoined(user);
+      if (!this.client) return;
+      try {
+        await this.client.subscribe(user, mediaType);
+        if (mediaType === "audio") {
+          // CRITICAL: Actually play the remote audio
+          user.audioTrack?.play();
+        }
+        onUserJoined(user);
+      } catch (err) {
+        console.error("Subscribe error:", err);
+      }
     });
+
     this.client.on("user-unpublished", (user) => {
       onUserLeft(user);
+    });
+
+    this.client.on("user-joined", (user) => {
+      console.log("User joined channel:", user.uid);
     });
 
     await this.client.join(appId, channel, token, uid);
@@ -34,25 +50,31 @@ class AgoraManager {
   async publishMicrophone() {
     if (!this.client) return;
     if (this.localAudioTrack) return;
-    this.localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack();
-    await this.client.publish([this.localAudioTrack]);
+    try {
+      this.localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack();
+      await this.client.publish([this.localAudioTrack]);
+      console.log("Microphone published");
+    } catch (err) {
+      console.error("Publish error:", err);
+      throw err;
+    }
   }
 
   async unpublishMicrophone() {
     if (this.localAudioTrack) {
-      this.localAudioTrack.stop();
-      this.localAudioTrack.close();
-      if (this.client) {
-        await this.client.unpublish([this.localAudioTrack]);
+      try {
+        this.localAudioTrack.stop();
+        this.localAudioTrack.close();
+        if (this.client) await this.client.unpublish([this.localAudioTrack]);
+      } catch (err) {
+        console.error("Unpublish error:", err);
       }
       this.localAudioTrack = null;
     }
   }
 
   muteMicrophone(muted: boolean) {
-    if (this.localAudioTrack) {
-      this.localAudioTrack.setMuted(muted);
-    }
+    if (this.localAudioTrack) this.localAudioTrack.setMuted(muted);
   }
 
   async leave() {

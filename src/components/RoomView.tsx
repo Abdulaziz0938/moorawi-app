@@ -23,6 +23,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const [agoraConnected, setAgoraConnected] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [remoteUsers, setRemoteUsers] = useState<string[]>([]);
   const joinedRef = useRef(false);
   const publishedRef = useRef(false);
 
@@ -39,8 +40,14 @@ export default function RoomView({ roomId, onLeave }: Props) {
           roomId,
           tokenData.token,
           tokenData.account,
-          () => {},
-          () => {},
+          (user) => {
+            setRemoteUsers((prev) =>
+              prev.includes(String(user.uid)) ? prev : [...prev, String(user.uid)]
+            );
+          },
+          (user) => {
+            setRemoteUsers((prev) => prev.filter((u) => u !== String(user.uid)));
+          },
         );
         setAgoraConnected(true);
       } catch (e: any) {
@@ -55,19 +62,24 @@ export default function RoomView({ roomId, onLeave }: Props) {
     };
   }, [room, roomId, getToken, deviceId]);
 
-  // Auto publish microphone when on a seat
+  // Determine if current user is on a mic
+  const mySeat = seats?.find((s) => s.userName?.includes(deviceId.slice(-4)));
+  const isOnMic = !!mySeat;
+
+  // Publish/unpublish microphone
   useEffect(() => {
-    if (!agoraConnected || !myRole || !seats) return;
-    const onSeat = seats.some((s) => s.userId && s.userId === seats.find((x) => x.userName)?.userId);
-    const isOnMic = myRole === "speaker" || myRole === "owner" || myRole === "moderator";
-    if (isOnMic && !isMuted && !publishedRef.current) {
+    if (!agoraConnected) return;
+    if (isOnMic && !publishedRef.current) {
       publishedRef.current = true;
-      agoraManager.publishMicrophone().catch((e) => console.error(e));
+      agoraManager.publishMicrophone().catch((e: any) => {
+        console.error(e);
+        setError("فشل تفعيل الميكروفون: " + (e?.message || ""));
+      });
     } else if (!isOnMic && publishedRef.current) {
       publishedRef.current = false;
-      agoraManager.unpublishMicrophone().catch((e) => console.error(e));
+      agoraManager.unpublishMicrophone().catch(console.error);
     }
-  }, [agoraConnected, myRole, isMuted, seats]);
+  }, [agoraConnected, isOnMic]);
 
   if (!room || !seats) {
     return (
@@ -103,8 +115,6 @@ export default function RoomView({ roomId, onLeave }: Props) {
     onLeave();
   };
 
-  const isOnMic = myRole === "speaker" || myRole === "owner" || myRole === "moderator";
-
   return (
     <div className="max-w-md mx-auto p-4">
       <header className="flex items-center justify-between text-white mb-6 pt-4">
@@ -115,11 +125,9 @@ export default function RoomView({ roomId, onLeave }: Props) {
           <h1 className="text-xl font-bold">{room.name}</h1>
           <p className="text-xs opacity-70">{room.memberCount} عضو</p>
           {agoraConnected && (
-            <p className="text-[10px] text-green-300 mt-1">● متصل بالصوت</p>
+            <p className="text-[10px] text-green-300 mt-1">● متصل بالصوت ({remoteUsers.length} بعيد)</p>
           )}
-          {error && (
-            <p className="text-[10px] text-red-300 mt-1">{error}</p>
-          )}
+          {error && <p className="text-[10px] text-red-300 mt-1">{error}</p>}
         </div>
         <div className="w-10" />
       </header>
