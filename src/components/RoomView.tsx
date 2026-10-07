@@ -602,7 +602,24 @@ export default function RoomView({ roomId, onLeave }: Props) {
                     <span className="text-[11px] font-black text-yellow-300 truncate max-w-[65px]">{activeGift.fromName}</span>
                   </div>
                   <div className="flex flex-col items-center px-1">
-                    <span className="text-[9px] font-bold text-white/90 truncate">أهدى {activeGift.giftName}</span>
+                    <div className="flex items-center gap-1 justify-center">
+                      {activeGift.mediaUrl && (
+                        activeGift.mediaType === "video" ? (
+                          <video
+                            src={activeGift.mediaUrl}
+                            className="w-4 h-4 object-contain pointer-events-none"
+                            autoPlay muted loop playsInline
+                          />
+                        ) : (
+                          <img
+                            src={activeGift.mediaUrl}
+                            alt=""
+                            className="w-4 h-4 object-contain"
+                          />
+                        )
+                      )}
+                      <span className="text-[9px] font-bold text-white/90 truncate max-w-[90px]">أهدى {activeGift.giftName}</span>
+                    </div>
                     <span className={`text-xs font-black text-yellow-400 ${showComboPulse ? "combo-pulse" : ""}`}>×{totalQuantity}</span>
                   </div>
                   <div className="flex items-center gap-1 min-w-0">
