@@ -43,7 +43,7 @@ function PodiumAvatar({ url, name, size }: { url: string | null; name: string; s
   );
 }
 
-// ============ Podium (simple: crown + circle + rank badge) ============
+// ============ Podium (crown on corner + circle) ============
 function Podium({
   top3,
   onUserClick,
@@ -56,15 +56,10 @@ function Podium({
   const third = top3[2];
 
   return (
-    <div className="flex justify-center items-end gap-3 py-6 px-2">
-      {/* Rank 3 — Bronze */}
-      {third && <PodiumSlot rank={3} user={third} onClick={() => onUserClick?.(third.userId)} />}
-
-      {/* Rank 1 — Gold (larger) */}
-      {first && <PodiumSlot rank={1} user={first} onClick={() => onUserClick?.(first.userId)} />}
-
-      {/* Rank 2 — Silver */}
+    <div className="flex justify-center items-start gap-4 py-8 px-4">
       {second && <PodiumSlot rank={2} user={second} onClick={() => onUserClick?.(second.userId)} />}
+      {first && <PodiumSlot rank={1} user={first} onClick={() => onUserClick?.(first.userId)} />}
+      {third && <PodiumSlot rank={3} user={third} onClick={() => onUserClick?.(third.userId)} />}
     </div>
   );
 }
@@ -78,74 +73,68 @@ function PodiumSlot({
   user: Leader;
   onClick?: () => void;
 }) {
-  // إعدادات الحجم حسب المرتبة (المركز الأول أكبر)
   const isGold = rank === 1;
-  const avatarSize = isGold ? 84 : 68;
-  const ringSize = avatarSize + 8; // الإطار أوسع بـ 8px
-  const crownWidth = isGold ? 70 : 56;
+  const avatarSize = isGold ? 78 : 66;
 
-  // ألوان الإطار
-  const ringColors = {
-    1: "from-yellow-300 via-amber-400 to-yellow-600",
-    2: "from-gray-200 via-gray-300 to-gray-500",
-    3: "from-orange-300 via-amber-600 to-orange-800",
-  };
-  const badgeColors = {
-    1: "bg-yellow-500 border-yellow-200",
-    2: "bg-gray-400 border-gray-200",
-    3: "bg-orange-600 border-orange-300",
-  };
+  // لون الإطار
+  const ringColor = {
+    1: "#FFD700",  // Gold
+    2: "#C0C0C0",  // Silver
+    3: "#CD7F32",  // Bronze
+  }[rank];
 
   return (
     <button
       onClick={onClick}
-      className={`flex flex-col items-center ${isGold ? "-mt-4" : ""}`}
+      className="flex flex-col items-center"
+      style={{ width: `${avatarSize + 16}px` }}
     >
-      {/* Crown above */}
-      <div className="mb-[-6px]">
-        <PodiumSVG rank={rank} size={crownWidth} />
-      </div>
-
-      {/* Ring + avatar */}
-      <div className="relative">
-        {/* Outer ring with gradient */}
+      {/* Circle + crown + rank badge (relative container) */}
+      <div className="relative" style={{ width: `${avatarSize}px`, height: `${avatarSize}px` }}>
+        {/* Avatar inside circle with colored ring */}
         <div
-          className={`rounded-full bg-gradient-to-br ${ringColors[rank]} p-[3px] shadow-lg`}
-          style={{ width: `${ringSize}px`, height: `${ringSize}px` }}
+          className="w-full h-full rounded-full overflow-hidden flex items-center justify-center text-white font-black bg-gradient-to-br from-purple-400 to-pink-500"
+          style={{ border: `3px solid ${ringColor}` }}
         >
-          {/* Inner circle (avatar) */}
-          <div
-            className="rounded-full overflow-hidden bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white font-black ring-2 ring-white/70"
-            style={{ width: `${avatarSize}px`, height: `${avatarSize}px` }}
-          >
-            {user.avatarUrl ? (
-              <img
-                src={user.avatarUrl}
-                alt=""
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <span style={{ fontSize: `${avatarSize * 0.4}px` }}>
-                {user.name[0] || "?"}
-              </span>
-            )}
-          </div>
+          {user.avatarUrl ? (
+            <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
+          ) : (
+            <span style={{ fontSize: `${avatarSize * 0.35}px` }}>
+              {user.name[0] || "?"}
+            </span>
+          )}
         </div>
 
-        {/* Rank badge (bottom of circle) */}
+        {/* Crown on top-right corner */}
         <div
-          className={`absolute left-1/2 -translate-x-1/2 ${badgeColors[rank]} text-white text-[11px] font-black rounded-full border-2 shadow-md flex items-center justify-center`}
-          style={{ width: "22px", height: "22px", bottom: "-4px" }}
+          className="absolute"
+          style={{
+            top: "-14px",
+            right: "-8px",
+            transform: "rotate(20deg)",
+          }}
+        >
+          <PodiumSVG rank={rank} size={isGold ? 34 : 28} />
+        </div>
+
+        {/* Rank badge at bottom */}
+        <div
+          className="absolute left-1/2 -translate-x-1/2 text-white text-[11px] font-black rounded-full flex items-center justify-center"
+          style={{
+            bottom: "-8px",
+            width: "22px",
+            height: "22px",
+            background: ringColor,
+            border: "2px solid #fff",
+          }}
         >
           {rank}
         </div>
       </div>
 
-      {/* Name + ID + Value below */}
-      <div className="mt-4 text-center" style={{ maxWidth: `${ringSize + 20}px` }}>
-        <p className="text-[11px] font-black text-amber-900 truncate">
-          {user.name}
-        </p>
+      {/* Name + ID + Value */}
+      <div className="mt-4 text-center w-full">
+        <p className="text-[11px] font-black text-amber-900 truncate">{user.name}</p>
         {user.userNumber !== null && (
           <p className="text-[9px] text-amber-900/60">ID:{user.userNumber}</p>
         )}
