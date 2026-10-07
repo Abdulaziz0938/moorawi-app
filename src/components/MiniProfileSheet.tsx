@@ -218,7 +218,13 @@ export default function MiniProfileSheet({
 
           {/* === VARIANT 1: My Seat — Only 2 buttons === */}
           {isMySeat ? (
-            <div className="mx-4 mb-4 flex items-center justify-center gap-6">
+            <div className="mx-4 mb-4 flex items-center justify-center gap-5">
+              <IconCircle
+                icon={<Gift size={22} />}
+                color="primary"
+                size={56}
+                onClick={onOpenGift}
+              />
               <IconCircle
                 icon={isMySeatMuted ? <Volume2 size={22} /> : <MicOff size={22} />}
                 color="warning"
