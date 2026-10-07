@@ -88,6 +88,34 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const targetCoordsRef = useRef<{x: number; y: number} | null>(null);
   const [comboOverlay, setComboOverlay] = useState<{gift: any; count: number; id: number} | null>(null);
   const comboOverlayTimerRef = useRef<any>(null);
+
+  // [moorawi-fix] Track latest userId for cleanup on unmount
+  const myUserIdRef = useRef<Id<"users"> | undefined>(undefined);
+  useEffect(() => { myUserIdRef.current = myInfo?.userId; }, [myInfo?.userId]);
+
+  // [moorawi-fix] Reset room-local state whenever roomId changes
+  useEffect(() => {
+    setActiveGift(null);
+    setGiftQueue([]);
+    setComboCount(1);
+    setTotalQuantity(0);
+    setComboValue(0);
+    setIsGlobalBanner(false);
+    setComboOverlay(null);
+    targetCoordsRef.current = null;
+    if (comboTimeoutRef.current) clearTimeout(comboTimeoutRef.current);
+    if (comboOverlayTimerRef.current) clearTimeout(comboOverlayTimerRef.current);
+  }, [roomId]);
+
+  // [moorawi-fix] Leave seat + release DB slot on unmount
+  useEffect(() => {
+    return () => {
+      if (myUserIdRef.current) {
+        clearMySeats({ roomId, tokenOverride: deviceId }).catch(() => {});
+      }
+    };
+  }, [roomId, deviceId, clearMySeats]);
+
   const giftSinceRef = useRef(Date.now());
   const latestGift = useQuery(api.gifts.latestGiftFull, { roomId, since: giftSinceRef.current });
   const globalBroadcast = useQuery(api.gifts.latestGlobalBroadcast, { since: giftSinceRef.current });
