@@ -3,6 +3,7 @@ import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { X, HelpCircle, Loader2 } from "lucide-react";
+import PodiumSVG from "./PodiumSVG";
 
 interface Props {
   roomId: Id<"rooms">;
@@ -42,62 +43,7 @@ function PodiumAvatar({ url, name, size }: { url: string | null; name: string; s
   );
 }
 
-// ============ Podium Item (avatar + name) ============
-function PodiumItem({
-  user,
-  xPercent,
-  avatarTopPercent,
-  avatarSize,
-  onClick,
-}: {
-  user: Leader;
-  xPercent: string;
-  avatarTopPercent: string;
-  avatarSize: string;
-  onClick?: () => void;
-}) {
-  return (
-    <>
-      {/* Avatar (absolute on the white circle) */}
-      <button
-        onClick={onClick}
-        className="absolute pointer-events-auto"
-        style={{
-          top: avatarTopPercent,
-          left: xPercent,
-          transform: "translate(-50%, -50%)",
-        }}
-      >
-        <PodiumAvatar url={user.avatarUrl} name={user.name} size={avatarSize} />
-      </button>
-
-      {/* Name + Total (below the podium) */}
-      <div
-        className="absolute text-center pointer-events-none"
-        style={{
-          top: "75%",
-          left: xPercent,
-          transform: "translateX(-50%)",
-          width: "30%",
-        }}
-      >
-        <p className="text-[10px] font-black text-amber-900 truncate leading-tight">
-          {user.name}
-        </p>
-        {user.userNumber !== null && (
-          <p className="text-[8px] text-amber-900/60 leading-tight">
-            ID:{user.userNumber}
-          </p>
-        )}
-        <p className="text-[10px] font-black text-amber-900 leading-tight mt-0.5">
-          {formatNumber(user.total)}
-        </p>
-      </div>
-    </>
-  );
-}
-
-// ============ Podium (single composite image + absolute overlays) ============
+// ============ Podium (SVG-based) ============
 function Podium({
   top3,
   onUserClick,
@@ -109,54 +55,148 @@ function Podium({
   const second = top3[1];
   const third = top3[2];
 
+  // قياسات كل podium (SVG viewBox 100x220)
+  const W = 100;
+  const H = 220;
+  const circleCx = 50;  // % أفقياً = 50%
+  const circleCy = 55;  // % رأسياً = 25%
+  const circleR = 30;   // نسبة = 30% من العرض
+
+  // أبعاد عرض كل podium على الشاشة
+  const rank1Width = 150;   // px
+  const rank23Width = 120;  // px
+
   return (
-    <div className="flex justify-center py-4">
-      <div
-        className="relative podium-glow-all"
-        style={{ width: "100%", maxWidth: "360px", aspectRatio: "800 / 1735" }}
-      >
-        {/* Composite podium image */}
-        <img
-          src="/leaderboard/rank-composite.png"
-          alt=""
-          className="w-full h-full object-contain"
-          draggable={false}
+    <div className="flex justify-center items-end gap-2 py-4 px-2">
+      {/* Rank 3 (left, bronze) */}
+      {third && (
+        <PodiumWrapper
+          rank={3}
+          user={third}
+          width={rank23Width}
+          height={(rank23Width / W) * H}
+          circleCx={circleCx}
+          circleCy={circleCy}
+          circleR={circleR}
+          W={W}
+          H={H}
+          onClick={() => onUserClick?.(third.userId)}
         />
+      )}
 
-        {/* Rank 3 — Left (Bronze) */}
-        {third && (
-          <PodiumItem
-            user={third}
-            xPercent="22%"
-            avatarTopPercent="35%"
-            avatarSize="w-12 h-12"
-            onClick={() => onUserClick?.(third.userId)}
-          />
-        )}
+      {/* Rank 1 (center, gold) */}
+      {first && (
+        <PodiumWrapper
+          rank={1}
+          user={first}
+          width={rank1Width}
+          height={(rank1Width / W) * H}
+          circleCx={circleCx}
+          circleCy={circleCy}
+          circleR={circleR}
+          W={W}
+          H={H}
+          onClick={() => onUserClick?.(first.userId)}
+        />
+      )}
 
-        {/* Rank 1 — Center (Gold with wings) */}
-        {first && (
-          <PodiumItem
-            user={first}
-            xPercent="50%"
-            avatarTopPercent="33%"
-            avatarSize="w-14 h-14"
-            onClick={() => onUserClick?.(first.userId)}
-          />
-        )}
-
-        {/* Rank 2 — Right (Silver) */}
-        {second && (
-          <PodiumItem
-            user={second}
-            xPercent="78%"
-            avatarTopPercent="35%"
-            avatarSize="w-12 h-12"
-            onClick={() => onUserClick?.(second.userId)}
-          />
-        )}
-      </div>
+      {/* Rank 2 (right, silver) */}
+      {second && (
+        <PodiumWrapper
+          rank={2}
+          user={second}
+          width={rank23Width}
+          height={(rank23Width / W) * H}
+          circleCx={circleCx}
+          circleCy={circleCy}
+          circleR={circleR}
+          W={W}
+          H={H}
+          onClick={() => onUserClick?.(second.userId)}
+        />
+      )}
     </div>
+  );
+}
+
+function PodiumWrapper({
+  rank,
+  user,
+  width,
+  height,
+  circleCx,
+  circleCy,
+  circleR,
+  W,
+  H,
+  onClick,
+}: {
+  rank: 1 | 2 | 3;
+  user: Leader;
+  width: number;
+  height: number;
+  circleCx: number;
+  circleCy: number;
+  circleR: number;
+  W: number;
+  H: number;
+  onClick?: () => void;
+}) {
+  // مراكز الأفاتار كنسبة مئوية
+  const avatarLeftPercent = (circleCx / W) * 100;  // 50%
+  const avatarTopPercent = (circleCy / H) * 100;   // 25%
+  // قطر الأفاتار = نسبة من الدائرة (مثلاً 88% لتغطي 44px من 60px)
+  const avatarDiameterPx = (circleR / W) * 2 * width * 0.85;
+  const avatarPx = Math.round(avatarDiameterPx);
+
+  return (
+    <button
+      onClick={onClick}
+      className="relative flex flex-col items-center pointer-events-auto"
+      style={{ width: `${width}px` }}
+    >
+      <div className="relative" style={{ width: `${width}px`, height: `${height}px` }}>
+        {/* SVG podium */}
+        <PodiumSVG rank={rank} width={width} height={height} />
+
+        {/* Avatar positioned exactly at circle center */}
+        <div
+          className="absolute rounded-full overflow-hidden bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white font-black shadow-lg ring-2 ring-white/60"
+          style={{
+            left: `${avatarLeftPercent}%`,
+            top: `${avatarTopPercent}%`,
+            width: `${avatarPx}px`,
+            height: `${avatarPx}px`,
+            transform: "translate(-50%, -50%)",
+          }}
+        >
+          {user.avatarUrl ? (
+            <img
+              src={user.avatarUrl}
+              alt=""
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <span style={{ fontSize: `${avatarPx * 0.4}px` }}>
+              {user.name[0] || "?"}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Name + ID + Value below podium */}
+      <div className="mt-2 text-center w-full">
+        <p className="text-[11px] font-black text-amber-900 truncate">
+          {user.name}
+        </p>
+        {user.userNumber !== null && (
+          <p className="text-[9px] text-amber-900/60">ID:{user.userNumber}</p>
+        )}
+        <p className="text-[11px] font-black text-amber-900 mt-0.5">
+          {formatNumber(user.total)}
+        </p>
+      </div>
+    </button>
   );
 }
 
