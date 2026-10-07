@@ -10,9 +10,11 @@ function vipLevelFromTotalSent(t: number): number {
 }
 
 export const list = query({
-  args: { roomId: v.id("rooms") },
+  args: { roomId: v.id("rooms"), since: v.optional(v.number()) },
   handler: async (ctx, args) => {
-    const rows = await ctx.db.query("messages").withIndex("by_room", (q) => q.eq("roomId", args.roomId)).order("desc").take(60);
+    const sinceTs = args.since ?? 0;
+    const raw = await ctx.db.query("messages").withIndex("by_room", (q) => q.eq("roomId", args.roomId)).order("desc").take(60);
+    const rows = sinceTs > 0 ? raw.filter((m) => m._creationTime >= sinceTs) : raw;
     const enriched = await Promise.all(rows.map(async (m) => {
       const sender = await ctx.db.get("users", m.senderId);
       const avatarUrl = sender?.avatarId ? await ctx.storage.getUrl(sender.avatarId) : null;

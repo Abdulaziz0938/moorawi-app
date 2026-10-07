@@ -36,7 +36,8 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const seats = useQuery(api.mics.state, { roomId });
   const members = useQuery(api.rooms.members, { roomId });
   const myInfo = useQuery(api.mics.myInfo, { roomId, tokenOverride: deviceId });
-  const messages = useQuery(api.messages.list, { roomId });
+  const msgSinceRef = useRef(Date.now());
+  const messages = useQuery(api.messages.list, { roomId, since: msgSinceRef.current });
   const listeners = useQuery(api.mics.listeners, { roomId });
   const myInvite = useQuery(api.mics.myInvite, { roomId, tokenOverride: deviceId });
 
