@@ -8,6 +8,7 @@ import { X, Coins, Loader2, Music, Heart, Globe, Mic, Users, Check, ChevronUp } 
 interface Props {
   roomId: Id<"rooms">;
   onClose: () => void;
+  preSelectedUserId?: string | null;
 }
 
 const CATEGORIES = [
@@ -22,7 +23,7 @@ type RecipientMode = "mic" | "room" | "individual";
 
 const QUANTITY_PRESETS = [1, 5, 10, 33, 66, 99];
 
-export default function GiftSheet({ roomId, onClose }: Props) {
+export default function GiftSheet({ roomId, onClose, preSelectedUserId }: Props) {
   const deviceId = getDeviceId();
   const gifts = useQuery(api.gifts.listActive);
   const balance = useQuery(api.gifts.myBalance, { tokenOverride: deviceId });
@@ -33,6 +34,14 @@ export default function GiftSheet({ roomId, onClose }: Props) {
   const [category, setCategory] = useState("all");
   const [selectedGiftId, setSelectedGiftId] = useState<Id<"gifts"> | null>(null);
   const [selectedUserIds, setSelectedUserIds] = useState<Set<Id<"users">>>(new Set());
+
+  // [moorawi] Auto-select preSelected user when opening from MiniProfile
+  useEffect(() => {
+    if (preSelectedUserId) {
+      setSelectedUserIds(new Set([preSelectedUserId as Id<"users">]));
+      setRecipientMode("individual");
+    }
+  }, [preSelectedUserId]);
   const [recipientMode, setRecipientMode] = useState<RecipientMode>("mic");
   const [showRecharge, setShowRecharge] = useState(false);
   const [sending, setSending] = useState(false);

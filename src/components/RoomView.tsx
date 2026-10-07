@@ -189,6 +189,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [miniProfileUserId, setMiniProfileUserId] = useState<string | null>(null);
   const [mySeatIndexForMiniProfile, setMySeatIndexForMiniProfile] = useState<number | null>(null);
+  const [preSelectedGiftUserId, setPreSelectedGiftUserId] = useState<string | null>(null);
   const [showGifts, setShowGifts] = useState(false);
   const [showChatInput, setShowChatInput] = useState(false);
   const [openSeatMenu, setOpenSeatMenu] = useState<number | null>(null);
@@ -976,7 +977,12 @@ export default function RoomView({ roomId, onLeave }: Props) {
           isMySeatMuted={mySeatIndexForMiniProfile !== null ? !!seats?.find((s: any) => s.seatIndex === mySeatIndexForMiniProfile)?.muted : false}
           isTargetOnMic={!!seats?.find((s: any) => s.userId === miniProfileUserId)}
           onClose={() => { setMiniProfileUserId(null); setMySeatIndexForMiniProfile(null); }}
-          onOpenGift={() => { /* TODO: open gift to this user */ }}
+          onOpenGift={() => {
+            setPreSelectedGiftUserId(miniProfileUserId);
+            setMiniProfileUserId(null);
+            setMySeatIndexForMiniProfile(null);
+            setShowGifts(true);
+          }}
           onKick={() => alert("قريباً - طرد")}
           onMute={() => {
             const targetSeat = mySeatIndexForMiniProfile !== null
@@ -1086,7 +1092,13 @@ export default function RoomView({ roomId, onLeave }: Props) {
         </div>
       )}
 
-      {showGifts && <GiftSheet roomId={roomId} onClose={() => setShowGifts(false)} />}
+      {showGifts && (
+        <GiftSheet
+          roomId={roomId}
+          onClose={() => { setShowGifts(false); setPreSelectedGiftUserId(null); }}
+          preSelectedUserId={preSelectedGiftUserId}
+        />
+      )}
 
       {showSettings && (
         <SettingsSheet roomId={roomId} currentLayout={layout} isOwnerOrMod={isOwnerOrMod}

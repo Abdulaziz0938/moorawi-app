@@ -3,7 +3,7 @@ import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import {
   X, Gift, MessageCircle, UserPlus, Mic, MicOff, ArrowDown,
-  Ban, Crown, Loader2, UserMinus, VolumeX, Volume2,
+  Ban, Crown, Loader2,
 } from "lucide-react";
 
 interface Props {
@@ -43,41 +43,23 @@ const VIP_LABEL: Record<number, string> = {
   0: "", 1: "VIP 1", 2: "VIP 2", 3: "VIP 3", 4: "VIP 4", 5: "VIP 5", 6: "VIP 6", 7: "VIP 7",
 };
 
-// Reusable circular icon button (Poppo-style)
+// Glass circular icon button — no colors, all white
 function IconCircle({
   icon,
   onClick,
-  color = "default",
   size = 52,
-  badge,
 }: {
   icon: React.ReactNode;
   onClick?: () => void;
-  color?: "default" | "primary" | "danger" | "warning" | "success" | "gold";
   size?: number;
-  badge?: string;
 }) {
-  const colorMap = {
-    default: "bg-white/15 hover:bg-white/25 text-white",
-    primary: "bg-gradient-to-br from-pink-500 to-purple-600 hover:opacity-90 text-white",
-    danger: "bg-red-500/90 hover:bg-red-500 text-white",
-    warning: "bg-amber-500/90 hover:bg-amber-500 text-white",
-    success: "bg-emerald-500/90 hover:bg-emerald-500 text-white",
-    gold: "bg-gradient-to-br from-yellow-400 to-amber-500 hover:opacity-90 text-white",
-  };
-
   return (
     <button
       onClick={onClick}
-      className={`${colorMap[color]} rounded-full flex items-center justify-center transition-all active:scale-90 backdrop-blur-md border border-white/25 shadow-lg`}
+      className="rounded-full flex items-center justify-center transition-all active:scale-90 backdrop-blur-xl border border-white/25 shadow-lg bg-white/10 hover:bg-white/20 text-white"
       style={{ width: `${size}px`, height: `${size}px` }}
     >
       {icon}
-      {badge && (
-        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center border border-white">
-          {badge}
-        </span>
-      )}
     </button>
   );
 }
@@ -125,7 +107,6 @@ export default function MiniProfileSheet({
   const vipLevel = profile.vip;
   const bgGradient = VIP_BG[vipLevel] || VIP_BG[0];
   const vipLabel = VIP_LABEL[vipLevel];
-
   const canKick = currentUserRole === "owner" || currentUserRole === "moderator";
   const canPromote = currentUserRole === "owner";
 
@@ -134,14 +115,11 @@ export default function MiniProfileSheet({
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
 
       <div className="relative w-full max-w-md mx-auto rounded-t-3xl max-h-[92vh] overflow-hidden flex flex-col">
-        {/* Glass background layers */}
         <div className={`absolute inset-0 bg-gradient-to-b ${bgGradient}`} />
         <div className="absolute inset-0 bg-black/30 backdrop-blur-2xl" />
         <div className="absolute inset-x-0 top-0 h-px bg-white/40" />
 
-        {/* Content */}
         <div className="relative z-10 flex flex-col max-h-[92vh] overflow-y-auto">
-          {/* Header */}
           <div className="flex items-center justify-between px-4 pt-3 pb-2">
             <button onClick={onClose} className="w-9 h-9 rounded-full bg-white/15 backdrop-blur border border-white/20 flex items-center justify-center text-white hover:bg-white/25 transition">
               <X size={18} />
@@ -153,7 +131,6 @@ export default function MiniProfileSheet({
             )}
           </div>
 
-          {/* Avatar + Name */}
           <div className="flex flex-col items-center px-4 pb-4">
             <div className="w-24 h-24 rounded-full overflow-hidden ring-4 ring-white/40 shadow-2xl bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white font-black text-3xl">
               {profile.avatarUrl ? (
@@ -197,7 +174,6 @@ export default function MiniProfileSheet({
             </div>
           </div>
 
-          {/* Stats */}
           <div className="mx-4 mb-3 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-3 grid grid-cols-3 gap-2 text-center">
             <div>
               <p className="text-lg">💎</p>
@@ -216,96 +192,44 @@ export default function MiniProfileSheet({
             </div>
           </div>
 
-          {/* === VARIANT 1: My Seat — Only 2 buttons === */}
           {isMySeat ? (
             <div className="mx-4 mb-4 flex items-center justify-center gap-5">
+              <IconCircle icon={<Gift size={22} />} size={56} onClick={onOpenGift} />
               <IconCircle
-                icon={<Gift size={22} />}
-                color="primary"
-                size={56}
-                onClick={onOpenGift}
-              />
-              <IconCircle
-                icon={isMySeatMuted ? <Volume2 size={22} /> : <MicOff size={22} />}
-                color="warning"
+                icon={isMySeatMuted ? <Mic size={22} /> : <MicOff size={22} />}
                 size={56}
                 onClick={onMute}
               />
-              <IconCircle
-                icon={<ArrowDown size={22} />}
-                color="danger"
-                size={56}
-                onClick={onRemoveFromSeat}
-              />
+              <IconCircle icon={<ArrowDown size={22} />} size={56} onClick={onRemoveFromSeat} />
             </div>
           ) : (
             <>
-              {/* === VARIANT 2: Other User — Full Actions === */}
               <div className="mx-4 mb-3 flex items-center justify-center gap-4">
-                <IconCircle
-                  icon={<Gift size={22} />}
-                  color="primary"
-                  size={54}
-                  onClick={onOpenGift}
-                />
-                <IconCircle
-                  icon={<MessageCircle size={22} />}
-                  size={54}
-                  onClick={() => alert("قريباً")}
-                />
-                <IconCircle
-                  icon={<UserPlus size={22} />}
-                  size={54}
-                  onClick={() => alert("قريباً")}
-                />
+                <IconCircle icon={<Gift size={22} />} size={54} onClick={onOpenGift} />
+                <IconCircle icon={<MessageCircle size={22} />} size={54} onClick={() => alert("قريباً")} />
+                <IconCircle icon={<UserPlus size={22} />} size={54} onClick={() => alert("قريباً")} />
               </div>
 
-              {/* Room actions */}
               {roomId && (
-                <div className="mx-4 mb-4 flex items-center justify-center gap-4 flex-wrap">
+                <div className="mx-4 mb-4 flex items-center justify-center gap-3 flex-wrap">
                   {!isTargetOnMic && (
-                    <IconCircle
-                      icon={<Mic size={20} />}
-                      color="success"
-                      size={50}
-                      onClick={onInviteToMic}
-                    />
+                    <IconCircle icon={<Mic size={20} />} size={50} onClick={onInviteToMic} />
                   )}
 
                   {canKick && isTargetOnMic && (
-                    <IconCircle
-                      icon={<VolumeX size={20} />}
-                      color="warning"
-                      size={50}
-                      onClick={onMute}
-                    />
+                    <IconCircle icon={<MicOff size={20} />} size={50} onClick={onMute} />
                   )}
 
                   {canKick && isTargetOnMic && (
-                    <IconCircle
-                      icon={<ArrowDown size={20} />}
-                      color="danger"
-                      size={50}
-                      onClick={onRemoveFromSeat}
-                    />
+                    <IconCircle icon={<ArrowDown size={20} />} size={50} onClick={onRemoveFromSeat} />
                   )}
 
                   {canKick && (
-                    <IconCircle
-                      icon={<Ban size={20} />}
-                      color="danger"
-                      size={50}
-                      onClick={onKick}
-                    />
+                    <IconCircle icon={<Ban size={20} />} size={50} onClick={onKick} />
                   )}
 
                   {canPromote && (
-                    <IconCircle
-                      icon={<Crown size={20} />}
-                      color="gold"
-                      size={50}
-                      onClick={onPromote}
-                    />
+                    <IconCircle icon={<Crown size={20} />} size={50} onClick={onPromote} />
                   )}
                 </div>
               )}
