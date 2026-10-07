@@ -43,17 +43,19 @@ const VIP_LABEL: Record<number, string> = {
   0: "", 1: "VIP 1", 2: "VIP 2", 3: "VIP 3", 4: "VIP 4", 5: "VIP 5", 6: "VIP 6", 7: "VIP 7",
 };
 
-// Reusable IconButton
-function IconButton({
+// Reusable circular icon button (Poppo-style)
+function IconCircle({
   icon,
-  label,
   onClick,
   color = "default",
+  size = 52,
+  badge,
 }: {
   icon: React.ReactNode;
-  label: string;
   onClick?: () => void;
   color?: "default" | "primary" | "danger" | "warning" | "success" | "gold";
+  size?: number;
+  badge?: string;
 }) {
   const colorMap = {
     default: "bg-white/15 hover:bg-white/25 text-white",
@@ -67,10 +69,15 @@ function IconButton({
   return (
     <button
       onClick={onClick}
-      className={`${colorMap[color]} rounded-2xl py-3 flex flex-col items-center justify-center gap-1.5 transition-all active:scale-95 backdrop-blur-md border border-white/20`}
+      className={`${colorMap[color]} rounded-full flex items-center justify-center transition-all active:scale-90 backdrop-blur-md border border-white/25 shadow-lg`}
+      style={{ width: `${size}px`, height: `${size}px` }}
     >
       {icon}
-      <span className="text-[10px] font-bold">{label}</span>
+      {badge && (
+        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center border border-white">
+          {badge}
+        </span>
+      )}
     </button>
   );
 }
@@ -211,94 +218,88 @@ export default function MiniProfileSheet({
 
           {/* === VARIANT 1: My Seat — Only 2 buttons === */}
           {isMySeat ? (
-            <div className="mx-4 mb-4 grid grid-cols-2 gap-3">
-              <IconButton
-                icon={<MicOff size={28} />}
-                label={isMySeatMuted ? "إلغاء الكتم" : "كتم"}
+            <div className="mx-4 mb-4 flex items-center justify-center gap-6">
+              <IconCircle
+                icon={isMySeatMuted ? <Volume2 size={22} /> : <MicOff size={22} />}
                 color="warning"
+                size={56}
                 onClick={onMute}
               />
-              <IconButton
-                icon={<ArrowDown size={28} />}
-                label="إنزال"
+              <IconCircle
+                icon={<ArrowDown size={22} />}
                 color="danger"
+                size={56}
                 onClick={onRemoveFromSeat}
               />
             </div>
           ) : (
             <>
               {/* === VARIANT 2: Other User — Full Actions === */}
-              <div className="mx-4 mb-3 grid grid-cols-3 gap-2">
-                <IconButton
+              <div className="mx-4 mb-3 flex items-center justify-center gap-4">
+                <IconCircle
                   icon={<Gift size={22} />}
-                  label="هدية"
                   color="primary"
+                  size={54}
                   onClick={onOpenGift}
                 />
-                <IconButton
+                <IconCircle
                   icon={<MessageCircle size={22} />}
-                  label="محادثة"
+                  size={54}
                   onClick={() => alert("قريباً")}
                 />
-                <IconButton
+                <IconCircle
                   icon={<UserPlus size={22} />}
-                  label="متابعة"
+                  size={54}
                   onClick={() => alert("قريباً")}
                 />
               </div>
 
               {/* Room actions */}
               {roomId && (
-                <div className="mx-4 mb-4 grid grid-cols-2 gap-2">
+                <div className="mx-4 mb-4 flex items-center justify-center gap-4 flex-wrap">
                   {!isTargetOnMic && (
-                    <div className="col-span-2">
-                      <IconButton
-                        icon={<Mic size={22} />}
-                        label="دعوة للمايك"
-                        color="success"
-                        onClick={onInviteToMic}
-                      />
-                    </div>
+                    <IconCircle
+                      icon={<Mic size={20} />}
+                      color="success"
+                      size={50}
+                      onClick={onInviteToMic}
+                    />
                   )}
 
                   {canKick && isTargetOnMic && (
-                    <IconButton
-                      icon={<VolumeX size={22} />}
-                      label="كتم"
+                    <IconCircle
+                      icon={<VolumeX size={20} />}
                       color="warning"
+                      size={50}
                       onClick={onMute}
                     />
                   )}
 
                   {canKick && isTargetOnMic && (
-                    <IconButton
-                      icon={<ArrowDown size={22} />}
-                      label="إنزال"
+                    <IconCircle
+                      icon={<ArrowDown size={20} />}
                       color="danger"
+                      size={50}
                       onClick={onRemoveFromSeat}
                     />
                   )}
 
                   {canKick && (
-                    <div className="col-span-2">
-                      <IconButton
-                        icon={<Ban size={22} />}
-                        label="طرد من الغرفة"
-                        color="danger"
-                        onClick={onKick}
-                      />
-                    </div>
+                    <IconCircle
+                      icon={<Ban size={20} />}
+                      color="danger"
+                      size={50}
+                      onClick={onKick}
+                    />
                   )}
 
                   {canPromote && (
-                    <div className="col-span-2">
-                      <IconButton
-                        icon={<Crown size={22} />}
-                        label="ترقية إلى مشرف"
-                        color="gold"
-                        onClick={onPromote}
-                      />
-                    </div>
+                    <IconCircle
+                      icon={<Crown size={20} />}
+                      color="gold"
+                      size={50}
+                      onClick={onPromote}
+                    />
                   )}
                 </div>
               )}
