@@ -110,8 +110,8 @@ function PodiumSlot({
           className="absolute"
           style={{
             top: "-14px",
-            right: "-8px",
-            transform: "rotate(20deg)",
+            right: "-10px",
+            transform: "rotate(30deg)",
           }}
         >
           <PodiumSVG rank={rank} size={isGold ? 34 : 28} />
