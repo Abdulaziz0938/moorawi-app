@@ -14,6 +14,7 @@ import SettingsSheet from "./SettingsSheet";
 import GiftSheet from "./GiftSheet";
 import CompactChatInput from "./CompactChatInput";
 import LeaderboardSheet from "./LeaderboardSheet";
+import MiniProfileSheet from "./MiniProfileSheet";
 
 // [moorawi-batch] Flying particle data for batch gifts
 type FlyingTarget = {
@@ -186,6 +187,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const [isFavorite, setIsFavorite] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [miniProfileUserId, setMiniProfileUserId] = useState<string | null>(null);
   const [showGifts, setShowGifts] = useState(false);
   const [showChatInput, setShowChatInput] = useState(false);
   const [openSeatMenu, setOpenSeatMenu] = useState<number | null>(null);
@@ -932,6 +934,26 @@ export default function RoomView({ roomId, onLeave }: Props) {
         <LeaderboardSheet
           roomId={roomId}
           onClose={() => setShowLeaderboard(false)}
+          onUserClick={(uid) => {
+            setShowLeaderboard(false);
+            setMiniProfileUserId(uid);
+          }}
+        />
+      )}
+
+      {miniProfileUserId && (
+        <MiniProfileSheet
+          userId={miniProfileUserId}
+          roomId={roomId}
+          currentUserRole={myInfo?.role as any}
+          isTargetOnMic={!!seats?.find((s: any) => s.userId === miniProfileUserId)}
+          onClose={() => setMiniProfileUserId(null)}
+          onOpenGift={() => { /* TODO: open gift to this user */ }}
+          onKick={() => alert("قريباً - طرد")}
+          onMute={() => alert("قريباً - كتم")}
+          onRemoveFromSeat={() => alert("قريباً - إنزال")}
+          onPromote={() => alert("قريباً - ترقية")}
+          onInviteToMic={() => alert("قريباً - دعوة")}
         />
       )}
 

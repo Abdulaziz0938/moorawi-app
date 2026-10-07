@@ -42,6 +42,41 @@ export const me = query({
   },
 });
 
+// [moorawi] Get public profile of any user by ID
+export const getById = query({
+  args: { userId: v.id("users") },
+  handler: async (ctx, args) => {
+    const u = await ctx.db.get("users", args.userId);
+    if (!u) return null;
+
+    const avatarUrl = u.avatarUrl ?? (u.avatarId ? await ctx.storage.getUrl(u.avatarId) : null);
+
+    // VIP level based on totalSent (7 tiers)
+    const vipThresholds = [1000, 5000, 20000, 50000, 100000, 250000, 500000];
+    const vip = vipThresholds.filter((x) => (u.totalSent ?? 0) >= x).length;
+
+    return {
+      _id: u._id,
+      userNumber: u.userNumber ?? null,
+      username: u.username ?? null,
+      name: u.name ?? "ضيف",
+      avatarUrl,
+      age: u.age ?? null,
+      gender: u.gender ?? null,
+      country: u.country ?? null,
+      interests: u.interests ?? [],
+      bio: u.bio ?? null,
+      profileComplete: u.profileComplete ?? false,
+      charms: u.charms ?? 0,
+      totalSent: u.totalSent ?? 0,
+      totalReceived: u.totalReceived ?? 0,
+      vip,
+      isAdmin: u.isAdmin ?? false,
+      banned: u.banned ?? false,
+    };
+  },
+});
+
 // Check if a username is available
 export const isUsernameAvailable = query({
   args: { username: v.string() },
