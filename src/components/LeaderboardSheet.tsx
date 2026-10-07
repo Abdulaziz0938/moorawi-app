@@ -52,16 +52,16 @@ function PodiumSlot({
   user: Leader;
   onClick?: () => void;
 }) {
-  // [moorawi-fix] نفس العرض للثلاثة، الارتفاع تلقائي حسب النسبة
-  // rank-1: 512x708 → aspect 0.72 → أوسع
-  // rank-2/3: 512x1233 → aspect 0.42 → أطول
-  const imgWidth = rank === 1 ? "w-28" : "w-20";
-  const avatarSize = rank === 1 ? "w-14 h-14" : "w-12 h-12";
+  // [moorawi-fix-v2] نصحّح النسب ليعطي rank-1 ارتفاعاً أكبر رغم عرض صورته
+  // rank-1: 512x708 (aspect 1.383) ← w-44 (176px) → ارتفاع 243px
+  // rank-2/3: 512x1233 (aspect 2.408) ← w-20 (80px) → ارتفاع 193px
+  const imgWidth = rank === 1 ? "w-44" : "w-20";
+  const avatarSize = rank === 1 ? "w-12 h-12" : "w-9 h-9";
 
-  // مركز الدائرة البيضاء من أعلى الصورة (النسبة مقاسة يدوياً):
-  // rank-1: الدائرة في ~38% من الأعلى
-  // rank-2/3: الدائرة في ~28% من الأعلى (بسبب المسافة الطويلة أسفل)
-  const avatarTopPercent = rank === 1 ? 38 : 28;
+  // مركز الدائرة البيضاء (نسبة من أعلى الصورة):
+  // rank-1: الدائرة أصغر (لأن الأجنحة تأخذ مساحة) → 40%
+  // rank-2/3: الدائرة أكبر نسبياً → 27%
+  const avatarTopPercent = rank === 1 ? 40 : 27;
 
   return (
     <button
