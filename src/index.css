@@ -243,3 +243,27 @@ html, body {
   animation: aggregateBadgePulse 2.2s ease-out forwards;
 }
 
+/* ============ Moorawi: Leaderboard Podium Glow ============ */
+@keyframes podiumGlow {
+  0%, 100% {
+    filter: brightness(1) drop-shadow(0 0 0 rgba(255, 215, 0, 0));
+  }
+  50% {
+    filter: brightness(1.15) drop-shadow(0 0 14px rgba(255, 215, 0, 0.55));
+  }
+}
+
+.podium-gold {
+  animation: podiumGlow 2.8s ease-in-out infinite;
+}
+
+.podium-silver {
+  animation: podiumGlow 2.8s ease-in-out infinite;
+  animation-delay: 0.4s;
+}
+
+.podium-bronze {
+  animation: podiumGlow 2.8s ease-in-out infinite;
+  animation-delay: 0.8s;
+}
+

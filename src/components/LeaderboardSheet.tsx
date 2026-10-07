@@ -52,38 +52,45 @@ function PodiumSlot({
   user: Leader;
   onClick?: () => void;
 }) {
-  // ارتفاع الصورة حسب المرتبة — rank-1 أعلى قليلاً
-  const imgHeight = rank === 1 ? "h-56" : "h-48";
-  // نسبة الدائرة من أعلى الصورة (يدوياً حسب التصميم)
-  const avatarTop = rank === 1 ? "42%" : "33%";
-  const avatarSize = rank === 1 ? "w-16 h-16" : "w-14 h-14";
+  // [moorawi-fix] نفس العرض للثلاثة، الارتفاع تلقائي حسب النسبة
+  // rank-1: 512x708 → aspect 0.72 → أوسع
+  // rank-2/3: 512x1233 → aspect 0.42 → أطول
+  const imgWidth = rank === 1 ? "w-28" : "w-20";
+  const avatarSize = rank === 1 ? "w-14 h-14" : "w-12 h-12";
+
+  // مركز الدائرة البيضاء من أعلى الصورة (النسبة مقاسة يدوياً):
+  // rank-1: الدائرة في ~38% من الأعلى
+  // rank-2/3: الدائرة في ~28% من الأعلى (بسبب المسافة الطويلة أسفل)
+  const avatarTopPercent = rank === 1 ? 38 : 28;
 
   return (
     <button
       onClick={onClick}
       className="flex flex-col items-center flex-1 max-w-[130px]"
     >
-      <div className={`relative ${imgHeight} flex items-end justify-center`}>
+      <div className="relative inline-block">
         {/* Podium image */}
         <img
           src={`/leaderboard/rank-${rank}.png`}
           alt=""
-          className="h-full w-auto object-contain"
-          style={{ mixBlendMode: "screen" }}
+          className={`${imgWidth} h-auto object-contain podium-${rank === 1 ? "gold" : rank === 2 ? "silver" : "bronze"}`}
           draggable={false}
         />
 
-        {/* Avatar placed inside the white circle */}
+        {/* Avatar inside the white circle — نسبة من ارتفاع الصورة */}
         <div
           className="absolute left-1/2 -translate-x-1/2 pointer-events-none"
-          style={{ top: avatarTop }}
+          style={{
+            top: `${avatarTopPercent}%`,
+            transform: "translate(-50%, -50%)",
+          }}
         >
           <PodiumAvatar url={user.avatarUrl} name={user.name} size={avatarSize} />
         </div>
       </div>
 
       {/* Name / ID / Value below podium */}
-      <p className="mt-1.5 text-[11px] font-black text-amber-900 truncate w-full text-center">
+      <p className="mt-2 text-[11px] font-black text-amber-900 truncate w-full text-center">
         {user.name}
       </p>
       {user.userNumber !== null && (

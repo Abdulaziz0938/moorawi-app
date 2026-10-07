@@ -313,7 +313,8 @@ export const roomLeaderboard = query({
     const enriched = await Promise.all(
       sorted.map(async (item) => {
         const u = await ctx.db.get("users", item.userId);
-        const avatarUrl = u?.avatarId ? await ctx.storage.getUrl(u.avatarId) : null;
+        // [moorawi-fix] prefer Cloudinary avatarUrl, fallback to legacy storage avatarId
+        const avatarUrl = u?.avatarUrl ?? (u?.avatarId ? await ctx.storage.getUrl(u.avatarId) : null);
         const vip = vipThresholds.filter((x) => (u?.totalSent ?? 0) >= x).length;
         return {
           userId: item.userId as string,
