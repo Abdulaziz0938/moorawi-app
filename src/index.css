@@ -267,3 +267,17 @@ html, body {
   animation-delay: 0.8s;
 }
 
+/* ============ Moorawi: Leaderboard composite glow ============ */
+@keyframes podiumGlowAll {
+  0%, 100% {
+    filter: brightness(1) drop-shadow(0 0 0 rgba(255, 215, 0, 0));
+  }
+  50% {
+    filter: brightness(1.1) drop-shadow(0 0 18px rgba(255, 215, 0, 0.5));
+  }
+}
+
+.podium-glow-all {
+  animation: podiumGlowAll 3s ease-in-out infinite;
+}
+

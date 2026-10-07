@@ -42,68 +42,62 @@ function PodiumAvatar({ url, name, size }: { url: string | null; name: string; s
   );
 }
 
-// ============ Podium Slot (with PNG podium image) ============
-function PodiumSlot({
-  rank,
+// ============ Podium Item (avatar + name) ============
+function PodiumItem({
   user,
+  xPercent,
+  avatarTopPercent,
+  avatarSize,
   onClick,
 }: {
-  rank: number;
   user: Leader;
+  xPercent: string;
+  avatarTopPercent: string;
+  avatarSize: string;
   onClick?: () => void;
 }) {
-  // [moorawi-fix-v2] نصحّح النسب ليعطي rank-1 ارتفاعاً أكبر رغم عرض صورته
-  // rank-1: 512x708 (aspect 1.383) ← w-44 (176px) → ارتفاع 243px
-  // rank-2/3: 512x1233 (aspect 2.408) ← w-20 (80px) → ارتفاع 193px
-  const imgWidth = rank === 1 ? "w-44" : "w-20";
-  const avatarSize = rank === 1 ? "w-12 h-12" : "w-9 h-9";
-
-  // مركز الدائرة البيضاء (نسبة من أعلى الصورة):
-  // rank-1: الدائرة أصغر (لأن الأجنحة تأخذ مساحة) → 40%
-  // rank-2/3: الدائرة أكبر نسبياً → 27%
-  const avatarTopPercent = rank === 1 ? 40 : 27;
-
   return (
-    <button
-      onClick={onClick}
-      className="flex flex-col items-center flex-1 max-w-[130px]"
-    >
-      <div className="relative inline-block">
-        {/* Podium image */}
-        <img
-          src={`/leaderboard/rank-${rank}.png`}
-          alt=""
-          className={`${imgWidth} h-auto object-contain podium-${rank === 1 ? "gold" : rank === 2 ? "silver" : "bronze"}`}
-          draggable={false}
-        />
+    <>
+      {/* Avatar (absolute on the white circle) */}
+      <button
+        onClick={onClick}
+        className="absolute pointer-events-auto"
+        style={{
+          top: avatarTopPercent,
+          left: xPercent,
+          transform: "translate(-50%, -50%)",
+        }}
+      >
+        <PodiumAvatar url={user.avatarUrl} name={user.name} size={avatarSize} />
+      </button>
 
-        {/* Avatar inside the white circle — نسبة من ارتفاع الصورة */}
-        <div
-          className="absolute left-1/2 -translate-x-1/2 pointer-events-none"
-          style={{
-            top: `${avatarTopPercent}%`,
-            transform: "translate(-50%, -50%)",
-          }}
-        >
-          <PodiumAvatar url={user.avatarUrl} name={user.name} size={avatarSize} />
-        </div>
+      {/* Name + Total (below the podium) */}
+      <div
+        className="absolute text-center pointer-events-none"
+        style={{
+          top: "75%",
+          left: xPercent,
+          transform: "translateX(-50%)",
+          width: "30%",
+        }}
+      >
+        <p className="text-[10px] font-black text-amber-900 truncate leading-tight">
+          {user.name}
+        </p>
+        {user.userNumber !== null && (
+          <p className="text-[8px] text-amber-900/60 leading-tight">
+            ID:{user.userNumber}
+          </p>
+        )}
+        <p className="text-[10px] font-black text-amber-900 leading-tight mt-0.5">
+          {formatNumber(user.total)}
+        </p>
       </div>
-
-      {/* Name / ID / Value below podium */}
-      <p className="mt-2 text-[11px] font-black text-amber-900 truncate w-full text-center">
-        {user.name}
-      </p>
-      {user.userNumber !== null && (
-        <p className="text-[9px] text-amber-900/60">ID:{user.userNumber}</p>
-      )}
-      <p className="text-[11px] font-black text-amber-900 mt-0.5">
-        {formatNumber(user.total)}
-      </p>
-    </button>
+    </>
   );
 }
 
-// ============ Podium (Top 3) — order: 3 | 1 | 2 ============
+// ============ Podium (single composite image + absolute overlays) ============
 function Podium({
   top3,
   onUserClick,
@@ -116,28 +110,52 @@ function Podium({
   const third = top3[2];
 
   return (
-    <div className="relative flex items-end justify-center gap-1 px-3 pt-4 pb-4">
-      {third && (
-        <PodiumSlot
-          rank={3}
-          user={third}
-          onClick={() => onUserClick?.(third.userId)}
+    <div className="flex justify-center py-4">
+      <div
+        className="relative podium-glow-all"
+        style={{ width: "100%", maxWidth: "360px", aspectRatio: "800 / 1735" }}
+      >
+        {/* Composite podium image */}
+        <img
+          src="/leaderboard/rank-composite.png"
+          alt=""
+          className="w-full h-full object-contain"
+          draggable={false}
         />
-      )}
-      {first && (
-        <PodiumSlot
-          rank={1}
-          user={first}
-          onClick={() => onUserClick?.(first.userId)}
-        />
-      )}
-      {second && (
-        <PodiumSlot
-          rank={2}
-          user={second}
-          onClick={() => onUserClick?.(second.userId)}
-        />
-      )}
+
+        {/* Rank 3 — Left (Bronze) */}
+        {third && (
+          <PodiumItem
+            user={third}
+            xPercent="22%"
+            avatarTopPercent="35%"
+            avatarSize="w-12 h-12"
+            onClick={() => onUserClick?.(third.userId)}
+          />
+        )}
+
+        {/* Rank 1 — Center (Gold with wings) */}
+        {first && (
+          <PodiumItem
+            user={first}
+            xPercent="50%"
+            avatarTopPercent="33%"
+            avatarSize="w-14 h-14"
+            onClick={() => onUserClick?.(first.userId)}
+          />
+        )}
+
+        {/* Rank 2 — Right (Silver) */}
+        {second && (
+          <PodiumItem
+            user={second}
+            xPercent="78%"
+            avatarTopPercent="35%"
+            avatarSize="w-12 h-12"
+            onClick={() => onUserClick?.(second.userId)}
+          />
+        )}
+      </div>
     </div>
   );
 }
