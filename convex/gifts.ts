@@ -272,19 +272,61 @@ export const sendBatch = mutation({
 
 // ============ LEADERBOARD ============
 export const roomLeaderboard = query({
-  args: { roomId: v.id("rooms") },
+  args: {
+    roomId: v.id("rooms"),
+    type: v.union(v.literal("wealth"), v.literal("charm")),
+    period: v.union(v.literal("daily"), v.literal("weekly"), v.literal("monthly")),
+  },
   handler: async (ctx, args) => {
+    // حساب since حسب الفترة
+    const now = new Date();
+    let since: number;
+    if (args.period === "daily") {
+      since = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    } else if (args.period === "weekly") {
+      const d = new Date(now); d.setDate(d.getDate() - 7); since = d.getTime();
+    } else {
+      const d = new Date(now); d.setDate(d.getDate() - 30); since = d.getTime();
+    }
+
     const txs = await ctx.db
       .query("giftTransactions")
       .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
-      .take(500);
-    const totals: Record<string, { userId: string; name: string; total: number }> = {};
-    for (const t of txs) {
-      const key = t.toUserId;
-      if (!totals[key]) totals[key] = { userId: key, name: t.toName, total: 0 };
+      .order("desc")
+      .take(1000);
+
+    const filtered = txs.filter((t) => t._creationTime >= since);
+    const isWealth = args.type === "wealth";
+
+    // تجميع حسب المستخدم
+    const totals: Record<string, { userId: any; total: number }> = {};
+    for (const t of filtered) {
+      const key = isWealth ? t.fromUserId : t.toUserId;
+      if (!totals[key]) totals[key] = { userId: key, total: 0 };
       totals[key].total += t.totalPrice;
     }
-    return Object.values(totals).sort((a, b) => b.total - a.total).slice(0, 10);
+
+    const sorted = Object.values(totals).sort((a, b) => b.total - a.total).slice(0, 20);
+
+    // جلب بيانات كل مستخدم
+    const vipThresholds = [1000, 5000, 20000, 50000, 100000, 250000, 500000];
+    const enriched = await Promise.all(
+      sorted.map(async (item) => {
+        const u = await ctx.db.get("users", item.userId);
+        const avatarUrl = u?.avatarId ? await ctx.storage.getUrl(u.avatarId) : null;
+        const vip = vipThresholds.filter((x) => (u?.totalSent ?? 0) >= x).length;
+        return {
+          userId: item.userId as string,
+          userNumber: u?.userNumber ?? null,
+          name: u?.name ?? "ضيف",
+          avatarUrl,
+          vip,
+          total: item.total,
+        };
+      })
+    );
+
+    return enriched;
   },
 });
 

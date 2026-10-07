@@ -13,6 +13,7 @@ import { uploadToCloudinary } from "../lib/cloudinary";
 import SettingsSheet from "./SettingsSheet";
 import GiftSheet from "./GiftSheet";
 import CompactChatInput from "./CompactChatInput";
+import LeaderboardSheet from "./LeaderboardSheet";
 
 // [moorawi-batch] Flying particle data for batch gifts
 type FlyingTarget = {
@@ -184,6 +185,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const [showBackMenu, setShowBackMenu] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showGifts, setShowGifts] = useState(false);
   const [showChatInput, setShowChatInput] = useState(false);
   const [openSeatMenu, setOpenSeatMenu] = useState<number | null>(null);
@@ -526,7 +528,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
             </div>
             <span className="text-[9px] font-bold bg-white/10 text-white px-1.5 py-0.5 rounded-full">{members.length}</span>
             <button onClick={() => setIsFavorite(!isFavorite)} className="p-1 rounded-full hover:bg-white/10 text-white"><Heart size={14} className={isFavorite ? "fill-red-500 text-red-500" : ""} /></button>
-            <button className="p-1 rounded-full hover:bg-white/10 text-white"><Trophy size={14} /></button>
+            <button onClick={() => setShowLeaderboard(true)} className="p-1 rounded-full hover:bg-white/10 text-white"><Trophy size={14} /></button>
           </div>
         </header>
 
@@ -926,7 +928,14 @@ export default function RoomView({ roomId, onLeave }: Props) {
         </>
       )}
 
-      {inviteSeatIndex !== null && listeners && (
+{showLeaderboard && (
+        <LeaderboardSheet
+          roomId={roomId}
+          onClose={() => setShowLeaderboard(false)}
+        />
+      )}
+
+            {inviteSeatIndex !== null && listeners && (
         <>
           <div className="fixed inset-0 bg-black/60 z-[75]" onClick={() => setInviteSeatIndex(null)} />
           <div className="fixed bottom-0 left-0 right-0 z-[80] max-w-md mx-auto bg-gray-950 rounded-t-2xl max-h-[70vh] flex flex-col" dir="rtl">
