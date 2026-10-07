@@ -171,3 +171,75 @@ html, body {
 .combo-fade-out {
   animation: comboFadeOut 0.4s ease-out forwards;
 }
+
+/* ============ Moorawi: هدايا جماعية متعددة (Batch) ============ */
+
+/* طيران هدية واحدة من مركز الشاشة إلى هدف محدد — 3 مراحل */
+@keyframes multiGiftFly {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 40vh) scale(0.3);
+  }
+  22% {
+    opacity: 1;
+    transform: translate(calc(-50% + var(--spread-x, 0px)), calc(-50% + var(--spread-y, 0px))) scale(1.15);
+  }
+  55% {
+    opacity: 1;
+    transform: translate(calc(-50% + var(--spread-x, 0px)), calc(-50% + var(--spread-y, 0px))) scale(1);
+  }
+  88% {
+    opacity: 1;
+    transform: translate(calc(-50% + var(--target-x, 0px)), calc(-50% + var(--target-y, 0px))) scale(0.7);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--target-x, 0px)), calc(-50% + var(--target-y, 0px))) scale(0.25);
+  }
+}
+
+.multi-gift-particle {
+  animation: multiGiftFly 2.2s cubic-bezier(0.22, 0.85, 0.25, 1) forwards;
+  will-change: transform, opacity;
+}
+
+/* نبضة اهتزاز على المايك عند وصول الهدية */
+@keyframes micHit {
+  0%, 100% {
+    transform: scale(1);
+    filter: none;
+  }
+  40% {
+    transform: scale(1.18);
+    filter: drop-shadow(0 0 12px #f59e0b);
+  }
+  70% {
+    transform: scale(0.95);
+    filter: drop-shadow(0 0 6px #f59e0b);
+  }
+}
+
+.mic-hit-anim {
+  animation: micHit 0.55s ease-out;
+}
+
+/* شارة تجميع المستمعين (+N) */
+@keyframes aggregateBadgePulse {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.7);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(0) scale(1.1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-20px) scale(1);
+  }
+}
+
+.aggregate-badge-anim {
+  animation: aggregateBadgePulse 2.2s ease-out forwards;
+}
+

@@ -28,7 +28,7 @@ export default function GiftSheet({ roomId, onClose }: Props) {
   const balance = useQuery(api.gifts.myBalance, { tokenOverride: deviceId });
   const seats = useQuery(api.mics.state, { roomId });
   const members = useQuery(api.rooms.members, { roomId });
-  const sendGift = useMutation(api.gifts.send);
+  const sendBatch = useMutation(api.gifts.sendBatch);
 
   const [category, setCategory] = useState("all");
   const [selectedGiftId, setSelectedGiftId] = useState<Id<"gifts"> | null>(null);
@@ -114,15 +114,13 @@ export default function GiftSheet({ roomId, onClose }: Props) {
 
     setSending(true);
     try {
-      for (const userId of Array.from(selectedUserIds)) {
-        await sendGift({
-          roomId,
-          toUserId: userId,
-          giftId,
-          quantity: selectedQuantity,
-          tokenOverride: deviceId,
-        });
-      }
+      await sendBatch({
+        roomId,
+        toUserIds: Array.from(selectedUserIds),
+        giftId,
+        quantity: selectedQuantity,
+        tokenOverride: deviceId,
+      });
     } catch (e: any) {
       const msg = typeof e?.data === "object" ? (e.data?.message || e?.message) : e?.message;
       alert(msg || "فشل الإرسال");

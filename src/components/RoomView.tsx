@@ -14,6 +14,97 @@ import SettingsSheet from "./SettingsSheet";
 import GiftSheet from "./GiftSheet";
 import CompactChatInput from "./CompactChatInput";
 
+// [moorawi-batch] Flying particle data for batch gifts
+type FlyingTarget = {
+  userId: string;
+  targetX: number;
+  targetY: number;
+  spreadX: number;
+  spreadY: number;
+  isOnMic: boolean;
+  seatIndex?: number;
+};
+
+// [moorawi-batch] Limits to keep animation smooth on all devices
+const MAX_MIC_PARTICLES = 24;
+const MAX_LISTENER_PARTICLES = 8;
+
+// [moorawi-batch] Compute particle positions for batch gifts
+function calculateTargetCoords(
+  recipientIds: string[],
+  seats: any[] | undefined
+): {
+  particles: FlyingTarget[];
+  aggregateBadge: { count: number; x: number; y: number } | null;
+} {
+  if (!recipientIds.length) return { particles: [], aggregateBadge: null };
+
+  const cx = window.innerWidth / 2;
+  const cy = window.innerHeight / 2;
+
+  const micTargets: { userId: string; seatIndex: number }[] = [];
+  const listenerTargets: string[] = [];
+
+  for (const id of recipientIds) {
+    const seat = seats?.find((s: any) => s.userId === id);
+    if (seat) micTargets.push({ userId: id, seatIndex: seat.seatIndex });
+    else listenerTargets.push(id);
+  }
+
+  const particles: FlyingTarget[] = [];
+
+  // 1) Mic targets — one particle per seat
+  const visibleMicTargets = micTargets.slice(0, MAX_MIC_PARTICLES);
+  visibleMicTargets.forEach((t, idx) => {
+    let targetX = 0;
+    let targetY = 0;
+    const el = document.querySelector(`[data-mic-seat="${t.seatIndex}"]`);
+    if (el) {
+      const r = el.getBoundingClientRect();
+      targetX = r.left + r.width / 2 - cx;
+      targetY = r.top + r.height / 2 - cy;
+    }
+    const angle = (idx / Math.max(1, visibleMicTargets.length)) * 2 * Math.PI;
+    const spread = Math.min(40, 6 + visibleMicTargets.length * 2);
+    particles.push({
+      userId: t.userId,
+      targetX,
+      targetY,
+      spreadX: Math.cos(angle) * spread,
+      spreadY: Math.sin(angle) * spread,
+      isOnMic: true,
+      seatIndex: t.seatIndex,
+    });
+  });
+
+  // 2) Listener targets — random sample, fly up and fade
+  const sampledListeners = listenerTargets
+    .slice()
+    .sort(() => Math.random() - 0.5)
+    .slice(0, MAX_LISTENER_PARTICLES);
+
+  sampledListeners.forEach((id, idx) => {
+    const angle = (idx / Math.max(1, sampledListeners.length)) * 2 * Math.PI;
+    const spread = Math.min(40, 8 + sampledListeners.length * 3);
+    particles.push({
+      userId: `l_${id}_${idx}`,
+      targetX: (Math.random() - 0.5) * 120,
+      targetY: -cy + 140,
+      spreadX: Math.cos(angle) * spread,
+      spreadY: Math.sin(angle) * spread,
+      isOnMic: false,
+    });
+  });
+
+  // 3) Aggregate badge for hidden listeners
+  const hiddenCount = listenerTargets.length - sampledListeners.length;
+  const aggregateBadge = hiddenCount > 0
+    ? { count: hiddenCount, x: 0, y: -cy + 100 }
+    : null;
+
+  return { particles, aggregateBadge };
+}
+
 interface Props { roomId: Id<"rooms">; onLeave: () => void; }
 
 function bubbleClass(vip: number): string {
@@ -89,6 +180,10 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const targetCoordsRef = useRef<{x: number; y: number} | null>(null);
   const [comboOverlay, setComboOverlay] = useState<{gift: any; count: number; id: number} | null>(null);
   const comboOverlayTimerRef = useRef<any>(null);
+
+  // [moorawi-batch] Flying particles for batch gifts
+  const [flyingTargets, setFlyingTargets] = useState<FlyingTarget[]>([]);
+  const [aggregateBadge, setAggregateBadge] = useState<{ count: number; x: number; y: number } | null>(null);
 
   // [moorawi-fix] Track latest userId for cleanup on unmount
   const myUserIdRef = useRef<Id<"users"> | undefined>(undefined);
@@ -225,20 +320,31 @@ export default function RoomView({ roomId, onLeave }: Props) {
     const next = giftQueue[0];
     setGiftQueue((q) => q.slice(1));
 
-    // Snapshot: موضع المايك المستهدف
-    targetCoordsRef.current = null;
-    if (seats && next.toUserId) {
-      const seat = seats.find((s) => s.userId === next.toUserId);
-      if (seat) {
-        const el = document.querySelector(`[data-mic-seat="${seat.seatIndex}"]`);
-        if (el) {
-          const rect = el.getBoundingClientRect();
-          targetCoordsRef.current = {
-            x: rect.left + rect.width / 2 - window.innerWidth / 2,
-            y: rect.top + rect.height / 2 - window.innerHeight / 2,
-          };
-        }
-      }
+    // [moorawi-batch] حساب كل الجسيمات بناءً على قائمة المستقبلين
+    // batchTargets → هدية جماعية | toUserId → هدية فردية
+    const recipientIds: string[] = Array.isArray(next.batchTargets) && next.batchTargets.length > 0
+      ? next.batchTargets.map((t: any) => t.toUserId).filter(Boolean)
+      : (next.toUserId ? [next.toUserId] : []);
+
+    // ننتظر إطار واحد لضمان وجود عناصر data-mic-seat في DOM
+    requestAnimationFrame(() => {
+      const { particles, aggregateBadge: badge } = calculateTargetCoords(recipientIds, seats);
+      setFlyingTargets(particles);
+      setAggregateBadge(badge);
+    });
+
+    // نبضة المايك لاحقاً (بعد وصول الجسيمات)
+    if (recipientIds.length > 0 && next.mediaType !== "video") {
+      setTimeout(() => {
+        recipientIds.forEach((uid: string) => {
+          const seat = seats?.find((s: any) => s.userId === uid);
+          if (!seat) return;
+          const el = document.querySelector(`[data-mic-seat="${seat.seatIndex}"]`);
+          if (!el) return;
+          (el as HTMLElement).classList.add("mic-hit-anim");
+          setTimeout(() => (el as HTMLElement).classList.remove("mic-hit-anim"), 700);
+        });
+      }, 1600);
     }
 
     setActiveGift(next);
@@ -247,20 +353,22 @@ export default function RoomView({ roomId, onLeave }: Props) {
     setComboValue((next.quantity || 1) * (next.price ?? 0));
     setIsGlobalBanner(next.isGlobal && (next.price ?? 0) >= 30000);
 
-    // إخفاء الهدية
+    // إخفاء الهدية — مددنا الوقت لأنيميشن multiGiftFly (2.2s)
     if (next.mediaType !== "video") {
-      comboTimeoutRef.current = setTimeout(() => finishActiveGift(), 1800);
+      comboTimeoutRef.current = setTimeout(() => finishActiveGift(), 2400);
     } else {
       // مؤقت أمان للفيديو (12s) في حال فشل onEnded
       comboTimeoutRef.current = setTimeout(() => finishActiveGift(), 12000);
     }
-  }, [giftQueue, activeGift]);
+  }, [giftQueue, activeGift, seats]);
 
   // (mic target position now handled via targetCoordsRef in queue processor)
 
     const finishActiveGift = () => {
     setActiveGift(null);
     targetCoordsRef.current = null;
+    setFlyingTargets([]);
+    setAggregateBadge(null);
     setIsGlobalBanner(false);
     setComboCount(1);
     setTotalQuantity(0);
@@ -666,19 +774,47 @@ export default function RoomView({ roomId, onLeave }: Props) {
             </div>
           )}
 
-          {/* ============ MICRO GIFT (< 1000) — flies to mic ============ */}
+          {/* ============ MICRO GIFT (< 1000) — multi-particle flies to mics/listeners ============ */}
           {(activeGift.price ?? 0) < 1000 && activeGift.mediaUrl && (
-            <div
-              key={`${activeGift._id}_${comboCount}`}
-              className="fixed z-[75] pointer-events-none gift-fly-anim"
-              style={{
-                left: "50%",
-                top: "50%",
-                ["--target-x" as any]: targetCoordsRef.current ? `${targetCoordsRef.current.x}px` : "0px",
-                ["--target-y" as any]: targetCoordsRef.current ? `${targetCoordsRef.current.y}px` : "-20vh",
-              }}
-            >
-              <img src={activeGift.mediaUrl} alt="" className="w-24 h-24 object-contain drop-shadow-2xl" />
+            <div className="fixed inset-0 z-[75] pointer-events-none">
+              {flyingTargets.map((target, idx) => (
+                <div
+                  key={`${activeGift._id}_${target.userId}_${comboCount}_${idx}`}
+                  className="fixed pointer-events-none multi-gift-particle"
+                  style={{
+                    left: "50%",
+                    top: "50%",
+                    ["--spread-x" as any]: `${target.spreadX}px`,
+                    ["--spread-y" as any]: `${target.spreadY}px`,
+                    ["--target-x" as any]: `${target.targetX}px`,
+                    ["--target-y" as any]: `${target.targetY}px`,
+                  }}
+                >
+                  <img
+                    src={activeGift.mediaUrl}
+                    alt=""
+                    className={`${target.isOnMic ? "w-24 h-24" : "w-16 h-16"} object-contain drop-shadow-2xl`}
+                  />
+                </div>
+              ))}
+
+              {/* شارة تجميع المستمعين المخفيين */}
+              {aggregateBadge && (
+                <div
+                  className="fixed pointer-events-none aggregate-badge-anim"
+                  style={{
+                    left: "50%",
+                    top: "50%",
+                    transform: `translate(calc(-50% + ${aggregateBadge.x}px), calc(-50% + ${aggregateBadge.y}px))`,
+                  }}
+                >
+                  <div className="bg-gradient-to-r from-pink-500/90 to-purple-600/90 rounded-full px-3 py-1 shadow-2xl border border-white/30">
+                    <span className="text-white text-xs font-black">
+                      +{aggregateBadge.count} مستمع 🎁
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

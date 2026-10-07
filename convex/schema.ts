@@ -116,10 +116,12 @@ export default defineSchema({
     giftIcon: v.string(),
     quantity: v.number(),
     totalPrice: v.number(),
+    batchId: v.optional(v.string()),
   })
     .index("by_room", ["roomId"])
     .index("by_to", ["toUserId"])
-    .index("by_from", ["fromUserId"]),
+    .index("by_from", ["fromUserId"])
+    .index("by_batch", ["batchId"]),
 
   auditLogs: defineTable({
     adminId: v.id("users"),

@@ -175,6 +175,101 @@ export const send = mutation({
   },
 });
 
+// ============ إرسال هدية لعدة مستخدمين دفعة واحدة (Batch) ============
+export const sendBatch = mutation({
+  args: {
+    roomId: v.id("rooms"),
+    toUserIds: v.array(v.id("users")),
+    giftId: v.id("gifts"),
+    quantity: v.number(),
+    tokenOverride: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx, args.tokenOverride);
+
+    // تحققات الإدخال
+    if (!args.toUserIds.length) {
+      throw new ConvexError({ code: "BAD_REQUEST", message: "لم يتم اختيار أي مستلم" });
+    }
+    if (args.toUserIds.length > 500) {
+      throw new ConvexError({ code: "BAD_REQUEST", message: "عدد المستلمين كبير جداً (500 كحد أقصى)" });
+    }
+    if (args.quantity < 1 || args.quantity > 999) {
+      throw new ConvexError({ code: "BAD_REQUEST", message: "عدد غير صالح" });
+    }
+
+    const gift = await ctx.db.get("gifts", args.giftId);
+    if (!gift) throw new ConvexError({ code: "NOT_FOUND", message: "الهدية غير موجودة" });
+
+    // إزالة التكرار (حماية من إرسال نفس الـ ID مرتين)
+    const uniqueIds = Array.from(new Set(args.toUserIds));
+
+    // جلب جميع المستلمين دفعة واحدة
+    const targetDocs = await Promise.all(uniqueIds.map((id) => ctx.db.get("users", id)));
+    const targets = targetDocs.filter((t): t is NonNullable<typeof t> => t !== null);
+
+    if (targets.length === 0) {
+      throw new ConvexError({ code: "NOT_FOUND", message: "المستلمون غير موجودين" });
+    }
+
+    const totalPrice = gift.price * args.quantity * targets.length;
+    const myCoins = user.coins ?? 0;
+    if (myCoins < totalPrice) {
+      throw new ConvexError({ code: "BAD_REQUEST", message: "رصيدك غير كافٍ" });
+    }
+
+    // خصم مرة واحدة من المرسل
+    await ctx.db.patch("users", user._id, {
+      coins: myCoins - totalPrice,
+      totalSent: (user.totalSent ?? 0) + totalPrice,
+    });
+
+    // batchId موحد لكل معاملات الدفعة (للتجميع في الواجهة)
+    const batchId = `b_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+
+    // لكل مستلم: زيادة charms + totalReceived + insert transaction
+    for (const target of targets) {
+      await ctx.db.patch("users", target._id, {
+        charms: (target.charms ?? 0) + args.quantity,
+        totalReceived: (target.totalReceived ?? 0) + gift.price * args.quantity,
+      });
+      await ctx.db.insert("giftTransactions", {
+        roomId: args.roomId,
+        fromUserId: user._id,
+        fromName: user.name ?? "ضيف",
+        toUserId: target._id,
+        toName: target.name ?? "ضيف",
+        giftId: gift._id,
+        giftName: gift.name,
+        giftIcon: "🎁",
+        quantity: args.quantity,
+        totalPrice: gift.price * args.quantity,
+        batchId,
+      });
+    }
+
+    // رسالة واحدة فقط (بدل N)
+    const summary = targets.length === 1
+      ? `إلى ${targets[0]?.name ?? "ضيف"}`
+      : `إلى ${targets.length} مستخدمين`;
+    await ctx.db.insert("messages", {
+      roomId: args.roomId,
+      senderId: user._id,
+      senderName: user.name ?? "ضيف",
+      text: `${user.name ?? "ضيف"} أرسل ${gift.name} × ${args.quantity} ${summary}`,
+      system: true,
+    });
+
+    return {
+      success: true,
+      batchId,
+      count: targets.length,
+      totalSpent: totalPrice,
+      remaining: myCoins - totalPrice,
+    };
+  },
+});
+
 // ============ LEADERBOARD ============
 export const roomLeaderboard = query({
   args: { roomId: v.id("rooms") },
@@ -243,6 +338,26 @@ export const latestGiftFull = query({
       fromUser?.avatarId ? ctx.storage.getUrl(fromUser.avatarId) : Promise.resolve(null),
       toUser?.avatarId ? ctx.storage.getUrl(toUser.avatarId) : Promise.resolve(null),
     ]);
+    // ============ دعم الدفعات (batch): جلب كل الأهداف ============
+    let batchTargets: Array<{ toUserId: string; toName: string; toAvatar: string | null }> = [];
+    if (recent.batchId) {
+      const batchTxs = await ctx.db
+        .query("giftTransactions")
+        .withIndex("by_batch", (q) => q.eq("batchId", recent.batchId))
+        .take(500);
+      batchTargets = await Promise.all(
+        batchTxs.map(async (t) => {
+          const u = await ctx.db.get("users", t.toUserId);
+          const av = u?.avatarId ? await ctx.storage.getUrl(u.avatarId) : null;
+          return {
+            toUserId: t.toUserId as string,
+            toName: t.toName,
+            toAvatar: av,
+          };
+        })
+      );
+    }
+
     return {
       _id: recent._id,
       giftId: recent.giftId,
@@ -261,6 +376,8 @@ export const latestGiftFull = query({
       isGlobal: gift.isGlobal ?? false,
       isRelationship: gift.isRelationship ?? false,
       createdAt: recent._creationTime,
+      batchId: recent.batchId ?? null,
+      batchTargets,
     };
   },
 });
