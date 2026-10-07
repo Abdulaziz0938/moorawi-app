@@ -188,6 +188,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const [showSettings, setShowSettings] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [miniProfileUserId, setMiniProfileUserId] = useState<string | null>(null);
+  const [mySeatIndexForMiniProfile, setMySeatIndexForMiniProfile] = useState<number | null>(null);
   const [showGifts, setShowGifts] = useState(false);
   const [showChatInput, setShowChatInput] = useState(false);
   const [openSeatMenu, setOpenSeatMenu] = useState<number | null>(null);
@@ -461,8 +462,33 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const gridHeight = layoutRows.length * 80 + 12;
 
   const handleSeatClick = (seatIndex: number, userId: string | undefined) => {
-    if (userId) setOpenSeatMenu(seatIndex);
-    else takeSeat({ roomId, seatIndex, tokenOverride: deviceId }).catch((e: any) => alert(e?.message || "خطأ"));
+    const seat = seats?.find((s) => s.seatIndex === seatIndex);
+    const isMine = userId && myInfo?.userId && userId === myInfo.userId;
+
+    // 1) مايك فاضي
+    if (!userId) {
+      if (seat?.locked) {
+        alert("المايك مقفل");
+        return;
+      }
+      if (isOwnerOrMod) {
+        setOpenSeatMenu(seatIndex);
+      } else {
+        takeSeat({ roomId, seatIndex, tokenOverride: deviceId }).catch((e: any) => alert(e?.message || "خطأ"));
+      }
+      return;
+    }
+
+    // 2) مايكي أنا → Mini Profile (isMySeat)
+    if (isMine) {
+      setMiniProfileUserId(userId!);
+      setMySeatIndexForMiniProfile(seatIndex);
+      return;
+    }
+
+    // 3) شخص آخر → Mini Profile
+    setMiniProfileUserId(userId);
+    setMySeatIndexForMiniProfile(null);
   };
 
   const handleToggleMute = () => {
@@ -946,14 +972,46 @@ export default function RoomView({ roomId, onLeave }: Props) {
           userId={miniProfileUserId}
           roomId={roomId}
           currentUserRole={myInfo?.role as any}
+          isMySeat={mySeatIndexForMiniProfile !== null}
+          isMySeatMuted={mySeatIndexForMiniProfile !== null ? !!seats?.find((s: any) => s.seatIndex === mySeatIndexForMiniProfile)?.muted : false}
           isTargetOnMic={!!seats?.find((s: any) => s.userId === miniProfileUserId)}
-          onClose={() => setMiniProfileUserId(null)}
+          onClose={() => { setMiniProfileUserId(null); setMySeatIndexForMiniProfile(null); }}
           onOpenGift={() => { /* TODO: open gift to this user */ }}
           onKick={() => alert("قريباً - طرد")}
-          onMute={() => alert("قريباً - كتم")}
-          onRemoveFromSeat={() => alert("قريباً - إنزال")}
+          onMute={() => {
+            const targetSeat = mySeatIndexForMiniProfile !== null
+              ? mySeatIndexForMiniProfile
+              : seats?.find((s: any) => s.userId === miniProfileUserId)?.seatIndex;
+            if (targetSeat === undefined || targetSeat === null) return;
+            toggleMuteSeat({ roomId, seatIndex: targetSeat, tokenOverride: deviceId }).then(() => {
+              setMiniProfileUserId(null);
+              setMySeatIndexForMiniProfile(null);
+            }).catch(() => {});
+          }}
+          onRemoveFromSeat={() => {
+            const targetSeat = mySeatIndexForMiniProfile !== null
+              ? mySeatIndexForMiniProfile
+              : seats?.find((s: any) => s.userId === miniProfileUserId)?.seatIndex;
+            if (targetSeat === undefined || targetSeat === null) return;
+            // إذا كان مايكي أنا → leaveSeat
+            if (mySeatIndexForMiniProfile !== null) {
+              leaveSeat({ roomId, tokenOverride: deviceId })
+                .then(() => agoraManager.unpublishMicrophone())
+                .then(() => { setMiniProfileUserId(null); setMySeatIndexForMiniProfile(null); })
+                .catch(() => {});
+            } else {
+              // إنزال شخص آخر — يحتاج backend mutation جديد
+              alert("سيُفعّل بعد إضافة backend mutation");
+            }
+          }}
           onPromote={() => alert("قريباً - ترقية")}
-          onInviteToMic={() => alert("قريباً - دعوة")}
+          onInviteToMic={() => {
+            const targetSeat = seats?.find((s: any) => s.userId === miniProfileUserId)?.seatIndex;
+            if (targetSeat !== undefined) {
+              setInviteSeatIndex(targetSeat);
+              setMiniProfileUserId(null);
+            }
+          }}
         />
       )}
 

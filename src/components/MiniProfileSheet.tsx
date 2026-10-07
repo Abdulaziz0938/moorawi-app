@@ -1,13 +1,17 @@
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
-import { X, Gift, MessageCircle, UserPlus, Mic, MicOff, ArrowDown, Ban, Crown, Loader2 } from "lucide-react";
+import {
+  X, Gift, MessageCircle, UserPlus, Mic, MicOff, ArrowDown,
+  Ban, Crown, Loader2, UserMinus, VolumeX, Volume2,
+} from "lucide-react";
 
 interface Props {
   userId: string;
   roomId?: Id<"rooms">;
   currentUserRole?: "owner" | "moderator" | "speaker" | "listener";
-  isCurrentUserOnMic?: boolean;
+  isMySeat?: boolean;
+  isMySeatMuted?: boolean;
   isTargetOnMic?: boolean;
   onClose: () => void;
   onOpenGift?: () => void;
@@ -24,34 +28,59 @@ function formatNumber(n: number): string {
   return n.toString();
 }
 
-// خلفيات حسب VIP
 const VIP_BG: Record<number, string> = {
-  0: "from-slate-700 via-slate-800 to-slate-900",
-  1: "from-sky-600 via-sky-700 to-sky-900",
-  2: "from-emerald-600 via-emerald-700 to-emerald-900",
-  3: "from-purple-600 via-purple-700 to-purple-900",
-  4: "from-pink-600 via-pink-700 to-pink-900",
-  5: "from-red-600 via-red-700 to-red-900",
-  6: "from-orange-500 via-orange-600 to-orange-800",
-  7: "from-yellow-500 via-amber-600 to-yellow-700",
+  0: "from-slate-700/70 via-slate-800/70 to-slate-900/70",
+  1: "from-sky-600/70 via-sky-700/70 to-sky-900/70",
+  2: "from-emerald-600/70 via-emerald-700/70 to-emerald-900/70",
+  3: "from-purple-600/70 via-purple-700/70 to-purple-900/70",
+  4: "from-pink-600/70 via-pink-700/70 to-pink-900/70",
+  5: "from-red-600/70 via-red-700/70 to-red-900/70",
+  6: "from-orange-500/70 via-orange-600/70 to-orange-800/70",
+  7: "from-yellow-500/70 via-amber-600/70 to-yellow-700/70",
 };
 
 const VIP_LABEL: Record<number, string> = {
-  0: "",
-  1: "VIP 1",
-  2: "VIP 2",
-  3: "VIP 3",
-  4: "VIP 4",
-  5: "VIP 5",
-  6: "VIP 6",
-  7: "VIP 7",
+  0: "", 1: "VIP 1", 2: "VIP 2", 3: "VIP 3", 4: "VIP 4", 5: "VIP 5", 6: "VIP 6", 7: "VIP 7",
 };
+
+// Reusable IconButton
+function IconButton({
+  icon,
+  label,
+  onClick,
+  color = "default",
+}: {
+  icon: React.ReactNode;
+  label: string;
+  onClick?: () => void;
+  color?: "default" | "primary" | "danger" | "warning" | "success" | "gold";
+}) {
+  const colorMap = {
+    default: "bg-white/15 hover:bg-white/25 text-white",
+    primary: "bg-gradient-to-br from-pink-500 to-purple-600 hover:opacity-90 text-white",
+    danger: "bg-red-500/90 hover:bg-red-500 text-white",
+    warning: "bg-amber-500/90 hover:bg-amber-500 text-white",
+    success: "bg-emerald-500/90 hover:bg-emerald-500 text-white",
+    gold: "bg-gradient-to-br from-yellow-400 to-amber-500 hover:opacity-90 text-white",
+  };
+
+  return (
+    <button
+      onClick={onClick}
+      className={`${colorMap[color]} rounded-2xl py-3 flex flex-col items-center justify-center gap-1.5 transition-all active:scale-95 backdrop-blur-md border border-white/20`}
+    >
+      {icon}
+      <span className="text-[10px] font-bold">{label}</span>
+    </button>
+  );
+}
 
 export default function MiniProfileSheet({
   userId,
   roomId,
   currentUserRole,
-  isCurrentUserOnMic,
+  isMySeat,
+  isMySeatMuted,
   isTargetOnMic,
   onClose,
   onOpenGift,
@@ -66,8 +95,8 @@ export default function MiniProfileSheet({
   if (profile === undefined) {
     return (
       <div className="fixed inset-0 z-[110] flex items-end" dir="rtl">
-        <div className="absolute inset-0 bg-black/70" onClick={onClose} />
-        <div className="relative w-full max-w-md mx-auto bg-slate-900 rounded-t-3xl p-8 flex items-center justify-center">
+        <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+        <div className="relative w-full max-w-md mx-auto bg-white/10 backdrop-blur-2xl rounded-t-3xl p-8 flex items-center justify-center border-t border-white/20">
           <Loader2 className="animate-spin text-white" size={32} />
         </div>
       </div>
@@ -77,8 +106,8 @@ export default function MiniProfileSheet({
   if (profile === null) {
     return (
       <div className="fixed inset-0 z-[110] flex items-end" dir="rtl">
-        <div className="absolute inset-0 bg-black/70" onClick={onClose} />
-        <div className="relative w-full max-w-md mx-auto bg-slate-900 rounded-t-3xl p-8 text-center">
+        <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+        <div className="relative w-full max-w-md mx-auto bg-white/10 backdrop-blur-2xl rounded-t-3xl p-8 text-center border-t border-white/20">
           <p className="text-white">المستخدم غير موجود</p>
           <button onClick={onClose} className="mt-4 text-white/60">إغلاق</button>
         </div>
@@ -92,183 +121,192 @@ export default function MiniProfileSheet({
 
   const canKick = currentUserRole === "owner" || currentUserRole === "moderator";
   const canPromote = currentUserRole === "owner";
-  const canInvite = !isTargetOnMic && isCurrentUserOnMic === undefined ? true : !isTargetOnMic;
 
   return (
     <div className="fixed inset-0 z-[110] flex items-end" dir="rtl">
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/70" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
 
-      {/* Sheet */}
-      <div className={`relative w-full max-w-md mx-auto bg-gradient-to-b ${bgGradient} rounded-t-3xl max-h-[90vh] overflow-hidden flex flex-col`}>
-        {/* Handle + close */}
-        <div className="flex items-center justify-between px-4 pt-3 pb-2">
-          <button onClick={onClose} className="w-9 h-9 rounded-full bg-white/15 backdrop-blur flex items-center justify-center text-white hover:bg-white/25">
-            <X size={18} />
-          </button>
-          {vipLabel && (
-            <span className="text-[11px] font-black text-yellow-300 bg-black/30 px-2 py-0.5 rounded-full">
-              {vipLabel}
-            </span>
-          )}
-        </div>
+      <div className="relative w-full max-w-md mx-auto rounded-t-3xl max-h-[92vh] overflow-hidden flex flex-col">
+        {/* Glass background layers */}
+        <div className={`absolute inset-0 bg-gradient-to-b ${bgGradient}`} />
+        <div className="absolute inset-0 bg-black/30 backdrop-blur-2xl" />
+        <div className="absolute inset-x-0 top-0 h-px bg-white/40" />
 
-        {/* Avatar + Name */}
-        <div className="flex flex-col items-center px-4 pb-4">
-          <div className="w-24 h-24 rounded-full overflow-hidden ring-4 ring-white/50 shadow-2xl bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white font-black text-3xl">
-            {profile.avatarUrl ? (
-              <img src={profile.avatarUrl} alt="" className="w-full h-full object-cover" />
-            ) : (
-              <span>{profile.name[0] || "?"}</span>
-            )}
-          </div>
-
-          <h3 className="text-white text-lg font-black mt-3 truncate max-w-full">{profile.name}</h3>
-          <div className="flex items-center gap-2 mt-1">
-            {profile.userNumber !== null && (
-              <span className="text-white/70 text-xs">ID:{profile.userNumber}</span>
-            )}
-            {profile.isAdmin && (
-              <span className="text-[10px] font-black bg-red-500 text-white px-2 py-0.5 rounded-full">
-                ADMIN
-              </span>
-            )}
-            {profile.banned && (
-              <span className="text-[10px] font-black bg-gray-900 text-white px-2 py-0.5 rounded-full">
-                BANNED
+        {/* Content */}
+        <div className="relative z-10 flex flex-col max-h-[92vh] overflow-y-auto">
+          {/* Header */}
+          <div className="flex items-center justify-between px-4 pt-3 pb-2">
+            <button onClick={onClose} className="w-9 h-9 rounded-full bg-white/15 backdrop-blur border border-white/20 flex items-center justify-center text-white hover:bg-white/25 transition">
+              <X size={18} />
+            </button>
+            {vipLabel && (
+              <span className="text-[11px] font-black text-yellow-300 bg-black/30 backdrop-blur px-3 py-1 rounded-full border border-yellow-300/30">
+                {vipLabel}
               </span>
             )}
           </div>
 
-          {profile.bio && (
-            <p className="text-white/80 text-xs mt-2 text-center max-w-[90%] line-clamp-2">{profile.bio}</p>
-          )}
+          {/* Avatar + Name */}
+          <div className="flex flex-col items-center px-4 pb-4">
+            <div className="w-24 h-24 rounded-full overflow-hidden ring-4 ring-white/40 shadow-2xl bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white font-black text-3xl">
+              {profile.avatarUrl ? (
+                <img src={profile.avatarUrl} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <span>{profile.name[0] || "?"}</span>
+              )}
+            </div>
 
-          {/* Info badges: age, gender, country */}
-          <div className="flex items-center gap-2 mt-2">
-            {profile.age && (
-              <span className="text-[10px] bg-white/20 backdrop-blur text-white px-2 py-0.5 rounded-full">
-                {profile.age} سنة
-              </span>
-            )}
-            {profile.gender && (
-              <span className="text-[10px] bg-white/20 backdrop-blur text-white px-2 py-0.5 rounded-full">
-                {profile.gender === "male" ? "♂ ذكر" : profile.gender === "female" ? "♀ أنثى" : "آخر"}
-              </span>
-            )}
-            {profile.country && (
-              <span className="text-[10px] bg-white/20 backdrop-blur text-white px-2 py-0.5 rounded-full">
-                {profile.country}
-              </span>
-            )}
+            <h3 className="text-white text-lg font-black mt-3 truncate max-w-full drop-shadow">
+              {profile.name}
+            </h3>
+
+            <div className="flex items-center gap-2 mt-1">
+              {profile.userNumber !== null && (
+                <span className="text-white/80 text-xs">ID:{profile.userNumber}</span>
+              )}
+              {profile.isAdmin && (
+                <span className="text-[10px] font-black bg-red-500 text-white px-2 py-0.5 rounded-full">
+                  ADMIN
+                </span>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2 mt-2 flex-wrap justify-center">
+              {profile.age && (
+                <span className="text-[10px] bg-white/15 backdrop-blur border border-white/20 text-white px-2 py-0.5 rounded-full">
+                  {profile.age} سنة
+                </span>
+              )}
+              {profile.gender && (
+                <span className="text-[10px] bg-white/15 backdrop-blur border border-white/20 text-white px-2 py-0.5 rounded-full">
+                  {profile.gender === "male" ? "♂ ذكر" : profile.gender === "female" ? "♀ أنثى" : "آخر"}
+                </span>
+              )}
+              {profile.country && (
+                <span className="text-[10px] bg-white/15 backdrop-blur border border-white/20 text-white px-2 py-0.5 rounded-full">
+                  {profile.country}
+                </span>
+              )}
+            </div>
           </div>
-        </div>
 
-        {/* Stats */}
-        <div className="mx-4 mb-3 bg-black/25 backdrop-blur rounded-2xl p-3 grid grid-cols-3 gap-2 text-center">
-          <div>
-            <p className="text-yellow-300 text-lg font-black">💎</p>
-            <p className="text-white text-xs font-bold">{formatNumber(profile.totalSent)}</p>
-            <p className="text-white/60 text-[10px]">ثروة</p>
+          {/* Stats */}
+          <div className="mx-4 mb-3 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-3 grid grid-cols-3 gap-2 text-center">
+            <div>
+              <p className="text-lg">💎</p>
+              <p className="text-white text-xs font-bold">{formatNumber(profile.totalSent)}</p>
+              <p className="text-white/60 text-[10px]">ثروة</p>
+            </div>
+            <div>
+              <p className="text-lg">✨</p>
+              <p className="text-white text-xs font-bold">{formatNumber(profile.totalReceived)}</p>
+              <p className="text-white/60 text-[10px]">جاذبية</p>
+            </div>
+            <div>
+              <p className="text-lg">❤️</p>
+              <p className="text-white text-xs font-bold">{formatNumber(profile.charms)}</p>
+              <p className="text-white/60 text-[10px]">شارات</p>
+            </div>
           </div>
-          <div>
-            <p className="text-pink-300 text-lg font-black">✨</p>
-            <p className="text-white text-xs font-bold">{formatNumber(profile.totalReceived)}</p>
-            <p className="text-white/60 text-[10px]">جاذبية</p>
-          </div>
-          <div>
-            <p className="text-red-300 text-lg font-black">❤️</p>
-            <p className="text-white text-xs font-bold">{formatNumber(profile.charms)}</p>
-            <p className="text-white/60 text-[10px]">شارات</p>
-          </div>
-        </div>
 
-        {/* Primary actions */}
-        <div className="mx-4 mb-3 grid grid-cols-3 gap-2">
-          <button
-            onClick={onOpenGift}
-            className="bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-xl py-2.5 flex flex-col items-center gap-1 hover:opacity-90 transition"
-          >
-            <Gift size={18} />
-            <span className="text-[10px] font-bold">هدية</span>
-          </button>
-          <button
-            onClick={() => alert("قريباً")}
-            className="bg-white/15 backdrop-blur text-white rounded-xl py-2.5 flex flex-col items-center gap-1 hover:bg-white/25 transition"
-          >
-            <MessageCircle size={18} />
-            <span className="text-[10px] font-bold">محادثة</span>
-          </button>
-          <button
-            onClick={() => alert("قريباً")}
-            className="bg-white/15 backdrop-blur text-white rounded-xl py-2.5 flex flex-col items-center gap-1 hover:bg-white/25 transition"
-          >
-            <UserPlus size={18} />
-            <span className="text-[10px] font-bold">متابعة</span>
-          </button>
-        </div>
-
-        {/* Room actions (contextual) */}
-        {roomId && (
-          <div className="mx-4 mb-4 grid grid-cols-2 gap-2">
-            {/* Invite to mic (anyone, if target not on mic) */}
-            {!isTargetOnMic && (
-              <button
-                onClick={onInviteToMic}
-                className="bg-emerald-500/90 text-white rounded-xl py-2.5 flex items-center justify-center gap-2 hover:bg-emerald-500 transition col-span-2"
-              >
-                <Mic size={16} />
-                <span className="text-xs font-bold">دعوة للمايك</span>
-              </button>
-            )}
-
-            {/* Mute (owner + mod, if target on mic) */}
-            {canKick && isTargetOnMic && (
-              <button
+          {/* === VARIANT 1: My Seat — Only 2 buttons === */}
+          {isMySeat ? (
+            <div className="mx-4 mb-4 grid grid-cols-2 gap-3">
+              <IconButton
+                icon={<MicOff size={28} />}
+                label={isMySeatMuted ? "إلغاء الكتم" : "كتم"}
+                color="warning"
                 onClick={onMute}
-                className="bg-amber-500/90 text-white rounded-xl py-2.5 flex items-center justify-center gap-2 hover:bg-amber-500 transition"
-              >
-                <MicOff size={16} />
-                <span className="text-xs font-bold">كتم</span>
-              </button>
-            )}
-
-            {/* Remove from seat (owner + mod, if target on mic) */}
-            {canKick && isTargetOnMic && (
-              <button
+              />
+              <IconButton
+                icon={<ArrowDown size={28} />}
+                label="إنزال"
+                color="danger"
                 onClick={onRemoveFromSeat}
-                className="bg-orange-600/90 text-white rounded-xl py-2.5 flex items-center justify-center gap-2 hover:bg-orange-600 transition"
-              >
-                <ArrowDown size={16} />
-                <span className="text-xs font-bold">إنزال</span>
-              </button>
-            )}
+              />
+            </div>
+          ) : (
+            <>
+              {/* === VARIANT 2: Other User — Full Actions === */}
+              <div className="mx-4 mb-3 grid grid-cols-3 gap-2">
+                <IconButton
+                  icon={<Gift size={22} />}
+                  label="هدية"
+                  color="primary"
+                  onClick={onOpenGift}
+                />
+                <IconButton
+                  icon={<MessageCircle size={22} />}
+                  label="محادثة"
+                  onClick={() => alert("قريباً")}
+                />
+                <IconButton
+                  icon={<UserPlus size={22} />}
+                  label="متابعة"
+                  onClick={() => alert("قريباً")}
+                />
+              </div>
 
-            {/* Kick (owner + mod) */}
-            {canKick && (
-              <button
-                onClick={onKick}
-                className="bg-red-600/90 text-white rounded-xl py-2.5 flex items-center justify-center gap-2 hover:bg-red-600 transition col-span-2"
-              >
-                <Ban size={16} />
-                <span className="text-xs font-bold">طرد من الغرفة</span>
-              </button>
-            )}
+              {/* Room actions */}
+              {roomId && (
+                <div className="mx-4 mb-4 grid grid-cols-2 gap-2">
+                  {!isTargetOnMic && (
+                    <div className="col-span-2">
+                      <IconButton
+                        icon={<Mic size={22} />}
+                        label="دعوة للمايك"
+                        color="success"
+                        onClick={onInviteToMic}
+                      />
+                    </div>
+                  )}
 
-            {/* Promote (owner only) */}
-            {canPromote && (
-              <button
-                onClick={onPromote}
-                className="bg-gradient-to-r from-yellow-400 to-amber-500 text-white rounded-xl py-2.5 flex items-center justify-center gap-2 hover:opacity-90 transition col-span-2"
-              >
-                <Crown size={16} />
-                <span className="text-xs font-bold">ترقية إلى مشرف</span>
-              </button>
-            )}
-          </div>
-        )}
+                  {canKick && isTargetOnMic && (
+                    <IconButton
+                      icon={<VolumeX size={22} />}
+                      label="كتم"
+                      color="warning"
+                      onClick={onMute}
+                    />
+                  )}
 
-        <div className="h-6" />
+                  {canKick && isTargetOnMic && (
+                    <IconButton
+                      icon={<ArrowDown size={22} />}
+                      label="إنزال"
+                      color="danger"
+                      onClick={onRemoveFromSeat}
+                    />
+                  )}
+
+                  {canKick && (
+                    <div className="col-span-2">
+                      <IconButton
+                        icon={<Ban size={22} />}
+                        label="طرد من الغرفة"
+                        color="danger"
+                        onClick={onKick}
+                      />
+                    </div>
+                  )}
+
+                  {canPromote && (
+                    <div className="col-span-2">
+                      <IconButton
+                        icon={<Crown size={22} />}
+                        label="ترقية إلى مشرف"
+                        color="gold"
+                        onClick={onPromote}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+
+          <div className="h-6" />
+        </div>
       </div>
     </div>
   );
