@@ -28,6 +28,15 @@ type FlyingTarget = {
 // [moorawi-batch] Limits to keep animation smooth on all devices
 const MAX_MIC_PARTICLES = 24;
 const MAX_LISTENER_PARTICLES = 8;
+// [moorawi-waterfall] Max stacked waves during combo (prevents runaway)
+const MAX_STACKED_WAVES = 12;
+
+// [moorawi-waterfall] A single combo wave (part of the waterfall)
+type StackedWave = {
+  id: number;
+  particles: FlyingTarget[];
+  gift: any;
+};
 
 // [moorawi-batch] Compute particle positions for batch gifts
 function calculateTargetCoords(
@@ -185,6 +194,9 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const [flyingTargets, setFlyingTargets] = useState<FlyingTarget[]>([]);
   const [aggregateBadge, setAggregateBadge] = useState<{ count: number; x: number; y: number } | null>(null);
 
+  // [moorawi-waterfall] Combo stacked waves (شلال)
+  const [stackedWaves, setStackedWaves] = useState<StackedWave[]>([]);
+
   // [moorawi-fix] Track latest userId for cleanup on unmount
   const myUserIdRef = useRef<Id<"users"> | undefined>(undefined);
   useEffect(() => { myUserIdRef.current = myInfo?.userId; }, [myInfo?.userId]);
@@ -193,6 +205,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
   useEffect(() => {
     setActiveGift(null);
     setGiftQueue([]);
+    setStackedWaves([]);
     setComboCount(1);
     setTotalQuantity(0);
     setComboValue(0);
@@ -281,6 +294,29 @@ export default function RoomView({ roomId, onLeave }: Props) {
       setComboValue((v) => v + (latestGift.quantity || 1) * (latestGift.price ?? 0));
       setShowComboPulse(true);
       setTimeout(() => setShowComboPulse(false), 350);
+
+      // [moorawi-waterfall] أطلق موجة جديدة للشلال
+      if ((latestGift.price ?? 0) < 1000 && latestGift.mediaUrl) {
+        const recipientIds: string[] = Array.isArray(latestGift.batchTargets) && latestGift.batchTargets.length > 0
+          ? latestGift.batchTargets.map((t: any) => t.toUserId).filter(Boolean)
+          : (latestGift.toUserId ? [latestGift.toUserId] : []);
+
+        if (recipientIds.length > 0) {
+          const waveId = Date.now() + Math.random();
+          const { particles } = calculateTargetCoords(recipientIds, seats);
+          const waveGift = latestGift;
+
+          setStackedWaves((w) => {
+            const next = [...w, { id: waveId, particles, gift: waveGift }];
+            return next.length > MAX_STACKED_WAVES ? next.slice(-MAX_STACKED_WAVES) : next;
+          });
+
+          setTimeout(() => {
+            setStackedWaves((w) => w.filter((x) => x.id !== waveId));
+          }, 2500);
+        }
+      }
+
       if (comboTimeoutRef.current) clearTimeout(comboTimeoutRef.current);
       comboTimeoutRef.current = setTimeout(() => finishActiveGift(), 3000);
       lastGiftIdRef.current = latestGift._id;
@@ -814,6 +850,34 @@ export default function RoomView({ roomId, onLeave }: Props) {
                     </span>
                   </div>
                 </div>
+              )}
+            </div>
+          )}
+
+          {/* ============ [moorawi-waterfall] STACKED COMBO WAVES ============ */}
+          {stackedWaves.length > 0 && (
+            <div className="fixed inset-0 z-[74] pointer-events-none">
+              {stackedWaves.map((wave) =>
+                wave.particles.map((target, idx) => (
+                  <div
+                    key={`wave_${wave.id}_${target.userId}_${idx}`}
+                    className="fixed pointer-events-none multi-gift-particle"
+                    style={{
+                      left: "50%",
+                      top: "50%",
+                      ["--spread-x" as any]: `${target.spreadX}px`,
+                      ["--spread-y" as any]: `${target.spreadY}px`,
+                      ["--target-x" as any]: `${target.targetX}px`,
+                      ["--target-y" as any]: `${target.targetY}px`,
+                    }}
+                  >
+                    <img
+                      src={wave.gift.mediaUrl}
+                      alt=""
+                      className={`${target.isOnMic ? "w-24 h-24" : "w-16 h-16"} object-contain drop-shadow-2xl`}
+                    />
+                  </div>
+                ))
               )}
             </div>
           )}
