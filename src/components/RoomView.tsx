@@ -23,11 +23,13 @@ type FlyingTarget = {
   spreadY: number;
   isOnMic: boolean;
   seatIndex?: number;
+  delay?: number;
 };
 
 // [moorawi-batch] Limits to keep animation smooth on all devices
 const MAX_MIC_PARTICLES = 24;
 const MAX_LISTENER_PARTICLES = 8;
+const MAX_TOTAL_PARTICLES = 80;
 // [moorawi-waterfall] Max stacked waves during combo (prevents runaway)
 const MAX_STACKED_WAVES = 12;
 
@@ -41,7 +43,8 @@ type StackedWave = {
 // [moorawi-batch] Compute particle positions for batch gifts
 function calculateTargetCoords(
   recipientIds: string[],
-  seats: any[] | undefined
+  seats: any[] | undefined,
+  quantity: number = 1
 ): {
   particles: FlyingTarget[];
   aggregateBadge: { count: number; x: number; y: number } | null;
@@ -60,10 +63,21 @@ function calculateTargetCoords(
     else listenerTargets.push(id);
   }
 
+  const visibleMicTargets = micTargets.slice(0, MAX_MIC_PARTICLES);
+  const sampledListeners = listenerTargets
+    .slice()
+    .sort(() => Math.random() - 0.5)
+    .slice(0, MAX_LISTENER_PARTICLES);
+
+  // [moorawi-waterfall] حساب عدد الجسيمات لكل مستلم (بسقف إجمالي 80)
+  const visibleCount = visibleMicTargets.length + sampledListeners.length;
+  const particlesPerRecipient = visibleCount > 0
+    ? Math.max(1, Math.min(quantity, Math.floor(MAX_TOTAL_PARTICLES / visibleCount)))
+    : 1;
+
   const particles: FlyingTarget[] = [];
 
-  // 1) Mic targets — one particle per seat
-  const visibleMicTargets = micTargets.slice(0, MAX_MIC_PARTICLES);
+  // 1) Mic targets — شلال من الجسيمات لكل مايك
   visibleMicTargets.forEach((t, idx) => {
     let targetX = 0;
     let targetY = 0;
@@ -75,37 +89,39 @@ function calculateTargetCoords(
     }
     const angle = (idx / Math.max(1, visibleMicTargets.length)) * 2 * Math.PI;
     const spread = Math.min(40, 6 + visibleMicTargets.length * 2);
-    particles.push({
-      userId: t.userId,
-      targetX,
-      targetY,
-      spreadX: Math.cos(angle) * spread,
-      spreadY: Math.sin(angle) * spread,
-      isOnMic: true,
-      seatIndex: t.seatIndex,
-    });
+
+    for (let k = 0; k < particlesPerRecipient; k++) {
+      particles.push({
+        userId: `${t.userId}_k${k}`,
+        targetX,
+        targetY,
+        spreadX: Math.cos(angle) * spread + (Math.random() - 0.5) * 10,
+        spreadY: Math.sin(angle) * spread + (Math.random() - 0.5) * 10,
+        isOnMic: true,
+        seatIndex: t.seatIndex,
+        delay: k * 90,
+      });
+    }
   });
 
-  // 2) Listener targets — random sample, fly up and fade
-  const sampledListeners = listenerTargets
-    .slice()
-    .sort(() => Math.random() - 0.5)
-    .slice(0, MAX_LISTENER_PARTICLES);
-
+  // 2) Listener targets — شلال صاعد للأعلى
   sampledListeners.forEach((id, idx) => {
     const angle = (idx / Math.max(1, sampledListeners.length)) * 2 * Math.PI;
     const spread = Math.min(40, 8 + sampledListeners.length * 3);
-    particles.push({
-      userId: `l_${id}_${idx}`,
-      targetX: (Math.random() - 0.5) * 120,
-      targetY: -cy + 140,
-      spreadX: Math.cos(angle) * spread,
-      spreadY: Math.sin(angle) * spread,
-      isOnMic: false,
-    });
+
+    for (let k = 0; k < particlesPerRecipient; k++) {
+      particles.push({
+        userId: `l_${id}_${idx}_k${k}`,
+        targetX: (Math.random() - 0.5) * 120,
+        targetY: -cy + 140,
+        spreadX: Math.cos(angle) * spread + (Math.random() - 0.5) * 10,
+        spreadY: Math.sin(angle) * spread + (Math.random() - 0.5) * 10,
+        isOnMic: false,
+        delay: k * 90,
+      });
+    }
   });
 
-  // 3) Aggregate badge for hidden listeners
   const hiddenCount = listenerTargets.length - sampledListeners.length;
   const aggregateBadge = hiddenCount > 0
     ? { count: hiddenCount, x: 0, y: -cy + 100 }
@@ -289,32 +305,33 @@ export default function RoomView({ roomId, onLeave }: Props) {
     if (!latestGift) return;
     const giftKey = `${latestGift.fromUserId}_${latestGift.giftId}`;
     if (activeGift && `${activeGift.fromUserId}_${activeGift.giftId}` === giftKey) {
-      setComboCount((c) => c + 1);
-      setTotalQuantity((q) => q + (latestGift.quantity || 1));
-      setComboValue((v) => v + (latestGift.quantity || 1) * (latestGift.price ?? 0));
+      // [moorawi-waterfall] احسب العدد الفعلي = مستقبلون × كمية
+      const recipientIds: string[] = Array.isArray(latestGift.batchTargets) && latestGift.batchTargets.length > 0
+        ? latestGift.batchTargets.map((t: any) => t.toUserId).filter(Boolean)
+        : (latestGift.toUserId ? [latestGift.toUserId] : []);
+      const qty = latestGift.quantity || 1;
+      const totalAdd = recipientIds.length * qty;
+
+      setComboCount((c) => c + totalAdd);
+      setTotalQuantity((q) => q + totalAdd);
+      setComboValue((v) => v + totalAdd * (latestGift.price ?? 0));
       setShowComboPulse(true);
       setTimeout(() => setShowComboPulse(false), 350);
 
-      // [moorawi-waterfall] أطلق موجة جديدة للشلال
-      if ((latestGift.price ?? 0) < 1000 && latestGift.mediaUrl) {
-        const recipientIds: string[] = Array.isArray(latestGift.batchTargets) && latestGift.batchTargets.length > 0
-          ? latestGift.batchTargets.map((t: any) => t.toUserId).filter(Boolean)
-          : (latestGift.toUserId ? [latestGift.toUserId] : []);
+      // أطلق موجة جديدة للشلال
+      if ((latestGift.price ?? 0) < 1000 && latestGift.mediaUrl && recipientIds.length > 0) {
+        const waveId = Date.now() + Math.random();
+        const { particles } = calculateTargetCoords(recipientIds, seats, qty);
+        const waveGift = latestGift;
 
-        if (recipientIds.length > 0) {
-          const waveId = Date.now() + Math.random();
-          const { particles } = calculateTargetCoords(recipientIds, seats);
-          const waveGift = latestGift;
+        setStackedWaves((w) => {
+          const next = [...w, { id: waveId, particles, gift: waveGift }];
+          return next.length > MAX_STACKED_WAVES ? next.slice(-MAX_STACKED_WAVES) : next;
+        });
 
-          setStackedWaves((w) => {
-            const next = [...w, { id: waveId, particles, gift: waveGift }];
-            return next.length > MAX_STACKED_WAVES ? next.slice(-MAX_STACKED_WAVES) : next;
-          });
-
-          setTimeout(() => {
-            setStackedWaves((w) => w.filter((x) => x.id !== waveId));
-          }, 2500);
-        }
+        setTimeout(() => {
+          setStackedWaves((w) => w.filter((x) => x.id !== waveId));
+        }, 2500);
       }
 
       if (comboTimeoutRef.current) clearTimeout(comboTimeoutRef.current);
@@ -363,8 +380,9 @@ export default function RoomView({ roomId, onLeave }: Props) {
       : (next.toUserId ? [next.toUserId] : []);
 
     // ننتظر إطار واحد لضمان وجود عناصر data-mic-seat في DOM
+    const qty = next.quantity || 1;
     requestAnimationFrame(() => {
-      const { particles, aggregateBadge: badge } = calculateTargetCoords(recipientIds, seats);
+      const { particles, aggregateBadge: badge } = calculateTargetCoords(recipientIds, seats, qty);
       setFlyingTargets(particles);
       setAggregateBadge(badge);
     });
@@ -384,9 +402,11 @@ export default function RoomView({ roomId, onLeave }: Props) {
     }
 
     setActiveGift(next);
-    setComboCount(1);
-    setTotalQuantity(next.quantity || 1);
-    setComboValue((next.quantity || 1) * (next.price ?? 0));
+    // [moorawi-waterfall] العدّاد = عدد المستقبلين × الكمية
+    const totalQtyInit = recipientIds.length * qty;
+    setComboCount(totalQtyInit);
+    setTotalQuantity(totalQtyInit);
+    setComboValue(totalQtyInit * (next.price ?? 0));
     setIsGlobalBanner(next.isGlobal && (next.price ?? 0) >= 30000);
 
     // إخفاء الهدية — مددنا الوقت لأنيميشن multiGiftFly (2.2s)
@@ -820,6 +840,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
                   style={{
                     left: "50%",
                     top: "50%",
+                    animationDelay: `${target.delay ?? 0}ms`,
                     ["--spread-x" as any]: `${target.spreadX}px`,
                     ["--spread-y" as any]: `${target.spreadY}px`,
                     ["--target-x" as any]: `${target.targetX}px`,
@@ -865,6 +886,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
                     style={{
                       left: "50%",
                       top: "50%",
+                      animationDelay: `${target.delay ?? 0}ms`,
                       ["--spread-x" as any]: `${target.spreadX}px`,
                       ["--spread-y" as any]: `${target.spreadY}px`,
                       ["--target-x" as any]: `${target.targetX}px`,
