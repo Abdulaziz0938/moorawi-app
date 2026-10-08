@@ -212,14 +212,50 @@ export default function MiniProfileSheet({
           </div>
 
           {isMySeat ? (
-            <div className="mx-4 mb-4 flex items-center justify-center gap-5">
-              <IconCircle icon={<Gift size={22} />} size={56} onClick={onOpenGift} />
-              <IconCircle
-                icon={isMySeatMuted ? <Mic size={22} /> : <MicOff size={22} />}
-                size={56}
-                onClick={onMute}
-              />
-              <IconCircle icon={<ArrowDown size={22} />} size={56} onClick={onRemoveFromSeat} />
+            <div className="mx-4 mb-4">
+              {/* 3 بطاقات عريضة: هدية | كتم | نزول */}
+              <div className="grid grid-cols-3 gap-2.5">
+                {/* Gift */}
+                <button
+                  onClick={onOpenGift}
+                  className="rounded-2xl bg-white/10 hover:bg-white/20 backdrop-blur-xl border border-white/25 flex flex-col items-center justify-center gap-2 py-4 active:scale-95 transition"
+                >
+                  <Gift size={22} className="text-white" />
+                  <span className="text-[11px] font-black text-white">هدية</span>
+                </button>
+
+                {/* Mute / Unmute */}
+                <button
+                  disabled={isMySeatMuted}
+                  onClick={onMute}
+                  className={`rounded-2xl backdrop-blur-xl border flex flex-col items-center justify-center gap-2 py-4 active:scale-95 transition ${
+                    isMySeatMuted
+                      ? "bg-red-500/20 border-red-400/40 cursor-not-allowed"
+                      : "bg-white/10 hover:bg-white/20 border-white/25"
+                  }`}
+                >
+                  {isMySeatMuted ? (
+                    <>
+                      <MicOff size={22} className="text-red-300" />
+                      <span className="text-[11px] font-black text-red-300">مكتوم إدارياً</span>
+                    </>
+                  ) : (
+                    <>
+                      <MicOff size={22} className="text-white" />
+                      <span className="text-[11px] font-black text-white">كتم</span>
+                    </>
+                  )}
+                </button>
+
+                {/* Step Down */}
+                <button
+                  onClick={onRemoveFromSeat}
+                  className="rounded-2xl bg-white/10 hover:bg-white/20 backdrop-blur-xl border border-white/25 flex flex-col items-center justify-center gap-2 py-4 active:scale-95 transition"
+                >
+                  <ArrowDown size={22} className="text-white" />
+                  <span className="text-[11px] font-black text-white">نزول</span>
+                </button>
+              </div>
             </div>
           ) : (
             <>

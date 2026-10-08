@@ -749,10 +749,24 @@ export default function RoomView({ roomId, onLeave }: Props) {
                         </button>
                       </>
                     )}
-                    {/* اجلس هنا — فقط إذا فاضي */}
+                    {/* اجلس هنا — يفتح القفل تلقائياً إذا كان مقفل */}
                     {!currentSeatMenuData.userId && isOwnerOrMod && (
-                      <button onClick={() => { takeSeat({ roomId, seatIndex: currentSeatMenuData.seatIndex, tokenOverride: deviceId }); setOpenSeatMenu(null); setOpenSeatMenuPos(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs">
-                        <Move size={14} /> اجلس هنا
+                      <button
+                        onClick={async () => {
+                          try {
+                            if (currentSeatMenuData.locked) {
+                              await toggleLock({ roomId, seatIndex: currentSeatMenuData.seatIndex, tokenOverride: deviceId });
+                            }
+                            await takeSeat({ roomId, seatIndex: currentSeatMenuData.seatIndex, tokenOverride: deviceId });
+                          } catch (e: any) {
+                            dialog.alert(e?.message || "خطأ");
+                          }
+                          setOpenSeatMenu(null);
+                          setOpenSeatMenuPos(null);
+                        }}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs"
+                      >
+                        <Move size={14} /> اجلس هنا {currentSeatMenuData.locked && "(يفتح القفل)"}
                       </button>
                     )}
                   </>
