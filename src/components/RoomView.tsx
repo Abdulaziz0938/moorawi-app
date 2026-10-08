@@ -502,16 +502,18 @@ export default function RoomView({ roomId, onLeave }: Props) {
     const seat = seats?.find((s) => s.seatIndex === seatIndex);
     const isMine = userId && myInfo?.userId && userId === myInfo.userId;
 
-    // 1) مايك فاضي
+    // 1) مايك فاضي (سواء مقفل أو لا)
     if (!userId) {
+      // [moorawi-fix] Owner/Mod: always show menu (even locked/empty)
+      if (isOwnerOrMod) {
+        setOpenSeatMenu(seatIndex);
+        return;
+      }
       if (seat?.locked) {
         alert("المايك مقفل");
         return;
       }
-      if (isOwnerOrMod) {
-        setOpenSeatMenu(seatIndex);
-      } else if (room?.micRequestsEnabled) {
-        // [moorawi] طلب المايك
+      if (room?.micRequestsEnabled) {
         requestMicMutation({ roomId, tokenOverride: deviceId })
           .then(() => setMyRequestToast("⏳ تم إرسال طلبك"))
           .catch((e: any) => alert(e?.message || "خطأ"));
@@ -642,12 +644,14 @@ export default function RoomView({ roomId, onLeave }: Props) {
                       <div key={seat._id} className="flex flex-col items-center justify-start pt-0.5 min-w-0" style={{ width: cellWidth }}>
                         <div data-mic-seat={seat.seatIndex}
                           onClick={() => handleSeatClick(seat.seatIndex, seat.userId)}
-                          className={`relative w-full aspect-square rounded-full flex-shrink-0 flex items-center justify-center text-white transition cursor-pointer overflow-hidden ${occupied ? "ring-2 ring-purple-300" : seat.locked ? "bg-gray-700 ring-2 ring-gray-500" : "bg-white/5 ring-1 ring-white/20 hover:bg-white/15"}`}>
-                          {occupied ? (
-                            seat.avatarUrl ? <img src={seat.avatarUrl} alt="" className="w-full h-full object-cover rounded-full" /> : <span className="text-[10px] font-bold">{(seat.userName ?? "?")[0]}</span>
-                          ) : seat.locked ? <Lock size={12} className="opacity-70" /> : <span className="text-[10px] font-bold text-white/60">{seat.seatIndex + 1}</span>}
+                          className="relative w-full aspect-square flex-shrink-0 cursor-pointer">
+                          <div className={`w-full h-full rounded-full flex items-center justify-center text-white overflow-hidden transition ${occupied ? "ring-2 ring-purple-300" : seat.locked ? "bg-gray-700 ring-2 ring-gray-500" : "bg-white/5 ring-1 ring-white/20 hover:bg-white/15"}`}>
+                            {occupied ? (
+                              seat.avatarUrl ? <img src={seat.avatarUrl} alt="" className="w-full h-full object-cover rounded-full" /> : <span className="text-[10px] font-bold">{(seat.userName ?? "?")[0]}</span>
+                            ) : seat.locked ? <Lock size={12} className="opacity-70" /> : <span className="text-[10px] font-bold text-white/60">{seat.seatIndex + 1}</span>}
+                          </div>
                           {occupied && seat.muted && (
-                            <div className="absolute -bottom-1 -left-1 bg-black/90 rounded-full p-1 ring-1 ring-white/30 shadow-md">
+                            <div className="absolute -bottom-1 -left-1 bg-black/90 rounded-full p-1 ring-1 ring-white/30 shadow-md z-10">
                               <MicOff size={10} className="text-white" />
                             </div>
                           )}
@@ -693,19 +697,25 @@ export default function RoomView({ roomId, onLeave }: Props) {
                   </>
                 ) : (
                   <>
+                    {/* دعوة شخص — متاح للجميع */}
                     <button onClick={() => { setInviteSeatIndex(currentSeatMenuData.seatIndex); setOpenSeatMenu(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs">
                       <UserPlus size={14} /> دعوة شخص للجلوس
                     </button>
                     {isOwnerOrMod && (
                       <>
+                        {/* فك/قفل المايك */}
                         <button onClick={() => { toggleLock({ roomId, seatIndex: currentSeatMenuData.seatIndex, tokenOverride: deviceId }); setOpenSeatMenu(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs">
-                          {currentSeatMenuData.locked ? <Unlock size={14} /> : <Lock size={14} />} {currentSeatMenuData.locked ? "فتح المايك" : "قفل المايك"}
+                          {currentSeatMenuData.locked ? <Unlock size={14} /> : <Lock size={14} />} {currentSeatMenuData.locked ? "فك القفل" : "قفل المايك"}
                         </button>
-                        <button onClick={() => { toggleMuteSeat({ roomId, seatIndex: currentSeatMenuData.seatIndex, tokenOverride: deviceId }); setOpenSeatMenu(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs">
-                          <MicOff size={14} /> {currentSeatMenuData.muted ? "إلغاء كتمه" : "اكتمه"}
-                        </button>
+                        {/* إلغاء/كتم المايك — يظهر فقط إذا كان هناك مستخدم */}
+                        {currentSeatMenuData.userId && (
+                          <button onClick={() => { toggleMuteSeat({ roomId, seatIndex: currentSeatMenuData.seatIndex, tokenOverride: deviceId }); setOpenSeatMenu(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs">
+                            <MicOff size={14} /> {currentSeatMenuData.muted ? "إلغاء الكتم" : "اكتمه"}
+                          </button>
+                        )}
                       </>
                     )}
+                    {/* اجلس هنا — فقط إذا فاضي */}
                     {!currentSeatMenuData.userId && isOwnerOrMod && (
                       <button onClick={() => { takeSeat({ roomId, seatIndex: currentSeatMenuData.seatIndex, tokenOverride: deviceId }); setOpenSeatMenu(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs">
                         <Move size={14} /> اجلس هنا
