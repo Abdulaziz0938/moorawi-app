@@ -68,6 +68,7 @@ export default defineSchema({
     userId: v.optional(v.id("users")),
     locked: v.boolean(),
     muted: v.boolean(),
+    adminMuted: v.optional(v.boolean()),
   }).index("by_room_and_seatIndex", ["roomId", "seatIndex"]),
 
   messages: defineTable({

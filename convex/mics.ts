@@ -60,7 +60,7 @@ export const takeSeat = mutation({
     const seat = allSeats.find((s) => s.seatIndex === args.seatIndex);
     if (!seat) throw new ConvexError({ code: "NOT_FOUND", message: "المايك غير موجود" });
     if (seat.locked || seat.userId) throw new ConvexError({ code: "CONFLICT", message: "المايك محجوز" });
-    await ctx.db.patch("micSeats", seat._id, { userId: user._id });
+    await ctx.db.patch("micSeats", seat._id, { userId: user._id, muted: false, adminMuted: false });
     const member = await getMember(ctx, args.roomId, user._id);
     if (member && member.role === "listener") await ctx.db.patch("roomMembers", member._id, { role: "speaker" });
     return null;
@@ -74,7 +74,7 @@ export const leaveSeat = mutation({
     const seats = await ctx.db.query("micSeats").withIndex("by_room_and_seatIndex", (q) => q.eq("roomId", args.roomId)).take(MAX_SEATS);
     const mine = seats.find((s) => s.userId === user._id);
     if (!mine) return null;
-    await ctx.db.patch("micSeats", mine._id, { userId: undefined, muted: false });
+    await ctx.db.patch("micSeats", mine._id, { userId: undefined, muted: false, adminMuted: false });
     const member = await getMember(ctx, args.roomId, user._id);
     if (member && member.role === "speaker") await ctx.db.patch("roomMembers", member._id, { role: "listener" });
     return null;
@@ -86,7 +86,7 @@ export const clearMySeats = mutation({
   handler: async (ctx, args) => {
     const user = await requireUser(ctx, args.tokenOverride);
     const seats = await ctx.db.query("micSeats").withIndex("by_room_and_seatIndex", (q) => q.eq("roomId", args.roomId)).take(MAX_SEATS);
-    for (const s of seats) if (s.userId === user._id) await ctx.db.patch("micSeats", s._id, { userId: undefined, muted: false });
+    for (const s of seats) if (s.userId === user._id) await ctx.db.patch("micSeats", s._id, { userId: undefined, muted: false, adminMuted: false });
     return null;
   },
 });
@@ -105,10 +105,39 @@ export const toggleLock = mutation({
 export const toggleMuteSeat = mutation({
   args: { roomId: v.id("rooms"), seatIndex: v.number(), tokenOverride: v.optional(v.string()) },
   handler: async (ctx, args) => {
-    await requireUser(ctx, args.tokenOverride);
+    const user = await requireUser(ctx, args.tokenOverride);
     const seat = await ctx.db.query("micSeats").withIndex("by_room_and_seatIndex", (q) => q.eq("roomId", args.roomId).eq("seatIndex", args.seatIndex)).unique();
     if (!seat) throw new ConvexError({ code: "NOT_FOUND", message: "المايك غير موجود" });
+
+    const isOwn = seat.userId === user._id;
+    const member = await getMember(ctx, args.roomId, user._id);
+    const isAdmin = member && (member.role === "owner" || member.role === "moderator");
+
+    // [moorawi] منع المستخدم من إلغاء الكتم الإداري
+    if (isOwn && !isAdmin && seat.adminMuted === true) {
+      throw new ConvexError({ code: "FORBIDDEN", message: "أنت مكتوم من الإدارة" });
+    }
+
     await ctx.db.patch("micSeats", seat._id, { muted: !seat.muted });
+    return null;
+  },
+});
+
+// [moorawi] الكتم الإداري — owner/mod فقط
+export const toggleAdminMute = mutation({
+  args: { roomId: v.id("rooms"), seatIndex: v.number(), tokenOverride: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx, args.tokenOverride);
+    const seat = await ctx.db.query("micSeats").withIndex("by_room_and_seatIndex", (q) => q.eq("roomId", args.roomId).eq("seatIndex", args.seatIndex)).unique();
+    if (!seat) throw new ConvexError({ code: "NOT_FOUND", message: "المايك غير موجود" });
+
+    const member = await getMember(ctx, args.roomId, user._id);
+    if (!member || (member.role !== "owner" && member.role !== "moderator")) {
+      throw new ConvexError({ code: "FORBIDDEN", message: "صلاحيات غير كافية" });
+    }
+
+    const next = !seat.adminMuted;
+    await ctx.db.patch("micSeats", seat._id, { adminMuted: next, muted: next });
     return null;
   },
 });
@@ -170,7 +199,7 @@ export const respondInvite = mutation({
     if (args.accept) {
       const seat = await ctx.db.query("micSeats").withIndex("by_room_and_seatIndex", (q) => q.eq("roomId", invite.roomId).eq("seatIndex", invite.seatIndex)).unique();
       if (seat && !seat.locked && !seat.userId) {
-        await ctx.db.patch("micSeats", seat._id, { userId: user._id });
+        await ctx.db.patch("micSeats", seat._id, { userId: user._id, muted: false, adminMuted: false });
         const member = await getMember(ctx, invite.roomId, user._id);
         if (member && member.role === "listener") await ctx.db.patch("roomMembers", member._id, { role: "speaker" });
       }

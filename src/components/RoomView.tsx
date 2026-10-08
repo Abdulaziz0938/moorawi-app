@@ -169,6 +169,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const clearMySeats = useMutation(api.mics.clearMySeats);
   const toggleLock = useMutation(api.mics.toggleLock);
   const toggleMuteSeat = useMutation(api.mics.toggleMuteSeat);
+  const toggleAdminMute = useMutation(api.mics.toggleAdminMute);
   const inviteToSeat = useMutation(api.mics.inviteToSeat);
   const respondInvite = useMutation(api.mics.respondInvite);
   const sendMsg = useMutation(api.messages.send);
@@ -661,8 +662,8 @@ export default function RoomView({ roomId, onLeave }: Props) {
                               seat.avatarUrl ? <img src={seat.avatarUrl} alt="" className="w-full h-full object-cover rounded-full" /> : <span className="text-[10px] font-bold">{(seat.userName ?? "?")[0]}</span>
                             ) : seat.locked ? <Lock size={12} className="opacity-70" /> : <span className="text-[10px] font-bold text-white/60">{seat.seatIndex + 1}</span>}
                           </div>
-                          {occupied && seat.muted && (
-                            <div className="absolute -bottom-1 -left-1 bg-black/90 rounded-full p-1 ring-1 ring-white/30 shadow-md z-10">
+                          {occupied && (seat.muted || seat.adminMuted) && (
+                            <div className={`absolute -bottom-1 -left-1 rounded-full p-1 ring-1 shadow-md z-10 ${seat.adminMuted ? "bg-red-600 ring-red-300/60" : "bg-black/90 ring-white/30"}`}>
                               <MicOff size={10} className="text-white" />
                             </div>
                           )}
@@ -712,8 +713,15 @@ export default function RoomView({ roomId, onLeave }: Props) {
                 <p className="text-white/60 text-[10px] px-3 py-1">المايك رقم {currentSeatMenuData.seatIndex + 1}</p>
                 {isMySeat ? (
                   <>
-                    <button onClick={() => { toggleMuteSeat({ roomId, seatIndex: currentSeatMenuData.seatIndex, tokenOverride: deviceId }); setOpenSeatMenu(null); setOpenSeatMenuPos(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs">
-                      <MicOff size={14} /> {currentSeatMenuData.muted ? "إلغاء الكتم" : "كتم"}
+                    <button
+                      disabled={currentSeatMenuData.adminMuted === true}
+                      onClick={() => { toggleMuteSeat({ roomId, seatIndex: currentSeatMenuData.seatIndex, tokenOverride: deviceId }).catch((e: any) => dialog.alert(e?.message || "خطأ")); setOpenSeatMenu(null); setOpenSeatMenuPos(null); }}
+                      className={`w-full flex items-center gap-2 px-3 py-2 text-xs ${currentSeatMenuData.adminMuted ? "text-red-400/60 cursor-not-allowed" : "text-white hover:bg-white/10"}`}
+                    >
+                      <MicOff size={14} />
+                      {currentSeatMenuData.adminMuted
+                        ? "مكتوم من الإدارة"
+                        : currentSeatMenuData.muted ? "إلغاء الكتم" : "كتم"}
                     </button>
                     <button onClick={() => { leaveSeat({ roomId, tokenOverride: deviceId }).then(() => agoraManager.unpublishMicrophone()); setOpenSeatMenu(null); setOpenSeatMenuPos(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-red-400 hover:bg-white/10 text-xs">
                       <LogOut size={14} /> انزل من المايك
@@ -731,9 +739,10 @@ export default function RoomView({ roomId, onLeave }: Props) {
                         <button onClick={() => { toggleLock({ roomId, seatIndex: currentSeatMenuData.seatIndex, tokenOverride: deviceId }); setOpenSeatMenu(null); setOpenSeatMenuPos(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs">
                           {currentSeatMenuData.locked ? <Unlock size={14} /> : <Lock size={14} />} {currentSeatMenuData.locked ? "فك القفل" : "قفل المايك"}
                         </button>
-                        {/* كتم/إلغاء كتم المايك — دائماً متاح للـ owner/mod */}
-                        <button onClick={() => { toggleMuteSeat({ roomId, seatIndex: currentSeatMenuData.seatIndex, tokenOverride: deviceId }); setOpenSeatMenu(null); setOpenSeatMenuPos(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs">
-                          <MicOff size={14} /> {currentSeatMenuData.muted ? "إلغاء كتم المايك" : "كتم المايك"}
+                        {/* [moorawi] الكتم الإداري — يمنع المستخدم من إلغاء الكتم */}
+                        <button onClick={() => { toggleAdminMute({ roomId, seatIndex: currentSeatMenuData.seatIndex, tokenOverride: deviceId }); setOpenSeatMenu(null); setOpenSeatMenuPos(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs">
+                          <MicOff size={14} />
+                          {currentSeatMenuData.adminMuted ? "إلغاء الكتم الإداري" : "كتم المايك (إداري)"}
                         </button>
                       </>
                     )}
