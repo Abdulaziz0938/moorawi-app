@@ -172,6 +172,11 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const toggleLock = useMutation(api.mics.toggleLock);
   const toggleMuteSeat = useMutation(api.mics.toggleMuteSeat);
   const toggleAdminMute = useMutation(api.mics.toggleAdminMute);
+  const kickFromRoom = useMutation(api.mics.kickFromRoom);
+  const toggleBanUser = useMutation(api.mics.toggleBanUser);
+  const promoteToMod = useMutation(api.mics.promoteToMod);
+  const demoteMod = useMutation(api.mics.demoteMod);
+  const removeFromSeat = useMutation(api.mics.removeFromSeat);
   const inviteToSeat = useMutation(api.mics.inviteToSeat);
   const respondInvite = useMutation(api.mics.respondInvite);
   const sendMsg = useMutation(api.messages.send);
@@ -1212,6 +1217,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
           isMySeat={mySeatIndexForMiniProfile !== null}
           isMySeatMuted={mySeatIndexForMiniProfile !== null ? !!seats?.find((s: any) => s.seatIndex === mySeatIndexForMiniProfile)?.muted : false}
           isTargetOnMic={!!seats?.find((s: any) => s.userId === miniProfileUserId)}
+          targetIsMod={members?.find((m: any) => m.userId === miniProfileUserId)?.role === "moderator"}
           onClose={() => { setMiniProfileUserId(null); setMySeatIndexForMiniProfile(null); }}
           onOpenGift={() => {
             setPreSelectedGiftUserId(miniProfileUserId);
@@ -1225,7 +1231,24 @@ export default function RoomView({ roomId, onLeave }: Props) {
             setMiniProfileUserId(null);
             setMySeatIndexForMiniProfile(null);
           }}
-          onKick={() => dialog.alert("قريباً - طرد")}
+          onKick={() => {
+            if (!miniProfileUserId) return;
+            kickFromRoom({ roomId, toUserId: miniProfileUserId as any, tokenOverride: deviceId })
+              .then(() => {
+                setMiniProfileUserId(null);
+                setMySeatIndexForMiniProfile(null);
+              })
+              .catch((e: any) => dialog.alert(e?.message || "خطأ"));
+          }}
+          onBan={() => {
+            if (!miniProfileUserId) return;
+            toggleBanUser({ roomId, toUserId: miniProfileUserId as any, tokenOverride: deviceId })
+              .then(() => {
+                setMiniProfileUserId(null);
+                setMySeatIndexForMiniProfile(null);
+              })
+              .catch((e: any) => dialog.alert(e?.message || "خطأ"));
+          }}
           onMute={() => {
             const targetSeat = mySeatIndexForMiniProfile !== null
               ? mySeatIndexForMiniProfile
@@ -1248,11 +1271,34 @@ export default function RoomView({ roomId, onLeave }: Props) {
                 .then(() => { setMiniProfileUserId(null); setMySeatIndexForMiniProfile(null); })
                 .catch(() => {});
             } else {
-              // إنزال شخص آخر — يحتاج backend mutation جديد
-              dialog.alert("سيُفعّل بعد إضافة backend mutation");
+              // إنزال شخص آخر
+              if (!miniProfileUserId) return;
+              removeFromSeat({ roomId, toUserId: miniProfileUserId as any, tokenOverride: deviceId })
+                .then(() => {
+                  setMiniProfileUserId(null);
+                  setMySeatIndexForMiniProfile(null);
+                })
+                .catch((e: any) => dialog.alert(e?.message || "خطأ"));
             }
           }}
-          onPromote={() => dialog.alert("قريباً - ترقية")}
+          onPromote={() => {
+            if (!miniProfileUserId) return;
+            promoteToMod({ roomId, toUserId: miniProfileUserId as any, tokenOverride: deviceId })
+              .then(() => {
+                setMiniProfileUserId(null);
+                setMySeatIndexForMiniProfile(null);
+              })
+              .catch((e: any) => dialog.alert(e?.message || "خطأ"));
+          }}
+          onDemote={() => {
+            if (!miniProfileUserId) return;
+            demoteMod({ roomId, toUserId: miniProfileUserId as any, tokenOverride: deviceId })
+              .then(() => {
+                setMiniProfileUserId(null);
+                setMySeatIndexForMiniProfile(null);
+              })
+              .catch((e: any) => dialog.alert(e?.message || "خطأ"));
+          }}
           onInviteToMic={() => {
             const targetSeat = seats?.find((s: any) => s.userId === miniProfileUserId)?.seatIndex;
             if (targetSeat !== undefined) {

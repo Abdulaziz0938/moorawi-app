@@ -4,7 +4,7 @@ import type { Id } from "../../convex/_generated/dataModel";
 import { dialog } from "../lib/dialog";
 import {
   X, Gift, MessageCircle, UserPlus, Mic, MicOff, ArrowDown,
-  Ban, Crown, Loader2,
+  Ban, Crown, Loader2, Shield,
 } from "lucide-react";
 import { UserName } from "./UserBadges";
 
@@ -19,10 +19,13 @@ interface Props {
   onOpenGift?: () => void;
   onOpenFullProfile?: () => void;
   onKick?: () => void;
+  onBan?: () => void;
   onMute?: () => void;
   onRemoveFromSeat?: () => void;
   onPromote?: () => void;
+  onDemote?: () => void;
   onInviteToMic?: () => void;
+  targetIsMod?: boolean;
 }
 
 function formatNumber(n: number): string {
@@ -78,10 +81,13 @@ export default function MiniProfileSheet({
   onOpenGift,
   onOpenFullProfile,
   onKick,
+  onBan,
   onMute,
   onRemoveFromSeat,
   onPromote,
+  onDemote,
   onInviteToMic,
+  targetIsMod = false,
 }: Props) {
   const profile = useQuery(api.profiles.getById, { userId: userId as Id<"users"> });
 
@@ -112,7 +118,8 @@ export default function MiniProfileSheet({
   const bgGradient = VIP_BG[vipLevel] || VIP_BG[0];
   const vipLabel = VIP_LABEL[vipLevel];
   const canKick = currentUserRole === "owner" || currentUserRole === "moderator";
-  const canPromote = currentUserRole === "owner";
+  const canBan = currentUserRole === "owner";
+  const canPromoteOrDemote = currentUserRole === "owner";
 
   return (
     <div className="fixed inset-0 z-[110] flex items-end" dir="rtl">
@@ -273,8 +280,14 @@ export default function MiniProfileSheet({
                     <IconCircle icon={<Ban size={20} />} size={50} onClick={onKick} />
                   )}
 
-                  {canPromote && (
+                  {canPromoteOrDemote && !targetIsMod && (
                     <IconCircle icon={<Crown size={20} />} size={50} onClick={onPromote} />
+                  )}
+                  {canPromoteOrDemote && targetIsMod && (
+                    <IconCircle icon={<Shield size={20} />} size={50} onClick={onDemote} />
+                  )}
+                  {canBan && (
+                    <IconCircle icon={<Ban size={20} />} size={50} onClick={onBan} />
                   )}
                 </div>
               )}
