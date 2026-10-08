@@ -716,9 +716,9 @@ export default function RoomView({ roomId, onLeave }: Props) {
                     {m.avatarUrl ? <img src={m.avatarUrl} alt="" className="w-full h-full object-cover" /> : (m.senderName?.[0] || "?")}
                   </div>
                   <div className="flex-1 min-w-0">
-                    {/* [moorawi] Badge order: member/owner → name → agency → vip-banner → family → admin → pvip */}
-                    <div className="flex items-center gap-1 flex-wrap" dir="ltr">
-                      {/* TODO: 1. member/owner badge (rooms.members.role) */}
+                    {/* [moorawi] Badge order (RTL): name → vip-banner → admin → pvip → time */}
+                    <div className="flex items-center gap-1 flex-wrap">
+                      {/* TODO: 1. member/owner badge */}
                       {/* 2. Name */}
                       <span className="text-[10px] font-bold text-purple-300">{m.senderName}</span>
                       {/* TODO: 3. agency badge */}
@@ -730,7 +730,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
                       {/* 7. VIP level (pvip small medal) */}
                       {(m.senderVip ?? 0) > 0 && <PvipBadge level={m.senderVip} size={14} />}
                       {/* time */}
-                      <span className="text-[8px] text-white/40 ml-auto">{formatTime(m.createdAt)}</span>
+                      <span className="text-[8px] text-white/40 mr-auto">{formatTime(m.createdAt)}</span>
                     </div>
                     {(m.text || m.imageUrl) && (
                       <div className={`w-fit max-w-[85%] mt-1 px-2.5 py-1.5 rounded-2xl rounded-tr-sm ${bubbleClass(m.senderVip ?? 0)}`}>
