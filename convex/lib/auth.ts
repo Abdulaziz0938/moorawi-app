@@ -35,8 +35,6 @@ export async function requireUser(
       const id = await mCtx.db.insert("users", {
         tokenIdentifier,
         userNumber,
-        isAdmin: true,
-        adminRole: "super",
         profileComplete: false,
       });
       user = await mCtx.db.get(id);

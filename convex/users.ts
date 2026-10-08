@@ -34,3 +34,25 @@ export const updateName = mutation({
     return null;
   },
 });
+
+// [moorawi-fix] تصحيح: إزالة admin من كل المستخدمين ما عدا المالك الحقيقي (userNumber = 1000)
+export const fixAllAdmins = mutation({
+  args: { tokenOverride: v.optional(v.string()) },
+  handler: async (ctx) => {
+    const all = await ctx.db.query("users").take(500);
+    let fixed = 0;
+    for (const u of all) {
+      // نُبقي admin للمالك الأصلي (userNumber = 1000)
+      const isRealOwner = u.userNumber === 1000;
+      if (!isRealOwner && (u.isAdmin === true || u.adminRole !== undefined)) {
+        await ctx.db.patch("users", u._id, {
+          isAdmin: false,
+          adminRole: undefined,
+        });
+        fixed++;
+      }
+    }
+    return { total: all.length, fixed };
+  },
+});
+
