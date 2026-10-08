@@ -4,6 +4,7 @@ import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { X, HelpCircle, Loader2 } from "lucide-react";
 import { UserName } from "./UserBadges";
+import MemberRow from "./MemberRow";
 import PodiumSVG from "./PodiumSVG";
 
 interface Props {
@@ -169,38 +170,19 @@ function UserRow({
   onClick?: () => void;
 }) {
   return (
-    <button
+    <MemberRow
+      userId={user.userId}
+      name={user.name}
+      avatarUrl={user.avatarUrl}
+      userNumber={user.userNumber}
+      vip={user.vip}
+      charmLevel={user.charmLevel}
+      adminRole={user.adminRole}
+      roomRole="speaker"
+      rank={rank}
+      compact={true}
       onClick={onClick}
-      className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/40 transition-colors"
-    >
-      <span className="w-7 text-center text-sm font-black text-amber-900/70">
-        {rank}
-      </span>
-      <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white font-black flex-shrink-0 border-2 border-white/70 shadow">
-        {user.avatarUrl ? (
-          <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
-        ) : (
-          <span className="text-sm">{user.name[0] || "?"}</span>
-        )}
-      </div>
-      <div className="flex-1 min-w-0 text-right">
-        <div className="flex items-center justify-end gap-1 flex-wrap">
-          <UserName
-            name={user.name}
-            vip={user.vip}
-            adminRole={user.adminRole}
-            size="sm"
-            nameClassName="text-amber-900"
-          />
-        </div>
-        {user.userNumber !== null && (
-          <p className="text-[10px] text-amber-900/60 mt-0.5">ID:{user.userNumber}</p>
-        )}
-      </div>
-      <span className="text-xs font-black text-amber-900 min-w-[55px] text-left">
-        {formatNumber(user.total)}
-      </span>
-    </button>
+    />
   );
 }
 

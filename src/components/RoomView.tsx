@@ -600,13 +600,19 @@ export default function RoomView({ roomId, onLeave }: Props) {
 
           {/* Row 1: Exit (right) | Owner info + Favorite (left) */}
           <div className="flex items-center justify-between gap-2">
-            {/* Exit button (right side in RTL) */}
-            <button
-              onClick={() => setShowBackMenu((v) => !v)}
-              className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white flex-shrink-0 active:scale-90 transition"
-            >
-              <LogOut size={15} />
-            </button>
+            {/* Exit + Room name (right side in RTL) */}
+            <div className="flex items-center gap-2 min-w-0">
+              <button
+                onClick={() => setShowBackMenu((v) => !v)}
+                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white flex-shrink-0 active:scale-90 transition"
+              >
+                <LogOut size={15} />
+              </button>
+              <div className="flex items-center gap-1 px-2 h-7 rounded-full bg-white/10 border border-white/15 min-w-0">
+                <Home size={11} className="text-purple-300 flex-shrink-0" />
+                <span className="text-[10px] font-black text-white truncate max-w-[120px]">{room.name}</span>
+              </div>
+            </div>
 
             {/* Owner info + Favorite (left side in RTL) */}
             <div className="flex items-center gap-2 min-w-0">

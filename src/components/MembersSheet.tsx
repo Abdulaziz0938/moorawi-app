@@ -43,16 +43,16 @@ export default function MembersSheet({ roomId, onClose, onUserClick }: Props) {
 
         {/* Header */}
         <div className="flex items-center justify-between px-4 pb-3 border-b border-white/10">
+          <div className="flex items-center gap-2">
+            <Users size={16} className="text-white/80" />
+            <h2 className="text-sm font-black text-white">الأعضاء ({members.length})</h2>
+          </div>
           <button
             onClick={onClose}
             className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition"
           >
             <X size={18} />
           </button>
-          <div className="flex items-center gap-2">
-            <Users size={16} className="text-white/80" />
-            <h2 className="text-sm font-black text-white">الأعضاء ({members.length})</h2>
-          </div>
         </div>
 
         {/* List */}
