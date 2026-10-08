@@ -594,50 +594,86 @@ export default function RoomView({ roomId, onLeave }: Props) {
       {room.backgroundUrl && <div className="absolute inset-0 bg-black/55 pointer-events-none" />}
 
       <div className="relative z-10 flex flex-col h-full min-h-0">
-        <header className="flex items-center justify-between gap-1 px-2 py-1.5 flex-shrink-0 bg-black/40 backdrop-blur-md border-b border-white/10">
-          <div className="flex items-center gap-1 flex-1 min-w-0">
-            <button onClick={() => setShowBackMenu((v) => !v)} className="p-1.5 rounded-full hover:bg-white/10 flex-shrink-0 text-white"><ArrowRight size={16} /></button>
-            <div className="flex items-center gap-1.5 bg-white/10 rounded-full pl-2 pr-1 py-0.5 min-w-0 flex-1">
-              <div className="w-6 h-6 rounded-full overflow-hidden bg-purple-500 flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0">
+        <header className="flex flex-col gap-1.5 px-2 py-2 flex-shrink-0 bg-black/40 backdrop-blur-md border-b border-white/10">
+
+          {/* Row 1: Exit (right) | Owner info + Favorite (left) */}
+          <div className="flex items-center justify-between gap-2">
+            {/* Exit button (right side in RTL) */}
+            <button
+              onClick={() => setShowBackMenu((v) => !v)}
+              className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white flex-shrink-0 active:scale-90 transition"
+            >
+              <LogOut size={15} />
+            </button>
+
+            {/* Owner info + Favorite (left side in RTL) */}
+            <div className="flex items-center gap-2 min-w-0">
+              <button
+                onClick={() => setIsFavorite(!isFavorite)}
+                className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center flex-shrink-0 active:scale-90 transition"
+              >
+                <Heart size={13} className={isFavorite ? "fill-red-500 text-red-500" : "text-white"} />
+              </button>
+              <div className="flex flex-col leading-tight items-end">
+                <div className="flex items-center gap-1">
+                  {owner?.userNumber === 1 && <Home size={10} className="text-amber-400 flex-shrink-0" fill="currentColor" />}
+                  <span className="text-[10px] font-black text-white">ID:{owner?.userNumber ?? "—"}</span>
+                </div>
+                <span className="text-[9px] text-white/60 font-bold">Lv.0</span>
+              </div>
+              <div className="w-7 h-7 rounded-full overflow-hidden bg-purple-500 flex items-center justify-center text-[11px] font-bold text-white flex-shrink-0 ring-2 ring-purple-400/40">
                 {roomAvatar ? <img src={roomAvatar} alt="" className="w-full h-full object-cover" /> : (room.name?.[0] || "?")}
               </div>
-              <span className="text-[10px] font-bold text-white truncate flex-1">{room.name}</span>
-              {owner && (
-                <span className="text-[9px] font-bold text-white/90 bg-black/40 rounded-full px-1.5 py-0.5 flex-shrink-0 flex items-center gap-1" dir="ltr">
-                  {owner.userNumber === 1 && <Home size={9} className="text-amber-400" fill="currentColor" />}
-                  ID:{owner.userNumber ?? "—"}
-                </span>
-              )}
             </div>
           </div>
-          <div className="flex items-center gap-0.5 flex-shrink-0">
-            <div className="flex -space-x-1.5">
-              {topMembers.map((m) => (
-                <div key={m._id} className="w-5 h-5 rounded-full border border-purple-900 overflow-hidden bg-purple-500 flex items-center justify-center text-[9px] font-bold text-white">
-                  {m.avatarUrl ? <img src={m.avatarUrl} alt="" className="w-full h-full object-cover" /> : (m.name?.[0] || "?")}
-                </div>
-              ))}
+
+          {/* Row 2: Members + Avatars (right) | Leaderboard + Bell (left) */}
+          <div className="flex items-center justify-between gap-2">
+            {/* Members + Avatars (right side in RTL) */}
+            <div className="flex items-center gap-1.5 min-w-0">
+              <div className="h-7 px-2 rounded-full bg-white/10 flex items-center gap-1 flex-shrink-0">
+                <Grid2x2 size={12} className="text-white/80" />
+                <span className="text-[10px] font-black text-white">{members.length}</span>
+              </div>
+              <div className="flex items-center -space-x-1.5">
+                {topMembers.slice(0, 5).map((m) => (
+                  <div key={m._id} className="w-6 h-6 rounded-full overflow-hidden bg-purple-500 flex items-center justify-center text-[9px] font-bold text-white border-2 border-purple-900 flex-shrink-0">
+                    {m.avatarUrl ? <img src={m.avatarUrl} alt="" className="w-full h-full object-cover" /> : (m.name?.[0] || "?")}
+                  </div>
+                ))}
+              </div>
             </div>
-            <span className="text-[9px] font-bold bg-white/10 text-white px-1.5 py-0.5 rounded-full">{members.length}</span>
-            <button onClick={() => setIsFavorite(!isFavorite)} className="p-1 rounded-full hover:bg-white/10 text-white"><Heart size={14} className={isFavorite ? "fill-red-500 text-red-500" : ""} /></button>
-            {isOwnerOrMod && room?.micRequestsEnabled && (
-              <button onClick={() => setShowMicRequests(true)} className="relative p-1 rounded-full hover:bg-white/10 text-white">
-                <Bell size={14} />
-                {micRequestsCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[8px] font-black rounded-full min-w-[14px] h-[14px] flex items-center justify-center border border-white px-0.5">
-                    {micRequestsCount > 9 ? "9+" : micRequestsCount}
-                  </span>
-                )}
+
+            {/* Leaderboard + Bell (left side in RTL) */}
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              {isOwnerOrMod && room?.micRequestsEnabled && (
+                <button
+                  onClick={() => setShowMicRequests(true)}
+                  className="relative w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white flex-shrink-0 active:scale-90 transition"
+                >
+                  <Bell size={13} />
+                  {micRequestsCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[8px] font-black rounded-full min-w-[14px] h-[14px] flex items-center justify-center border border-white px-0.5">
+                      {micRequestsCount > 9 ? "9+" : micRequestsCount}
+                    </span>
+                  )}
+                </button>
+              )}
+              <button
+                onClick={() => setShowLeaderboard(true)}
+                className="h-7 px-2.5 rounded-full bg-gradient-to-r from-amber-500/40 to-yellow-500/30 border border-amber-400/40 hover:opacity-90 flex items-center gap-1 flex-shrink-0 active:scale-95 transition"
+              >
+                <Trophy size={12} className="text-amber-300" />
+                <span className="text-[10px] font-black text-white">Leaderboard</span>
               </button>
-            )}
-            <button onClick={() => setShowLeaderboard(true)} className="p-1 rounded-full hover:bg-white/10 text-white"><Trophy size={14} /></button>
+            </div>
           </div>
         </header>
 
         {showBackMenu && (
           <>
             <div className="fixed inset-0 z-20" onClick={() => setShowBackMenu(false)} />
-            <div className="absolute top-10 right-2 z-30 bg-gray-900/95 backdrop-blur rounded-xl shadow-2xl border border-white/10 py-1 w-40">
+            <div className="absolute top-20 right-2 z-30 bg-gray-900/95 backdrop-blur rounded-xl shadow-2xl border border-white/10 py-1 w-40">
               <button onClick={handleLeave} className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs"><LogOut size={14} /> مغادرة</button>
               <button className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs"><Minimize2 size={14} /> تصغير</button>
               <button className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs"><Share2 size={14} /> مشاركة</button>
