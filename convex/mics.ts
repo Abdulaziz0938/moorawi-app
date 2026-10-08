@@ -498,3 +498,17 @@ export const removeFromSeat = mutation({
   },
 });
 
+// [moorawi] قائمة نشاط الغرفة
+export const listActivity = query({
+  args: { roomId: v.id("rooms"), limit: v.optional(v.number()) },
+  handler: async (ctx, args) => {
+    const limit = args.limit ?? 100;
+    const actions = await ctx.db
+      .query("roomActions")
+      .withIndex("by_room_and_createdAt", (q) => q.eq("roomId", args.roomId))
+      .order("desc")
+      .take(limit);
+    return actions;
+  },
+});
+

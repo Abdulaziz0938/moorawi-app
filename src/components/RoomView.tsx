@@ -17,6 +17,7 @@ import LeaderboardSheet from "./LeaderboardSheet";
 import MiniProfileSheet from "./MiniProfileSheet";
 import MicRequestsSheet from "./MicRequestsSheet";
 import MembersSheet from "./MembersSheet";
+import ActivitySheet from "./ActivitySheet";
 import ProfilePage from "./ProfilePage";
 import { UserName } from "./UserBadges";
 import { dialog } from "../lib/dialog";
@@ -201,6 +202,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const [showSettings, setShowSettings] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showMembers, setShowMembers] = useState(false);
+  const [showActivity, setShowActivity] = useState(false);
   const [miniProfileUserId, setMiniProfileUserId] = useState<string | null>(null);
   const [mySeatIndexForMiniProfile, setMySeatIndexForMiniProfile] = useState<number | null>(null);
   const [preSelectedGiftUserId, setPreSelectedGiftUserId] = useState<string | null>(null);
@@ -1182,6 +1184,14 @@ export default function RoomView({ roomId, onLeave }: Props) {
         </div>
       )}
 
+      {showActivity && (
+        <ActivitySheet
+          roomId={roomId}
+          onClose={() => setShowActivity(false)}
+          currentUserId={myInfo?.userId}
+        />
+      )}
+
       {showMembers && (
         <MembersSheet
           roomId={roomId}
@@ -1392,7 +1402,8 @@ export default function RoomView({ roomId, onLeave }: Props) {
         <SettingsSheet roomId={roomId} currentLayout={layout} isOwnerOrMod={isOwnerOrMod}
           currentName={room.name} currentWelcome={room.welcomeMessage ?? ""} currentCoverUrl={room.coverUrl ?? null}
           micRequestsEnabled={!!room?.micRequestsEnabled}
-          onClose={() => setShowSettings(false)} />
+          onClose={() => setShowSettings(false)}
+          onOpenActivity={() => { setShowSettings(false); setShowActivity(true); }} />
       )}
     </div>
   );

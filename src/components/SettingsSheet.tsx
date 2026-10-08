@@ -34,6 +34,7 @@ interface Props {
   currentCoverUrl: string | null;
   micRequestsEnabled: boolean;
   onClose: () => void;
+  onOpenActivity?: () => void;
 }
 
 type Tab = "main" | "layout" | "editRoom" | "background" | "gifts";
@@ -54,7 +55,7 @@ function LayoutPreview({ layoutKey }: { layoutKey: string }) {
 }
 
 export default function SettingsSheet({
-  roomId, currentLayout, isOwnerOrMod, currentName, currentWelcome, currentCoverUrl, micRequestsEnabled, onClose,
+  roomId, currentLayout, isOwnerOrMod, currentName, currentWelcome, currentCoverUrl, micRequestsEnabled, onClose, onOpenActivity,
 }: Props) {
   const deviceId = getDeviceId();
   const updateLayout = useMutation(api.rooms.updateLayout);
@@ -148,6 +149,10 @@ export default function SettingsSheet({
     else if (key === "editRoom") setTab("editRoom");
     else if (key === "background") setTab("background");
     else if (key === "gifts") setTab("gifts");
+    else if (key === "activity") {
+      if (onOpenActivity) onOpenActivity();
+      else dialog.alert("ميزة غير مفعّلة");
+    }
     else dialog.alert(`"${key}" - قيد التطوير`);
   };
 
