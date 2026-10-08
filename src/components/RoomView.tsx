@@ -3,7 +3,7 @@ import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import {
-  Mic, MicOff, LogOut, Loader2, Heart, Trophy, Bell,
+  Mic, MicOff, LogOut, Loader2, Heart, Trophy, Bell, Crown, Shield, Home, User,
   MessageCircle, Gift, Grid2x2, Share2, Minimize2, ArrowRight,
   Lock, Unlock, UserPlus, Move, X, Check,
 } from "lucide-react";
@@ -646,11 +646,26 @@ export default function RoomView({ roomId, onLeave }: Props) {
                           {occupied ? (
                             seat.avatarUrl ? <img src={seat.avatarUrl} alt="" className="w-full h-full object-cover rounded-full" /> : <span className="text-[10px] font-bold">{(seat.userName ?? "?")[0]}</span>
                           ) : seat.locked ? <Lock size={12} className="opacity-70" /> : <span className="text-[10px] font-bold text-white/60">{seat.seatIndex + 1}</span>}
-                          {occupied && seat.muted && <div className="absolute bottom-0 left-0 bg-black/80 rounded-full p-0.5"><MicOff size={8} className="text-white" /></div>}
+                          {occupied && seat.muted && (
+                            <div className="absolute -bottom-1 -left-1 bg-black/90 rounded-full p-1 ring-1 ring-white/30 shadow-md">
+                              <MicOff size={10} className="text-white" />
+                            </div>
+                          )}
                         </div>
                         {occupied && (
                           <>
-                            <p className="text-[8px] text-white/90 mt-1 truncate max-w-full leading-tight">{seat.userName}</p>
+                            <div className="flex items-center justify-center gap-0.5 mt-1 max-w-full">
+                              {seat.adminRole === "super" && (
+                                <Home size={9} className="text-amber-400 flex-shrink-0" fill="currentColor" strokeWidth={1.5} />
+                              )}
+                              {seat.adminRole === "moderator" && (
+                                <Shield size={9} className="text-sky-400 flex-shrink-0" fill="currentColor" strokeWidth={1.5} />
+                              )}
+                              {!seat.adminRole && (
+                                <User size={9} className="text-emerald-400 flex-shrink-0" fill="currentColor" strokeWidth={1.5} />
+                              )}
+                              <p className="text-[8px] text-white/90 truncate leading-tight">{seat.userName}</p>
+                            </div>
                             <p className="text-[8px] text-pink-300 leading-tight">{(seat.charms ?? 0)} ❤</p>
                           </>
                         )}
@@ -716,18 +731,25 @@ export default function RoomView({ roomId, onLeave }: Props) {
                     {m.avatarUrl ? <img src={m.avatarUrl} alt="" className="w-full h-full object-cover" /> : (m.senderName?.[0] || "?")}
                   </div>
                   <div className="flex-1 min-w-0">
-                    {/* [moorawi] Badge order (RTL): name → vip-banner → admin → pvip → time */}
+                    {/* [moorawi] Badge order (RTL): role → name → vip → admin → pvip → time */}
                     <div className="flex items-center gap-1 flex-wrap">
-                      {/* TODO: 1. member/owner badge */}
+                      {/* 1. Room role badge — SVG transparent */}
+                      {m.senderRoomRole === "owner" && (
+                        <Home size={12} className="text-amber-400 flex-shrink-0" fill="currentColor" strokeWidth={1.5} />
+                      )}
+                      {m.senderRoomRole === "moderator" && (
+                        <Shield size={12} className="text-sky-400 flex-shrink-0" fill="currentColor" strokeWidth={1.5} />
+                      )}
+                      {(m.senderRoomRole === "listener" || m.senderRoomRole === "speaker" || !m.senderRoomRole) && (
+                        <User size={11} className="text-emerald-400 flex-shrink-0" fill="currentColor" strokeWidth={1.5} />
+                      )}
                       {/* 2. Name */}
                       <span className="text-[10px] font-bold text-purple-300">{m.senderName}</span>
-                      {/* TODO: 3. agency badge */}
-                      {/* 4. VIP banner (wide) */}
+                      {/* 3. VIP banner */}
                       {(m.senderVip ?? 0) > 0 && <VipBanner level={m.senderVip} width={38} />}
-                      {/* TODO: 5. family badge */}
-                      {/* 6. Admin / Super admin */}
+                      {/* 4. Admin / Super admin */}
                       {m.senderAdminRole && <AdminBadge role={m.senderAdminRole} size={14} />}
-                      {/* 7. VIP level (pvip small medal) */}
+                      {/* 5. VIP level (pvip) */}
                       {(m.senderVip ?? 0) > 0 && <PvipBadge level={m.senderVip} size={14} />}
                       {/* time */}
                       <span className="text-[8px] text-white/40 mr-auto">{formatTime(m.createdAt)}</span>

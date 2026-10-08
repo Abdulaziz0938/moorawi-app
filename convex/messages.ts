@@ -11,6 +11,23 @@ export const list = query({
     const sinceTs = args.since ?? 0;
     const raw = await ctx.db.query("messages").withIndex("by_room", (q) => q.eq("roomId", args.roomId)).order("desc").take(60);
     const rows = sinceTs > 0 ? raw.filter((m) => m._creationTime >= sinceTs) : raw;
+
+    // [moorawi] Prefetch room members for role lookup
+    const members = await ctx.db.query("roomMembers")
+      .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
+      .take(100);
+    const roleByUser = new Map<string, string>();
+    for (const mem of members) roleByUser.set(mem.userId as string, mem.role);
+
+    // [moorawi] Prefetch mic seats for mute lookup
+    const seats = await ctx.db.query("micSeats")
+      .withIndex("by_room_and_seatIndex", (q) => q.eq("roomId", args.roomId))
+      .take(24);
+    const mutedByUser = new Map<string, boolean>();
+    for (const s of seats) {
+      if (s.userId) mutedByUser.set(s.userId as string, !!s.muted);
+    }
+
     const enriched = await Promise.all(rows.map(async (m) => {
       const sender = await ctx.db.get("users", m.senderId);
       const avatarUrl = sender?.avatarUrl ?? (sender?.avatarId ? await ctx.storage.getUrl(sender.avatarId) : null);
@@ -24,6 +41,8 @@ export const list = query({
         senderVip: vip,
         senderAdminRole: sender?.adminRole ?? null,
         senderCharms: sender?.charms ?? 0,
+        senderRoomRole: roleByUser.get(m.senderId as string) ?? null,
+        senderMuted: mutedByUser.get(m.senderId as string) ?? null,
         avatarUrl,
         text: m.text ?? null,
         imageUrl,
