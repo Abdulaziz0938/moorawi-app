@@ -148,9 +148,14 @@ export default function MiniProfileSheet({
               {profile.userNumber !== null && (
                 <span className="text-white/80 text-xs">ID:{profile.userNumber}</span>
               )}
-              {profile.isAdmin && (
-                <span className="text-[10px] font-black bg-red-500 text-white px-2 py-0.5 rounded-full">
-                  ADMIN
+              {profile.adminRole === "super" && (
+                <span className="text-[10px] font-black bg-gradient-to-r from-yellow-400 via-amber-500 to-red-500 text-white px-2 py-0.5 rounded-full border border-yellow-300/50 shadow">
+                  👑 SUPER ADMIN
+                </span>
+              )}
+              {profile.adminRole === "moderator" && (
+                <span className="text-[10px] font-black bg-sky-500 text-white px-2 py-0.5 rounded-full border border-sky-300/50 shadow">
+                  MOD
                 </span>
               )}
             </div>

@@ -35,6 +35,7 @@ export const me = query({
         bio: user.bio ?? null,
         profileComplete: user.profileComplete ?? false,
         isAdmin: user.isAdmin ?? false,
+        adminRole: user.adminRole ?? null,
       };
     } catch {
       return null;
@@ -72,6 +73,7 @@ export const getById = query({
       totalReceived: u.totalReceived ?? 0,
       vip,
       isAdmin: u.isAdmin ?? false,
+      adminRole: u.adminRole ?? null,
       banned: u.banned ?? false,
     };
   },
