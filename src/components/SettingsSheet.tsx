@@ -6,6 +6,7 @@ import type { Id } from "../../convex/_generated/dataModel";
 import { getDeviceId } from "../lib/device";
 import { uploadToCloudinary } from "../lib/cloudinary";
 import {
+import { dialog } from "../lib/dialog";
   X, Sparkles, Palette, LayoutGrid, Settings, Lock,
   Briefcase, Activity, Music, Coins, MessageCircle,
   Wand2, Gift, Volume2, Mic2, ImageIcon, Monitor, VolumeX, Check, Loader2, Globe, Heart, Hand,
@@ -71,7 +72,7 @@ export default function SettingsSheet({
       await setMicRequestsEnabledMutation({ roomId, enabled: next, tokenOverride: deviceId });
       setLocalMicReqEnabled(next);
     } catch (e: any) {
-      alert(e?.message || "خطأ");
+      dialog.alert(e?.message || "خطأ");
     } finally {
       setMicReqSaving(false);
     }
@@ -88,7 +89,7 @@ export default function SettingsSheet({
 
   const handleLayoutChange = async (layout: string) => {
     try { await updateLayout({ roomId, micLayout: layout, tokenOverride: deviceId }); }
-    catch (e: any) { alert(e?.message || "خطأ"); }
+    catch (e: any) { dialog.alert(e?.message || "خطأ"); }
   };
 
   const handleCoverUpload = async (file: File) => {
@@ -97,7 +98,7 @@ export default function SettingsSheet({
       const result = await uploadToCloudinary(file, "image");
       await updateRoomInfo({ roomId, coverUrl: result.url, tokenOverride: deviceId });
       setCoverUrl(result.url);
-    } catch (e: any) { alert(e?.message || "فشل"); }
+    } catch (e: any) { dialog.alert(e?.message || "فشل"); }
     finally { setUploading(false); }
   };
 
@@ -106,15 +107,15 @@ export default function SettingsSheet({
     try {
       const result = await uploadToCloudinary(file, "image");
       await updateBackground({ roomId, backgroundUrl: result.url, tokenOverride: deviceId });
-      alert("تم تغيير الخلفية");
-    } catch (e: any) { alert(e?.message || "فشل"); }
+      dialog.alert("تم تغيير الخلفية");
+    } catch (e: any) { dialog.alert(e?.message || "فشل"); }
     finally { setUploading(false); }
   };
 
   const handleSaveRoomInfo = async () => {
     setSaving(true);
-    try { await updateRoomInfo({ roomId, name, welcomeMessage: welcome, tokenOverride: deviceId }); alert("تم الحفظ"); }
-    catch (e: any) { alert(e?.message || "خطأ"); }
+    try { await updateRoomInfo({ roomId, name, welcomeMessage: welcome, tokenOverride: deviceId }); dialog.alert("تم الحفظ"); }
+    catch (e: any) { dialog.alert(e?.message || "خطأ"); }
     finally { setSaving(false); }
   };
 
@@ -147,7 +148,7 @@ export default function SettingsSheet({
     else if (key === "editRoom") setTab("editRoom");
     else if (key === "background") setTab("background");
     else if (key === "gifts") setTab("gifts");
-    else alert(`"${key}" - قيد التطوير`);
+    else dialog.alert(`"${key}" - قيد التطوير`);
   };
 
   const titles: Record<Tab, string> = {
@@ -325,7 +326,7 @@ function GiftsAdmin() {
 
   const handleUpload = async () => {
     if (!name.trim() || !mediaFile || price < 1) {
-      alert("أكمل البيانات (اسم + سعر + ملف)");
+      dialog.alert("أكمل البيانات (اسم + سعر + ملف)");
       return;
     }
     setUploading(true);
@@ -345,9 +346,9 @@ function GiftsAdmin() {
       setForceGlobal(false);
       setMediaFile(null);
       if (mediaRef.current) mediaRef.current.value = "";
-      alert("✅ تم إضافة الهدية");
+      dialog.alert("✅ تم إضافة الهدية");
     } catch (e: any) {
-      alert(e?.message || "فشل الرفع");
+      dialog.alert(e?.message || "فشل الرفع");
     } finally {
       setUploading(false);
     }
@@ -428,7 +429,7 @@ function GiftsAdmin() {
                   {g.isRelationship && <Heart size={10} className="text-pink-400 fill-pink-400" />}
                 </div>
               </div>
-              <button onClick={() => { if (confirm("حذف هذه الهدية؟")) removeGift({ giftId: g._id, tokenOverride: deviceId }).catch((e) => alert(e?.message)); }}
+              <button onClick={() => { if (confirm("حذف هذه الهدية؟")) removeGift({ giftId: g._id, tokenOverride: deviceId }).catch((e) => dialog.alert(e?.message)); }}
                 className="p-2 text-red-400 hover:bg-red-500/20 rounded-full">
                 <X size={16} />
               </button>

@@ -4,6 +4,7 @@ import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { Mic, Users, Plus, X, Check } from "lucide-react";
 import { getDeviceId } from "../lib/device";
+import { dialog } from "../lib/dialog";
 
 interface Props {
   onEnter: (roomId: Id<"rooms">) => void;
@@ -27,7 +28,7 @@ export default function RoomList({ onEnter }: Props) {
     try {
       const roomId = await createRoom({ name: newName.trim(), isPrivate: false, tokenOverride: deviceId });
       setNewName(""); setShowCreate(false); onEnter(roomId);
-    } catch (e: any) { alert(e.message || "خطأ"); }
+    } catch (e: any) { dialog.alert(e.message || "خطأ"); }
     finally { setIsCreating(false); }
   };
 
@@ -35,7 +36,7 @@ export default function RoomList({ onEnter }: Props) {
     try {
       await joinRoom({ roomId, tokenOverride: deviceId });
       onEnter(roomId);
-    } catch (e: any) { alert(e.message || "خطأ"); }
+    } catch (e: any) { dialog.alert(e.message || "خطأ"); }
   };
 
   const handleCopyId = async () => {

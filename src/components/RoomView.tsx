@@ -17,6 +17,7 @@ import LeaderboardSheet from "./LeaderboardSheet";
 import MiniProfileSheet from "./MiniProfileSheet";
 import MicRequestsSheet from "./MicRequestsSheet";
 import { AdminBadge, VipBanner, PvipBadge } from "./UserBadges";
+import { dialog } from "../lib/dialog";
 
 // [moorawi-batch] Flying particle data for batch gifts
 type FlyingTarget = {
@@ -206,6 +207,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const [showGifts, setShowGifts] = useState(false);
   const [showChatInput, setShowChatInput] = useState(false);
   const [openSeatMenu, setOpenSeatMenu] = useState<number | null>(null);
+  const [openSeatMenuPos, setOpenSeatMenuPos] = useState<{ x: number; y: number } | null>(null);
   const [inviteSeatIndex, setInviteSeatIndex] = useState<number | null>(null);
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -502,31 +504,40 @@ export default function RoomView({ roomId, onLeave }: Props) {
     const seat = seats?.find((s) => s.seatIndex === seatIndex);
     const isMine = userId && myInfo?.userId && userId === myInfo.userId;
 
+    // احسب موضع المايك أولاً (لكل الحالات)
+    const seatEl = document.querySelector(`[data-mic-seat="${seatIndex}"]`) as HTMLElement | null;
+    let menuPos: { x: number; y: number } | null = null;
+    if (seatEl) {
+      const r = seatEl.getBoundingClientRect();
+      menuPos = { x: r.left + r.width / 2, y: r.bottom + 4 };
+    }
+
     // 1) مايك فاضي (سواء مقفل أو لا)
     if (!userId) {
       // [moorawi-fix] Owner/Mod: always show menu (even locked/empty)
       if (isOwnerOrMod) {
+        setOpenSeatMenuPos(menuPos);
         setOpenSeatMenu(seatIndex);
         return;
       }
       if (seat?.locked) {
-        alert("المايك مقفل");
+        dialog.alert("المايك مقفل");
         return;
       }
       if (room?.micRequestsEnabled) {
         requestMicMutation({ roomId, tokenOverride: deviceId })
           .then(() => setMyRequestToast("⏳ تم إرسال طلبك"))
-          .catch((e: any) => alert(e?.message || "خطأ"));
+          .catch((e: any) => dialog.alert(e?.message || "خطأ"));
       } else {
-        takeSeat({ roomId, seatIndex, tokenOverride: deviceId }).catch((e: any) => alert(e?.message || "خطأ"));
+        takeSeat({ roomId, seatIndex, tokenOverride: deviceId }).catch((e: any) => dialog.alert(e?.message || "خطأ"));
       }
       return;
     }
 
-    // 2) مايكي أنا → Mini Profile (isMySeat)
+    // 2) مايكي أنا → قائمة (كتم/نزول)
     if (isMine) {
-      setMiniProfileUserId(userId!);
-      setMySeatIndexForMiniProfile(seatIndex);
+      setOpenSeatMenuPos(menuPos);
+      setOpenSeatMenu(seatIndex);
       return;
     }
 
@@ -552,7 +563,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const handleSendMsg = async (text: string) => {
     setSending(true);
     try { await sendMsg({ roomId, text, tokenOverride: deviceId }); }
-    catch (e: any) { alert(e?.message || "خطأ"); }
+    catch (e: any) { dialog.alert(e?.message || "خطأ"); }
     finally { setSending(false); }
   };
 
@@ -561,7 +572,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
     try {
       const result = await uploadToCloudinary(file, "image");
       await sendMsg({ roomId, imageUrl: result.url, tokenOverride: deviceId });
-    } catch (e: any) { alert(e?.message || "فشل رفع الصورة"); }
+    } catch (e: any) { dialog.alert(e?.message || "فشل رفع الصورة"); }
     finally { setUploading(false); }
   };
 
@@ -681,35 +692,48 @@ export default function RoomView({ roomId, onLeave }: Props) {
             })}
           </div>
 
-          {openSeatMenu !== null && currentSeatMenuData && (
+          {openSeatMenu !== null && currentSeatMenuData && openSeatMenuPos && (
             <>
-              <div className="fixed inset-0 z-40" onClick={() => setOpenSeatMenu(null)} />
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-gray-900 rounded-xl shadow-2xl border border-white/20 py-1.5 w-52">
+              <div className="fixed inset-0 z-40" onClick={() => { setOpenSeatMenu(null); setOpenSeatMenuPos(null); }} />
+              <div
+                className="fixed z-50 rounded-2xl shadow-2xl overflow-hidden animate-[seatMenuPop_0.2s_cubic-bezier(0.34,1.56,0.64,1)]"
+                style={{
+                  left: `${Math.max(8, Math.min(openSeatMenuPos.x - 110, window.innerWidth - 228))}px`,
+                  top: `${openSeatMenuPos.y}px`,
+                  width: "220px",
+                  background: "linear-gradient(145deg, rgba(30,27,75,0.88) 0%, rgba(15,12,40,0.94) 100%)",
+                  backdropFilter: "blur(24px)",
+                  WebkitBackdropFilter: "blur(24px)",
+                  border: "1px solid rgba(255,255,255,0.18)",
+                }}
+              >
+                {/* Top glow line */}
+                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-purple-400/60 to-transparent" />
                 <p className="text-white/60 text-[10px] px-3 py-1">المايك رقم {currentSeatMenuData.seatIndex + 1}</p>
                 {isMySeat ? (
                   <>
-                    <button onClick={() => { toggleMuteSeat({ roomId, seatIndex: currentSeatMenuData.seatIndex, tokenOverride: deviceId }); setOpenSeatMenu(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs">
+                    <button onClick={() => { toggleMuteSeat({ roomId, seatIndex: currentSeatMenuData.seatIndex, tokenOverride: deviceId }); setOpenSeatMenu(null); setOpenSeatMenuPos(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs">
                       <MicOff size={14} /> {currentSeatMenuData.muted ? "إلغاء الكتم" : "كتم"}
                     </button>
-                    <button onClick={() => { leaveSeat({ roomId, tokenOverride: deviceId }).then(() => agoraManager.unpublishMicrophone()); setOpenSeatMenu(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-red-400 hover:bg-white/10 text-xs">
+                    <button onClick={() => { leaveSeat({ roomId, tokenOverride: deviceId }).then(() => agoraManager.unpublishMicrophone()); setOpenSeatMenu(null); setOpenSeatMenuPos(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-red-400 hover:bg-white/10 text-xs">
                       <LogOut size={14} /> انزل من المايك
                     </button>
                   </>
                 ) : (
                   <>
                     {/* دعوة شخص — متاح للجميع */}
-                    <button onClick={() => { setInviteSeatIndex(currentSeatMenuData.seatIndex); setOpenSeatMenu(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs">
+                    <button onClick={() => { setInviteSeatIndex(currentSeatMenuData.seatIndex); setOpenSeatMenu(null); setOpenSeatMenuPos(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs">
                       <UserPlus size={14} /> دعوة شخص للجلوس
                     </button>
                     {isOwnerOrMod && (
                       <>
                         {/* فك/قفل المايك */}
-                        <button onClick={() => { toggleLock({ roomId, seatIndex: currentSeatMenuData.seatIndex, tokenOverride: deviceId }); setOpenSeatMenu(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs">
+                        <button onClick={() => { toggleLock({ roomId, seatIndex: currentSeatMenuData.seatIndex, tokenOverride: deviceId }); setOpenSeatMenu(null); setOpenSeatMenuPos(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs">
                           {currentSeatMenuData.locked ? <Unlock size={14} /> : <Lock size={14} />} {currentSeatMenuData.locked ? "فك القفل" : "قفل المايك"}
                         </button>
                         {/* إلغاء/كتم المايك — يظهر فقط إذا كان هناك مستخدم */}
                         {currentSeatMenuData.userId && (
-                          <button onClick={() => { toggleMuteSeat({ roomId, seatIndex: currentSeatMenuData.seatIndex, tokenOverride: deviceId }); setOpenSeatMenu(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs">
+                          <button onClick={() => { toggleMuteSeat({ roomId, seatIndex: currentSeatMenuData.seatIndex, tokenOverride: deviceId }); setOpenSeatMenu(null); setOpenSeatMenuPos(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs">
                             <MicOff size={14} /> {currentSeatMenuData.muted ? "إلغاء الكتم" : "اكتمه"}
                           </button>
                         )}
@@ -717,7 +741,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
                     )}
                     {/* اجلس هنا — فقط إذا فاضي */}
                     {!currentSeatMenuData.userId && isOwnerOrMod && (
-                      <button onClick={() => { takeSeat({ roomId, seatIndex: currentSeatMenuData.seatIndex, tokenOverride: deviceId }); setOpenSeatMenu(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs">
+                      <button onClick={() => { takeSeat({ roomId, seatIndex: currentSeatMenuData.seatIndex, tokenOverride: deviceId }); setOpenSeatMenu(null); setOpenSeatMenuPos(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs">
                         <Move size={14} /> اجلس هنا
                       </button>
                     )}
@@ -1089,7 +1113,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
             setMySeatIndexForMiniProfile(null);
             setShowGifts(true);
           }}
-          onKick={() => alert("قريباً - طرد")}
+          onKick={() => dialog.alert("قريباً - طرد")}
           onMute={() => {
             const targetSeat = mySeatIndexForMiniProfile !== null
               ? mySeatIndexForMiniProfile
@@ -1113,10 +1137,10 @@ export default function RoomView({ roomId, onLeave }: Props) {
                 .catch(() => {});
             } else {
               // إنزال شخص آخر — يحتاج backend mutation جديد
-              alert("سيُفعّل بعد إضافة backend mutation");
+              dialog.alert("سيُفعّل بعد إضافة backend mutation");
             }
           }}
-          onPromote={() => alert("قريباً - ترقية")}
+          onPromote={() => dialog.alert("قريباً - ترقية")}
           onInviteToMic={() => {
             const targetSeat = seats?.find((s: any) => s.userId === miniProfileUserId)?.seatIndex;
             if (targetSeat !== undefined) {

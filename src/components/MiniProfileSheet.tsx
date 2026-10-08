@@ -2,6 +2,7 @@ import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import {
+import { dialog } from "../lib/dialog";
   X, Gift, MessageCircle, UserPlus, Mic, MicOff, ArrowDown,
   Ban, Crown, Loader2,
 } from "lucide-react";
@@ -219,8 +220,8 @@ export default function MiniProfileSheet({
             <>
               <div className="mx-4 mb-3 flex items-center justify-center gap-4">
                 <IconCircle icon={<Gift size={22} />} size={54} onClick={onOpenGift} />
-                <IconCircle icon={<MessageCircle size={22} />} size={54} onClick={() => alert("قريباً")} />
-                <IconCircle icon={<UserPlus size={22} />} size={54} onClick={() => alert("قريباً")} />
+                <IconCircle icon={<MessageCircle size={22} />} size={54} onClick={() => dialog.alert("قريباً")} />
+                <IconCircle icon={<UserPlus size={22} />} size={54} onClick={() => dialog.alert("قريباً")} />
               </div>
 
               {roomId && (

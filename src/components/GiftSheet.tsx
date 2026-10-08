@@ -4,6 +4,7 @@ import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { getDeviceId } from "../lib/device";
 import { X, Coins, Loader2, Music, Heart, Globe, Mic, Users, Check, ChevronUp } from "lucide-react";
+import { dialog } from "../lib/dialog";
 
 interface Props {
   roomId: Id<"rooms">;
@@ -109,11 +110,11 @@ export default function GiftSheet({ roomId, onClose, preSelectedUserId }: Props)
   // ============ ضغطة على زر الإرسال داخل البطاقة: إرسال فوري (مع Combo) ============
   const handleSendClick = async (e: React.MouseEvent, giftId: Id<"gifts">) => {
     e.stopPropagation();
-    if (selectedUserIds.size === 0) { alert("اختر مستلماً واحداً على الأقل"); return; }
+    if (selectedUserIds.size === 0) { dialog.alert("اختر مستلماً واحداً على الأقل"); return; }
     const gift = gifts?.find((g) => g._id === giftId);
     if (!gift) return;
     const cost = gift.price * selectedUserIds.size;
-    if (cost > (balance ?? 0)) { alert("رصيدك غير كافٍ"); return; }
+    if (cost > (balance ?? 0)) { dialog.alert("رصيدك غير كافٍ"); return; }
 
     // Update combo UI immediately (optimistic)
     setComboCount((c) => c + 1);
@@ -132,7 +133,7 @@ export default function GiftSheet({ roomId, onClose, preSelectedUserId }: Props)
       });
     } catch (e: any) {
       const msg = typeof e?.data === "object" ? (e.data?.message || e?.message) : e?.message;
-      alert(msg || "فشل الإرسال");
+      dialog.alert(msg || "فشل الإرسال");
     } finally {
       setSending(false);
     }
@@ -444,7 +445,7 @@ export default function GiftSheet({ roomId, onClose, preSelectedUserId }: Props)
               <h3 className="text-white font-bold text-sm mb-2 text-center">شحن الرصيد</h3>
               <div className="grid grid-cols-3 gap-1.5 mb-2">
                 {[1000, 5000, 10000, 25000, 50000, 100000].map((amt) => (
-                  <button key={amt} onClick={() => alert(`قريباً: ${amt} عملة`)}
+                  <button key={amt} onClick={() => dialog.alert(`قريباً: ${amt} عملة`)}
                     className="bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-500/40 rounded-lg p-2 flex flex-col items-center gap-0.5">
                     <Coins size={14} className="text-yellow-400" />
                     <span className="text-yellow-300 text-[10px] font-bold">{amt}</span>
