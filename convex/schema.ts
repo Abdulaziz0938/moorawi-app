@@ -104,6 +104,22 @@ export default defineSchema({
     .index("by_room_and_status", ["roomId", "status"])
     .index("by_user_and_room", ["userId", "roomId"]),
 
+  // [moorawi] Room actions log (activity feed)
+  roomActions: defineTable({
+    roomId: v.id("rooms"),
+    actorId: v.id("users"),
+    actorName: v.string(),
+    actorAvatar: v.optional(v.string()),
+    actorNumber: v.optional(v.number()),
+    targetId: v.id("users"),
+    targetName: v.string(),
+    targetAvatar: v.optional(v.string()),
+    targetNumber: v.optional(v.number()),
+    action: v.string(), // "kick" | "ban" | "unban" | "mute" | "unmute" | "promote" | "demote" | "removeFromSeat" | "adminMute" | "adminUnmute"
+    createdAt: v.number(),
+  })
+    .index("by_room_and_createdAt", ["roomId", "createdAt"]),
+
   gifts: defineTable({
     name: v.string(),
     price: v.number(),
