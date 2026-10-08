@@ -94,9 +94,9 @@ import { Home, Shield, User as UserIcon } from "lucide-react";
 type Size = "sm" | "md" | "lg";
 
 const SIZES: Record<Size, { role: number; name: string; vipW: number; admin: number; pvip: number; gap: string }> = {
-  sm: { role: 11, name: "text-[10px]", vipW: 36, admin: 13, pvip: 13, gap: "gap-1" },
-  md: { role: 14, name: "text-xs", vipW: 44, admin: 16, pvip: 16, gap: "gap-1.5" },
-  lg: { role: 16, name: "text-sm", vipW: 52, admin: 18, pvip: 18, gap: "gap-2" },
+  sm: { role: 11, name: "text-[10px]", vipW: 44, admin: 18, pvip: 18, gap: "gap-1" },
+  md: { role: 14, name: "text-xs", vipW: 54, admin: 22, pvip: 22, gap: "gap-1.5" },
+  lg: { role: 16, name: "text-sm", vipW: 62, admin: 26, pvip: 26, gap: "gap-2" },
 };
 
 export function UserName({
@@ -167,13 +167,25 @@ export function UserName({
       )}
 
       {/* 5. VIP banner (if >0) */}
-      {v > 0 && <VipBanner level={v} width={s.vipW} />}
+      {v > 0 && (
+        <div className="badge-glow flex-shrink-0">
+          <VipBanner level={v} width={s.vipW} />
+        </div>
+      )}
 
       {/* 6. Admin badge */}
-      {adminRole && <AdminBadge role={adminRole} size={s.admin} />}
+      {adminRole && (
+        <div className="badge-glow flex-shrink-0">
+          <AdminBadge role={adminRole} size={s.admin} />
+        </div>
+      )}
 
       {/* 7. pvip */}
-      {v > 0 && <PvipBadge level={v} size={s.pvip} />}
+      {v > 0 && (
+        <div className="badge-glow flex-shrink-0">
+          <PvipBadge level={v} size={s.pvip} />
+        </div>
+      )}
     </div>
   );
 }

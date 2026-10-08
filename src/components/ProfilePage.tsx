@@ -7,7 +7,7 @@ import { uploadToCloudinary } from "../lib/cloudinary";
 import { dialog } from "../lib/dialog";
 import {
   X, Home, Shield, User as UserIcon, Gift, MessageCircle, UserPlus,
-  Crown, Loader2, Pencil, Camera, ShieldCheck, Eye, Trash2, ImageIcon,
+  Crown, Loader2, Pencil, Camera, ShieldCheck, Eye, Trash2, ImageIcon, Sparkles, Gem,
 } from "lucide-react";
 import { UserName } from "./UserBadges";
 
@@ -257,21 +257,16 @@ export default function ProfilePage({
         </div>
 
         {/* Stats */}
-        <div className="mx-4 mt-6 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-4 grid grid-cols-3 gap-3 text-center">
-          <div>
-            <p className="text-2xl">💎</p>
-            <p className="text-white text-base font-black mt-1">{formatNumber(profile.totalSent)}</p>
-            <p className="text-white/60 text-[10px]">ثروة</p>
-          </div>
-          <div>
-            <p className="text-2xl">✨</p>
-            <p className="text-white text-base font-black mt-1">{formatNumber(profile.totalReceived)}</p>
+        <div className="mx-4 mt-5 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-4 grid grid-cols-2 gap-3 text-center">
+          <div className="flex flex-col items-center gap-1">
+            <Sparkles size={26} className="text-pink-300" />
+            <p className="text-white text-base font-black">{formatNumber(profile.totalReceived)}</p>
             <p className="text-white/60 text-[10px]">جاذبية</p>
           </div>
-          <div>
-            <p className="text-2xl">❤️</p>
-            <p className="text-white text-base font-black mt-1">{formatNumber(profile.charms)}</p>
-            <p className="text-white/60 text-[10px]">شارات</p>
+          <div className="flex flex-col items-center gap-1">
+            <Gem size={26} className="text-amber-300" />
+            <p className="text-white text-base font-black">{formatNumber(profile.totalSent)}</p>
+            <p className="text-white/60 text-[10px]">ثروة</p>
           </div>
         </div>
 

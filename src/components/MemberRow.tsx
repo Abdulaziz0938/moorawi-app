@@ -109,10 +109,10 @@ export default function MemberRow({
             </span>
           )}
           {adminRole === "super" && (
-            <img src="/badges/badge-super.png" alt="" className="h-4 w-4 object-contain flex-shrink-0" />
+            <img src="/badges/badge-super.png" alt="" className="h-5 w-5 object-contain flex-shrink-0 badge-glow" />
           )}
           {adminRole === "moderator" && (
-            <img src="/badges/badge-admin.png" alt="" className="h-4 w-4 object-contain flex-shrink-0" />
+            <img src="/badges/badge-admin.png" alt="" className="h-5 w-5 object-contain flex-shrink-0 badge-glow" />
           )}
         </div>
       )}

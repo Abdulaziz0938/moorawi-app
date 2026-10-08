@@ -165,15 +165,23 @@ function PodiumSlot({
             <img
               src={`/vip/vip${user.vip}.png`}
               alt=""
-              className="h-3 w-auto object-contain"
+              className="h-4 w-auto object-contain badge-glow"
               draggable={false}
             />
           )}
           {user.adminRole === "super" && (
-            <img src="/badges/badge-super.png" alt="" className="h-3.5 w-3.5 object-contain" />
+            <img
+              src="/badges/badge-super.png"
+              alt=""
+              className="h-5 w-5 object-contain badge-glow"
+            />
           )}
           {user.adminRole === "moderator" && (
-            <img src="/badges/badge-admin.png" alt="" className="h-3.5 w-3.5 object-contain" />
+            <img
+              src="/badges/badge-admin.png"
+              alt=""
+              className="h-5 w-5 object-contain badge-glow"
+            />
           )}
         </div>
       )}

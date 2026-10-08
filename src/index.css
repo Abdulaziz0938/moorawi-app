@@ -387,3 +387,23 @@ html, body {
   border: 1px solid #fcd34d;
 }
 
+/* ============ Badge Glow (VIP / Admin / pvip) ============ */
+.badge-glow {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6))
+          drop-shadow(0 0 6px rgba(255, 215, 0, 0.5))
+          brightness(1.1);
+  transition: filter 0.2s ease;
+}
+
+.badge-glow:hover {
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.7))
+          drop-shadow(0 0 10px rgba(255, 215, 0, 0.7))
+          brightness(1.2);
+}
+
+.badge-glow-purple {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6))
+          drop-shadow(0 0 6px rgba(168, 85, 247, 0.6))
+          brightness(1.1);
+}
+

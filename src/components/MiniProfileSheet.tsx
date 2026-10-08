@@ -4,7 +4,7 @@ import type { Id } from "../../convex/_generated/dataModel";
 import { dialog } from "../lib/dialog";
 import {
   X, Gift, MessageCircle, UserPlus, Mic, MicOff, ArrowDown,
-  Ban, Crown, Loader2, Shield,
+  Ban, Crown, Loader2, Shield, Sparkles, Gem,
 } from "lucide-react";
 import { UserName } from "./UserBadges";
 
@@ -190,21 +190,16 @@ export default function MiniProfileSheet({
             </div>
           </div>
 
-          <div className="mx-4 mb-2 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-2.5 grid grid-cols-3 gap-2 text-center">
-            <div>
-              <p className="text-lg">💎</p>
-              <p className="text-white text-xs font-bold">{formatNumber(profile.totalSent)}</p>
-              <p className="text-white/60 text-[10px]">ثروة</p>
-            </div>
-            <div>
-              <p className="text-lg">✨</p>
-              <p className="text-white text-xs font-bold">{formatNumber(profile.totalReceived)}</p>
+          <div className="mx-4 mb-2 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-3 grid grid-cols-2 gap-3 text-center">
+            <div className="flex flex-col items-center gap-0.5">
+              <Sparkles size={22} className="text-pink-300" />
+              <p className="text-white text-sm font-black">{formatNumber(profile.totalReceived)}</p>
               <p className="text-white/60 text-[10px]">جاذبية</p>
             </div>
-            <div>
-              <p className="text-lg">❤️</p>
-              <p className="text-white text-xs font-bold">{formatNumber(profile.charms)}</p>
-              <p className="text-white/60 text-[10px]">شارات</p>
+            <div className="flex flex-col items-center gap-0.5">
+              <Gem size={22} className="text-amber-300" />
+              <p className="text-white text-sm font-black">{formatNumber(profile.totalSent)}</p>
+              <p className="text-white/60 text-[10px]">ثروة</p>
             </div>
           </div>
 
