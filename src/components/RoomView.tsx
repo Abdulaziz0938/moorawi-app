@@ -16,6 +16,7 @@ import CompactChatInput from "./CompactChatInput";
 import LeaderboardSheet from "./LeaderboardSheet";
 import MiniProfileSheet from "./MiniProfileSheet";
 import MicRequestsSheet from "./MicRequestsSheet";
+import MembersSheet from "./MembersSheet";
 import ProfilePage from "./ProfilePage";
 import { UserName } from "./UserBadges";
 import { dialog } from "../lib/dialog";
@@ -194,6 +195,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const [isFavorite, setIsFavorite] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [showMembers, setShowMembers] = useState(false);
   const [miniProfileUserId, setMiniProfileUserId] = useState<string | null>(null);
   const [mySeatIndexForMiniProfile, setMySeatIndexForMiniProfile] = useState<number | null>(null);
   const [preSelectedGiftUserId, setPreSelectedGiftUserId] = useState<string | null>(null);
@@ -631,10 +633,13 @@ export default function RoomView({ roomId, onLeave }: Props) {
           <div className="flex items-center justify-between gap-2">
             {/* Members + Avatars (right side in RTL) */}
             <div className="flex items-center gap-1.5 min-w-0">
-              <div className="h-7 px-2 rounded-full bg-white/10 flex items-center gap-1 flex-shrink-0">
+              <button
+                onClick={() => setShowMembers(true)}
+                className="h-7 px-2 rounded-full bg-white/10 hover:bg-white/20 flex items-center gap-1 flex-shrink-0 active:scale-95 transition"
+              >
                 <Grid2x2 size={12} className="text-white/80" />
                 <span className="text-[10px] font-black text-white">{members.length}</span>
-              </div>
+              </button>
               <div className="flex items-center -space-x-1.5">
                 {topMembers.slice(0, 5).map((m) => (
                   <div key={m._id} className="w-6 h-6 rounded-full overflow-hidden bg-purple-500 flex items-center justify-center text-[9px] font-bold text-white border-2 border-purple-900 flex-shrink-0">
@@ -1150,6 +1155,17 @@ export default function RoomView({ roomId, onLeave }: Props) {
             <p className="text-white text-xs font-bold whitespace-nowrap">{myRequestToast}</p>
           </div>
         </div>
+      )}
+
+      {showMembers && (
+        <MembersSheet
+          roomId={roomId}
+          onClose={() => setShowMembers(false)}
+          onUserClick={(uid) => {
+            setShowMembers(false);
+            setMiniProfileUserId(uid);
+          }}
+        />
       )}
 
       {fullProfileUserId && (

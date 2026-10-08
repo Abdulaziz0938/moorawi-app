@@ -310,3 +310,80 @@ html, body {
   }
 }
 
+/* ============ Member Row Card ============ */
+.member-avatar-ring {
+  position: relative;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  padding: 2px;
+  background: linear-gradient(135deg, #06b6d4 0%, #10b981 100%);
+  box-shadow: 0 0 12px rgba(6, 182, 212, 0.4);
+  flex-shrink: 0;
+}
+
+.member-avatar-inner {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  background: linear-gradient(135deg, #a855f7, #ec4899);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 900;
+  font-size: 20px;
+}
+
+.member-status-badge {
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  height: 17px;
+  padding: 0 7px;
+  border-radius: 9px;
+  font-size: 9px;
+  font-weight: 900;
+  color: white;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.7);
+  border: 1px solid rgba(255,255,255,0.3);
+}
+
+.member-status-badge.mic {
+  background: linear-gradient(180deg, #10b981 0%, #047857 100%);
+}
+
+.member-status-badge.room {
+  background: linear-gradient(180deg, #8b5cf6 0%, #6d28d9 100%);
+}
+
+.badge-capsule {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 900;
+  color: white;
+  gap: 4px;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.35);
+}
+
+.badge-capsule.charm {
+  background: linear-gradient(180deg, #ec4899 0%, #9d174d 100%);
+  border: 1px solid #f9a8d4;
+}
+
+.badge-capsule.wealth {
+  background: linear-gradient(180deg, #f59e0b 0%, #92400e 100%);
+  border: 1px solid #fcd34d;
+}
+
