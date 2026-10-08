@@ -16,6 +16,7 @@ import CompactChatInput from "./CompactChatInput";
 import LeaderboardSheet from "./LeaderboardSheet";
 import MiniProfileSheet from "./MiniProfileSheet";
 import MicRequestsSheet from "./MicRequestsSheet";
+import { AdminBadge, VipBanner, PvipBadge } from "./UserBadges";
 
 // [moorawi-batch] Flying particle data for batch gifts
 type FlyingTarget = {
@@ -135,6 +136,8 @@ function calculateTargetCoords(
 
 interface Props { roomId: Id<"rooms">; onLeave: () => void; }
 
+// [moorawi] Chat bubble style — will be customizable via purchase + VIP skins later
+// TODO: read from user.chatBubbleSkin when implemented
 function bubbleClass(vip: number): string {
   if (vip <= 0) return "bg-white/5 border border-white/10";
   const g = [
@@ -713,10 +716,21 @@ export default function RoomView({ roomId, onLeave }: Props) {
                     {m.avatarUrl ? <img src={m.avatarUrl} alt="" className="w-full h-full object-cover" /> : (m.senderName?.[0] || "?")}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5 flex-wrap">
+                    {/* [moorawi] Badge order: member/owner → name → agency → vip-banner → family → admin → pvip */}
+                    <div className="flex items-center gap-1 flex-wrap" dir="ltr">
+                      {/* TODO: 1. member/owner badge (rooms.members.role) */}
+                      {/* 2. Name */}
                       <span className="text-[10px] font-bold text-purple-300">{m.senderName}</span>
-                      {m.senderNumber && <span className="text-[8px] text-white/40" dir="ltr">ID:{m.senderNumber}</span>}
-                      <span className="text-[8px] text-white/40">{formatTime(m.createdAt)}</span>
+                      {/* TODO: 3. agency badge */}
+                      {/* 4. VIP banner (wide) */}
+                      {(m.senderVip ?? 0) > 0 && <VipBanner level={m.senderVip} width={38} />}
+                      {/* TODO: 5. family badge */}
+                      {/* 6. Admin / Super admin */}
+                      {m.senderAdminRole && <AdminBadge role={m.senderAdminRole} size={14} />}
+                      {/* 7. VIP level (pvip small medal) */}
+                      {(m.senderVip ?? 0) > 0 && <PvipBadge level={m.senderVip} size={14} />}
+                      {/* time */}
+                      <span className="text-[8px] text-white/40 ml-auto">{formatTime(m.createdAt)}</span>
                     </div>
                     {(m.text || m.imageUrl) && (
                       <div className={`w-fit max-w-[85%] mt-1 px-2.5 py-1.5 rounded-2xl rounded-tr-sm ${bubbleClass(m.senderVip ?? 0)}`}>
