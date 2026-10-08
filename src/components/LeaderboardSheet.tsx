@@ -22,6 +22,7 @@ type Leader = {
   name: string;
   avatarUrl: string | null;
   vip: number;
+  charmLevel?: number | null;
   adminRole?: "super" | "moderator" | null;
   total: number;
 };
