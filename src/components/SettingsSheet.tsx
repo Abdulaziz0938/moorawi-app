@@ -8,7 +8,7 @@ import { uploadToCloudinary } from "../lib/cloudinary";
 import {
   X, Sparkles, Palette, LayoutGrid, Settings, Lock,
   Briefcase, Activity, Music, Coins, MessageCircle,
-  Wand2, Gift, Volume2, Mic2, ImageIcon, Monitor, VolumeX, Check, Loader2, Globe, Heart,
+  Wand2, Gift, Volume2, Mic2, ImageIcon, Monitor, VolumeX, Check, Loader2, Globe, Heart, Hand,
 } from "lucide-react";
 
 export const LAYOUT_ROWS: Record<string, number[]> = { "m1": [1], "m2": [2], "m3": [3], "m5": [2,3], "m7": [1,6], "m18": [6,6,6], "m24": [6,6,6,6], "m12b": [6,6] };
@@ -31,6 +31,7 @@ interface Props {
   currentName: string;
   currentWelcome: string;
   currentCoverUrl: string | null;
+  micRequestsEnabled: boolean;
   onClose: () => void;
 }
 
@@ -52,12 +53,29 @@ function LayoutPreview({ layoutKey }: { layoutKey: string }) {
 }
 
 export default function SettingsSheet({
-  roomId, currentLayout, isOwnerOrMod, currentName, currentWelcome, currentCoverUrl, onClose,
+  roomId, currentLayout, isOwnerOrMod, currentName, currentWelcome, currentCoverUrl, micRequestsEnabled, onClose,
 }: Props) {
   const deviceId = getDeviceId();
   const updateLayout = useMutation(api.rooms.updateLayout);
   const updateRoomInfo = useMutation(api.rooms.updateRoomInfo);
   const updateBackground = useMutation(api.rooms.updateRoomBackground);
+  const setMicRequestsEnabledMutation = useMutation(api.mics.setMicRequestsEnabled);
+  const [localMicReqEnabled, setLocalMicReqEnabled] = useState<boolean>(micRequestsEnabled);
+  const [micReqSaving, setMicReqSaving] = useState(false);
+
+  const handleToggleMicRequests = async () => {
+    if (!isOwnerOrMod || micReqSaving) return;
+    const next = !localMicReqEnabled;
+    setMicReqSaving(true);
+    try {
+      await setMicRequestsEnabledMutation({ roomId, enabled: next, tokenOverride: deviceId });
+      setLocalMicReqEnabled(next);
+    } catch (e: any) {
+      alert(e?.message || "خطأ");
+    } finally {
+      setMicReqSaving(false);
+    }
+  };
   
   const [tab, setTab] = useState<Tab>("main");
   const [name, setName] = useState(currentName);
@@ -154,6 +172,38 @@ export default function SettingsSheet({
 
         {tab === "main" && (
           <div className="flex-1 overflow-y-auto p-4">
+            {/* [moorawi] طلب المايك Toggle */}
+            <div className="mb-4 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-400/30 rounded-2xl p-3 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-purple-500/30 flex items-center justify-center">
+                  <Hand size={20} className="text-white" />
+                </div>
+                <div className="text-right">
+                  <p className="text-white text-sm font-black">طلب المايك</p>
+                  <p className="text-white/60 text-[10px]">
+                    {localMicReqEnabled ? "المستمعون يطلبون الصعود" : "المستمعون يصعدون مباشرة"}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={handleToggleMicRequests}
+                disabled={!isOwnerOrMod || micReqSaving}
+                className={`relative w-14 h-7 rounded-full transition-all flex-shrink-0 border ${
+                  localMicReqEnabled ? "bg-emerald-500 border-emerald-400" : "bg-white/20 border-white/30"
+                } ${!isOwnerOrMod ? "opacity-50 cursor-not-allowed" : ""}`}
+              >
+                <div
+                  className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-all ${
+                    localMicReqEnabled ? "left-0.5" : "left-[calc(100%-22px)]"
+                  }`}
+                />
+              </button>
+            </div>
+
+            {!isOwnerOrMod && (
+              <p className="text-yellow-300 text-[10px] text-center mb-3">للمالك/المشرف فقط</p>
+            )}
+
             <div className="grid grid-cols-3 gap-3 mb-6">
               {items.map((it) => (
                 <button key={it.key} onClick={() => handleItemClick(it.key)} className="flex flex-col items-center gap-2 p-3 bg-white/5 hover:bg-white/10 rounded-2xl transition">

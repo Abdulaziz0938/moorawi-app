@@ -1163,6 +1163,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
       {showSettings && (
         <SettingsSheet roomId={roomId} currentLayout={layout} isOwnerOrMod={isOwnerOrMod}
           currentName={room.name} currentWelcome={room.welcomeMessage ?? ""} currentCoverUrl={room.coverUrl ?? null}
+          micRequestsEnabled={!!room?.micRequestsEnabled}
           onClose={() => setShowSettings(false)} />
       )}
     </div>
