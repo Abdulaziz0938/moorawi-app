@@ -731,12 +731,10 @@ export default function RoomView({ roomId, onLeave }: Props) {
                         <button onClick={() => { toggleLock({ roomId, seatIndex: currentSeatMenuData.seatIndex, tokenOverride: deviceId }); setOpenSeatMenu(null); setOpenSeatMenuPos(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs">
                           {currentSeatMenuData.locked ? <Unlock size={14} /> : <Lock size={14} />} {currentSeatMenuData.locked ? "فك القفل" : "قفل المايك"}
                         </button>
-                        {/* إلغاء/كتم المايك — يظهر فقط إذا كان هناك مستخدم */}
-                        {currentSeatMenuData.userId && (
-                          <button onClick={() => { toggleMuteSeat({ roomId, seatIndex: currentSeatMenuData.seatIndex, tokenOverride: deviceId }); setOpenSeatMenu(null); setOpenSeatMenuPos(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs">
-                            <MicOff size={14} /> {currentSeatMenuData.muted ? "إلغاء الكتم" : "اكتمه"}
-                          </button>
-                        )}
+                        {/* كتم/إلغاء كتم المايك — دائماً متاح للـ owner/mod */}
+                        <button onClick={() => { toggleMuteSeat({ roomId, seatIndex: currentSeatMenuData.seatIndex, tokenOverride: deviceId }); setOpenSeatMenu(null); setOpenSeatMenuPos(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs">
+                          <MicOff size={14} /> {currentSeatMenuData.muted ? "إلغاء كتم المايك" : "كتم المايك"}
+                        </button>
                       </>
                     )}
                     {/* اجلس هنا — فقط إذا فاضي */}
