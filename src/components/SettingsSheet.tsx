@@ -5,8 +5,8 @@ import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { getDeviceId } from "../lib/device";
 import { uploadToCloudinary } from "../lib/cloudinary";
-import {
 import { dialog } from "../lib/dialog";
+import {
   X, Sparkles, Palette, LayoutGrid, Settings, Lock,
   Briefcase, Activity, Music, Coins, MessageCircle,
   Wand2, Gift, Volume2, Mic2, ImageIcon, Monitor, VolumeX, Check, Loader2, Globe, Heart, Hand,

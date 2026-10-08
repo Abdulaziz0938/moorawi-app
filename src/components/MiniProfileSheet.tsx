@@ -1,8 +1,8 @@
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
-import {
 import { dialog } from "../lib/dialog";
+import {
   X, Gift, MessageCircle, UserPlus, Mic, MicOff, ArrowDown,
   Ban, Crown, Loader2,
 } from "lucide-react";
