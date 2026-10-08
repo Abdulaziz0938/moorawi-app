@@ -188,3 +188,157 @@ export const sendCharm = mutation({
     return null;
   },
 });
+
+// ============ [moorawi] نظام طلب المايك ============
+
+// Owner/Mod يفعّل أو يعطّل نظام الطلبات
+export const setMicRequestsEnabled = mutation({
+  args: { roomId: v.id("rooms"), enabled: v.boolean(), tokenOverride: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx, args.tokenOverride);
+    const member = await getMember(ctx, args.roomId, user._id);
+    if (!member || (member.role !== "owner" && member.role !== "moderator")) {
+      throw new ConvexError({ code: "FORBIDDEN", message: "صلاحيات غير كافية" });
+    }
+    await ctx.db.patch("rooms", args.roomId, { micRequestsEnabled: args.enabled });
+    return null;
+  },
+});
+
+// Listener يطلب المايك
+export const requestMic = mutation({
+  args: { roomId: v.id("rooms"), tokenOverride: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx, args.tokenOverride);
+    const room = await ctx.db.get("rooms", args.roomId);
+    if (!room) throw new ConvexError({ code: "NOT_FOUND", message: "الغرفة غير موجودة" });
+    if (!room.micRequestsEnabled) {
+      throw new ConvexError({ code: "FORBIDDEN", message: "طلب المايك معطّل" });
+    }
+
+    // فحص هل المستخدم أصلاً على مايك
+    const seats = await ctx.db.query("micSeats").withIndex("by_room_and_seatIndex", (q) => q.eq("roomId", args.roomId)).take(MAX_SEATS);
+    if (seats.some((s) => s.userId === user._id)) return null;
+
+    // فحص هل هناك طلب موجود
+    const existing = await ctx.db
+      .query("micRequests")
+      .withIndex("by_user_and_room", (q) => q.eq("userId", user._id).eq("roomId", args.roomId))
+      .first();
+    if (existing) return existing._id;
+
+    const avatarUrl = user.avatarUrl ?? (user.avatarId ? await ctx.storage.getUrl(user.avatarId) : null);
+
+    const id = await ctx.db.insert("micRequests", {
+      roomId: args.roomId,
+      userId: user._id,
+      userName: user.name ?? "ضيف",
+      avatarUrl: avatarUrl ?? undefined,
+      userNumber: user.userNumber ?? undefined,
+      status: "pending",
+    });
+    return id;
+  },
+});
+
+// المستخدم يلغي طلبه (أو يُحذف بعد رؤية الإشعار)
+export const cancelMyRequest = mutation({
+  args: { roomId: v.id("rooms"), tokenOverride: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx, args.tokenOverride);
+    const req = await ctx.db
+      .query("micRequests")
+      .withIndex("by_user_and_room", (q) => q.eq("userId", user._id).eq("roomId", args.roomId))
+      .first();
+    if (req) await ctx.db.delete(req._id);
+    return null;
+  },
+});
+
+// حالة طلبي (للمستخدم)
+export const myRequestStatus = query({
+  args: { roomId: v.id("rooms"), tokenOverride: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    try {
+      const user = await requireUser(ctx, args.tokenOverride);
+      const req = await ctx.db
+        .query("micRequests")
+        .withIndex("by_user_and_room", (q) => q.eq("userId", user._id).eq("roomId", args.roomId))
+        .first();
+      if (!req) return null;
+      return { _id: req._id, status: req.status };
+    } catch {
+      return null;
+    }
+  },
+});
+
+// Owner/Mod يجلب قائمة الطلبات
+export const listRequests = query({
+  args: { roomId: v.id("rooms") },
+  handler: async (ctx, args) => {
+    const reqs = await ctx.db
+      .query("micRequests")
+      .withIndex("by_room_and_status", (q) => q.eq("roomId", args.roomId).eq("status", "pending"))
+      .take(50);
+    return reqs.map((r) => ({
+      _id: r._id,
+      userId: r.userId,
+      userName: r.userName,
+      avatarUrl: r.avatarUrl ?? null,
+      userNumber: r.userNumber ?? null,
+    }));
+  },
+});
+
+// Owner/Mod يقبل الطلب → يجلس في أول مايك فارغ
+export const approveRequest = mutation({
+  args: { requestId: v.id("micRequests"), tokenOverride: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx, args.tokenOverride);
+    const req = await ctx.db.get("micRequests", args.requestId);
+    if (!req) throw new ConvexError({ code: "NOT_FOUND", message: "الطلب غير موجود" });
+
+    const member = await getMember(ctx, req.roomId, user._id);
+    if (!member || (member.role !== "owner" && member.role !== "moderator")) {
+      throw new ConvexError({ code: "FORBIDDEN", message: "صلاحيات غير كافية" });
+    }
+
+    // أول مايك فارغ غير مقفل
+    const seats = await ctx.db
+      .query("micSeats")
+      .withIndex("by_room_and_seatIndex", (q) => q.eq("roomId", req.roomId))
+      .take(MAX_SEATS);
+    const freeSeat = seats.find((s) => !s.userId && !s.locked);
+
+    if (freeSeat) {
+      await ctx.db.patch("micSeats", freeSeat._id, { userId: req.userId });
+      const targetMember = await getMember(ctx, req.roomId, req.userId);
+      if (targetMember && targetMember.role === "listener") {
+        await ctx.db.patch("roomMembers", targetMember._id, { role: "speaker" });
+      }
+    }
+
+    // تحديث الطلب → accepted (المستخدم سيراه ويحذفه)
+    await ctx.db.patch("micRequests", args.requestId, { status: "accepted" });
+    return null;
+  },
+});
+
+// Owner/Mod يرفض الطلب
+export const rejectRequest = mutation({
+  args: { requestId: v.id("micRequests"), tokenOverride: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx, args.tokenOverride);
+    const req = await ctx.db.get("micRequests", args.requestId);
+    if (!req) return null;
+
+    const member = await getMember(ctx, req.roomId, user._id);
+    if (!member || (member.role !== "owner" && member.role !== "moderator")) {
+      throw new ConvexError({ code: "FORBIDDEN", message: "صلاحيات غير كافية" });
+    }
+    await ctx.db.patch("micRequests", args.requestId, { status: "rejected" });
+    return null;
+  },
+});
+

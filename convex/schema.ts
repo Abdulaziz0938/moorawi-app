@@ -47,6 +47,7 @@ export default defineSchema({
     coverUrl: v.optional(v.string()),                  // Cloudinary
     backgroundImageId: v.optional(v.id("_storage")),   // legacy
     backgroundUrl: v.optional(v.string()),             // Cloudinary
+    micRequestsEnabled: v.optional(v.boolean()),       // طلب المايك
   })
     .index("by_isPrivate", ["isPrivate"])
     .index("by_owner", ["ownerId"]),
@@ -87,8 +88,20 @@ export default defineSchema({
     seatIndex: v.number(),
     status: v.union(v.literal("pending"), v.literal("accepted"), v.literal("declined")),
   })
-    .index("by_to_and_status", ["toUserId", "status"])
-    .index("by_room", ["roomId"]),
+    .index("by_room", ["roomId"])
+    .index("by_to_and_status", ["toUserId", "status"]),
+
+  // [moorawi] طلبات المايك — ephemeral (تُحذف بعد رؤية الإشعار)
+  micRequests: defineTable({
+    roomId: v.id("rooms"),
+    userId: v.id("users"),
+    userName: v.string(),
+    avatarUrl: v.optional(v.string()),
+    userNumber: v.optional(v.number()),
+    status: v.union(v.literal("pending"), v.literal("accepted"), v.literal("rejected")),
+  })
+    .index("by_room_and_status", ["roomId", "status"])
+    .index("by_user_and_room", ["userId", "roomId"]),
 
   gifts: defineTable({
     name: v.string(),

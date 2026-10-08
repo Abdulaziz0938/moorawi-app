@@ -3,7 +3,7 @@ import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import {
-  Mic, MicOff, LogOut, Loader2, Heart, Trophy,
+  Mic, MicOff, LogOut, Loader2, Heart, Trophy, Bell,
   MessageCircle, Gift, Grid2x2, Share2, Minimize2, ArrowRight,
   Lock, Unlock, UserPlus, Move, X, Check,
 } from "lucide-react";
@@ -15,6 +15,7 @@ import GiftSheet from "./GiftSheet";
 import CompactChatInput from "./CompactChatInput";
 import LeaderboardSheet from "./LeaderboardSheet";
 import MiniProfileSheet from "./MiniProfileSheet";
+import MicRequestsSheet from "./MicRequestsSheet";
 
 // [moorawi-batch] Flying particle data for batch gifts
 type FlyingTarget = {
@@ -190,6 +191,15 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const [miniProfileUserId, setMiniProfileUserId] = useState<string | null>(null);
   const [mySeatIndexForMiniProfile, setMySeatIndexForMiniProfile] = useState<number | null>(null);
   const [preSelectedGiftUserId, setPreSelectedGiftUserId] = useState<string | null>(null);
+  const [showMicRequests, setShowMicRequests] = useState(false);
+  const [myRequestToast, setMyRequestToast] = useState<string | null>(null);
+
+  // [moorawi] mic requests queries
+  const micRequestsList = useQuery(api.mics.listRequests, { roomId });
+  const micRequestsCount = micRequestsList?.length ?? 0;
+  const myMicRequest = useQuery(api.mics.myRequestStatus, { roomId, tokenOverride: deviceId });
+  const requestMicMutation = useMutation(api.mics.requestMic);
+  const cancelMyRequestMutation = useMutation(api.mics.cancelMyRequest);
   const [showGifts, setShowGifts] = useState(false);
   const [showChatInput, setShowChatInput] = useState(false);
   const [openSeatMenu, setOpenSeatMenu] = useState<number | null>(null);
@@ -305,6 +315,29 @@ export default function RoomView({ roomId, onLeave }: Props) {
     window.addEventListener("beforeunload", h);
     return () => window.removeEventListener("beforeunload", h);
   }, [roomId, deviceId, myInfo, clearMySeats]);
+
+  // [moorawi] Auto-hide my request toast
+  useEffect(() => {
+    if (!myRequestToast) return;
+    const t = setTimeout(() => setMyRequestToast(null), 3000);
+    return () => clearTimeout(t);
+  }, [myRequestToast]);
+
+  // [moorawi] Watch my request status change
+  const lastReqStatusRef = useRef<string | null>(null);
+  useEffect(() => {
+    const status = myMicRequest?.status ?? null;
+    if (status && status !== lastReqStatusRef.current) {
+      lastReqStatusRef.current = status;
+      if (status === "accepted") {
+        setMyRequestToast("✅ تم قبول طلب المايك");
+        cancelMyRequestMutation({ roomId, tokenOverride: deviceId }).catch(() => {});
+      } else if (status === "rejected") {
+        setMyRequestToast("❌ تم رفض طلب المايك");
+        cancelMyRequestMutation({ roomId, tokenOverride: deviceId }).catch(() => {});
+      }
+    }
+  }, [myMicRequest?.status, roomId, deviceId, cancelMyRequestMutation]);
 
   // Gift: combo detection
   useEffect(() => {
@@ -474,6 +507,11 @@ export default function RoomView({ roomId, onLeave }: Props) {
       }
       if (isOwnerOrMod) {
         setOpenSeatMenu(seatIndex);
+      } else if (room?.micRequestsEnabled) {
+        // [moorawi] طلب المايك
+        requestMicMutation({ roomId, tokenOverride: deviceId })
+          .then(() => setMyRequestToast("⏳ تم إرسال طلبك"))
+          .catch((e: any) => alert(e?.message || "خطأ"));
       } else {
         takeSeat({ roomId, seatIndex, tokenOverride: deviceId }).catch((e: any) => alert(e?.message || "خطأ"));
       }
@@ -557,6 +595,16 @@ export default function RoomView({ roomId, onLeave }: Props) {
             </div>
             <span className="text-[9px] font-bold bg-white/10 text-white px-1.5 py-0.5 rounded-full">{members.length}</span>
             <button onClick={() => setIsFavorite(!isFavorite)} className="p-1 rounded-full hover:bg-white/10 text-white"><Heart size={14} className={isFavorite ? "fill-red-500 text-red-500" : ""} /></button>
+            {isOwnerOrMod && room?.micRequestsEnabled && (
+              <button onClick={() => setShowMicRequests(true)} className="relative p-1 rounded-full hover:bg-white/10 text-white">
+                <Bell size={14} />
+                {micRequestsCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[8px] font-black rounded-full min-w-[14px] h-[14px] flex items-center justify-center border border-white px-0.5">
+                    {micRequestsCount > 9 ? "9+" : micRequestsCount}
+                  </span>
+                )}
+              </button>
+            )}
             <button onClick={() => setShowLeaderboard(true)} className="p-1 rounded-full hover:bg-white/10 text-white"><Trophy size={14} /></button>
           </div>
         </header>
@@ -966,6 +1014,18 @@ export default function RoomView({ roomId, onLeave }: Props) {
             setMiniProfileUserId(uid);
           }}
         />
+      )}
+
+      {showMicRequests && (
+        <MicRequestsSheet roomId={roomId} onClose={() => setShowMicRequests(false)} />
+      )}
+
+      {myRequestToast && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[200] pointer-events-none" dir="rtl">
+          <div className="bg-black/85 backdrop-blur-md border border-white/30 rounded-full px-5 py-2 shadow-2xl animate-pulse">
+            <p className="text-white text-xs font-bold whitespace-nowrap">{myRequestToast}</p>
+          </div>
+        </div>
       )}
 
       {miniProfileUserId && (
