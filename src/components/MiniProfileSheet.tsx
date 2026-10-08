@@ -149,14 +149,22 @@ export default function MiniProfileSheet({
                 <span className="text-white/80 text-xs">ID:{profile.userNumber}</span>
               )}
               {profile.adminRole === "super" && (
-                <span className="text-[10px] font-black bg-gradient-to-r from-yellow-400 via-amber-500 to-red-500 text-white px-2 py-0.5 rounded-full border border-yellow-300/50 shadow">
-                  👑 SUPER ADMIN
-                </span>
+                <img
+                  src="/badges/badge-super.png"
+                  alt="Super Admin"
+                  title="Super Admin"
+                  className="h-5 w-5 object-contain drop-shadow-lg"
+                  draggable={false}
+                />
               )}
               {profile.adminRole === "moderator" && (
-                <span className="text-[10px] font-black bg-sky-500 text-white px-2 py-0.5 rounded-full border border-sky-300/50 shadow">
-                  MOD
-                </span>
+                <img
+                  src="/badges/badge-admin.png"
+                  alt="Admin"
+                  title="Admin"
+                  className="h-4 w-4 object-contain drop-shadow-lg"
+                  draggable={false}
+                />
               )}
             </div>
 
