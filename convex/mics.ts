@@ -375,3 +375,126 @@ export const rejectRequest = mutation({
   },
 });
 
+// ============ [moorawi] Admin Actions ============
+
+// طرد من الغرفة (يمكنه العودة)
+export const kickFromRoom = mutation({
+  args: { roomId: v.id("rooms"), toUserId: v.id("users"), tokenOverride: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx, args.tokenOverride);
+    const member = await getMember(ctx, args.roomId, user._id);
+    if (!member || (member.role !== "owner" && member.role !== "moderator")) {
+      throw new ConvexError({ code: "FORBIDDEN", message: "صلاحيات غير كافية" });
+    }
+    const targetMember = await getMember(ctx, args.roomId, args.toUserId);
+    if (!targetMember) return null;
+    if (targetMember.role === "owner") {
+      throw new ConvexError({ code: "FORBIDDEN", message: "لا يمكن طرد المالك" });
+    }
+    if (member.role === "moderator" && targetMember.role === "moderator") {
+      throw new ConvexError({ code: "FORBIDDEN", message: "لا يمكنك طرد مشرف آخر" });
+    }
+    // إفراغ مقعده
+    const seats = await ctx.db.query("micSeats").withIndex("by_room_and_seatIndex", (q) => q.eq("roomId", args.roomId)).take(MAX_SEATS);
+    for (const s of seats) {
+      if (s.userId === args.toUserId) {
+        await ctx.db.patch("micSeats", s._id, { userId: undefined, muted: false, adminMuted: false });
+      }
+    }
+    // حذف عضويته
+    await ctx.db.delete("roomMembers", targetMember._id);
+    return null;
+  },
+});
+
+// حظر/فك حظر (toggle) — المالك فقط
+export const toggleBanUser = mutation({
+  args: { roomId: v.id("rooms"), toUserId: v.id("users"), tokenOverride: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx, args.tokenOverride);
+    const member = await getMember(ctx, args.roomId, user._id);
+    if (!member || member.role !== "owner") {
+      throw new ConvexError({ code: "FORBIDDEN", message: "المالك فقط" });
+    }
+    const targetMember = await getMember(ctx, args.roomId, args.toUserId);
+    if (!targetMember) return null;
+    if (targetMember.role === "owner") {
+      throw new ConvexError({ code: "FORBIDDEN", message: "لا يمكن حظر المالك" });
+    }
+    const next = !targetMember.banned;
+    await ctx.db.patch("roomMembers", targetMember._id, { banned: next });
+    // إذا حظر → أفرغ مقعده
+    if (next) {
+      const seats = await ctx.db.query("micSeats").withIndex("by_room_and_seatIndex", (q) => q.eq("roomId", args.roomId)).take(MAX_SEATS);
+      for (const s of seats) {
+        if (s.userId === args.toUserId) {
+          await ctx.db.patch("micSeats", s._id, { userId: undefined, muted: false, adminMuted: false });
+        }
+      }
+    }
+    return null;
+  },
+});
+
+// ترقية إلى مشرف — المالك فقط
+export const promoteToMod = mutation({
+  args: { roomId: v.id("rooms"), toUserId: v.id("users"), tokenOverride: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx, args.tokenOverride);
+    const member = await getMember(ctx, args.roomId, user._id);
+    if (!member || member.role !== "owner") {
+      throw new ConvexError({ code: "FORBIDDEN", message: "المالك فقط" });
+    }
+    const targetMember = await getMember(ctx, args.roomId, args.toUserId);
+    if (!targetMember) return null;
+    if (targetMember.role === "owner") {
+      throw new ConvexError({ code: "FORBIDDEN", message: "لا يمكن تعديل المالك" });
+    }
+    await ctx.db.patch("roomMembers", targetMember._id, { role: "moderator" });
+    return null;
+  },
+});
+
+// إزالة الإشراف — المالك فقط
+export const demoteMod = mutation({
+  args: { roomId: v.id("rooms"), toUserId: v.id("users"), tokenOverride: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx, args.tokenOverride);
+    const member = await getMember(ctx, args.roomId, user._id);
+    if (!member || member.role !== "owner") {
+      throw new ConvexError({ code: "FORBIDDEN", message: "المالك فقط" });
+    }
+    const targetMember = await getMember(ctx, args.roomId, args.toUserId);
+    if (!targetMember) return null;
+    if (targetMember.role !== "moderator") return null;
+    await ctx.db.patch("roomMembers", targetMember._id, { role: "listener" });
+    return null;
+  },
+});
+
+// إنزال شخص آخر من المايك — Owner/Mod
+export const removeFromSeat = mutation({
+  args: { roomId: v.id("rooms"), toUserId: v.id("users"), tokenOverride: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx, args.tokenOverride);
+    const member = await getMember(ctx, args.roomId, user._id);
+    if (!member || (member.role !== "owner" && member.role !== "moderator")) {
+      throw new ConvexError({ code: "FORBIDDEN", message: "صلاحيات غير كافية" });
+    }
+    const targetMember = await getMember(ctx, args.roomId, args.toUserId);
+    if (targetMember && targetMember.role === "owner") {
+      throw new ConvexError({ code: "FORBIDDEN", message: "لا يمكن إنزال المالك" });
+    }
+    const seats = await ctx.db.query("micSeats").withIndex("by_room_and_seatIndex", (q) => q.eq("roomId", args.roomId)).take(MAX_SEATS);
+    for (const s of seats) {
+      if (s.userId === args.toUserId) {
+        await ctx.db.patch("micSeats", s._id, { userId: undefined, muted: false, adminMuted: false });
+      }
+    }
+    if (targetMember && targetMember.role === "speaker") {
+      await ctx.db.patch("roomMembers", targetMember._id, { role: "listener" });
+    }
+    return null;
+  },
+});
+
