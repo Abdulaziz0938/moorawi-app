@@ -1,4 +1,5 @@
 import { ConvexError, v } from "convex/values";
+import { vipLevelFromTotalReceived } from "./lib/vip";
 import { mutation, query } from "./_generated/server";
 import { requireUser } from "./lib/auth";
 
@@ -322,6 +323,7 @@ export const roomLeaderboard = query({
           name: u?.name ?? "ضيف",
           avatarUrl,
           vip,
+          charmLevel: vipLevelFromTotalReceived(u?.totalReceived ?? 0),
           adminRole: u?.adminRole ?? null,
           total: item.total,
         };

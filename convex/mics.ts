@@ -1,7 +1,7 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { getMember, requireUser } from "./lib/auth";
-import { vipLevelFromTotalSent } from "./lib/vip";
+import { vipLevelFromTotalSent, vipLevelFromTotalReceived } from "./lib/vip";
 
 const MAX_SEATS = 20;
 
@@ -25,6 +25,7 @@ export const state = query({
           charms: user?.charms ?? 0,
           frame: null,
           userVip: vipLevelFromTotalSent(user?.totalSent ?? 0),
+          userCharmLevel: vipLevelFromTotalReceived(user?.totalReceived ?? 0),
           adminRole: user?.adminRole ?? null,
         };
       }),

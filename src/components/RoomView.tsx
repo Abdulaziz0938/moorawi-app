@@ -678,14 +678,17 @@ export default function RoomView({ roomId, onLeave }: Props) {
                         </div>
                         {occupied && (
                           <>
-                            <div className="flex items-center justify-center mt-1 max-w-full">
-                              <UserName
-                                name={seat.userName ?? "?"}
-                                vip={seat.userVip}
-                                adminRole={seat.adminRole}
-                                size="sm"
-                                nameClassName="text-white/90"
-                              />
+                            <div className="flex items-center justify-center gap-0.5 mt-1 max-w-full">
+                              {seat.adminRole === "super" && (
+                                <Home size={9} className="text-amber-400 flex-shrink-0" fill="currentColor" strokeWidth={1.5} />
+                              )}
+                              {seat.adminRole === "moderator" && (
+                                <Shield size={9} className="text-sky-400 flex-shrink-0" fill="currentColor" strokeWidth={1.5} />
+                              )}
+                              {!seat.adminRole && (
+                                <User size={9} className="text-emerald-400 flex-shrink-0" fill="currentColor" strokeWidth={1.5} />
+                              )}
+                              <p className="text-[8px] text-white/90 truncate leading-tight">{seat.userName}</p>
                             </div>
                             <p className="text-[8px] text-pink-300 leading-tight">{(seat.charms ?? 0)} ❤</p>
                           </>
@@ -796,6 +799,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
                       <UserName
                         name={m.senderName}
                         vip={m.senderVip}
+                        charmLevel={m.senderCharmLevel}
                         adminRole={m.senderAdminRole}
                         roomRole={m.senderRoomRole}
                         size="sm"

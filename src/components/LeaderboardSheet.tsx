@@ -140,6 +140,7 @@ function PodiumSlot({
         <UserName
           name={user.name}
           vip={user.vip}
+          charmLevel={user.charmLevel}
           adminRole={user.adminRole}
           size="sm"
           nameClassName="text-amber-900"

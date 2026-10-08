@@ -1,7 +1,7 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { requireUser } from "./lib/auth";
-import { vipLevelFromTotalSent } from "./lib/vip";
+import { vipLevelFromTotalSent, vipLevelFromTotalReceived } from "./lib/vip";
 
 const MAX_LEN = 500;
 
@@ -39,6 +39,7 @@ export const list = query({
         senderName: m.senderName,
         senderNumber: sender?.userNumber ?? null,
         senderVip: vip,
+        senderCharmLevel: vipLevelFromTotalReceived(sender?.totalReceived ?? 0),
         senderAdminRole: sender?.adminRole ?? null,
         senderCharms: sender?.charms ?? 0,
         senderRoomRole: roleByUser.get(m.senderId as string) ?? null,

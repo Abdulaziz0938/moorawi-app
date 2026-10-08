@@ -1,7 +1,7 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { getMember, requireUser } from "./lib/auth";
-import { vipLevelFromTotalSent } from "./lib/vip";
+import { vipLevelFromTotalSent, vipLevelFromTotalReceived } from "./lib/vip";
 
 export const listPublic = query({
   args: {},
@@ -73,6 +73,7 @@ export const members = query({
         userNumber: user?.userNumber ?? null,
         avatarUrl,
         vip: vipLevelFromTotalSent(user?.totalSent ?? 0),
+        charmLevel: vipLevelFromTotalReceived(user?.totalReceived ?? 0),
         adminRole: user?.adminRole ?? null,
         charms: user?.charms ?? 0,
       };

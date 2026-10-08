@@ -1,6 +1,7 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { requireUser } from "./lib/auth";
+import { vipLevelFromTotalReceived } from "./lib/vip";
 
 const COUNTRIES = [
   "سوريا", "مصر", "السعودية", "الإمارات", "الأردن", "لبنان", "العراق",
@@ -72,6 +73,7 @@ export const getById = query({
       totalSent: u.totalSent ?? 0,
       totalReceived: u.totalReceived ?? 0,
       vip,
+      charmLevel: vipLevelFromTotalReceived(u.totalReceived ?? 0),
       isAdmin: u.isAdmin ?? false,
       adminRole: u.adminRole ?? null,
       banned: u.banned ?? false,

@@ -102,70 +102,78 @@ const SIZES: Record<Size, { role: number; name: string; vipW: number; admin: num
 export function UserName({
   name,
   vip,
+  charmLevel,
   adminRole,
   roomRole,
   size = "sm",
   nameClassName = "text-purple-300",
   wrap = false,
+  showRole = true,
+  showCapsules = true,
 }: {
   name: string;
   vip?: number | null;
+  charmLevel?: number | null;
   adminRole?: "super" | "moderator" | null;
   roomRole?: "owner" | "moderator" | "speaker" | "listener" | null;
   size?: Size;
   nameClassName?: string;
   wrap?: boolean;
+  showRole?: boolean;
+  showCapsules?: boolean;
 }) {
   const s = SIZES[size];
 
-  // Determine effective room role
-  // Priority: owner > moderator > member
-  let effectiveRole: "owner" | "moderator" | "member" = "member";
-  if (roomRole === "owner") effectiveRole = "owner";
-  else if (roomRole === "moderator") effectiveRole = "moderator";
-  else if (adminRole === "super") effectiveRole = "owner";  // fallback: super admin treated as owner
-  else if (adminRole === "moderator") effectiveRole = "moderator";
+  // Role: owner / moderator / member
+  let role: "owner" | "moderator" | "member" = "member";
+  if (roomRole === "owner") role = "owner";
+  else if (roomRole === "moderator") role = "moderator";
+  else if (adminRole === "super") role = "owner";
+  else if (adminRole === "moderator") role = "moderator";
+
+  const v = typeof vip === "number" ? vip : 0;
+  const ch = typeof charmLevel === "number" ? charmLevel : 0;
 
   return (
     <div className={`flex items-center ${s.gap} ${wrap ? "flex-wrap" : ""} min-w-0`}>
-      {/* 1. Room role icon */}
-      {effectiveRole === "owner" && (
-        <Home
-          size={s.role}
-          className="text-amber-400 flex-shrink-0"
-          fill="currentColor"
-          strokeWidth={1.5}
-        />
+      {/* 1. Role icon */}
+      {showRole && role === "owner" && (
+        <Home size={s.role} className="text-amber-400 flex-shrink-0" fill="currentColor" strokeWidth={1.5} />
       )}
-      {effectiveRole === "moderator" && (
-        <Shield
-          size={s.role}
-          className="text-sky-400 flex-shrink-0"
-          fill="currentColor"
-          strokeWidth={1.5}
-        />
+      {showRole && role === "moderator" && (
+        <Shield size={s.role} className="text-sky-400 flex-shrink-0" fill="currentColor" strokeWidth={1.5} />
       )}
-      {effectiveRole === "member" && (
-        <UserIcon
-          size={Math.max(9, s.role - 1)}
-          className="text-emerald-400 flex-shrink-0"
-          fill="currentColor"
-          strokeWidth={1.5}
-        />
+      {showRole && role === "member" && (
+        <UserIcon size={Math.max(9, s.role - 1)} className="text-emerald-400 flex-shrink-0" fill="currentColor" strokeWidth={1.5} />
       )}
 
       {/* 2. Name */}
       <span className={`${s.name} font-bold ${nameClassName} truncate`}>{name}</span>
 
-      {/* 3. VIP banner */}
-      {vip && vip > 0 && <VipBanner level={vip} width={s.vipW} />}
+      {/* 3. Charm capsule */}
+      {showCapsules && (
+        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-pink-500/25 border border-pink-400/40 text-[9px] font-black text-pink-200 flex-shrink-0">
+          <span>✨</span>
+          <span>{ch}</span>
+        </span>
+      )}
 
-      {/* 4. Admin badge */}
+      {/* 4. Wealth capsule */}
+      {showCapsules && (
+        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-yellow-500/25 border border-yellow-400/40 text-[9px] font-black text-yellow-200 flex-shrink-0">
+          <span>💎</span>
+          <span>{v}</span>
+        </span>
+      )}
+
+      {/* 5. VIP banner (if >0) */}
+      {v > 0 && <VipBanner level={v} width={s.vipW} />}
+
+      {/* 6. Admin badge */}
       {adminRole && <AdminBadge role={adminRole} size={s.admin} />}
 
-      {/* 5. pvip mini medal */}
-      {vip && vip > 0 && <PvipBadge level={vip} size={s.pvip} />}
+      {/* 7. pvip */}
+      {v > 0 && <PvipBadge level={v} size={s.pvip} />}
     </div>
   );
 }
-
