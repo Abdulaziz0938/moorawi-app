@@ -322,6 +322,7 @@ export const roomLeaderboard = query({
           name: u?.name ?? "ضيف",
           avatarUrl,
           vip,
+          adminRole: u?.adminRole ?? null,
           total: item.total,
         };
       })
