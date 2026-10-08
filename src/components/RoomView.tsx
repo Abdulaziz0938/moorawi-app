@@ -662,7 +662,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
                               seat.avatarUrl ? <img src={seat.avatarUrl} alt="" className="w-full h-full object-cover rounded-full" /> : <span className="text-[10px] font-bold">{(seat.userName ?? "?")[0]}</span>
                             ) : seat.locked ? <Lock size={12} className="opacity-70" /> : <span className="text-[10px] font-bold text-white/60">{seat.seatIndex + 1}</span>}
                           </div>
-                          {occupied && (seat.muted || seat.adminMuted) && (
+                          {(seat.adminMuted === true || (occupied && seat.muted)) && (
                             <div className={`absolute -bottom-1 -left-1 rounded-full p-1 ring-1 shadow-md z-10 ${seat.adminMuted ? "bg-red-600 ring-red-300/60" : "bg-black/90 ring-white/30"}`}>
                               <MicOff size={10} className="text-white" />
                             </div>
