@@ -142,10 +142,10 @@ export default function MiniProfileSheet({
             )}
           </div>
 
-          <div className="flex flex-col items-center px-4 pb-4">
+          <div className="flex flex-col items-center px-4 pb-2">
             <button
               onClick={onOpenFullProfile}
-              className="w-24 h-24 rounded-full overflow-hidden ring-4 ring-white/40 shadow-2xl bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white font-black text-3xl active:scale-95 transition-transform cursor-pointer"
+              className="w-20 h-20 rounded-full overflow-hidden ring-4 ring-white/40 shadow-2xl bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white font-black text-2xl active:scale-95 transition-transform cursor-pointer"
             >
               {profile.avatarUrl ? (
                 <img src={profile.avatarUrl} alt="" className="w-full h-full object-cover" />
@@ -154,7 +154,7 @@ export default function MiniProfileSheet({
               )}
             </button>
 
-            <div className="flex items-center justify-center gap-2 mt-3">
+            <div className="flex items-center justify-center gap-1.5 mt-2">
               <UserName
                 name={profile.name}
                 vip={profile.vip}
@@ -171,7 +171,7 @@ export default function MiniProfileSheet({
               )}
             </div>
 
-            <div className="flex items-center gap-2 mt-2 flex-wrap justify-center">
+            <div className="flex items-center gap-1.5 mt-1.5 flex-wrap justify-center">
               {profile.age && (
                 <span className="text-[10px] bg-white/15 backdrop-blur border border-white/20 text-white px-2 py-0.5 rounded-full">
                   {profile.age} سنة
@@ -190,7 +190,7 @@ export default function MiniProfileSheet({
             </div>
           </div>
 
-          <div className="mx-4 mb-3 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-3 grid grid-cols-3 gap-2 text-center">
+          <div className="mx-4 mb-2 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-2.5 grid grid-cols-3 gap-2 text-center">
             <div>
               <p className="text-lg">💎</p>
               <p className="text-white text-xs font-bold">{formatNumber(profile.totalSent)}</p>

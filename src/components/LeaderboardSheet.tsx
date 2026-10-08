@@ -80,12 +80,17 @@ function PodiumSlot({
   const isGold = rank === 1;
   const avatarSize = isGold ? 78 : 66;
 
-  // لون الإطار
   const ringColor = {
-    1: "#FFD700",  // Gold
-    2: "#C0C0C0",  // Silver
-    3: "#CD7F32",  // Bronze
+    1: "#FFD700",
+    2: "#C0C0C0",
+    3: "#CD7F32",
   }[rank];
+
+  const v = typeof user.vip === "number" ? user.vip : 0;
+  const ch = typeof user.charmLevel === "number" ? user.charmLevel : 0;
+  const hasCharm = ch > 0;
+  const hasVip = v > 0;
+  const hasAdmin = !!user.adminRole;
 
   return (
     <button
@@ -93,9 +98,14 @@ function PodiumSlot({
       className="flex flex-col items-center"
       style={{ width: `${avatarSize + 16}px` }}
     >
-      {/* Circle + crown + rank badge (relative container) */}
+      {/* Crown + Avatar + Rank badge */}
       <div className="relative" style={{ width: `${avatarSize}px`, height: `${avatarSize}px` }}>
-        {/* Avatar inside circle with colored ring */}
+        {/* Crown (only rank 1) */}
+        {isGold && (
+          <div className="absolute -top-4 left-1/2 -translate-x-1/2 text-2xl z-10">👑</div>
+        )}
+
+        {/* Avatar circle */}
         <div
           className="w-full h-full rounded-full overflow-hidden flex items-center justify-center text-white font-black bg-gradient-to-br from-purple-400 to-pink-500"
           style={{ border: `3px solid ${ringColor}` }}
@@ -109,52 +119,69 @@ function PodiumSlot({
           )}
         </div>
 
-        {/* Crown on top-right corner */}
+        {/* Rank badge (bottom of circle) */}
         <div
-          className="absolute"
-          style={{
-            top: "-14px",
-            right: "-10px",
-            transform: "rotate(35deg)",
-          }}
-        >
-          <PodiumSVG rank={rank} size={isGold ? 34 : 28} />
-        </div>
-
-        {/* Rank badge at bottom */}
-        <div
-          className="absolute left-1/2 -translate-x-1/2 text-white text-[11px] font-black rounded-full flex items-center justify-center"
+          className="absolute left-1/2 -translate-x-1/2 text-white text-[11px] font-black rounded-full flex items-center justify-center border-2 border-white"
           style={{
             bottom: "-8px",
             width: "22px",
             height: "22px",
             background: ringColor,
-            border: "2px solid #fff",
           }}
         >
           {rank}
         </div>
       </div>
 
-      {/* Name + ID + Value */}
-      <div className="mt-4 text-center w-full">
-        <div className="w-full flex items-center justify-center">
-        <UserName
-          name={user.name}
-          vip={user.vip}
-          charmLevel={user.charmLevel}
-          adminRole={user.adminRole}
-          size="sm"
-          nameClassName="text-amber-900"
-        />
+      {/* Name + role icon */}
+      <div className="mt-4 flex items-center gap-1 max-w-full">
+        <span className="text-[12px] font-black text-amber-900 truncate">
+          {user.name}
+        </span>
+        {rank === 1 && <span className="text-[11px] text-amber-600">🏠</span>}
       </div>
-        {user.userNumber !== null && (
-          <p className="text-[9px] text-amber-900/60">ID:{user.userNumber}</p>
-        )}
-        <p className="text-[11px] font-black text-amber-900 mt-0.5">
-          {formatNumber(user.total)}
+
+      {/* ID (thin) */}
+      {user.userNumber !== null && (
+        <p className="text-[9px] font-normal text-amber-900/60 leading-tight">
+          ID:{user.userNumber}
         </p>
-      </div>
+      )}
+
+      {/* Badges row: charm + wealth + vip + admin */}
+      {(hasCharm || hasVip || hasAdmin) && (
+        <div className="flex items-center gap-1 mt-1.5 justify-center flex-wrap">
+          {hasCharm && (
+            <span className="text-[9px] font-black bg-pink-500/25 border border-pink-400/40 rounded-full px-1.5 py-0.5 text-pink-800">
+              ✨{ch}
+            </span>
+          )}
+          {hasVip && (
+            <span className="text-[9px] font-black bg-yellow-500/25 border border-yellow-400/40 rounded-full px-1.5 py-0.5 text-amber-800">
+              💎{v}
+            </span>
+          )}
+          {user.vip > 0 && (
+            <img
+              src={`/vip/vip${user.vip}.png`}
+              alt=""
+              className="h-3 w-auto object-contain"
+              draggable={false}
+            />
+          )}
+          {user.adminRole === "super" && (
+            <img src="/badges/badge-super.png" alt="" className="h-3.5 w-3.5 object-contain" />
+          )}
+          {user.adminRole === "moderator" && (
+            <img src="/badges/badge-admin.png" alt="" className="h-3.5 w-3.5 object-contain" />
+          )}
+        </div>
+      )}
+
+      {/* Total value */}
+      <p className="text-[11px] font-black text-amber-900 mt-1">
+        {formatNumber(user.total)}
+      </p>
     </button>
   );
 }
