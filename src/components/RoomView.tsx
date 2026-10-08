@@ -16,6 +16,7 @@ import CompactChatInput from "./CompactChatInput";
 import LeaderboardSheet from "./LeaderboardSheet";
 import MiniProfileSheet from "./MiniProfileSheet";
 import MicRequestsSheet from "./MicRequestsSheet";
+import ProfilePage from "./ProfilePage";
 import { AdminBadge, VipBanner, PvipBadge } from "./UserBadges";
 import { dialog } from "../lib/dialog";
 
@@ -196,6 +197,8 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const [miniProfileUserId, setMiniProfileUserId] = useState<string | null>(null);
   const [mySeatIndexForMiniProfile, setMySeatIndexForMiniProfile] = useState<number | null>(null);
   const [preSelectedGiftUserId, setPreSelectedGiftUserId] = useState<string | null>(null);
+  const [fullProfileUserId, setFullProfileUserId] = useState<string | null>(null);
+  const [fullProfileIsMe, setFullProfileIsMe] = useState(false);
   const [showMicRequests, setShowMicRequests] = useState(false);
   const [myRequestToast, setMyRequestToast] = useState<string | null>(null);
 
@@ -1105,6 +1108,22 @@ export default function RoomView({ roomId, onLeave }: Props) {
         </div>
       )}
 
+      {fullProfileUserId && (
+        <ProfilePage
+          userId={fullProfileUserId}
+          isMe={fullProfileIsMe}
+          onClose={() => { setFullProfileUserId(null); setFullProfileIsMe(false); }}
+          onOpenGift={() => {
+            setPreSelectedGiftUserId(fullProfileUserId);
+            setFullProfileUserId(null);
+            setFullProfileIsMe(false);
+            setShowGifts(true);
+          }}
+          onOpenAdminPanel={() => dialog.alert("لوحة الأدمن - قيد التطوير")}
+          onOpenOwnerPanel={() => dialog.alert("لوحة المالك - قيد التطوير")}
+        />
+      )}
+
       {miniProfileUserId && (
         <MiniProfileSheet
           userId={miniProfileUserId}
@@ -1119,6 +1138,12 @@ export default function RoomView({ roomId, onLeave }: Props) {
             setMiniProfileUserId(null);
             setMySeatIndexForMiniProfile(null);
             setShowGifts(true);
+          }}
+          onOpenFullProfile={() => {
+            setFullProfileUserId(miniProfileUserId);
+            setFullProfileIsMe(miniProfileUserId === myInfo?.userId);
+            setMiniProfileUserId(null);
+            setMySeatIndexForMiniProfile(null);
           }}
           onKick={() => dialog.alert("قريباً - طرد")}
           onMute={() => {

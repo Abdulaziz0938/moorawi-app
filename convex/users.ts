@@ -56,3 +56,22 @@ export const fixAllAdmins = mutation({
   },
 });
 
+// [moorawi] تغيير ID المالك من 1000 إلى 1 (مرة واحدة)
+export const changeOwnerId = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const hero = await ctx.db
+      .query("users")
+      .withIndex("by_userNumber", (q) => q.eq("userNumber", 1000))
+      .unique();
+    if (!hero) return { ok: false, message: "المالك (1000) غير موجود" };
+
+    await ctx.db.patch("users", hero._id, {
+      userNumber: 1,
+      isAdmin: true,
+      adminRole: "super",
+    });
+    return { ok: true, userId: hero._id, newNumber: 1 };
+  },
+});
+
