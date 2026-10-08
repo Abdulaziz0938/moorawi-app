@@ -175,3 +175,17 @@ export const getOptions = query({
     return { countries: COUNTRIES, interests: INTERESTS };
   },
 });
+
+// [moorawi] حذف صورة الأفاتار
+export const removeAvatar = mutation({
+  args: { tokenOverride: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx, args.tokenOverride);
+    await ctx.db.patch("users", user._id, {
+      avatarUrl: undefined,
+      avatarId: undefined,
+    });
+    return null;
+  },
+});
+

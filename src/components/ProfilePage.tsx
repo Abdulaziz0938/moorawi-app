@@ -7,7 +7,7 @@ import { uploadToCloudinary } from "../lib/cloudinary";
 import { dialog } from "../lib/dialog";
 import {
   X, Home, Shield, User as UserIcon, Gift, MessageCircle, UserPlus,
-  Crown, Loader2, Pencil, Camera, Settings, ShieldCheck,
+  Crown, Loader2, Pencil, Camera, ShieldCheck, Eye, Trash2, ImageIcon,
 } from "lucide-react";
 
 interface Props {
@@ -49,10 +49,13 @@ export default function ProfilePage({
   const profile = useQuery(api.profiles.getById, { userId: userId as Id<"users"> });
   const updateName = useMutation(api.users.updateName);
   const saveAvatar = useMutation(api.profiles.saveAvatar);
+  const removeAvatar = useMutation(api.profiles.removeAvatar);
 
   const [editingName, setEditingName] = useState(false);
   const [newName, setNewName] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [showAvatarMenu, setShowAvatarMenu] = useState(false);
+  const [showImagePreview, setShowImagePreview] = useState(false);
 
   if (profile === undefined) {
     return (
@@ -100,6 +103,26 @@ export default function ProfilePage({
     }
   };
 
+  const handleAvatarClick = () => {
+    if (isMe) {
+      setShowAvatarMenu(true);
+    } else {
+      if (profile.avatarUrl) setShowImagePreview(true);
+    }
+  };
+
+  const handleRemoveAvatar = async () => {
+    setShowAvatarMenu(false);
+    dialog.confirm("هل أنت متأكد من حذف الصورة؟", async () => {
+      try {
+        await removeAvatar({ tokenOverride: deviceId });
+        dialog.alert("تم حذف الصورة");
+      } catch (e: any) {
+        dialog.alert(e?.message || "فشل الحذف");
+      }
+    }, "", "حذف", "إلغاء");
+  };
+
   return (
     <div className="fixed inset-0 z-[200] flex flex-col" dir="rtl">
       {/* Backdrop */}
@@ -144,30 +167,21 @@ export default function ProfilePage({
         {/* Avatar */}
         <div className="flex justify-center mt-4">
           <div className="relative">
-            <div className="w-32 h-32 rounded-full overflow-hidden bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white text-4xl font-black ring-4 ring-white/30 shadow-2xl">
+            <button
+              onClick={handleAvatarClick}
+              className="w-32 h-32 rounded-full overflow-hidden bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white text-4xl font-black ring-4 ring-white/30 shadow-2xl active:scale-95 transition-transform"
+            >
               {profile.avatarUrl ? (
                 <img src={profile.avatarUrl} alt="" className="w-full h-full object-cover" />
               ) : (
                 <span>{profile.name[0] || "?"}</span>
               )}
-            </div>
+            </button>
+            {/* Hidden integrated camera indicator (only visual hint) */}
             {isMe && (
-              <label className="absolute bottom-0 right-0 w-10 h-10 rounded-full bg-purple-600 border-2 border-white flex items-center justify-center cursor-pointer hover:bg-purple-500 transition">
-                {uploading ? (
-                  <Loader2 size={16} className="animate-spin text-white" />
-                ) : (
-                  <Camera size={16} className="text-white" />
-                )}
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    if (f) handleAvatarUpload(f);
-                  }}
-                />
-              </label>
+              <div className="absolute bottom-1 right-1 w-7 h-7 rounded-full bg-black/60 backdrop-blur-xl border border-white/30 flex items-center justify-center pointer-events-none">
+                <Camera size={12} className="text-white/90" />
+              </div>
             )}
           </div>
         </div>
@@ -287,6 +301,76 @@ export default function ProfilePage({
 
         <div className="h-8" />
       </div>
+
+      {/* Avatar Menu (for me) */}
+      {isMe && showAvatarMenu && (
+        <>
+          <div className="fixed inset-0 z-[250]" onClick={() => setShowAvatarMenu(false)} />
+          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[260] w-[260px] rounded-3xl overflow-hidden shadow-2xl animate-[dialogPop_0.22s_cubic-bezier(0.34,1.56,0.64,1)]"
+            style={{
+              background: "linear-gradient(145deg, rgba(30,27,75,0.92) 0%, rgba(15,12,40,0.96) 100%)",
+              backdropFilter: "blur(28px)",
+              WebkitBackdropFilter: "blur(28px)",
+              border: "1px solid rgba(255,255,255,0.2)",
+            }}
+          >
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-purple-400/70 to-transparent" />
+
+            <button
+              onClick={() => { setShowAvatarMenu(false); if (profile.avatarUrl) setShowImagePreview(true); }}
+              disabled={!profile.avatarUrl}
+              className={`w-full flex items-center gap-3 px-5 py-3.5 text-sm font-bold ${profile.avatarUrl ? "text-white hover:bg-white/10" : "text-white/30 cursor-not-allowed"}`}
+            >
+              <Eye size={18} />
+              عرض الصورة
+            </button>
+
+            <label className="w-full flex items-center gap-3 px-5 py-3.5 text-sm font-bold text-white hover:bg-white/10 cursor-pointer">
+              {uploading ? <Loader2 size={18} className="animate-spin" /> : <ImageIcon size={18} />}
+              {uploading ? "جاري الرفع..." : "تغيير الصورة"}
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) { setShowAvatarMenu(false); handleAvatarUpload(f); }
+                }}
+              />
+            </label>
+
+            <button
+              onClick={handleRemoveAvatar}
+              disabled={!profile.avatarUrl}
+              className={`w-full flex items-center gap-3 px-5 py-3.5 text-sm font-bold border-t border-white/10 ${profile.avatarUrl ? "text-red-400 hover:bg-red-500/10" : "text-white/30 cursor-not-allowed"}`}
+            >
+              <Trash2 size={18} />
+              حذف الصورة
+            </button>
+          </div>
+        </>
+      )}
+
+      {/* Image Preview (full screen) */}
+      {showImagePreview && profile.avatarUrl && (
+        <div
+          className="fixed inset-0 z-[260] flex items-center justify-center bg-black/95 backdrop-blur-md animate-[fadeIn_0.2s_ease-out]"
+          onClick={() => setShowImagePreview(false)}
+        >
+          <button
+            onClick={() => setShowImagePreview(false)}
+            className="absolute top-4 right-4 w-11 h-11 rounded-full bg-white/15 backdrop-blur-xl border border-white/25 flex items-center justify-center text-white hover:bg-white/25 transition"
+          >
+            <X size={22} />
+          </button>
+          <img
+            src={profile.avatarUrl}
+            alt=""
+            className="max-w-[95vw] max-h-[85vh] object-contain rounded-2xl shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </div>
   );
 }
