@@ -22,7 +22,7 @@ export const state = query({
           userName: user?.name ?? "ضيف",
           userNumber: user?.userNumber ?? null,
           avatarUrl,
-          charms: user?.charms ?? 0,
+          charms: user?.totalReceived ?? 0,  // [moorawi] 1 coin received = 1 charm
           frame: null,
           userVip: vipLevelFromTotalSent(user?.totalSent ?? 0),
           userCharmLevel: vipLevelFromTotalReceived(user?.totalReceived ?? 0),
