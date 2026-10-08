@@ -1,13 +1,9 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { requireUser } from "./lib/auth";
+import { vipLevelFromTotalSent } from "./lib/vip";
 
 const MAX_LEN = 500;
-
-function vipLevelFromTotalSent(t: number): number {
-  const T = [1000, 5000, 20000, 50000, 100000, 250000, 500000];
-  return T.filter((x) => t >= x).length;
-}
 
 export const list = query({
   args: { roomId: v.id("rooms"), since: v.optional(v.number()) },
@@ -17,10 +13,23 @@ export const list = query({
     const rows = sinceTs > 0 ? raw.filter((m) => m._creationTime >= sinceTs) : raw;
     const enriched = await Promise.all(rows.map(async (m) => {
       const sender = await ctx.db.get("users", m.senderId);
-      const avatarUrl = sender?.avatarId ? await ctx.storage.getUrl(sender.avatarId) : null;
+      const avatarUrl = sender?.avatarUrl ?? (sender?.avatarId ? await ctx.storage.getUrl(sender.avatarId) : null);
       const imageUrl = m.imageUrl ?? (m.imageId ? await ctx.storage.getUrl(m.imageId) : null);
       const vip = vipLevelFromTotalSent(sender?.totalSent ?? 0);
-      return { _id: m._id, senderId: m.senderId, senderName: m.senderName, senderNumber: sender?.userNumber ?? null, senderVip: vip, avatarUrl, text: m.text ?? null, imageUrl, system: m.system ?? false, createdAt: m._creationTime };
+      return {
+        _id: m._id,
+        senderId: m.senderId,
+        senderName: m.senderName,
+        senderNumber: sender?.userNumber ?? null,
+        senderVip: vip,
+        senderAdminRole: sender?.adminRole ?? null,
+        senderCharms: sender?.charms ?? 0,
+        avatarUrl,
+        text: m.text ?? null,
+        imageUrl,
+        system: m.system ?? false,
+        createdAt: m._creationTime,
+      };
     }));
     return enriched.reverse();
   },

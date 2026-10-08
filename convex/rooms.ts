@@ -1,6 +1,7 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { getMember, requireUser } from "./lib/auth";
+import { vipLevelFromTotalSent } from "./lib/vip";
 
 export const listPublic = query({
   args: {},
@@ -62,8 +63,19 @@ export const members = query({
     const members = await ctx.db.query("roomMembers").withIndex("by_room", (q) => q.eq("roomId", args.roomId)).take(100);
     return await Promise.all(members.map(async (m) => {
       const user = await ctx.db.get("users", m.userId);
-      const avatarUrl = user?.avatarId ? await ctx.storage.getUrl(user.avatarId) : null;
-      return { _id: m._id, userId: m.userId, role: m.role, name: user?.name ?? "ضيف", username: user?.username ?? null, userNumber: user?.userNumber ?? null, avatarUrl };
+      const avatarUrl = user?.avatarUrl ?? (user?.avatarId ? await ctx.storage.getUrl(user.avatarId) : null);
+      return {
+        _id: m._id,
+        userId: m.userId,
+        role: m.role,
+        name: user?.name ?? "ضيف",
+        username: user?.username ?? null,
+        userNumber: user?.userNumber ?? null,
+        avatarUrl,
+        vip: vipLevelFromTotalSent(user?.totalSent ?? 0),
+        adminRole: user?.adminRole ?? null,
+        charms: user?.charms ?? 0,
+      };
     }));
   },
 });

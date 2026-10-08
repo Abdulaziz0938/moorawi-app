@@ -1,6 +1,7 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { getMember, requireUser } from "./lib/auth";
+import { vipLevelFromTotalSent } from "./lib/vip";
 
 const MAX_SEATS = 20;
 
@@ -13,9 +14,9 @@ export const state = query({
       .take(MAX_SEATS);
     const enriched = await Promise.all(
       seats.map(async (s) => {
-        if (!s.userId) return { ...s, userName: null, avatarUrl: null, charms: 0, frame: null };
+        if (!s.userId) return { ...s, userName: null, avatarUrl: null, charms: 0, frame: null, userVip: 0, adminRole: null };
         const user = await ctx.db.get("users", s.userId);
-        const avatarUrl = user?.avatarId ? await ctx.storage.getUrl(user.avatarId) : null;
+        const avatarUrl = user?.avatarUrl ?? (user?.avatarId ? await ctx.storage.getUrl(user.avatarId) : null);
         return {
           ...s,
           userName: user?.name ?? "ضيف",
@@ -23,6 +24,8 @@ export const state = query({
           avatarUrl,
           charms: user?.charms ?? 0,
           frame: null,
+          userVip: vipLevelFromTotalSent(user?.totalSent ?? 0),
+          adminRole: user?.adminRole ?? null,
         };
       }),
     );
