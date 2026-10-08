@@ -86,3 +86,86 @@ export default function UserBadges({ vip, adminRole, variant = "inline", size = 
     </div>
   );
 }
+
+// [moorawi] Unified UserName — role icon + name + vip banner + admin badge + pvip
+// Order (RTL): [role] [name] [vip-banner] [admin] [pvip]
+import { Home, Shield, User as UserIcon } from "lucide-react";
+
+type Size = "sm" | "md" | "lg";
+
+const SIZES: Record<Size, { role: number; name: string; vipW: number; admin: number; pvip: number; gap: string }> = {
+  sm: { role: 11, name: "text-[10px]", vipW: 36, admin: 13, pvip: 13, gap: "gap-1" },
+  md: { role: 14, name: "text-xs", vipW: 44, admin: 16, pvip: 16, gap: "gap-1.5" },
+  lg: { role: 16, name: "text-sm", vipW: 52, admin: 18, pvip: 18, gap: "gap-2" },
+};
+
+export function UserName({
+  name,
+  vip,
+  adminRole,
+  roomRole,
+  size = "sm",
+  nameClassName = "text-purple-300",
+  wrap = false,
+}: {
+  name: string;
+  vip?: number | null;
+  adminRole?: "super" | "moderator" | null;
+  roomRole?: "owner" | "moderator" | "speaker" | "listener" | null;
+  size?: Size;
+  nameClassName?: string;
+  wrap?: boolean;
+}) {
+  const s = SIZES[size];
+
+  // Determine effective room role
+  // Priority: owner > moderator > member
+  let effectiveRole: "owner" | "moderator" | "member" = "member";
+  if (roomRole === "owner") effectiveRole = "owner";
+  else if (roomRole === "moderator") effectiveRole = "moderator";
+  else if (adminRole === "super") effectiveRole = "owner";  // fallback: super admin treated as owner
+  else if (adminRole === "moderator") effectiveRole = "moderator";
+
+  return (
+    <div className={`flex items-center ${s.gap} ${wrap ? "flex-wrap" : ""} min-w-0`}>
+      {/* 1. Room role icon */}
+      {effectiveRole === "owner" && (
+        <Home
+          size={s.role}
+          className="text-amber-400 flex-shrink-0"
+          fill="currentColor"
+          strokeWidth={1.5}
+        />
+      )}
+      {effectiveRole === "moderator" && (
+        <Shield
+          size={s.role}
+          className="text-sky-400 flex-shrink-0"
+          fill="currentColor"
+          strokeWidth={1.5}
+        />
+      )}
+      {effectiveRole === "member" && (
+        <UserIcon
+          size={Math.max(9, s.role - 1)}
+          className="text-emerald-400 flex-shrink-0"
+          fill="currentColor"
+          strokeWidth={1.5}
+        />
+      )}
+
+      {/* 2. Name */}
+      <span className={`${s.name} font-bold ${nameClassName} truncate`}>{name}</span>
+
+      {/* 3. VIP banner */}
+      {vip && vip > 0 && <VipBanner level={vip} width={s.vipW} />}
+
+      {/* 4. Admin badge */}
+      {adminRole && <AdminBadge role={adminRole} size={s.admin} />}
+
+      {/* 5. pvip mini medal */}
+      {vip && vip > 0 && <PvipBadge level={vip} size={s.pvip} />}
+    </div>
+  );
+}
+

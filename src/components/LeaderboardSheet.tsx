@@ -3,6 +3,7 @@ import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { X, HelpCircle, Loader2 } from "lucide-react";
+import { UserName } from "./UserBadges";
 import PodiumSVG from "./PodiumSVG";
 
 interface Props {
@@ -134,7 +135,15 @@ function PodiumSlot({
 
       {/* Name + ID + Value */}
       <div className="mt-4 text-center w-full">
-        <p className="text-[11px] font-black text-amber-900 truncate">{user.name}</p>
+        <div className="w-full flex items-center justify-center">
+        <UserName
+          name={user.name}
+          vip={user.vip}
+          adminRole={user.adminRole}
+          size="sm"
+          nameClassName="text-amber-900"
+        />
+      </div>
         {user.userNumber !== null && (
           <p className="text-[9px] text-amber-900/60">ID:{user.userNumber}</p>
         )}
@@ -172,16 +181,19 @@ function UserRow({
         )}
       </div>
       <div className="flex-1 min-w-0 text-right">
-        <p className="text-sm font-black text-amber-900 truncate">{user.name}</p>
+        <div className="flex items-center justify-end gap-1 flex-wrap">
+          <UserName
+            name={user.name}
+            vip={user.vip}
+            adminRole={user.adminRole}
+            size="sm"
+            nameClassName="text-amber-900"
+          />
+        </div>
         {user.userNumber !== null && (
-          <p className="text-[10px] text-amber-900/60">ID:{user.userNumber}</p>
+          <p className="text-[10px] text-amber-900/60 mt-0.5">ID:{user.userNumber}</p>
         )}
       </div>
-      {user.vip > 0 && (
-        <span className="text-[10px] font-black bg-gradient-to-r from-yellow-400 to-amber-500 text-white rounded-full px-2 py-0.5 shadow">
-          VIP{user.vip}
-        </span>
-      )}
       <span className="text-xs font-black text-amber-900 min-w-[55px] text-left">
         {formatNumber(user.total)}
       </span>

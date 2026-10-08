@@ -6,6 +6,7 @@ import {
   X, Gift, MessageCircle, UserPlus, Mic, MicOff, ArrowDown,
   Ban, Crown, Loader2,
 } from "lucide-react";
+import { UserName } from "./UserBadges";
 
 interface Props {
   userId: string;
@@ -146,31 +147,20 @@ export default function MiniProfileSheet({
               )}
             </button>
 
-            <h3 className="text-white text-lg font-black mt-3 truncate max-w-full drop-shadow">
-              {profile.name}
-            </h3>
+            <div className="flex items-center justify-center gap-2 mt-3">
+              <UserName
+                name={profile.name}
+                vip={profile.vip}
+                adminRole={profile.adminRole}
+                roomRole={profile.userNumber === 1 ? "owner" : null}
+                size="md"
+                nameClassName="text-white"
+              />
+            </div>
 
             <div className="flex items-center gap-2 mt-1">
               {profile.userNumber !== null && (
                 <span className="text-white/80 text-xs">ID:{profile.userNumber}</span>
-              )}
-              {profile.adminRole === "super" && (
-                <img
-                  src="/badges/badge-super.png"
-                  alt="Super Admin"
-                  title="Super Admin"
-                  className="h-5 w-5 object-contain drop-shadow-lg"
-                  draggable={false}
-                />
-              )}
-              {profile.adminRole === "moderator" && (
-                <img
-                  src="/badges/badge-admin.png"
-                  alt="Admin"
-                  title="Admin"
-                  className="h-4 w-4 object-contain drop-shadow-lg"
-                  draggable={false}
-                />
               )}
             </div>
 

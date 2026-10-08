@@ -9,6 +9,7 @@ import {
   X, Home, Shield, User as UserIcon, Gift, MessageCircle, UserPlus,
   Crown, Loader2, Pencil, Camera, ShieldCheck, Eye, Trash2, ImageIcon,
 } from "lucide-react";
+import { UserName } from "./UserBadges";
 
 interface Props {
   userId: string;
@@ -205,18 +206,19 @@ export default function ProfilePage({
               </button>
             </div>
           ) : (
-            <div className="flex items-center gap-2">
-              {/* Room role icon */}
-              {isOwner && <Home size={16} className="text-amber-400" fill="currentColor" />}
-              {profile.adminRole === "moderator" && <Shield size={16} className="text-sky-400" fill="currentColor" />}
-              {!isOwner && profile.adminRole !== "moderator" && <UserIcon size={14} className="text-emerald-400" fill="currentColor" />}
-
-              <h1 className="text-white text-xl font-black drop-shadow">{profile.name}</h1>
-
+            <div className="flex items-center justify-center gap-2 flex-wrap">
+              <UserName
+                name={profile.name}
+                vip={profile.vip}
+                adminRole={profile.adminRole}
+                roomRole={isOwner ? "owner" : null}
+                size="lg"
+                nameClassName="text-white text-xl drop-shadow"
+              />
               {isMe && (
                 <button
                   onClick={() => { setNewName(profile.name); setEditingName(true); }}
-                  className="w-7 h-7 rounded-full bg-white/15 flex items-center justify-center text-white/80 hover:bg-white/25"
+                  className="w-7 h-7 rounded-full bg-white/15 flex items-center justify-center text-white/80 hover:bg-white/25 flex-shrink-0"
                 >
                   <Pencil size={12} />
                 </button>
@@ -228,15 +230,7 @@ export default function ProfilePage({
             <p className="text-white/60 text-xs mt-1">ID:{profile.userNumber}</p>
           )}
 
-          {/* Vip Banner */}
-          {vipLevel > 0 && (
-            <img
-              src={`/vip/vip${vipLevel}.png`}
-              alt=""
-              className="mt-3 h-7 w-auto object-contain drop-shadow-lg"
-              draggable={false}
-            />
-          )}
+
 
           {profile.bio && (
             <p className="text-white/80 text-xs mt-3 text-center max-w-[90%]">{profile.bio}</p>

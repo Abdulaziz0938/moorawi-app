@@ -17,7 +17,7 @@ import LeaderboardSheet from "./LeaderboardSheet";
 import MiniProfileSheet from "./MiniProfileSheet";
 import MicRequestsSheet from "./MicRequestsSheet";
 import ProfilePage from "./ProfilePage";
-import { AdminBadge, VipBanner, PvipBadge } from "./UserBadges";
+import { UserName } from "./UserBadges";
 import { dialog } from "../lib/dialog";
 
 // [moorawi-batch] Flying particle data for batch gifts
@@ -538,10 +538,10 @@ export default function RoomView({ roomId, onLeave }: Props) {
       return;
     }
 
-    // 2) مايكي أنا → قائمة (كتم/نزول)
+    // 2) مايكي أنا → MiniProfile (isMySeat)
     if (isMine) {
-      setOpenSeatMenuPos(menuPos);
-      setOpenSeatMenu(seatIndex);
+      setMiniProfileUserId(userId!);
+      setMySeatIndexForMiniProfile(seatIndex);
       return;
     }
 
@@ -602,7 +602,12 @@ export default function RoomView({ roomId, onLeave }: Props) {
                 {roomAvatar ? <img src={roomAvatar} alt="" className="w-full h-full object-cover" /> : (room.name?.[0] || "?")}
               </div>
               <span className="text-[10px] font-bold text-white truncate flex-1">{room.name}</span>
-              {owner && <span className="text-[9px] font-bold text-white/90 bg-black/40 rounded-full px-1.5 py-0.5 flex-shrink-0" dir="ltr">ID:{owner.userNumber ?? "—"}</span>}
+              {owner && (
+                <span className="text-[9px] font-bold text-white/90 bg-black/40 rounded-full px-1.5 py-0.5 flex-shrink-0 flex items-center gap-1" dir="ltr">
+                  {owner.userNumber === 1 && <Home size={9} className="text-amber-400" fill="currentColor" />}
+                  ID:{owner.userNumber ?? "—"}
+                </span>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-0.5 flex-shrink-0">
@@ -673,17 +678,14 @@ export default function RoomView({ roomId, onLeave }: Props) {
                         </div>
                         {occupied && (
                           <>
-                            <div className="flex items-center justify-center gap-0.5 mt-1 max-w-full">
-                              {seat.adminRole === "super" && (
-                                <Home size={9} className="text-amber-400 flex-shrink-0" fill="currentColor" strokeWidth={1.5} />
-                              )}
-                              {seat.adminRole === "moderator" && (
-                                <Shield size={9} className="text-sky-400 flex-shrink-0" fill="currentColor" strokeWidth={1.5} />
-                              )}
-                              {!seat.adminRole && (
-                                <User size={9} className="text-emerald-400 flex-shrink-0" fill="currentColor" strokeWidth={1.5} />
-                              )}
-                              <p className="text-[8px] text-white/90 truncate leading-tight">{seat.userName}</p>
+                            <div className="flex items-center justify-center mt-1 max-w-full">
+                              <UserName
+                                name={seat.userName ?? "?"}
+                                vip={seat.userVip}
+                                adminRole={seat.adminRole}
+                                size="sm"
+                                nameClassName="text-white/90"
+                              />
                             </div>
                             <p className="text-[8px] text-pink-300 leading-tight">{(seat.charms ?? 0)} ❤</p>
                           </>
@@ -789,27 +791,15 @@ export default function RoomView({ roomId, onLeave }: Props) {
                     {m.avatarUrl ? <img src={m.avatarUrl} alt="" className="w-full h-full object-cover" /> : (m.senderName?.[0] || "?")}
                   </div>
                   <div className="flex-1 min-w-0">
-                    {/* [moorawi] Badge order (RTL): role → name → vip → admin → pvip → time */}
-                    <div className="flex items-center gap-1 flex-wrap">
-                      {/* 1. Room role badge — SVG transparent */}
-                      {m.senderRoomRole === "owner" && (
-                        <Home size={12} className="text-amber-400 flex-shrink-0" fill="currentColor" strokeWidth={1.5} />
-                      )}
-                      {m.senderRoomRole === "moderator" && (
-                        <Shield size={12} className="text-sky-400 flex-shrink-0" fill="currentColor" strokeWidth={1.5} />
-                      )}
-                      {(m.senderRoomRole === "listener" || m.senderRoomRole === "speaker" || !m.senderRoomRole) && (
-                        <User size={11} className="text-emerald-400 flex-shrink-0" fill="currentColor" strokeWidth={1.5} />
-                      )}
-                      {/* 2. Name */}
-                      <span className="text-[10px] font-bold text-purple-300">{m.senderName}</span>
-                      {/* 3. VIP banner */}
-                      {(m.senderVip ?? 0) > 0 && <VipBanner level={m.senderVip} width={38} />}
-                      {/* 4. Admin / Super admin */}
-                      {m.senderAdminRole && <AdminBadge role={m.senderAdminRole} size={14} />}
-                      {/* 5. VIP level (pvip) */}
-                      {(m.senderVip ?? 0) > 0 && <PvipBadge level={m.senderVip} size={14} />}
-                      {/* time */}
+                    {/* [moorawi] UserName — unified badges */}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <UserName
+                        name={m.senderName}
+                        vip={m.senderVip}
+                        adminRole={m.senderAdminRole}
+                        roomRole={m.senderRoomRole}
+                        size="sm"
+                      />
                       <span className="text-[8px] text-white/40 mr-auto">{formatTime(m.createdAt)}</span>
                     </div>
                     {(m.text || m.imageUrl) && (
