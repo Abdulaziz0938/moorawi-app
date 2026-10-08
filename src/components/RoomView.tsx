@@ -598,32 +598,26 @@ export default function RoomView({ roomId, onLeave }: Props) {
       <div className="relative z-10 flex flex-col h-full min-h-0">
         <header className="flex flex-col gap-1.5 px-2 py-2 flex-shrink-0 bg-black/40 backdrop-blur-md border-b border-white/10">
 
-          {/* Row 1: Exit + Room (right) | Favorite + Owner Capsule (left) */}
+          {/* Row 1: Exit (right) | Favorite + Room Capsule (left) */}
           <div className="flex items-center justify-between gap-2">
-            {/* Exit + Room name (right side in RTL) */}
-            <div className="flex items-center gap-2 min-w-0">
-              <button
-                onClick={() => setShowBackMenu((v) => !v)}
-                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white flex-shrink-0 active:scale-90 transition"
-              >
-                <LogOut size={15} />
-              </button>
-              <div className="flex items-center gap-1 px-2 h-7 rounded-full bg-white/10 border border-white/15 min-w-0">
-                <Home size={11} className="text-purple-300 flex-shrink-0" />
-                <span className="text-[10px] font-black text-white truncate max-w-[120px]">{room.name}</span>
-              </div>
-            </div>
+            {/* Exit button (right in RTL) */}
+            <button
+              onClick={() => setShowBackMenu((v) => !v)}
+              className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white flex-shrink-0 active:scale-90 transition"
+            >
+              <LogOut size={16} />
+            </button>
 
-            {/* Favorite + Unified Owner Capsule (left side in RTL) */}
+            {/* Favorite + Room Capsule (left in RTL) */}
             <div className="flex items-center gap-2 flex-shrink-0">
               <button
                 onClick={() => setIsFavorite(!isFavorite)}
-                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center flex-shrink-0 active:scale-90 transition"
+                className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center flex-shrink-0 active:scale-90 transition"
               >
-                <Heart size={14} className={isFavorite ? "fill-red-500 text-red-500" : "text-white"} />
+                <Heart size={15} className={isFavorite ? "fill-red-500 text-red-500" : "text-white"} />
               </button>
 
-              {/* Unified owner capsule: 2-line info + avatar */}
+              {/* Unified room capsule: room name + owner ID + avatar */}
               <div
                 className="flex items-center gap-2 pl-1 pr-3 h-10 rounded-full flex-shrink-0"
                 style={{
@@ -633,12 +627,10 @@ export default function RoomView({ roomId, onLeave }: Props) {
               >
                 <div className="flex flex-col items-end leading-tight">
                   <div className="flex items-center gap-1">
-                    <span className="text-[11px] font-black text-white truncate max-w-[80px]">
-                      {owner?.name ?? "—"}
+                    <span className="text-[11px] font-black text-white truncate max-w-[120px]">
+                      {room.name}
                     </span>
-                    {owner?.userNumber === 1 && (
-                      <Home size={10} className="text-amber-400 flex-shrink-0" fill="currentColor" strokeWidth={1.5} />
-                    )}
+                    <Home size={10} className="text-purple-300 flex-shrink-0" strokeWidth={1.5} />
                   </div>
                   <span className="text-[9px] text-white/50 font-bold" dir="ltr">
                     ID:{owner?.userNumber ?? "—"} • Lv.0
@@ -650,7 +642,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
                   ) : roomAvatar ? (
                     <img src={roomAvatar} alt="" className="w-full h-full object-cover" />
                   ) : (
-                    (owner?.name?.[0] || "?")
+                    (room.name?.[0] || "?")
                   )}
                 </div>
               </div>
