@@ -598,7 +598,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
       <div className="relative z-10 flex flex-col h-full min-h-0">
         <header className="flex flex-col gap-1.5 px-2 py-2 flex-shrink-0 bg-black/40 backdrop-blur-md border-b border-white/10">
 
-          {/* Row 1: Exit (right) | Owner info + Favorite (left) */}
+          {/* Row 1: Exit + Room (right) | Favorite + Owner Capsule (left) */}
           <div className="flex items-center justify-between gap-2">
             {/* Exit + Room name (right side in RTL) */}
             <div className="flex items-center gap-2 min-w-0">
@@ -614,23 +614,45 @@ export default function RoomView({ roomId, onLeave }: Props) {
               </div>
             </div>
 
-            {/* Owner info + Favorite (left side in RTL) */}
-            <div className="flex items-center gap-2 min-w-0">
+            {/* Favorite + Unified Owner Capsule (left side in RTL) */}
+            <div className="flex items-center gap-2 flex-shrink-0">
               <button
                 onClick={() => setIsFavorite(!isFavorite)}
-                className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center flex-shrink-0 active:scale-90 transition"
+                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center flex-shrink-0 active:scale-90 transition"
               >
-                <Heart size={13} className={isFavorite ? "fill-red-500 text-red-500" : "text-white"} />
+                <Heart size={14} className={isFavorite ? "fill-red-500 text-red-500" : "text-white"} />
               </button>
-              <div className="flex flex-col leading-tight items-end">
-                <div className="flex items-center gap-1">
-                  {owner?.userNumber === 1 && <Home size={10} className="text-amber-400 flex-shrink-0" fill="currentColor" />}
-                  <span className="text-[10px] font-black text-white">ID:{owner?.userNumber ?? "—"}</span>
+
+              {/* Unified owner capsule: 2-line info + avatar */}
+              <div
+                className="flex items-center gap-2 pl-1 pr-3 h-10 rounded-full flex-shrink-0"
+                style={{
+                  background: "linear-gradient(135deg, rgba(30,27,75,0.6) 0%, rgba(15,12,40,0.8) 100%)",
+                  border: "1px solid rgba(255,255,255,0.15)",
+                }}
+              >
+                <div className="flex flex-col items-end leading-tight">
+                  <div className="flex items-center gap-1">
+                    <span className="text-[11px] font-black text-white truncate max-w-[80px]">
+                      {owner?.name ?? "—"}
+                    </span>
+                    {owner?.userNumber === 1 && (
+                      <Home size={10} className="text-amber-400 flex-shrink-0" fill="currentColor" strokeWidth={1.5} />
+                    )}
+                  </div>
+                  <span className="text-[9px] text-white/50 font-bold" dir="ltr">
+                    ID:{owner?.userNumber ?? "—"} • Lv.0
+                  </span>
                 </div>
-                <span className="text-[9px] text-white/60 font-bold">Lv.0</span>
-              </div>
-              <div className="w-7 h-7 rounded-full overflow-hidden bg-purple-500 flex items-center justify-center text-[11px] font-bold text-white flex-shrink-0 ring-2 ring-purple-400/40">
-                {roomAvatar ? <img src={roomAvatar} alt="" className="w-full h-full object-cover" /> : (room.name?.[0] || "?")}
+                <div className="w-8 h-8 rounded-full overflow-hidden bg-purple-500 flex items-center justify-center text-[11px] font-bold text-white flex-shrink-0 ring-2 ring-purple-400/40">
+                  {owner?.avatarUrl ? (
+                    <img src={owner.avatarUrl} alt="" className="w-full h-full object-cover" />
+                  ) : roomAvatar ? (
+                    <img src={roomAvatar} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    (owner?.name?.[0] || "?")
+                  )}
+                </div>
               </div>
             </div>
           </div>
