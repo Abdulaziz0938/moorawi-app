@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
-import { X, HelpCircle, Loader2 } from "lucide-react";
+import { X, HelpCircle, Loader2, Home } from "lucide-react";
 import { UserName } from "./UserBadges";
 import MemberRow from "./MemberRow";
 import PodiumSVG from "./PodiumSVG";
@@ -138,7 +138,7 @@ function PodiumSlot({
         <span className="text-[12px] font-black text-amber-900 truncate">
           {user.name}
         </span>
-        {rank === 1 && <span className="text-[11px] text-amber-600">🏠</span>}
+        {rank === 1 && <Home size={11} className="text-amber-600 inline-block" />}
       </div>
 
       {/* ID (thin) */}
@@ -301,7 +301,7 @@ export default function LeaderboardSheet({ roomId, onClose, onUserClick }: Props
                   : "text-amber-900/50"
               }`}
             >
-              🏠 هذه الغرفة
+              <Home size={14} className="inline-block ml-1" /> هذه الغرفة
             </button>
           </div>
         </div>

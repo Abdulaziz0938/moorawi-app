@@ -89,7 +89,8 @@ export default function UserBadges({ vip, adminRole, variant = "inline", size = 
 
 // [moorawi] Unified UserName — role icon + name + vip banner + admin badge + pvip
 // Order (RTL): [role] [name] [vip-banner] [admin] [pvip]
-import { Home, Shield, User as UserIcon } from "lucide-react";
+import { Home, Shield, User as UserIcon, Crown } from "lucide-react";
+import CapsuleBadge from "./CapsuleBadge";
 
 type Size = "sm" | "md" | "lg";
 
@@ -124,19 +125,21 @@ export function UserName({
 }) {
   const s = SIZES[size];
 
-  // Role: owner / moderator / member
-  let role: "owner" | "moderator" | "member" = "member";
-  if (roomRole === "owner") role = "owner";
-  else if (roomRole === "moderator") role = "moderator";
-  else if (adminRole === "super") role = "owner";
-  else if (adminRole === "moderator") role = "moderator";
+  // [moorawi-poppo] Role priority: super > owner(room) > moderator > member
+  let role: "super" | "owner" | "moderator" | "member" = "member";
+  if (adminRole === "super") role = "super";
+  else if (roomRole === "owner") role = "owner";
+  else if (roomRole === "moderator" || adminRole === "moderator") role = "moderator";
 
   const v = typeof vip === "number" ? vip : 0;
   const ch = typeof charmLevel === "number" ? charmLevel : 0;
 
   return (
     <div className={`flex items-center ${s.gap} ${wrap ? "flex-wrap" : ""} min-w-0`}>
-      {/* 1. Role icon */}
+      {/* 1. Role icon — Poppo style */}
+      {showRole && role === "super" && (
+        <Crown size={s.role} className="text-amber-400 flex-shrink-0" fill="currentColor" strokeWidth={1.5} />
+      )}
       {showRole && role === "owner" && (
         <Home size={s.role} className="text-amber-400 flex-shrink-0" fill="currentColor" strokeWidth={1.5} />
       )}
@@ -151,20 +154,10 @@ export function UserName({
       <span className={`${s.name} font-bold ${nameClassName} truncate`}>{name}</span>
 
       {/* 3. Charm capsule */}
-      {showCapsules && (
-        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-pink-500/25 border border-pink-400/40 text-[9px] font-black text-pink-200 flex-shrink-0">
-          <span>✨</span>
-          <span>{ch}</span>
-        </span>
-      )}
+      {showCapsules && <CapsuleBadge kind="charm" value={ch} size="sm" />}
 
       {/* 4. Wealth capsule */}
-      {showCapsules && (
-        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-yellow-500/25 border border-yellow-400/40 text-[9px] font-black text-yellow-200 flex-shrink-0">
-          <span>💎</span>
-          <span>{v}</span>
-        </span>
-      )}
+      {showCapsules && <CapsuleBadge kind="wealth" value={v} size="sm" />}
 
       {/* 5. VIP banner (if >0) */}
       {v > 0 && (
