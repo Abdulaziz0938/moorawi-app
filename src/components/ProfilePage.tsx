@@ -10,9 +10,6 @@ import {
   Crown, Loader2, Pencil, Camera, ShieldCheck, Eye, Trash2, ImageIcon, Sparkles, Gem,
 } from "lucide-react";
 import { UserName } from "./UserBadges";
-import ServicesSection from "./ServicesSection";
-import WalletSheet from "./WalletSheet";
-import ShopSheet from "./ShopSheet";
 
 interface Props {
   userId: string;
@@ -59,9 +56,7 @@ export default function ProfilePage({
   const [newName, setNewName] = useState("");
   const [uploading, setUploading] = useState(false);
   const [showAvatarMenu, setShowAvatarMenu] = useState(false);
-  const [showWallet, setShowWallet] = useState(false);
-  const [showShop, setShowShop] = useState(false);
-  const [showImagePreview, setShowImagePreview] = useState(false);
+      const [showImagePreview, setShowImagePreview] = useState(false);
 
   if (profile === undefined) {
     return (
@@ -150,15 +145,6 @@ export default function ProfilePage({
 
           {isMe && (
             <div className="flex items-center gap-2">
-              {isAdmin && (
-                <button
-                  onClick={onOpenAdminPanel}
-                  className="h-10 px-4 rounded-full bg-white/15 backdrop-blur-xl border border-sky-300/40 flex items-center gap-2 text-white hover:bg-white/25 transition"
-                >
-                  <ShieldCheck size={16} className="text-sky-300" />
-                  <span className="text-xs font-black">لوحة الأدمن</span>
-                </button>
-              )}
               {isOwner && (
                 <button
                   onClick={onOpenOwnerPanel}
@@ -278,12 +264,6 @@ export default function ProfilePage({
         </div>
 
         {/* ============ Services section (for me) ============ */}
-        {isMe && (
-          <ServicesSection
-            onOpenWallet={() => setShowWallet(true)}
-            onOpenStore={() => setShowShop(true)}
-          />
-        )}
 
         {/* Action buttons (not me) */}
         {!isMe && (
@@ -307,8 +287,6 @@ export default function ProfilePage({
       </div>
 
       {/* ============ Wallet Sheet ============ */}
-      {showWallet && <WalletSheet onClose={() => setShowWallet(false)} />}
-      {showShop && <ShopSheet onClose={() => setShowShop(false)} />}
 
       {/* Avatar Menu (for me) */}
       {isMe && showAvatarMenu && (
