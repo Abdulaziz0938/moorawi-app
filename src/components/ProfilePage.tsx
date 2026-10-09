@@ -10,6 +10,8 @@ import {
   Crown, Loader2, Pencil, Camera, ShieldCheck, Eye, Trash2, ImageIcon, Sparkles, Gem,
 } from "lucide-react";
 import { UserName } from "./UserBadges";
+import ServicesSection from "./ServicesSection";
+import WalletSheet from "./WalletSheet";
 
 interface Props {
   userId: string;
@@ -56,6 +58,7 @@ export default function ProfilePage({
   const [newName, setNewName] = useState("");
   const [uploading, setUploading] = useState(false);
   const [showAvatarMenu, setShowAvatarMenu] = useState(false);
+  const [showWallet, setShowWallet] = useState(false);
   const [showImagePreview, setShowImagePreview] = useState(false);
 
   if (profile === undefined) {
@@ -270,6 +273,13 @@ export default function ProfilePage({
           </div>
         </div>
 
+        {/* ============ Services section (for me) ============ */}
+        {isMe && (
+          <ServicesSection
+            onOpenWallet={() => setShowWallet(true)}
+          />
+        )}
+
         {/* Action buttons (not me) */}
         {!isMe && (
           <div className="mx-4 mt-5 flex items-center justify-center gap-4">
@@ -290,6 +300,9 @@ export default function ProfilePage({
 
         <div className="h-8" />
       </div>
+
+      {/* ============ Wallet Sheet ============ */}
+      {showWallet && <WalletSheet onClose={() => setShowWallet(false)} />}
 
       {/* Avatar Menu (for me) */}
       {isMe && showAvatarMenu && (

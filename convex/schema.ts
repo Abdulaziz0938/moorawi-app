@@ -28,6 +28,52 @@ export default defineSchema({
     passwordSalt: v.optional(v.string()),
     authProvider: v.optional(v.union(v.literal("guest"), v.literal("password"))),
     lastLoginAt: v.optional(v.number()),
+
+    // [moorawi-economy] Economy
+    diamonds: v.optional(v.number()),                     // ماس (من استقبال الهدايا)
+    totalPurchased: v.optional(v.number()),               // إجمالي الشحن (USD cents)
+    totalRecharged: v.optional(v.number()),               // إجمالي العملات المشحونة
+
+    // [moorawi-vip] VIP
+    vipLevel: v.optional(v.number()),                     // 0-7
+    vipExpiresAt: v.optional(v.number()),
+
+    // [moorawi-assets] Equipped items
+    titleId: v.optional(v.string()),                      // معرّف اللقب (نص)
+    titleText: v.optional(v.string()),                    // النص المعروض
+    equippedFrameId: v.optional(v.id("shopItems")),
+    equippedVehicleId: v.optional(v.id("shopItems")),
+    equippedEntryEffectId: v.optional(v.id("shopItems")),
+    equippedChatBubbleId: v.optional(v.id("shopItems")),
+    equippedSoundWaveId: v.optional(v.id("shopItems")),
+    equippedProfileCardId: v.optional(v.id("shopItems")),
+    equippedMedalId: v.optional(v.id("medals")),
+
+    // [moorawi-social] Social counters
+    visitorCount: v.optional(v.number()),
+    fanCount: v.optional(v.number()),
+    followingCount: v.optional(v.number()),
+    followerCount: v.optional(v.number()),
+    friendCount: v.optional(v.number()),
+    medalCount: v.optional(v.number()),                   // وسام +N
+
+    // [moorawi-relations] Partner/CP
+    partnerId: v.optional(v.id("users")),
+    partnerType: v.optional(v.string()),                  // "cp" | "trueLove" | ...
+    partnerSince: v.optional(v.number()),
+
+    // [moorawi-verification] Verification
+    verificationStatus: v.optional(v.union(
+      v.literal("none"),
+      v.literal("pending"),
+      v.literal("approved"),
+      v.literal("rejected"),
+    )),
+
+    // [moorawi-security] Privacy
+    hideVisits: v.optional(v.boolean()),
+    incognito: v.optional(v.boolean()),
+    hideFollowing: v.optional(v.boolean()),
   })
     .index("by_token", ["tokenIdentifier"])
     .index("by_userNumber", ["userNumber"])
@@ -164,4 +210,267 @@ export default defineSchema({
     action: v.string(),
     target: v.string(),
   }),
+
+  // ================================================================
+  // [moorawi-economy] ECONOMY — wallet transactions
+  // ================================================================
+  walletTransactions: defineTable({
+    userId: v.id("users"),
+    type: v.union(
+      v.literal("recharge"),
+      v.literal("spend"),
+      v.literal("gift_sent"),
+      v.literal("gift_received"),
+      v.literal("reward"),
+      v.literal("exchange"),
+      v.literal("admin_grant"),
+      v.literal("purchase"),
+    ),
+    amount: v.number(),
+    balanceAfter: v.number(),
+    meta: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_user_and_createdAt", ["userId", "createdAt"])
+    .index("by_user_and_type", ["userId", "type"]),
+
+  // ================================================================
+  // [moorawi-shop] SHOP ITEMS (frames, vehicles, effects, ...)
+  // ================================================================
+  shopItems: defineTable({
+    category: v.union(
+      v.literal("frame"),
+      v.literal("vehicle"),
+      v.literal("entryEffect"),
+      v.literal("chatBubble"),
+      v.literal("soundWave"),
+      v.literal("profileCard"),
+      v.literal("decoration"),
+      v.literal("vipId"),
+      v.literal("skin"),
+    ),
+    name: v.string(),
+    nameEn: v.optional(v.string()),
+    imageUrl: v.string(),
+    previewUrl: v.optional(v.string()),
+    previewType: v.optional(v.union(v.literal("image"), v.literal("video"))),
+    price: v.number(),
+    durationDays: v.optional(v.number()),
+    rarity: v.union(
+      v.literal("common"),
+      v.literal("rare"),
+      v.literal("epic"),
+      v.literal("legendary"),
+      v.literal("mythic"),
+    ),
+    isHot: v.optional(v.boolean()),
+    isNew: v.optional(v.boolean()),
+    active: v.boolean(),
+    sortOrder: v.optional(v.number()),
+  })
+    .index("by_category_active", ["category", "active"])
+    .index("by_active", ["active"]),
+
+  userInventory: defineTable({
+    userId: v.id("users"),
+    itemId: v.id("shopItems"),
+    category: v.string(),
+    acquiredAt: v.number(),
+    expiresAt: v.optional(v.number()),
+    isEquipped: v.boolean(),
+    purchaseType: v.union(
+      v.literal("buy"),
+      v.literal("gift_received"),
+      v.literal("reward"),
+      v.literal("admin"),
+    ),
+    fromUserId: v.optional(v.id("users")),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_and_category", ["userId", "category"])
+    .index("by_user_and_equipped", ["userId", "isEquipped"])
+    .index("by_expiresAt", ["expiresAt"]),
+
+  // ================================================================
+  // [moorawi-vip] VIP SUBSCRIPTIONS
+  // ================================================================
+  vipSubscriptions: defineTable({
+    userId: v.id("users"),
+    level: v.number(),
+    purchasedAt: v.number(),
+    expiresAt: v.number(),
+    autoRenew: v.boolean(),
+    purchasePrice: v.number(),
+    source: v.union(
+      v.literal("purchase"),
+      v.literal("gift"),
+      v.literal("admin"),
+    ),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_and_expiresAt", ["userId", "expiresAt"])
+    .index("by_expiresAt", ["expiresAt"]),
+
+  // ================================================================
+  // [moorawi-medals] MEDALS
+  // ================================================================
+  medals: defineTable({
+    name: v.string(),
+    description: v.optional(v.string()),
+    imageUrl: v.string(),
+    tier: v.union(
+      v.literal("C"),
+      v.literal("B"),
+      v.literal("A"),
+      v.literal("S"),
+      v.literal("SS"),
+      v.literal("SSS"),
+    ),
+    category: v.union(
+      v.literal("activity"),
+      v.literal("wealth"),
+      v.literal("charm"),
+      v.literal("monthly"),
+      v.literal("weekly"),
+      v.literal("special"),
+    ),
+    value: v.number(),
+    active: v.boolean(),
+  })
+    .index("by_tier", ["tier"])
+    .index("by_category_active", ["category", "active"]),
+
+  userMedals: defineTable({
+    userId: v.id("users"),
+    medalId: v.id("medals"),
+    earnedAt: v.number(),
+    progress: v.optional(v.number()),
+    equipped: v.boolean(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_and_equipped", ["userId", "equipped"]),
+
+  // ================================================================
+  // [moorawi-relations] RELATIONSHIPS (CP, true love, ...)
+  // ================================================================
+  relationships: defineTable({
+    userId1: v.id("users"),
+    userId2: v.id("users"),
+    type: v.union(
+      v.literal("cp"),
+      v.literal("trueLove"),
+      v.literal("bestFriend"),
+      v.literal("sister"),
+      v.literal("brother"),
+    ),
+    level: v.number(),
+    loveScore: v.number(),
+    since: v.number(),
+    status: v.union(v.literal("active"), v.literal("ended")),
+    endedAt: v.optional(v.number()),
+  })
+    .index("by_user1", ["userId1"])
+    .index("by_user2", ["userId2"])
+    .index("by_user1_and_status", ["userId1", "status"])
+    .index("by_user2_and_status", ["userId2", "status"]),
+
+  relationshipRequests: defineTable({
+    fromUserId: v.id("users"),
+    toUserId: v.id("users"),
+    type: v.union(
+      v.literal("cp"),
+      v.literal("trueLove"),
+      v.literal("bestFriend"),
+      v.literal("sister"),
+      v.literal("brother"),
+    ),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("accepted"),
+      v.literal("rejected"),
+      v.literal("cancelled"),
+    ),
+    createdAt: v.number(),
+    respondedAt: v.optional(v.number()),
+  })
+    .index("by_to_and_status", ["toUserId", "status"])
+    .index("by_from_and_status", ["fromUserId", "status"]),
+
+  // ================================================================
+  // [moorawi-social] FOLLOWS + VISITS
+  // ================================================================
+  follows: defineTable({
+    followerId: v.id("users"),
+    followingId: v.id("users"),
+    createdAt: v.number(),
+  })
+    .index("by_follower", ["followerId"])
+    .index("by_following", ["followingId"])
+    .index("by_pair", ["followerId", "followingId"]),
+
+  visits: defineTable({
+    visitorId: v.id("users"),
+    visitedUserId: v.id("users"),
+    source: v.union(v.literal("profile"), v.literal("room")),
+    visitedAt: v.number(),
+  })
+    .index("by_visited_and_visitedAt", ["visitedUserId", "visitedAt"])
+    .index("by_visitor", ["visitorId"]),
+
+  // ================================================================
+  // [moorawi-missions] MISSIONS
+  // ================================================================
+  missions: defineTable({
+    key: v.string(),
+    title: v.string(),
+    description: v.optional(v.string()),
+    reward: v.number(),
+    rewardType: v.union(
+      v.literal("coins"),
+      v.literal("medal"),
+      v.literal("item"),
+    ),
+    rewardItemId: v.optional(v.id("shopItems")),
+    type: v.union(
+      v.literal("daily"),
+      v.literal("weekly"),
+      v.literal("new_user"),
+      v.literal("achievement"),
+    ),
+    target: v.number(),
+    sortOrder: v.optional(v.number()),
+    active: v.boolean(),
+  })
+    .index("by_key", ["key"])
+    .index("by_type_active", ["type", "active"]),
+
+  userMissions: defineTable({
+    userId: v.id("users"),
+    missionId: v.id("missions"),
+    progress: v.number(),
+    completedAt: v.optional(v.number()),
+    claimedAt: v.optional(v.number()),
+    cycleKey: v.optional(v.string()),
+  })
+    .index("by_user_and_mission", ["userId", "missionId"])
+    .index("by_user_and_cycle", ["userId", "cycleKey"]),
+
+  // ================================================================
+  // [moorawi-verification] VERIFICATION REQUESTS
+  // ================================================================
+  verificationRequests: defineTable({
+    userId: v.id("users"),
+    imageUrl: v.string(),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("approved"),
+      v.literal("rejected"),
+    ),
+    submittedAt: v.number(),
+    reviewedAt: v.optional(v.number()),
+    reviewedBy: v.optional(v.id("users")),
+    reason: v.optional(v.string()),
+  })
+    .index("by_user", ["userId"])
+    .index("by_status", ["status"]),
 });
