@@ -12,6 +12,7 @@ import {
 import { UserName } from "./UserBadges";
 import ServicesSection from "./ServicesSection";
 import WalletSheet from "./WalletSheet";
+import ShopSheet from "./ShopSheet";
 
 interface Props {
   userId: string;
@@ -59,6 +60,7 @@ export default function ProfilePage({
   const [uploading, setUploading] = useState(false);
   const [showAvatarMenu, setShowAvatarMenu] = useState(false);
   const [showWallet, setShowWallet] = useState(false);
+  const [showShop, setShowShop] = useState(false);
   const [showImagePreview, setShowImagePreview] = useState(false);
 
   if (profile === undefined) {
@@ -277,6 +279,7 @@ export default function ProfilePage({
         {isMe && (
           <ServicesSection
             onOpenWallet={() => setShowWallet(true)}
+            onOpenStore={() => setShowShop(true)}
           />
         )}
 
@@ -303,6 +306,7 @@ export default function ProfilePage({
 
       {/* ============ Wallet Sheet ============ */}
       {showWallet && <WalletSheet onClose={() => setShowWallet(false)} />}
+      {showShop && <ShopSheet onClose={() => setShowShop(false)} />}
 
       {/* Avatar Menu (for me) */}
       {isMe && showAvatarMenu && (

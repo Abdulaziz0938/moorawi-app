@@ -17,6 +17,7 @@ import type * as mics from "../mics.js";
 import type * as profiles from "../profiles.js";
 import type * as rooms from "../rooms.js";
 import type * as seedShop from "../seedShop.js";
+import type * as shop from "../shop.js";
 import type * as users from "../users.js";
 import type * as voice from "../voice.js";
 import type * as voiceAccess from "../voiceAccess.js";
@@ -38,6 +39,7 @@ declare const fullApi: ApiFromModules<{
   profiles: typeof profiles;
   rooms: typeof rooms;
   seedShop: typeof seedShop;
+  shop: typeof shop;
   users: typeof users;
   voice: typeof voice;
   voiceAccess: typeof voiceAccess;
