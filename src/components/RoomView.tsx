@@ -867,7 +867,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
                       <UserName
                         name={m.senderName}
                         vip={m.senderVip}
-                        charmLevel={m.senderCharmLevel}
+                        charmValue={m.senderCharmLevel}
                         adminRole={m.senderAdminRole}
                         roomRole={m.senderRoomRole}
                         size="sm"

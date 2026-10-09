@@ -1,12 +1,29 @@
-// [moorawi] Unified user badges component
-// Displays: pvip (mini VIP), admin badge, and wide VIP banner
+// [moorawi] Unified user badges + name — Single Source of Truth for display
+// Used in: RoomView (chat), Leaderboard, Members, MiniProfile, ProfilePage, MeTab
+// Rule: only render what the user actually owns (DB-driven)
 
-interface Props {
-  vip?: number | null;          // 0-7
-  adminRole?: "super" | "moderator" | null;
-  variant?: "inline" | "stacked";
-  size?: "sm" | "md" | "lg";
-}
+import { Home, Shield, User as UserIcon, Crown, Award } from "lucide-react";
+import LevelBadge from "./LevelBadge";
+
+type Size = "sm" | "md" | "lg";
+
+const SIZES: Record<Size, {
+  role: number;
+  name: string;
+  vipW: number;
+  admin: number;
+  pvip: number;
+  gap: string;
+  medal: number;
+}> = {
+  sm: { role: 11, name: "text-[10px]", vipW: 44, admin: 18, pvip: 18, gap: "gap-1",   medal: 12 },
+  md: { role: 14, name: "text-xs",     vipW: 54, admin: 22, pvip: 22, gap: "gap-1.5", medal: 14 },
+  lg: { role: 16, name: "text-sm",     vipW: 62, admin: 26, pvip: 26, gap: "gap-2",   medal: 16 },
+};
+
+// ============================================================
+// Individual badges
+// ============================================================
 
 export function PvipBadge({ level, size = 20 }: { level: number; size?: number }) {
   if (!level || level < 1 || level > 7) return null;
@@ -52,7 +69,10 @@ export function AdminBadge({ role, size = 18 }: { role: "super" | "moderator" | 
   );
 }
 
-// Inline row: [pvip] [admin] — compact
+// ============================================================
+// Inline badges (compact row)
+// ============================================================
+
 export function UserBadgesInline({
   vip,
   adminRole,
@@ -70,15 +90,23 @@ export function UserBadgesInline({
   );
 }
 
-// Default export — flexible usage
-export default function UserBadges({ vip, adminRole, variant = "inline", size = "sm" }: Props) {
+export default function UserBadges({
+  vip,
+  adminRole,
+  variant = "inline",
+  size = "sm",
+}: {
+  vip?: number | null;
+  adminRole?: "super" | "moderator" | null;
+  variant?: "inline" | "stacked";
+  size?: Size;
+}) {
   const px = size === "sm" ? 16 : size === "md" ? 20 : 24;
 
   if (variant === "inline") {
     return <UserBadgesInline vip={vip} adminRole={adminRole} size={px} />;
   }
 
-  // stacked — vertical
   return (
     <div className="flex flex-col items-center gap-1">
       {adminRole && <AdminBadge role={adminRole} size={px} />}
@@ -87,52 +115,59 @@ export default function UserBadges({ vip, adminRole, variant = "inline", size = 
   );
 }
 
-// [moorawi] Unified UserName — role icon + name + vip banner + admin badge + pvip
-// Order (RTL): [role] [name] [vip-banner] [admin] [pvip]
-import { Home, Shield, User as UserIcon, Crown } from "lucide-react";
-import CapsuleBadge from "./CapsuleBadge";
+// ============================================================
+// Unified UserName — shows everything conditionally
+// Order (RTL): [role] [medal] [name] [title] [charm] [wealth] [vip-banner] [admin] [pvip]
+// ============================================================
 
-type Size = "sm" | "md" | "lg";
-
-const SIZES: Record<Size, { role: number; name: string; vipW: number; admin: number; pvip: number; gap: string }> = {
-  sm: { role: 11, name: "text-[10px]", vipW: 44, admin: 18, pvip: 18, gap: "gap-1" },
-  md: { role: 14, name: "text-xs", vipW: 54, admin: 22, pvip: 22, gap: "gap-1.5" },
-  lg: { role: 16, name: "text-sm", vipW: 62, admin: 26, pvip: 26, gap: "gap-2" },
-};
-
-export function UserName({
-  name,
-  vip,
-  charmLevel,
-  adminRole,
-  roomRole,
-  size = "sm",
-  nameClassName = "text-purple-300",
-  wrap = false,
-  showRole = true,
-  showCapsules = true,
-}: {
+interface UserNameProps {
   name: string;
-  vip?: number | null;
-  charmLevel?: number | null;
+  // Identity
+  vip?: number | null;                       // 0-7 (real VIP)
+  charmValue?: number | null;                // raw charms (0+)
+  wealthValue?: number | null;               // raw totalSent (0+)
   adminRole?: "super" | "moderator" | null;
   roomRole?: "owner" | "moderator" | "speaker" | "listener" | null;
+  medal?: { imageUrl?: string; name: string; tier: string } | null;
+  titleText?: string | null;
+  // Layout
   size?: Size;
   nameClassName?: string;
   wrap?: boolean;
   showRole?: boolean;
   showCapsules?: boolean;
-}) {
+  showMedal?: boolean;
+  showTitle?: boolean;
+}
+
+export function UserName({
+  name,
+  vip,
+  charmValue,
+  wealthValue,
+  adminRole,
+  roomRole,
+  medal,
+  titleText,
+  size = "sm",
+  nameClassName = "text-purple-300",
+  wrap = false,
+  showRole = true,
+  showCapsules = true,
+  showMedal = true,
+  showTitle = true,
+}: UserNameProps) {
   const s = SIZES[size];
 
-  // [moorawi-poppo] Role priority: super > owner(room) > moderator > member
+  // Role priority: super > owner(room) > moderator > member
   let role: "super" | "owner" | "moderator" | "member" = "member";
   if (adminRole === "super") role = "super";
   else if (roomRole === "owner") role = "owner";
   else if (roomRole === "moderator" || adminRole === "moderator") role = "moderator";
 
-  const v = typeof vip === "number" ? vip : 0;
-  const ch = typeof charmLevel === "number" ? charmLevel : 0;
+  const v = typeof vip === "number" && vip > 0 ? vip : 0;
+  const ch = typeof charmValue === "number" && charmValue > 0 ? charmValue : 0;
+  const we = typeof wealthValue === "number" && wealthValue > 0 ? wealthValue : 0;
 
   return (
     <div className={`flex items-center ${s.gap} ${wrap ? "flex-wrap" : ""} min-w-0`}>
@@ -150,30 +185,59 @@ export function UserName({
         <UserIcon size={Math.max(9, s.role - 1)} className="text-emerald-400 flex-shrink-0" fill="currentColor" strokeWidth={1.5} />
       )}
 
-      {/* 2. Name */}
+      {/* 2. Equipped medal (only if user owns it) */}
+      {showMedal && medal && (
+        medal.imageUrl ? (
+          <img
+            src={medal.imageUrl}
+            alt={medal.name}
+            title={medal.name}
+            className="object-contain drop-shadow flex-shrink-0"
+            style={{ width: s.medal, height: s.medal }}
+            draggable={false}
+          />
+        ) : (
+          <span title={medal.name} className="flex-shrink-0">
+            <Award size={s.medal} className="text-amber-300" strokeWidth={1.8} />
+          </span>
+        )
+      )}
+
+      {/* 3. Name */}
       <span className={`${s.name} font-bold ${nameClassName} truncate`}>{name}</span>
 
-      {/* 3. Charm capsule */}
-      {showCapsules && <CapsuleBadge kind="charm" value={ch} size="sm" />}
+      {/* 4. Title (only if user has one) */}
+      {showTitle && titleText && (
+        <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-[9px] font-black text-amber-200 flex-shrink-0">
+          {titleText}
+        </span>
+      )}
 
-      {/* 4. Wealth capsule */}
-      {showCapsules && <CapsuleBadge kind="wealth" value={v} size="sm" />}
+      {/* 5. Charm badge (only if charms > 0) */}
+      {showCapsules && ch > 0 && (
+        <LevelBadge kind="charm" level={Math.min(100, Math.floor(Math.pow(ch / 500, 1/3)))} size="sm" />
+      )}
 
-      {/* 5. VIP banner (if >0) */}
+      {/* 6. Wealth badge (only if totalSent > 0) */}
+      {showCapsules && we > 0 && (
+        <LevelBadge kind="wealth" level={Math.min(100, Math.floor(Math.pow(we / 500, 1/3)))} size="sm" />
+      )}
+
+      {/* 7. VIP banner (only if VIP active) */}
       {v > 0 && (
         <div className="badge-glow flex-shrink-0">
           <VipBanner level={v} width={s.vipW} />
         </div>
       )}
 
-      {/* 6. Admin badge */}
+      {/* 8. Admin badge (only if admin) */}
       {adminRole && (
         <div className="badge-glow flex-shrink-0">
           <AdminBadge role={adminRole} size={s.admin} />
         </div>
       )}
 
-      {/* 7. pvip */}
+      {/* 9. pvip mini badge */}
       {v > 0 && (
         <div className="badge-glow flex-shrink-0">
           <PvipBadge level={v} size={s.pvip} />
