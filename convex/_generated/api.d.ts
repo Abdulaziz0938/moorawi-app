@@ -8,6 +8,8 @@
  * @module
  */
 
+import type * as admin from "../admin.js";
+import type * as auth from "../auth.js";
 import type * as gifts from "../gifts.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_vip from "../lib/vip.js";
@@ -26,6 +28,8 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  admin: typeof admin;
+  auth: typeof auth;
   gifts: typeof gifts;
   "lib/auth": typeof lib_auth;
   "lib/vip": typeof lib_vip;

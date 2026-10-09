@@ -23,6 +23,11 @@ export default defineSchema({
     isAdmin: v.optional(v.boolean()),
     banned: v.optional(v.boolean()),
     adminRole: v.optional(v.union(v.literal("super"), v.literal("moderator"))),
+    // [moorawi-auth] Authentication
+    passwordHash: v.optional(v.string()),
+    passwordSalt: v.optional(v.string()),
+    authProvider: v.optional(v.union(v.literal("guest"), v.literal("password"))),
+    lastLoginAt: v.optional(v.number()),
   })
     .index("by_token", ["tokenIdentifier"])
     .index("by_userNumber", ["userNumber"])
