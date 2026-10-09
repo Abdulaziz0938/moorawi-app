@@ -16,9 +16,10 @@ export default function RoomList({ onEnter }: Props) {
   const deviceId = getDeviceId();
 
   const handleLogout = () => {
-    if (!confirm("تسجيل الخروج من الحساب؟")) return;
-    clearSession();
-    window.location.reload();
+    dialog.confirm("تسجيل الخروج من الحساب؟", () => {
+      clearSession();
+      window.location.reload();
+    });
   };
   const rooms = useQuery(api.rooms.listPublic);
   const myRoom = useQuery(api.rooms.myRoom, { tokenOverride: deviceId });

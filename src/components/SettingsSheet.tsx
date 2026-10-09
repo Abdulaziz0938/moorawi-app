@@ -446,7 +446,7 @@ function GiftsAdmin() {
                   {g.isRelationship && <Heart size={10} className="text-pink-400 fill-pink-400" />}
                 </div>
               </div>
-              <button onClick={() => { if (confirm("حذف هذه الهدية؟")) removeGift({ giftId: g._id, tokenOverride: deviceId }).catch((e) => dialog.alert(e?.message)); }}
+              <button onClick={() => { dialog.confirm("حذف هذه الهدية؟", () => { removeGift({ giftId: g._id, tokenOverride: deviceId }).catch((e) => dialog.alert(e?.message)); }); }}
                 className="p-2 text-red-400 hover:bg-red-500/20 rounded-full">
                 <X size={16} />
               </button>

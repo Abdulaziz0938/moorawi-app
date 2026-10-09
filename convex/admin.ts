@@ -181,3 +181,40 @@ export const purgeAllRooms = mutation({
   },
 });
 
+// ============ Purge guest users (no password) ============
+export const purgeGuestUsers = mutation({
+  args: { secret: v.string(), confirm: v.string() },
+  handler: async (ctx, args) => {
+    if (args.secret !== "moorawi-setup-2026") {
+      throw new ConvexError({ code: "FORBIDDEN", message: "Invalid secret" });
+    }
+    if (args.confirm !== "YES_DELETE_GUESTS") {
+      throw new ConvexError({ code: "FORBIDDEN", message: "Confirm mismatch" });
+    }
+
+    const all = await ctx.db.query("users").collect();
+    let deleted = 0;
+    const deletedIds: string[] = [];
+
+    for (const u of all) {
+      // احتفظ بالمالك (ID:1) والحسابات المسجلة
+      if (u.userNumber === 1) continue;
+      if (u.passwordHash) continue;
+      if (u.adminRole === "super") continue;
+
+      // احذف عضوياته في الغرف
+      const members = await ctx.db.query("roomMembers")
+        .filter((q) => q.eq(q.field("userId"), u._id))
+        .collect();
+      for (const m of members) {
+        await ctx.db.delete("roomMembers", m._id);
+      }
+      await ctx.db.delete("users", u._id);
+      deleted++;
+      deletedIds.push(u.tokenIdentifier);
+    }
+
+    return { ok: true, deleted, deletedIds };
+  },
+});
+
