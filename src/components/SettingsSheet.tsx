@@ -144,7 +144,16 @@ export default function SettingsSheet({
     { icon: VolumeX, label: "عازل صوت", key: "noise-cancel" },
   ];
 
+  // [moorawi-security] الأزرار المتاحة لجميع المستخدمين (شخصية فقط)
+  const personalKeys = ["mini-chat", "mute", "voice-changer", "always-on", "noise-cancel"];
+
   const handleItemClick = (key: string) => {
+    // حماية: أي زر غير شخصي = owner/mod فقط
+    if (!isOwnerOrMod && !personalKeys.includes(key)) {
+      dialog.alert("للمالك/المشرف فقط");
+      return;
+    }
+
     if (key === "layout") setTab("layout");
     else if (key === "editRoom") setTab("editRoom");
     else if (key === "background") setTab("background");
@@ -206,28 +215,31 @@ export default function SettingsSheet({
               </button>
             </div>
 
-            {!isOwnerOrMod && (
-              <p className="text-yellow-300 text-[10px] text-center mb-3">للمالك/المشرف فقط</p>
+            {/* [moorawi-security] Items grid — Owner/Mod فقط */}
+            {isOwnerOrMod && (
+              <div className="grid grid-cols-3 gap-3 mb-6">
+                {items.map((it) => (
+                  <button key={it.key} onClick={() => handleItemClick(it.key)} className="flex flex-col items-center gap-2 p-3 bg-white/5 hover:bg-white/10 rounded-2xl transition">
+                    <it.icon size={26} className="text-white" />
+                    <span className="text-white text-[11px]">{it.label}</span>
+                  </button>
+                ))}
+              </div>
             )}
 
-            <div className="grid grid-cols-3 gap-3 mb-6">
-              {items.map((it) => (
-                <button key={it.key} onClick={() => handleItemClick(it.key)} className="flex flex-col items-center gap-2 p-3 bg-white/5 hover:bg-white/10 rounded-2xl transition">
-                  <it.icon size={26} className="text-white" />
-                  <span className="text-white text-[11px]">{it.label}</span>
-                </button>
-              ))}
-            </div>
+            {/* [moorawi-security] Quick Tools — مصفّاة حسب الدور */}
             <h3 className="text-white/60 text-xs mb-3 text-center">أدوات سريعة</h3>
             <div className="grid grid-cols-4 gap-3">
-              {quickTools.map((it) => (
-                <button key={it.key} onClick={() => handleItemClick(it.key)} className="flex flex-col items-center gap-1.5">
-                  <div className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition">
-                    <it.icon size={20} className="text-white" />
-                  </div>
-                  <span className="text-white/80 text-[9px] text-center leading-tight">{it.label}</span>
-                </button>
-              ))}
+              {quickTools
+                .filter((it) => isOwnerOrMod || personalKeys.includes(it.key))
+                .map((it) => (
+                  <button key={it.key} onClick={() => handleItemClick(it.key)} className="flex flex-col items-center gap-1.5">
+                    <div className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition">
+                      <it.icon size={20} className="text-white" />
+                    </div>
+                    <span className="text-white/80 text-[9px] text-center leading-tight">{it.label}</span>
+                  </button>
+                ))}
             </div>
           </div>
         )}
