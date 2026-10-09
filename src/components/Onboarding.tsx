@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { getDeviceId } from "../lib/device";
+import { getSessionUsername } from "../lib/session";
 import { uploadToCloudinary } from "../lib/cloudinary";
 import { Camera, Check, Loader2, ChevronLeft } from "lucide-react";
 
@@ -20,7 +21,8 @@ export default function Onboarding({ onComplete }: Props) {
   const [step, setStep] = useState(1);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [name, setName] = useState("");
-  const [username, setUsername] = useState("");
+  const sessionUsername = getSessionUsername();
+  const [username, setUsername] = useState(sessionUsername ?? "");
   const [age, setAge] = useState(18);
   const [gender, setGender] = useState<Gender>("male");
   const [country, setCountry] = useState("");
@@ -29,10 +31,13 @@ export default function Onboarding({ onComplete }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Username availability check
+  // [moorawi-auth] هل هذا اسم المستخدم الخاص بالمستخدم المسجل حالياً؟
+  const isOwnUsername = !!sessionUsername && username.toLowerCase() === sessionUsername.toLowerCase();
+
+  // Username availability check (skip if it's own username)
   const usernameCheck = useQuery(
     api.profiles.isUsernameAvailable,
-    username.length >= 3 ? { username } : "skip" as any,
+    username.length >= 3 && !isOwnUsername ? { username } : "skip" as any,
   );
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -79,7 +84,7 @@ export default function Onboarding({ onComplete }: Props) {
     }
   };
 
-  const canProceedStep3 = name.length >= 2 && usernameCheck?.available === true;
+  const canProceedStep3 = name.length >= 2 && (isOwnUsername || usernameCheck?.available === true);
   const canProceedStep4 = country && selectedInterests.length >= 3;
 
   return (
@@ -191,16 +196,19 @@ export default function Onboarding({ onComplete }: Props) {
                   onChange={(e) => setUsername(e.target.value.toLowerCase())}
                   placeholder="ahmad_123"
                   maxLength={20}
-                  className="w-full bg-white/10 border border-white/30 rounded-xl p-3 outline-none focus:border-white text-white placeholder-white/40 pl-10"
+                  readOnly={!!sessionUsername}
+                  className={`w-full bg-white/10 border border-white/30 rounded-xl p-3 outline-none focus:border-white text-white placeholder-white/40 pl-10 ${sessionUsername ? "opacity-70 cursor-not-allowed" : ""}`}
                   dir="ltr"
                 />
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/60">@</span>
               </div>
-              {username.length >= 3 && usernameCheck && (
+              {isOwnUsername ? (
+                <p className="text-xs mt-1 text-green-300">✓ مرتبط بحسابك</p>
+              ) : username.length >= 3 && usernameCheck ? (
                 <p className={`text-xs mt-1 ${usernameCheck.available ? "text-green-300" : "text-red-300"}`}>
                   {usernameCheck.available ? "✓ متاح" : `✗ ${usernameCheck.reason}`}
                 </p>
-              )}
+              ) : null}
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>

@@ -4,6 +4,8 @@ import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { Mic, Users, Plus, X, Check } from "lucide-react";
 import { getDeviceId } from "../lib/device";
+import { clearSession, hasSession } from "../lib/session";
+import { LogOut } from "lucide-react";
 import { dialog } from "../lib/dialog";
 
 interface Props {
@@ -12,6 +14,12 @@ interface Props {
 
 export default function RoomList({ onEnter }: Props) {
   const deviceId = getDeviceId();
+
+  const handleLogout = () => {
+    if (!confirm("تسجيل الخروج من الحساب؟")) return;
+    clearSession();
+    window.location.reload();
+  };
   const rooms = useQuery(api.rooms.listPublic);
   const me = useQuery(api.profiles.me, { tokenOverride: deviceId });
   const createRoom = useMutation(api.rooms.create);
@@ -54,7 +62,18 @@ export default function RoomList({ onEnter }: Props) {
   };
 
   return (
-    <div className="max-w-md mx-auto p-4">
+    <div className="max-w-md mx-auto p-4 relative">
+      {/* [moorawi-auth] Logout — يظهر فقط عند تسجيل دخول رسمي */}
+      {hasSession() && (
+        <button
+          onClick={handleLogout}
+          className="absolute top-2 left-2 z-10 p-2 rounded-full bg-white/10 hover:bg-red-500/30 backdrop-blur-xl border border-white/20 text-white/70 hover:text-white transition"
+          title="تسجيل الخروج"
+        >
+          <LogOut size={18} />
+        </button>
+      )}
+
       <header className="text-center py-6 text-white">
         {me && (
           <div className="flex flex-col items-center mb-4">
