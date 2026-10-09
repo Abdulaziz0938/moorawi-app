@@ -11,6 +11,7 @@ interface Props {
   onOpenMissions?: () => void;
   onOpenSettings?: () => void;
   onOpenAdmin?: () => void;
+  onOpenMedals?: () => void;
   isOwner?: boolean;
 }
 
@@ -20,6 +21,7 @@ export default function ServicesSection({
   onOpenMissions,
   onOpenSettings,
   onOpenAdmin,
+  onOpenMedals,
   isOwner,
 }: Props) {
   const soon = (name: string) => dialog.alert(`${name} — قريباً`);
@@ -50,7 +52,7 @@ export default function ServicesSection({
   const gridItems = [
     { key: "relation", label: "العلاقة",   icon: Handshake,  color: "text-rose-300",     onClick: () => soon("العلاقة") },
     { key: "level",    label: "مستوى",      icon: Sparkles,   color: "text-amber-300",    onClick: () => soon("المستوى") },
-    { key: "medals",   label: "أوسمة",      icon: Award,      color: "text-yellow-300",   onClick: () => soon("الأوسمة") },
+    { key: "medals",   label: "أوسمة",      icon: Award,      color: "text-yellow-300",   onClick: onOpenMedals ?? (() => soon("الأوسمة")) },
     { key: "wallet",   label: "محفظة",      icon: Wallet,     color: "text-emerald-300",  onClick: onOpenWallet },
     { key: "legend",   label: "الأسطورة",   icon: Star,       color: "text-fuchsia-300",  onClick: () => soon("الأسطورة") },
     { key: "host",     label: "مضيف",       icon: Mic,        color: "text-sky-300",      onClick: () => soon("المضيف") },

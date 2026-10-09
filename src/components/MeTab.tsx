@@ -8,6 +8,7 @@ import WalletSheet from "./WalletSheet";
 import ShopSheet from "./ShopSheet";
 import ProfilePage from "./ProfilePage";
 import AdminPanelSheet from "./AdminPanelSheet";
+import MedalsSheet from "./MedalsSheet";
 
 interface Props {
   onEnterRoom?: (roomId: any) => void;
@@ -25,6 +26,7 @@ export default function MeTab({ onEnterRoom }: Props) {
   const [showWallet, setShowWallet] = useState(false);
   const [showShop, setShowShop] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
+  const [showMedals, setShowMedals] = useState(false);
 
   if (!me) {
     return (
@@ -93,6 +95,7 @@ export default function MeTab({ onEnterRoom }: Props) {
         <ServicesSection
           onOpenWallet={() => setShowWallet(true)}
           onOpenStore={() => setShowShop(true)}
+          onOpenMedals={() => setShowMedals(true)}
           isOwner={me.userNumber === 1 || me.adminRole === "super"}
           onOpenAdmin={() => setShowAdmin(true)}
         />
@@ -104,6 +107,7 @@ export default function MeTab({ onEnterRoom }: Props) {
       {showWallet && <WalletSheet onClose={() => setShowWallet(false)} />}
       {showShop && <ShopSheet onClose={() => setShowShop(false)} />}
       {showAdmin && <AdminPanelSheet onClose={() => setShowAdmin(false)} />}
+      {showMedals && <MedalsSheet onClose={() => setShowMedals(false)} />}
     </>
   );
 }

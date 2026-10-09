@@ -1,0 +1,170 @@
+import { mutation, query } from "./_generated/server";
+import { ConvexError, v } from "convex/values";
+import { requireUser } from "./lib/auth";
+
+// ============================================================
+// [moorawi-medals] Medals queries + mutations
+// ============================================================
+
+// List all active medals (grouped by category)
+export const listAll = query({
+  args: { category: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    if (args.category) {
+      return await ctx.db
+        .query("medals")
+        .withIndex("by_category_active", (q) =>
+          q.eq("category", args.category as any).eq("active", true),
+        )
+        .collect();
+    }
+    return await ctx.db.query("medals").collect();
+  },
+});
+
+// Get my medals
+export const myMedals = query({
+  args: { tokenOverride: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    if (!args.tokenOverride) return [];
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_token", (q) => q.eq("tokenIdentifier", args.tokenOverride!))
+      .unique();
+    if (!user) return [];
+
+    const userMedals = await ctx.db
+      .query("userMedals")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .collect();
+
+    // Enrich with medal data
+    const enriched = await Promise.all(
+      userMedals.map(async (um) => {
+        const medal = await ctx.db.get("medals", um.medalId);
+        return { ...um, medal };
+      }),
+    );
+
+    return enriched.filter((x) => x.medal);
+  },
+});
+
+// Get user medals (public)
+export const userMedals = query({
+  args: { userId: v.id("users") },
+  handler: async (ctx, args) => {
+    const userMedals = await ctx.db
+      .query("userMedals")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .collect();
+
+    const enriched = await Promise.all(
+      userMedals.map(async (um) => {
+        const medal = await ctx.db.get("medals", um.medalId);
+        return { ...um, medal };
+      }),
+    );
+
+    return enriched.filter((x) => x.medal);
+  },
+});
+
+// ============================================================
+// Mutations
+// ============================================================
+
+// Grant a medal to user (admin or auto)
+export const grantMedal = mutation({
+  args: {
+    tokenOverride: v.optional(v.string()),
+    userId: v.id("users"),
+    medalId: v.id("medals"),
+  },
+  handler: async (ctx, args) => {
+    // Require admin (for now — auto-grant comes later)
+    const me = await requireUser(ctx, args.tokenOverride);
+    if (me.adminRole !== "super" && me.userNumber !== 1) {
+      throw new ConvexError({ code: "FORBIDDEN", message: "صلاحيات المطلوبة" });
+    }
+
+    const user = await ctx.db.get("users", args.userId);
+    if (!user) throw new ConvexError({ code: "NOT_FOUND", message: "المستخدم غير موجود" });
+    const medal = await ctx.db.get("medals", args.medalId);
+    if (!medal) throw new ConvexError({ code: "NOT_FOUND", message: "الوسام غير موجود" });
+
+    // Check if already has
+    const existing = await ctx.db
+      .query("userMedals")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .collect();
+    if (existing.some((um) => um.medalId === args.medalId)) {
+      return { ok: true, alreadyOwned: true };
+    }
+
+    await ctx.db.insert("userMedals", {
+      userId: args.userId,
+      medalId: args.medalId,
+      earnedAt: Date.now(),
+      equipped: false,
+    });
+
+    // Increment user's medalCount
+    await ctx.db.patch("users", args.userId, {
+      medalCount: (user.medalCount ?? 0) + 1,
+    });
+
+    return { ok: true };
+  },
+});
+
+// Toggle equip medal (only one equipped at a time)
+export const equipMedal = mutation({
+  args: {
+    tokenOverride: v.optional(v.string()),
+    userMedalId: v.id("userMedals"),
+  },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
+    const um = await ctx.db.get("userMedals", args.userMedalId);
+    if (!um) throw new ConvexError({ code: "NOT_FOUND", message: "غير موجود" });
+    if (um.userId !== me._id) {
+      throw new ConvexError({ code: "FORBIDDEN", message: "ليس لك" });
+    }
+
+    // Unequip all user's medals
+    const all = await ctx.db
+      .query("userMedals")
+      .withIndex("by_user", (q) => q.eq("userId", me._id))
+      .collect();
+    for (const m of all) {
+      await ctx.db.patch("userMedals", m._id, { equipped: false });
+    }
+
+    // Equip this one
+    await ctx.db.patch("userMedals", args.userMedalId, { equipped: true });
+
+    // Update user
+    await ctx.db.patch("users", me._id, { equippedMedalId: um.medalId });
+
+    return { ok: true };
+  },
+});
+
+// Unequip
+export const unequipMedal = mutation({
+  args: {
+    tokenOverride: v.optional(v.string()),
+    userMedalId: v.id("userMedals"),
+  },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
+    const um = await ctx.db.get("userMedals", args.userMedalId);
+    if (!um || um.userId !== me._id) {
+      throw new ConvexError({ code: "FORBIDDEN", message: "ليس لك" });
+    }
+    await ctx.db.patch("userMedals", args.userMedalId, { equipped: false });
+    await ctx.db.patch("users", me._id, { equippedMedalId: undefined });
+    return { ok: true };
+  },
+});
