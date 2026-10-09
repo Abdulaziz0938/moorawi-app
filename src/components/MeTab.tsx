@@ -87,26 +87,6 @@ export default function MeTab({ onEnterRoom }: Props) {
           />
         </div>
 
-        {/* ===== Quick cards: VIP + Supporter ===== */}
-        <div className="mx-4 mt-4 grid grid-cols-2 gap-3">
-          <button
-            onClick={() => setShowFullProfile(true)}
-            className="rounded-2xl border border-purple-500/30 bg-gradient-to-br from-purple-700/40 to-purple-900/40 p-4 flex flex-col items-center gap-1 active:scale-95 transition"
-          >
-            <span className="text-3xl">👑</span>
-            <p className="text-white text-sm font-black">VIP</p>
-            <p className="text-white/50 text-[10px]">1 → 7</p>
-          </button>
-          <button
-            onClick={() => setShowFullProfile(true)}
-            className="rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-700/40 to-amber-900/40 p-4 flex flex-col items-center gap-1 active:scale-95 transition"
-          >
-            <span className="text-3xl">💎</span>
-            <p className="text-white text-sm font-black">الداعم المحترم</p>
-            <p className="text-white/50 text-[10px]">S5 → S100</p>
-          </button>
-        </div>
-
         {/* ===== Services section (8 grid + list) ===== */}
         <ServicesSection
           onOpenWallet={() => setShowWallet(true)}
