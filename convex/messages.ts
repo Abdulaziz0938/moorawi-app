@@ -40,6 +40,8 @@ export const list = query({
         senderNumber: sender?.userNumber ?? null,
         senderVip: vip,
         senderCharmLevel: vipLevelFromTotalReceived(sender?.totalReceived ?? 0),
+        senderCharmValue: sender?.charms ?? 0,
+        senderWealthValue: sender?.totalSent ?? 0,
         senderAdminRole: sender?.adminRole ?? null,
         senderCharms: sender?.charms ?? 0,
         senderRoomRole: roleByUser.get(m.senderId as string) ?? null,

@@ -2,6 +2,7 @@
 // Renders as horizontal pill: [level] [icon/image]
 // Supports DB image override (when user uploads custom icons)
 
+import { Heart, Gem } from "lucide-react";
 import { tierFor } from "../lib/levelBadges";
 
 type Kind = "charm" | "wealth";
@@ -15,10 +16,10 @@ const SIZE_MAP: Record<Size, {
   iconSize: number;
   borderW: number;
 }> = {
-  xs: { height: 18, padX: 6,  gap: 2, levelFont: "text-[9px]",  iconSize: 12, borderW: 1 },
-  sm: { height: 24, padX: 8,  gap: 3, levelFont: "text-xs",     iconSize: 16, borderW: 1.5 },
-  md: { height: 32, padX: 10, gap: 4, levelFont: "text-sm",     iconSize: 22, borderW: 2 },
-  lg: { height: 42, padX: 14, gap: 6, levelFont: "text-base",   iconSize: 28, borderW: 2.5 },
+  xs: { height: 14, padX: 5,  gap: 1, levelFont: "text-[8px]",  iconSize: 9,  borderW: 1 },
+  sm: { height: 18, padX: 6,  gap: 2, levelFont: "text-[10px]", iconSize: 12, borderW: 1 },
+  md: { height: 22, padX: 8,  gap: 2, levelFont: "text-xs",     iconSize: 15, borderW: 1.5 },
+  lg: { height: 30, padX: 10, gap: 3, levelFont: "text-sm",     iconSize: 20, borderW: 2 },
 };
 
 interface Props {
@@ -40,7 +41,7 @@ export default function LevelBadge({
 }: Props) {
   const s = SIZE_MAP[size];
   const tier = tierFor(kind, level);
-  const Icon = tier.icon;
+  const Icon = kind === "charm" ? Heart : Gem;
 
   return (
     <span
@@ -78,8 +79,8 @@ export default function LevelBadge({
           <Icon
             size={s.iconSize}
             className="text-white flex-shrink-0 drop-shadow"
-            strokeWidth={2.2}
-            fill="rgba(255,255,255,0.15)"
+            strokeWidth={2.4}
+            fill="rgba(255,255,255,0.2)"
           />
         )
       )}

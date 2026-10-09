@@ -4,6 +4,7 @@
 
 import { Home, Shield, User as UserIcon, Crown, Award } from "lucide-react";
 import LevelBadge from "./LevelBadge";
+import { levelFromValue } from "../lib/levels";
 
 type Size = "sm" | "md" | "lg";
 
@@ -215,12 +216,12 @@ export function UserName({
 
       {/* 5. Charm badge (only if charms > 0) */}
       {showCapsules && ch > 0 && (
-        <LevelBadge kind="charm" level={Math.min(100, Math.floor(Math.pow(ch / 500, 1/3)))} size="sm" />
+        <LevelBadge kind="charm" level={levelFromValue(ch)} size="sm" />
       )}
 
       {/* 6. Wealth badge (only if totalSent > 0) */}
       {showCapsules && we > 0 && (
-        <LevelBadge kind="wealth" level={Math.min(100, Math.floor(Math.pow(we / 500, 1/3)))} size="sm" />
+        <LevelBadge kind="wealth" level={levelFromValue(we)} size="sm" />
       )}
 
       {/* 7. VIP banner (only if VIP active) */}
