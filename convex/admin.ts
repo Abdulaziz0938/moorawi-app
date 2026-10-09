@@ -149,3 +149,35 @@ export const purgeOrphanRooms = mutation({
   },
 });
 
+// ============ Purge ALL rooms (dev cleanup) ============
+export const purgeAllRooms = mutation({
+  args: { secret: v.string(), confirm: v.string() },
+  handler: async (ctx, args) => {
+    if (args.secret !== "moorawi-setup-2026") {
+      throw new ConvexError({ code: "FORBIDDEN", message: "Invalid secret" });
+    }
+    if (args.confirm !== "YES_DELETE_ALL_ROOMS") {
+      throw new ConvexError({ code: "FORBIDDEN", message: "Confirm string mismatch" });
+    }
+
+    const allRooms = await ctx.db.query("rooms").collect();
+    let roomsDeleted = 0;
+    let membersDeleted = 0;
+
+    for (const room of allRooms) {
+      const members = await ctx.db
+        .query("roomMembers")
+        .filter((q) => q.eq(q.field("roomId"), room._id))
+        .collect();
+      for (const m of members) {
+        await ctx.db.delete("roomMembers", m._id);
+        membersDeleted++;
+      }
+      await ctx.db.delete("rooms", room._id);
+      roomsDeleted++;
+    }
+
+    return { ok: true, roomsDeleted, membersDeleted };
+  },
+});
+
