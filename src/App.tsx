@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import type { Id } from "../convex/_generated/dataModel";
-import RoomList from "./components/RoomList";
+import Dashboard from "./components/Dashboard";
 import RoomView from "./components/RoomView";
 import Onboarding from "./components/Onboarding";
 import AuthScreen from "./components/AuthScreen";
@@ -66,9 +66,7 @@ function App() {
       {currentRoomId ? (
         <RoomView roomId={currentRoomId} onLeave={() => setCurrentRoomId(null)} />
       ) : (
-        <div className="h-full w-full overflow-y-auto">
-          <RoomList onEnter={setCurrentRoomId} />
-        </div>
+        <Dashboard onEnterRoom={setCurrentRoomId} />
       )}
     </div>
   );
