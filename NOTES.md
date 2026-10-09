@@ -1,7 +1,7 @@
 # NOTES — مشروع الدولة المعراوية (moorawi-app)
 
-آخر تحديث: 2026-10-08
-Owner ID: 1
+آخر تحديث: 2026-10-09
+Owner ID: 1 (username: abdulaziz0938)
 
 ## معلومات المشروع
 - GitHub: https://github.com/Abdulaziz0938/moorawi-app.git
@@ -12,107 +12,70 @@ Owner ID: 1
 ## التقنيات
 React + Vite + TS + Tailwind v3 + Convex + Agora + Cloudinary + lucide-react
 
-## الملفات الرئيسية
-### Frontend (src/components/)
-RoomView.tsx, MiniProfileSheet.tsx, ProfilePage.tsx, LeaderboardSheet.tsx,
-MembersSheet.tsx, MemberRow.tsx, ActivitySheet.tsx, MicRequestsSheet.tsx,
-SettingsSheet.tsx, GiftSheet.tsx, CompactChatInput.tsx, Onboarding.tsx,
-RoomList.tsx, UserBadges.tsx (PvipBadge, VipBanner, AdminBadge, UserName)
+## ✅ ما تم إنجازه (مكتمل)
 
-### Frontend (src/lib/)
-agora.ts, device.ts, cloudinary.ts, dialog.tsx
+### الأساس
+- تسجيل/دخول (Custom Auth) + Onboarding + Dashboard 5 تبويبات
+- غرف صوتية (Agora) + مايكات + رتب (owner/mod/speaker/listener)
+- هدايا جماعية + waterfall + كومبو
+- Leaderboard + Podium
 
-### Assets (public/)
-- vip/vip1-7.png + pvip1-7.png
-- badges/badge-super.png, badge-admin.png
+### النظام الجديد (Economy + Shop)
+- **25 جدول** في Schema (wallet, shop, vip, medals, relations, ...)
+- **wallet.ts**: balance / spend / reward / recharge / exchangeDiamonds
+- **shop.ts**: listByCategory / buyItem / sendItem / equipItem / unequipItem
+- **seedShop.ts**: 51 منتج (14 frames, 11 vehicles, 8 effects, 7 bubbles, 8 waves, 3 cards)
+- **WalletSheet.tsx**: محفظة كاملة (رصيد + شحن 7 باقات + استبدال ماس + سجل)
+- **ShopSheet.tsx**: 6 تصنيفات + شراء/تفعيل (أيقونات lucide مؤقتاً)
+- **ServicesSection.tsx**: 10 أزرار + 7 قائمة سفلية
 
-### Backend (convex/)
-schema.ts, gifts.ts, messages.ts, mics.ts, rooms.ts, users.ts, profiles.ts
-lib/auth.ts, lib/vip.ts
+### Branding
+- الاسم الصحيح: **الدولة المعراوية** (نسبة لمعرة النعمان)
 
-## ما تم إنجازه (35 ميزة)
-### الأساس (1-11)
-تسجيل (Device ID) | Onboarding | صفحة الغرف | غرفة الصوت (Agora) |
-نظام المايكات 1-24 | إدارة الغرفة | الدردشة | الهدايا | كومبو + نبضة |
-بانرات 3 مستويات | Cloudinary
+## 🚧 المهام القادمة
 
-### الهدايا (12-15)
-هدايا جماعية sendBatch | أنيميشن multiGiftFly | شلال waterfall |
-عدّاد الكومبو الفعلي
-
-### الشات (16-17)
-فلترة since | UserName موحّد في 6 أماكن
-
-### البروفايل (18-20)
-MiniProfileSheet glass | ProfilePage كاملة | Avatar menu + preview
-
-### الأدوار (21-25)
-micRequests | كتم مزدوج | قائمة المايك | kick/ban/promote/demote/removeFromSeat |
-ActivitySheet
-
-### الشارات (26-30)
-VIP 1-7 + Pvip 1-7 | Admin super/mod | Charm + Wealth capsules |
-UserName موحّد | Owner ID = 1
-
-### النظام (31-35)
-dialog مخصص | MembersSheet | MemberRow موحّدة | TopBar 2-rows | badge-glow CSS
-
-## المهام القادمة
-### عاجل
-1) استبدال الإيموجي بـ SVG (قاعدة 15)
-   الاستثناء: 👑 في Leaderboard Podium
-   المتبقي:
-   - RoomView.tsx:1105 — 🎁 → Gift
-   - SettingsSheet.tsx:425 — 🎁 → Gift
-   - GiftSheet.tsx:327 — 🎁 → Gift
-   - LeaderboardSheet.tsx:105 — 👑 (يبقى)
-   - LeaderboardSheet.tsx:141 — 🏠 → Home
-   - LeaderboardSheet.tsx:156 — ✨ → Sparkles
-   - LeaderboardSheet.tsx:161 — 💎 → Gem
-   - LeaderboardSheet.tsx:304 — 🏠 → Home
-   - UserBadges.tsx:156 — ✨ → Sparkles
-   - UserBadges.tsx:164 — 💎 → Gem
-   - MemberRow.tsx:102 — ✨ → Sparkles
-   - MemberRow.tsx:108 — 💎 → Gem
-
-2) تفعيل الأزرار المتبقية في SettingsSheet
-   - قفل الغرفة، موسيقى، الديكور، وظيفة، صرف
-   - Quick Tools: دردشة موجزة، كتم صوت، عازل صوت، تشغيل الشاشة دوماً،
-     مغير الصوت، تأثيرات هدية، تأثيرات مركبة، عملية خلفية
+### أولوية عالية
+1. **Admin Panel** — لوحة للمالك (ID:1) لتعديل المستخدمين
+2. **الأوسمة** — 6 رتب (C/B/A/S/SS/SSS) + تصنيفات
+3. **المستوى + مكافآت** — Progress 0-139 + rewards
+4. **العلاقات (CP)** — CP + أخ/أخت/صديق + طلبات
 
 ### متوسطة
-3) Leaderboard جديد (عالمي)
-4) Leaderboard تصنيف الساعات (schema + heartbeat)
-5) Admin Panel (ID:1)
-6) الأصدقاء + العائلات + الوكالة
+5. **VIP** — 7 مستويات + 33 ميزة
+6. **الزيارات الأخيرة** — تتبع زوار البروفايل/الغرفة
+7. **المهام** — يومية + دخول 7 أيام
+8. **المصادقة** — رفع صورة حقيقية
+9. **الملكة (CP)** — 3 مستويات
 
-## قواعد العمل (15)
+### مؤجل
+- الوكالة + المضيف + الأسطورة
+- VIP خاصة بالداعمين
+- اللحظات + اكتشاف
+- الرسائل + الإشعارات
+- **الصور الحقيقية** (Frames/Vehicles/...) — عند توفرها
+
+## 📋 قواعد العمل
 1. أمر Termux واحد + شرح
 2. تحقق قبل الانتقال
-3. لا حذف/تعديل بدون سؤال
+3. لا حذف بدون سؤال
 4. commit + push بعد كل مرحلة
-5. Backend: npx convex dev --once + npx convex deploy (الاثنين)
-6. انتظار Vercel ~دقيقة
-7. أوامر واضحة للنسخ
-8. imports: إدراج يدوي (لا regex)
-9. عند تعديل Backend → check Frontend type
-10. npx tsc -b --noEmit قبل كل push
-11. قبل تعديل import block: نمط محدد (لا regex عام)
-12. قبل استبدال دالة: تحقق من عدم وجود نسخ مكررة
-13. لا نضيف أزرار — فعّل الموجود
-14. قبل استبدال كتلة: اطبع 30 سطراً أولاً
-15. لا إيموجي في UI — SVG من lucide-react أو PNG
-    استثناء: 👑 في Leaderboard Podium
+5. Backend: npx convex dev --once + npx convex deploy
+6. npx tsc -b --noEmit قبل push
+7. imports: إدراج يدوي
+8. لا regex عام على import block
+9. قبل استبدال كتلة: اطبع 30 سطراً
+10. **لا إيموجي في UI** (lucide-react أو PNG)
+11. **dialog.confirm/alert** دائماً (لا native)
+12. **CapsuleBadge** في كل مكان فيه اسم
 
-## أوامر أساسية
-فحص TypeScript:
-cd ~/moorawi-app && npx tsc -b --noEmit 2>&1 | head -20
+## 🔧 أوامر أساسية
+- فحص: `cd ~/moorawi-app && npx tsc -b --noEmit 2>&1 | head -20`
+- Deploy: `npx convex dev --once && npx convex deploy`
+- Push: `git add . && git commit -m "..." && git push`
 
-Deploy Backend:
-cd ~/moorawi-app && npx convex dev --once && npx convex deploy
-
-Push Frontend:
-cd ~/moorawi-app && git add . && git commit -m "..." && git push
-
-Backup:
-cd ~ && tar -czf moorawi-backup-$(date +%Y-%m-%d_%H-%M).tar.gz --exclude='node_modules' --exclude='.git' --exclude='dist' moorawi-app/
+## 📊 Schema الحالي (25 جدول)
+users, counters, rooms, roomMembers, micSeats, messages, micInvites,
+micRequests, roomActions, gifts, giftTransactions, auditLogs,
+walletTransactions, shopItems, userInventory, vipSubscriptions,
+medals, userMedals, relationships, relationshipRequests, follows,
+visits, missions, userMissions, verificationRequests
