@@ -10,6 +10,8 @@ interface Props {
   onOpenStore?: () => void;
   onOpenMissions?: () => void;
   onOpenSettings?: () => void;
+  onOpenAdmin?: () => void;
+  isOwner?: boolean;
 }
 
 export default function ServicesSection({
@@ -17,6 +19,8 @@ export default function ServicesSection({
   onOpenStore,
   onOpenMissions,
   onOpenSettings,
+  onOpenAdmin,
+  isOwner,
 }: Props) {
   const soon = (name: string) => dialog.alert(`${name} — قريباً`);
 
@@ -67,6 +71,25 @@ export default function ServicesSection({
 
   return (
     <div className="mx-4 mt-5 space-y-4">
+      {/* ============ ADMIN BUTTON (owner only) ============ */}
+      {isOwner && onOpenAdmin && (
+        <button
+          onClick={onOpenAdmin}
+          className="w-full rounded-2xl border border-red-500/40 bg-gradient-to-r from-red-600/30 to-orange-600/30 p-3 flex items-center justify-between active:scale-95 transition"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-orange-600 flex items-center justify-center">
+              <Crown size={20} className="text-white" />
+            </div>
+            <div className="text-right">
+              <p className="text-white text-sm font-black">لوحة المالك</p>
+              <p className="text-white/50 text-[10px]">إدارة المستخدمين والمتجر</p>
+            </div>
+          </div>
+          <ChevronLeft size={20} className="text-white/50" />
+        </button>
+      )}
+
       {/* ============ TOP CARDS ============ */}
       <div className="grid grid-cols-2 gap-3">
         {topCards.map((c) => {

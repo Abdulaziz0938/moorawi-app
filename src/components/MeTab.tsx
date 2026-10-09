@@ -7,6 +7,7 @@ import ServicesSection from "./ServicesSection";
 import WalletSheet from "./WalletSheet";
 import ShopSheet from "./ShopSheet";
 import ProfilePage from "./ProfilePage";
+import AdminPanelSheet from "./AdminPanelSheet";
 
 interface Props {
   onEnterRoom?: (roomId: any) => void;
@@ -23,6 +24,7 @@ export default function MeTab({ onEnterRoom }: Props) {
   const [showFullProfile, setShowFullProfile] = useState(false);
   const [showWallet, setShowWallet] = useState(false);
   const [showShop, setShowShop] = useState(false);
+  const [showAdmin, setShowAdmin] = useState(false);
 
   if (!me) {
     return (
@@ -91,6 +93,8 @@ export default function MeTab({ onEnterRoom }: Props) {
         <ServicesSection
           onOpenWallet={() => setShowWallet(true)}
           onOpenStore={() => setShowShop(true)}
+          isOwner={me.userNumber === 1 || me.adminRole === "super"}
+          onOpenAdmin={() => setShowAdmin(true)}
         />
 
         <div className="h-24" />
@@ -99,6 +103,7 @@ export default function MeTab({ onEnterRoom }: Props) {
       {/* ===== Overlays ===== */}
       {showWallet && <WalletSheet onClose={() => setShowWallet(false)} />}
       {showShop && <ShopSheet onClose={() => setShowShop(false)} />}
+      {showAdmin && <AdminPanelSheet onClose={() => setShowAdmin(false)} />}
     </>
   );
 }
