@@ -140,8 +140,10 @@ export default function ProfilePage({
         {/* Header */}
         <div className="flex items-center justify-between px-4 pt-4 pb-2">
           <button
-            onClick={onClose}
-            className="w-10 h-10 rounded-full bg-white/15 backdrop-blur-xl border border-white/25 flex items-center justify-center text-white hover:bg-white/25 transition active:scale-95"
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onClose(); }}
+            className="w-10 h-10 rounded-full bg-white/15 backdrop-blur-xl border border-white/25 flex items-center justify-center text-white hover:bg-white/25 transition active:scale-95 z-20"
+            aria-label="إغلاق"
           >
             <X size={20} />
           </button>

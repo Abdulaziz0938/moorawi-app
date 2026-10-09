@@ -5,7 +5,7 @@ import type { Id } from "../../convex/_generated/dataModel";
 import { Home, Compass, Image as ImageIcon, MessageCircle, User as UserIcon } from "lucide-react";
 import { getActiveToken } from "../lib/session";
 import RoomList from "./RoomList";
-import ProfilePage from "./ProfilePage";
+import MeTab from "./MeTab";
 
 type Tab = "rooms" | "discover" | "moments" | "messages" | "me";
 
@@ -57,13 +57,7 @@ export default function Dashboard({ onEnterRoom }: Props) {
           </div>
         )}
 
-        {tab === "me" && me && (
-          <ProfilePage
-            userId={me._id}
-            isMe={true}
-            onClose={() => {}}
-          />
-        )}
+        {tab === "me" && <MeTab />}
 
         {tab === "me" && !me && (
           <div className="h-full flex flex-col items-center justify-center text-white/60 p-8">
