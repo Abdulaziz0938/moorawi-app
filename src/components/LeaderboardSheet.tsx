@@ -23,7 +23,8 @@ type Leader = {
   name: string;
   avatarUrl: string | null;
   vip: number;
-  charmLevel?: number | null;
+  charmValue?: number | null;
+  wealthValue?: number | null;
   adminRole?: "super" | "moderator" | null;
   total: number;
 };
@@ -87,7 +88,8 @@ function PodiumSlot({
   }[rank];
 
   const v = typeof user.vip === "number" ? user.vip : 0;
-  const ch = typeof user.charmLevel === "number" ? user.charmLevel : 0;
+  const ch = typeof user.charmValue === "number" ? user.charmValue : 0;
+  const we = typeof user.wealthValue === "number" ? user.wealthValue : 0;
   const hasCharm = ch > 0;
   const hasVip = v > 0;
   const hasAdmin = !!user.adminRole;
@@ -211,7 +213,8 @@ function UserRow({
       avatarUrl={user.avatarUrl}
       userNumber={user.userNumber}
       vip={user.vip}
-      charmLevel={user.charmLevel}
+      charmValue={user.charmValue}
+        wealthValue={user.wealthValue}
       adminRole={user.adminRole}
       roomRole="speaker"
       rank={rank}

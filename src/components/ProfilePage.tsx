@@ -203,6 +203,8 @@ export default function ProfilePage({
               <UserName
                 name={profile.name}
                 vip={profile.vip}
+                charmValue={profile.charms}
+                wealthValue={profile.totalSent}
                 adminRole={profile.adminRole}
                 roomRole={isOwner ? "owner" : null}
                 size="lg"

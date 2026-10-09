@@ -105,6 +105,8 @@ export const members = query({
         avatarUrl,
         vip: vipLevelFromTotalSent(user?.totalSent ?? 0),
         charmLevel: vipLevelFromTotalReceived(user?.totalReceived ?? 0),
+        charmValue: user?.charms ?? 0,
+        wealthValue: user?.totalSent ?? 0,
         adminRole: user?.adminRole ?? null,
         charms: user?.charms ?? 0,
       };

@@ -67,7 +67,8 @@ export default function MembersSheet({ roomId, onClose, onUserClick }: Props) {
                 avatarUrl={m.avatarUrl}
                 userNumber={m.userNumber}
                 vip={m.vip}
-                charmLevel={m.charmLevel}
+                charmValue={m.charmValue}
+                wealthValue={m.wealthValue}
                 adminRole={m.adminRole}
                 roomRole={m.role as any}
                 seatIndex={seat?.seatIndex ?? null}

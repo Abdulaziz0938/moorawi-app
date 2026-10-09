@@ -158,6 +158,8 @@ export default function MiniProfileSheet({
               <UserName
                 name={profile.name}
                 vip={profile.vip}
+                charmValue={profile.charms}
+                wealthValue={profile.totalSent}
                 adminRole={profile.adminRole}
                 roomRole={profile.userNumber === 1 ? "owner" : null}
                 size="md"

@@ -153,8 +153,22 @@ export const listeners = query({
     const enriched = await Promise.all(
       listeners.map(async (m) => {
         const user = await ctx.db.get("users", m.userId);
-        const avatarUrl = user?.avatarId ? await ctx.storage.getUrl(user.avatarId) : null;
-        return { _id: m._id, userId: m.userId, name: user?.name ?? "ضيف", userNumber: user?.userNumber ?? null, avatarUrl };
+        const avatarUrl = user?.avatarUrl ?? (user?.avatarId ? await ctx.storage.getUrl(user.avatarId) : null);
+        // [moorawi-levels] raw values for badges everywhere
+        const vip = [1000, 5000, 20000, 50000, 100000, 250000, 500000].filter((x) => (user?.totalSent ?? 0) >= x).length;
+        return {
+          _id: m._id,
+          userId: m.userId,
+          name: user?.name ?? "ضيف",
+          username: user?.username ?? null,
+          userNumber: user?.userNumber ?? null,
+          avatarUrl,
+          role: m.role,
+          charmValue: user?.charms ?? 0,
+          wealthValue: user?.totalSent ?? 0,
+          vip,
+          adminRole: user?.adminRole ?? null,
+        };
       }),
     );
     return enriched;

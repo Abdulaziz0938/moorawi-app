@@ -7,7 +7,8 @@ interface Props {
   avatarUrl: string | null;
   userNumber: number | null;
   vip?: number | null;
-  charmLevel?: number | null;
+  charmValue?: number | null;
+  wealthValue?: number | null;
   adminRole?: "super" | "moderator" | null;
   roomRole: "owner" | "moderator" | "speaker" | "listener";
   seatIndex?: number | null;
@@ -21,7 +22,8 @@ export default function MemberRow({
   avatarUrl,
   userNumber,
   vip,
-  charmLevel,
+  charmValue,
+  wealthValue,
   adminRole,
   roomRole,
   seatIndex,
@@ -34,7 +36,8 @@ export default function MemberRow({
   const onMic = seatIndex !== null && seatIndex !== undefined;
 
   const v = typeof vip === "number" ? vip : 0;
-  const ch = typeof charmLevel === "number" ? charmLevel : 0;
+  const ch = typeof charmValue === "number" ? charmValue : 0;
+  const we = typeof wealthValue === "number" ? wealthValue : 0;
   const hasCharm = ch > 0;
   const hasVip = v > 0;
   const hasAdmin = adminRole === "super" || adminRole === "moderator";
