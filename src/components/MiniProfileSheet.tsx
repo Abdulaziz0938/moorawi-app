@@ -7,6 +7,7 @@ import {
   Ban, Crown, Loader2, Shield, Sparkles, Gem,
 } from "lucide-react";
 import { UserName } from "./UserBadges";
+import { levelInfo } from "../lib/levels";
 
 interface Props {
   userId: string;
@@ -190,17 +191,10 @@ export default function MiniProfileSheet({
             </div>
           </div>
 
-          <div className="mx-4 mb-2 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-3 grid grid-cols-2 gap-3 text-center">
-            <div className="flex flex-col items-center gap-0.5">
-              <Sparkles size={22} className="text-pink-300" />
-              <p className="text-white text-sm font-black">{formatNumber(profile.totalReceived)}</p>
-              <p className="text-white/60 text-[10px]">جاذبية</p>
-            </div>
-            <div className="flex flex-col items-center gap-0.5">
-              <Gem size={22} className="text-amber-300" />
-              <p className="text-white text-sm font-black">{formatNumber(profile.totalSent)}</p>
-              <p className="text-white/60 text-[10px]">ثروة</p>
-            </div>
+          {/* [moorawi-poppo] Stats: Charm + Wealth (level badge + value + progress) */}
+          <div className="mx-4 mb-2 grid grid-cols-2 gap-2.5">
+            <StatCard kind="charm" value={profile.totalReceived} />
+            <StatCard kind="wealth" value={profile.totalSent} />
           </div>
 
           {isMySeat ? (
@@ -295,3 +289,55 @@ export default function MiniProfileSheet({
     </div>
   );
 }
+
+// ============ Poppo-style stat card ============
+function StatCard({ kind, value }: { kind: "charm" | "wealth"; value: number }) {
+  const info = levelInfo(value);
+  const Icon = kind === "charm" ? Sparkles : Gem;
+  const label = kind === "charm" ? "الجاذبية" : "الثروة";
+  const iconColor = kind === "charm" ? "text-pink-400" : "text-amber-400";
+
+  return (
+    <div
+      className={`relative rounded-2xl border ${info.tier.border} ${info.tier.bg} backdrop-blur-xl p-2.5 flex flex-col items-center gap-1 overflow-hidden`}
+      style={{
+        boxShadow: info.level >= 40 ? `0 0 12px ${info.tier.color}44` : undefined,
+      }}
+    >
+      {/* Icon row */}
+      <div className="flex items-center gap-1.5">
+        <span
+          className="min-w-[26px] h-[26px] px-1.5 rounded-full flex items-center justify-center font-black text-[11px]"
+          style={{
+            background: info.tier.color,
+            color: "#0a0a0a",
+            textShadow: "0 1px 0 rgba(255,255,255,0.25)",
+          }}
+        >
+          {info.level}
+        </span>
+        <Icon size={20} className={iconColor} fill="currentColor" strokeWidth={1.5} />
+      </div>
+
+      {/* Value */}
+      <p className="text-white text-sm font-black leading-none">
+        {formatNumber(value)}
+      </p>
+
+      {/* Label */}
+      <p className="text-white/60 text-[10px] leading-none">{label}</p>
+
+      {/* Progress bar */}
+      <div className="w-full h-1 rounded-full bg-black/30 overflow-hidden mt-0.5">
+        <div
+          className="h-full rounded-full transition-all"
+          style={{
+            width: `${info.progress}%`,
+            background: `linear-gradient(90deg, ${info.tier.color}, ${info.tier.color}cc)`,
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
