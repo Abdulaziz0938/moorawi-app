@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
-import { Mic, Users, Plus, X, Check } from "lucide-react";
+import { Mic, Users, Plus, X, Check, Home } from "lucide-react";
 import { getDeviceId } from "../lib/device";
 import { clearSession, hasSession } from "../lib/session";
 import { LogOut } from "lucide-react";
@@ -21,6 +21,7 @@ export default function RoomList({ onEnter }: Props) {
     window.location.reload();
   };
   const rooms = useQuery(api.rooms.listPublic);
+  const myRoom = useQuery(api.rooms.myRoom, { tokenOverride: deviceId });
   const me = useQuery(api.profiles.me, { tokenOverride: deviceId });
   const createRoom = useMutation(api.rooms.create);
   const joinRoom = useMutation(api.rooms.join);
@@ -100,12 +101,28 @@ export default function RoomList({ onEnter }: Props) {
         )}
       </header>
 
-      <button
-        onClick={() => setShowCreate(true)}
-        className="w-full bg-white/20 hover:bg-white/30 text-white py-3 rounded-xl flex items-center justify-center gap-2 mb-4 font-bold transition"
-      >
-        <Plus size={20} /> إنشاء غرفة جديدة
-      </button>
+      {/* [moorawi-rooms] زر ديناميكي: Home + (+) إن لم توجد غرفة / Home فقط إن وُجدت */}
+      {myRoom ? (
+        <button
+          onClick={() => onEnter(myRoom._id)}
+          className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white py-3 rounded-xl flex items-center justify-center gap-2 mb-4 font-bold transition shadow-lg active:scale-95"
+        >
+          <Home size={20} /> غرفتي
+        </button>
+      ) : (
+        <button
+          onClick={() => setShowCreate(true)}
+          className="w-full bg-white/20 hover:bg-white/30 text-white py-3 rounded-xl flex items-center justify-center gap-2 mb-4 font-bold transition active:scale-95 relative"
+        >
+          <div className="relative">
+            <Home size={22} />
+            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full flex items-center justify-center border-2 border-purple-900">
+              <Plus size={10} className="text-white" strokeWidth={3} />
+            </div>
+          </div>
+          إنشاء غرفة جديدة
+        </button>
+      )}
 
       <div className="space-y-3">
         {rooms === undefined ? (

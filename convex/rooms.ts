@@ -15,6 +15,27 @@ export const listPublic = query({
   },
 });
 
+// [moorawi-rooms] Get current user's own room (max 1)
+export const myRoom = query({
+  args: { tokenOverride: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    if (!args.tokenOverride) return null;
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_token", (q) => q.eq("tokenIdentifier", args.tokenOverride!))
+      .unique();
+    if (!user) return null;
+    const rooms = await ctx.db
+      .query("rooms")
+      .withIndex("by_owner", (q) => q.eq("ownerId", user._id))
+      .take(1);
+    if (rooms.length === 0) return null;
+    const r = rooms[0];
+    const coverUrl = r.coverUrl ?? (r.coverImageId ? await ctx.storage.getUrl(r.coverImageId) : null);
+    return { ...r, coverUrl };
+  },
+});
+
 export const get = query({
   args: { roomId: v.id("rooms") },
   handler: async (ctx, args) => {
@@ -30,6 +51,16 @@ export const create = mutation({
   args: { name: v.string(), description: v.optional(v.string()), isPrivate: v.boolean(), tokenOverride: v.optional(v.string()) },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx, args.tokenOverride);
+
+    // [moorawi-rooms] منع تعدد الغرف: إن كان للمستخدم غرفة → أعدها
+    const existing = await ctx.db
+      .query("rooms")
+      .withIndex("by_owner", (q) => q.eq("ownerId", user._id))
+      .take(1);
+    if (existing.length > 0) {
+      return existing[0]._id;
+    }
+
     const name = args.name.trim();
     if (name.length < 2 || name.length > 40) throw new ConvexError({ code: "BAD_REQUEST", message: "Room name must be 2-40 chars" });
     const roomId = await ctx.db.insert("rooms", {
