@@ -5,7 +5,7 @@ import { Loader2, User, Lock, ArrowLeft, Sparkles } from "lucide-react";
 import { setSession } from "../lib/session";
 
 interface Props {
-  onSuccess: () => void;
+  onSuccess: (sessionToken: string) => void;
 }
 
 type Mode = "welcome" | "signin" | "signup";
@@ -51,7 +51,7 @@ export default function AuthScreen({ onSuccess }: Props) {
     try {
       const res = await signin({ identifier: username.trim(), password });
       setSession(res.sessionToken, res.username);
-      onSuccess();
+      onSuccess(res.sessionToken);
     } catch (e: any) {
       const msg = e?.data?.message || e?.message || "فشل تسجيل الدخول";
       setError(msg);
@@ -82,7 +82,7 @@ export default function AuthScreen({ onSuccess }: Props) {
         deviceId,
       });
       setSession(res.sessionToken, res.username);
-      onSuccess();
+      onSuccess(res.sessionToken);
     } catch (e: any) {
       const msg = e?.data?.message || e?.message || "فشل إنشاء الحساب";
       setError(msg);
@@ -118,7 +118,7 @@ export default function AuthScreen({ onSuccess }: Props) {
               إنشاء حساب جديد
             </button>
             <button
-              onClick={() => onSuccess()}
+              onClick={() => onSuccess("")}
               className="w-full py-3 text-white/50 text-sm hover:text-white/80 transition mt-2"
             >
               متابعة كزائر

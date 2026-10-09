@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import type { Id } from "../convex/_generated/dataModel";
@@ -6,10 +6,8 @@ import RoomList from "./components/RoomList";
 import RoomView from "./components/RoomView";
 import Onboarding from "./components/Onboarding";
 import AuthScreen from "./components/AuthScreen";
-import { getActiveToken, hasSession, clearSession } from "./lib/session";
+import { getActiveToken, hasSession } from "./lib/session";
 import { Loader2 } from "lucide-react";
-
-type AuthGate = "loading" | "welcome" | "onboarding" | "app";
 
 function App() {
   const [token, setToken] = useState<string>(() => getActiveToken());
@@ -19,10 +17,16 @@ function App() {
 
   const me = useQuery(api.auth.me, { tokenOverride: token });
 
-  // Refresh token when session changes
-  useEffect(() => {
-    setToken(getActiveToken());
-  }, [refreshKey, showAuth]);
+  // [moorawi-auth] يُستدعى من AuthScreen مع session token الجديد مباشرة
+  const handleAuthSuccess = (sessionToken: string) => {
+    if (sessionToken) {
+      setToken(sessionToken);
+    } else {
+      setToken(getActiveToken()); // زائر → device id
+    }
+    setShowAuth(false);
+    setRefreshKey((k) => k + 1);
+  };
 
   // Loading state
   if (me === undefined) {
@@ -36,24 +40,14 @@ function App() {
   // Auth welcome screen
   if (showAuth) {
     return (
-      <AuthScreen
-        onSuccess={() => {
-          setShowAuth(false);
-          setRefreshKey((k) => k + 1);
-        }}
-      />
+      <AuthScreen onSuccess={handleAuthSuccess} />
     );
   }
 
   // If token resolves to nothing, bounce back to auth
   if (!me) {
     return (
-      <AuthScreen
-        onSuccess={() => {
-          setShowAuth(false);
-          setRefreshKey((k) => k + 1);
-        }}
-      />
+      <AuthScreen onSuccess={handleAuthSuccess} />
     );
   }
 
