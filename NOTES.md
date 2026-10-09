@@ -1,4 +1,4 @@
-# NOTES — مشروع الدولة العمراوية (moorawi-app)
+# NOTES — مشروع الدولة المعراوية (moorawi-app)
 
 آخر تحديث: 2026-10-08
 Owner ID: 1

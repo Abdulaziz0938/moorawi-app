@@ -113,7 +113,7 @@ export default function Onboarding({ onComplete }: Props) {
           <div className="text-center space-y-6 pt-12">
             <div className="text-6xl mb-4">🎙️</div>
             <h1 className="text-4xl font-bold">أهلاً بك في</h1>
-            <h2 className="text-3xl font-bold text-purple-200">الدولة العمراوية</h2>
+            <h2 className="text-3xl font-bold text-purple-200">الدولة المعراوية</h2>
             <p className="opacity-80 text-sm leading-relaxed px-4">
               انضم إلى غرف صوتية، تعرف على أصدقاء جدد، وشارك لحظاتك مع المجتمع.
             </p>

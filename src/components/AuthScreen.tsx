@@ -100,7 +100,7 @@ export default function AuthScreen({ onSuccess }: Props) {
             <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center shadow-2xl">
               <Sparkles size={48} className="text-white" />
             </div>
-            <h1 className="text-white text-3xl font-black mt-2">الدولة العمراوية</h1>
+            <h1 className="text-white text-3xl font-black mt-2">الدولة المعراوية</h1>
             <p className="text-white/60 text-sm">انضم لأفضل غرف صوتية</p>
           </div>
 
