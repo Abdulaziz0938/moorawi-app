@@ -4,10 +4,9 @@ import type { Id } from "../../convex/_generated/dataModel";
 import { dialog } from "../lib/dialog";
 import {
   X, Gift, MessageCircle, UserPlus, Mic, MicOff, ArrowDown,
-  Ban, Crown, Loader2, Shield, Sparkles, Gem,
+  Ban, Crown, Loader2, Shield, Award, ChevronLeft,
 } from "lucide-react";
 import { UserName } from "./UserBadges";
-import { levelInfo } from "../lib/levels";
 
 interface Props {
   userId: string;
@@ -191,10 +190,32 @@ export default function MiniProfileSheet({
             </div>
           </div>
 
-          {/* [moorawi-poppo] Stats: Charm + Wealth (level badge + value + progress) */}
-          <div className="mx-4 mb-2 grid grid-cols-2 gap-2.5">
-            <StatCard kind="charm" value={profile.totalReceived} />
-            <StatCard kind="wealth" value={profile.totalSent} />
+          {/* [moorawi-poppo] No Title placeholder */}
+          <div className="mx-4 mb-2 flex justify-center">
+            <span className="text-[10px] bg-white/10 backdrop-blur border border-white/20 text-white/60 px-3 py-1 rounded-full font-bold">
+              No Title
+            </span>
+          </div>
+
+          {/* [moorawi-poppo] وسام row */}
+          <div className="mx-4 mb-2.5 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-3 flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-slate-300 to-slate-500 flex items-center justify-center">
+                <Award size={20} className="text-white" />
+              </div>
+              <div className="flex flex-col">
+                <p className="text-white font-black text-base leading-none">+0</p>
+                <p className="text-white/60 text-[10px] mt-0.5">وسام</p>
+              </div>
+            </div>
+            <ChevronLeft size={18} className="text-white/40" />
+          </div>
+
+          {/* [moorawi-poppo] 3 property cards: مركبة | إطار | هدية */}
+          <div className="mx-4 mb-3 grid grid-cols-3 gap-2.5">
+            <PropertyCard label="مركبة" value={0} tone="blue" />
+            <PropertyCard label="إطار" value={0} tone="emerald" />
+            <PropertyCard label="هدية" value={0} tone="purple" />
           </div>
 
           {isMySeat ? (
@@ -290,53 +311,28 @@ export default function MiniProfileSheet({
   );
 }
 
-// ============ Poppo-style stat card ============
-function StatCard({ kind, value }: { kind: "charm" | "wealth"; value: number }) {
-  const info = levelInfo(value);
-  const Icon = kind === "charm" ? Sparkles : Gem;
-  const label = kind === "charm" ? "الجاذبية" : "الثروة";
-  const iconColor = kind === "charm" ? "text-pink-400" : "text-amber-400";
+// ============ Poppo-style property card ============
+function PropertyCard({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: number;
+  tone: "blue" | "emerald" | "purple";
+}) {
+  const toneMap = {
+    blue:    { bg: "from-blue-900/40 to-blue-950/60",        border: "border-blue-500/30",    text: "text-blue-200"    },
+    emerald: { bg: "from-emerald-900/40 to-emerald-950/60",  border: "border-emerald-500/30", text: "text-emerald-200" },
+    purple:  { bg: "from-purple-900/40 to-purple-950/60",    border: "border-purple-500/30",  text: "text-purple-200"  },
+  }[tone];
 
   return (
     <div
-      className={`relative rounded-2xl border ${info.tier.border} ${info.tier.bg} backdrop-blur-xl p-2.5 flex flex-col items-center gap-1 overflow-hidden`}
-      style={{
-        boxShadow: info.level >= 40 ? `0 0 12px ${info.tier.color}44` : undefined,
-      }}
+      className={`rounded-2xl border ${toneMap.border} bg-gradient-to-br ${toneMap.bg} backdrop-blur-xl p-2 flex flex-col items-center justify-center gap-0.5 aspect-[5/4]`}
     >
-      {/* Icon row */}
-      <div className="flex items-center gap-1.5">
-        <span
-          className="min-w-[26px] h-[26px] px-1.5 rounded-full flex items-center justify-center font-black text-[11px]"
-          style={{
-            background: info.tier.color,
-            color: "#0a0a0a",
-            textShadow: "0 1px 0 rgba(255,255,255,0.25)",
-          }}
-        >
-          {info.level}
-        </span>
-        <Icon size={20} className={iconColor} fill="currentColor" strokeWidth={1.5} />
-      </div>
-
-      {/* Value */}
-      <p className="text-white text-sm font-black leading-none">
-        {formatNumber(value)}
-      </p>
-
-      {/* Label */}
-      <p className="text-white/60 text-[10px] leading-none">{label}</p>
-
-      {/* Progress bar */}
-      <div className="w-full h-1 rounded-full bg-black/30 overflow-hidden mt-0.5">
-        <div
-          className="h-full rounded-full transition-all"
-          style={{
-            width: `${info.progress}%`,
-            background: `linear-gradient(90deg, ${info.tier.color}, ${info.tier.color}cc)`,
-          }}
-        />
-      </div>
+      <p className={`${toneMap.text} text-base font-black leading-none`}>{value}</p>
+      <p className="text-white/60 text-[10px] leading-none mt-1">{label}</p>
     </div>
   );
 }
