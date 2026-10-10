@@ -15,6 +15,7 @@ import GiftSheet from "./GiftSheet";
 import MusicSheet from "./MusicSheet";
 import MusicPlayer from "./MusicPlayer";
 import CompactChatInput from "./CompactChatInput";
+import ChatBubble from "./ChatBubble";
 import IconOrImage from "./IconOrImage";
 import LeaderboardSheet from "./LeaderboardSheet";
 import MiniProfileSheet from "./MiniProfileSheet";
@@ -898,10 +899,10 @@ export default function RoomView({ roomId, onLeave }: Props) {
                       <span className="text-[8px] text-white/40 mr-auto">{formatTime(m.createdAt)}</span>
                     </div>
                     {(m.text || m.imageUrl) && (
-                      <div className={`w-fit max-w-[85%] mt-1 px-2.5 py-1.5 rounded-2xl rounded-tr-sm ${bubbleClass(m.senderVip ?? 0)}`}>
+                      <ChatBubble vip={m.senderVip ?? 0}>
                         {m.text && <p className="text-white text-xs break-words whitespace-pre-wrap">{m.text}</p>}
                         {m.imageUrl && <img src={m.imageUrl} alt="" className="mt-1 rounded-lg max-w-[140px] max-h-[140px] object-cover" />}
-                      </div>
+                      </ChatBubble>
                     )}
                   </div>
                 </div>
