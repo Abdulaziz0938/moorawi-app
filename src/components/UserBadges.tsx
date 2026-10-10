@@ -5,6 +5,7 @@
 import { Home, Shield, User as UserIcon, Crown, Award } from "lucide-react";
 import LevelBadge from "./LevelBadge";
 import { levelFromValue } from "../lib/levels";
+import { useAssets, resolveAsset } from "../lib/assets";
 
 type Size = "sm" | "md" | "lg";
 
@@ -27,10 +28,12 @@ const SIZES: Record<Size, {
 // ============================================================
 
 export function PvipBadge({ level, size = 20 }: { level: number; size?: number }) {
+  const assets = useAssets();
   if (!level || level < 1 || level > 7) return null;
+  const src = resolveAsset(assets, `vip.pvip.${level}`, `/vip/pvip${level}.png`);
   return (
     <img
-      src={`/vip/pvip${level}.png`}
+      src={src}
       alt={`VIP ${level}`}
       title={`VIP ${level}`}
       className="object-contain drop-shadow"
@@ -41,10 +44,12 @@ export function PvipBadge({ level, size = 20 }: { level: number; size?: number }
 }
 
 export function VipBanner({ level, width = 60 }: { level: number; width?: number }) {
+  const assets = useAssets();
   if (!level || level < 1 || level > 7) return null;
+  const src = resolveAsset(assets, `vip.banner.${level}`, `/vip/vip${level}.png`);
   return (
     <img
-      src={`/vip/vip${level}.png`}
+      src={src}
       alt={`VIP ${level}`}
       title={`VIP ${level}`}
       className="object-contain drop-shadow"
@@ -55,8 +60,10 @@ export function VipBanner({ level, width = 60 }: { level: number; width?: number
 }
 
 export function AdminBadge({ role, size = 18 }: { role: "super" | "moderator" | null; size?: number }) {
+  const assets = useAssets();
   if (!role) return null;
-  const src = role === "super" ? "/badges/badge-super.png" : "/badges/badge-admin.png";
+  const fallback = role === "super" ? "/badges/badge-super.png" : "/badges/badge-admin.png";
+  const src = resolveAsset(assets, `admin.${role}`, fallback);
   const alt = role === "super" ? "Super Admin" : "Admin";
   return (
     <img

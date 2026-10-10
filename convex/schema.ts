@@ -512,4 +512,14 @@ export default defineSchema({
   })
     .index("by_user", ["userId"])
     .index("by_status", ["status"]),
+
+  // [moorawi-assets] Static asset overrides — admin can upload images
+  // Keys: "vip.pvip.1..7", "vip.banner.1..7", "admin.super", "admin.moderator"
+  // Missing key → fallback to bundled /vip/*.png or /badges/*.png
+  assets: defineTable({
+    key: v.string(),
+    imageUrl: v.optional(v.string()),
+    updatedAt: v.number(),
+    updatedBy: v.optional(v.id("users")),
+  }).index("by_key", ["key"]),
 });

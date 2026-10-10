@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import { useAssets, resolveAsset } from "../lib/assets";
 import type { Id } from "../../convex/_generated/dataModel";
 import { dialog } from "../lib/dialog";
 import {
@@ -72,6 +73,7 @@ export default function MiniProfileSheet({
 }: Props) {
   const profile = useQuery(api.profileFull.getFull, { userId: userId as Id<"users"> });
   const [copied, setCopied] = useState(false);
+  const assets = useAssets();
 
   if (profile === undefined) {
     return (
@@ -211,7 +213,7 @@ export default function MiniProfileSheet({
             )}
             {vipLevel > 0 && (
               <div className="badge-glow">
-                <img src={`/vip/vip${vipLevel}.png`} alt={`VIP ${vipLevel}`} className="h-6 w-auto object-contain" draggable={false} />
+                <img src={resolveAsset(assets, `vip.banner.${vipLevel}`, `/vip/vip${vipLevel}.png`)} alt={`VIP ${vipLevel}`} className="h-6 w-auto object-contain" draggable={false} />
               </div>
             )}
           </div>

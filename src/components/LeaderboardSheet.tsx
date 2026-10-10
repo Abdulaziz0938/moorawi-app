@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import { useAssets, resolveAsset } from "../lib/assets";
 import type { Id } from "../../convex/_generated/dataModel";
 import { X, HelpCircle, Loader2, Home } from "lucide-react";
 import { UserName } from "./UserBadges";
@@ -80,6 +81,7 @@ function PodiumSlot({
   user: Leader;
   onClick?: () => void;
 }) {
+  const assets = useAssets();
   const isGold = rank === 1;
   const avatarSize = isGold ? 78 : 66;
 
@@ -162,7 +164,7 @@ function PodiumSlot({
           )}
           {user.vip > 0 && (
             <img
-              src={`/vip/vip${user.vip}.png`}
+              src={resolveAsset(assets, `vip.banner.${user.vip}`, `/vip/vip${user.vip}.png`)}
               alt=""
               className="h-4 w-auto object-contain badge-glow"
               draggable={false}
@@ -170,14 +172,14 @@ function PodiumSlot({
           )}
           {user.adminRole === "super" && (
             <img
-              src="/badges/badge-super.png"
+              src={resolveAsset(assets, "admin.super", "/badges/badge-super.png")}
               alt=""
               className="h-5 w-5 object-contain badge-glow"
             />
           )}
           {user.adminRole === "moderator" && (
             <img
-              src="/badges/badge-admin.png"
+              src={resolveAsset(assets, "admin.moderator", "/badges/badge-admin.png")}
               alt=""
               className="h-5 w-5 object-contain badge-glow"
             />
@@ -203,6 +205,7 @@ function UserRow({
   user: Leader;
   onClick?: () => void;
 }) {
+  const assets = useAssets();
   return (
     <MemberRow
       userId={user.userId}

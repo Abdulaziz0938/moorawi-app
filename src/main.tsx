@@ -4,6 +4,7 @@ import { ConvexProvider, ConvexReactClient } from "convex/react"
 import App from './App.tsx'
 import './index.css'
 import { DialogHost } from './lib/dialog'
+import { AssetsProvider } from './lib/assets'
 
 const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string);
 

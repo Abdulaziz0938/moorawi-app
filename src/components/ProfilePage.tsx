@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import { useAssets, resolveAsset } from "../lib/assets";
 import type { Id } from "../../convex/_generated/dataModel";
 import { getDeviceId } from "../lib/device";
 import { uploadToCloudinary } from "../lib/cloudinary";
@@ -56,6 +57,7 @@ export default function ProfilePage({
   const removeAvatar = useMutation(api.profiles.removeAvatar);
 
   const [editingName, setEditingName] = useState(false);
+  const assets = useAssets();
   const [newName, setNewName] = useState("");
   const [uploading, setUploading] = useState(false);
   const [showAvatarMenu, setShowAvatarMenu] = useState(false);
@@ -262,7 +264,7 @@ export default function ProfilePage({
           {wealth > 0 && <LevelBadge kind="wealth" level={levelFromValue(wealth)} size="sm" />}
           {vipLevel > 0 && (
             <div className="badge-glow">
-              <img src={`/vip/vip${vipLevel}.png`} alt={`VIP ${vipLevel}`} className="h-6 w-auto object-contain" draggable={false} />
+              <img src={resolveAsset(assets, `vip.banner.${vipLevel}`, `/vip/vip${vipLevel}.png`)} alt={`VIP ${vipLevel}`} className="h-6 w-auto object-contain" draggable={false} />
             </div>
           )}
         </div>
