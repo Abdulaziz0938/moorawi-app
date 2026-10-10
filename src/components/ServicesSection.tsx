@@ -33,7 +33,7 @@ export default function ServicesSection({
   const topCards = [
     {
       key: "supporter",
-      assetKey: "ui.service.legend",
+      assetKey: "ui.service.supporter",
       label: "الداعم المحترم",
       sub: "S5 → S100",
       icon: Gem,
