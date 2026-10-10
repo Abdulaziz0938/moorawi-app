@@ -214,3 +214,37 @@ export async function checkAndGrantMedals(ctx: any, userId: any) {
   return granted;
 }
 
+// ============================================================
+// [moorawi-medals] updateMedal — admin can edit name/image
+// ============================================================
+export const updateMedal = mutation({
+  args: {
+    medalId: v.id("medals"),
+    name: v.optional(v.string()),
+    imageUrl: v.optional(v.string()),
+    description: v.optional(v.string()),
+    tokenOverride: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
+    if (me.adminRole !== "super" && me.userNumber !== 1) {
+      throw new ConvexError({ code: "FORBIDDEN", message: "صلاحيات المالك مطلوبة" });
+    }
+    const medal = await ctx.db.get("medals", args.medalId);
+    if (!medal) throw new ConvexError({ code: "NOT_FOUND", message: "الوسم غير موجود" });
+
+    const patch: any = {};
+    if (args.name !== undefined) {
+      const trimmed = args.name.trim();
+      if (trimmed.length < 1) throw new ConvexError({ code: "BAD_NAME", message: "اسم فارغ" });
+      patch.name = trimmed;
+    }
+    if (args.imageUrl !== undefined) patch.imageUrl = args.imageUrl;
+    if (args.description !== undefined) patch.description = args.description;
+
+    if (Object.keys(patch).length > 0) {
+      await ctx.db.patch("medals", args.medalId, patch);
+    }
+    return { ok: true };
+  },
+});
