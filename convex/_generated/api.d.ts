@@ -11,6 +11,7 @@
 import type * as adminPanel from "../adminPanel.js";
 import type * as assets from "../assets.js";
 import type * as auth from "../auth.js";
+import type * as bubbles from "../bubbles.js";
 import type * as follows from "../follows.js";
 import type * as gifts from "../gifts.js";
 import type * as lib_auth from "../lib/auth.js";
@@ -46,6 +47,7 @@ declare const fullApi: ApiFromModules<{
   adminPanel: typeof adminPanel;
   assets: typeof assets;
   auth: typeof auth;
+  bubbles: typeof bubbles;
   follows: typeof follows;
   gifts: typeof gifts;
   "lib/auth": typeof lib_auth;

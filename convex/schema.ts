@@ -557,4 +557,20 @@ export default defineSchema({
     textEn: v.optional(v.string()),
     active: v.boolean(),
   }).index("by_level", ["level", "order"]),
+
+  // [moorawi-bubbles] 9-Patch Chat Bubbles (admin-managed)
+  // Each bubble stores imageUrl + 4 slice insets for CSS border-image.
+  // Key example: "bubble.vip4", "bubble.default", "bubble.gold"
+  chatBubbles: defineTable({
+    key: v.string(),
+    name: v.string(),
+    imageUrl: v.string(),
+    sliceTop: v.number(),
+    sliceRight: v.number(),
+    sliceBottom: v.number(),
+    sliceLeft: v.number(),
+    active: v.boolean(),
+  })
+    .index("by_key", ["key"])
+    .index("by_active", ["active"]),
 });

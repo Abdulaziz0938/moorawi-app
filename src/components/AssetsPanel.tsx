@@ -9,6 +9,7 @@ import { uploadToCloudinary } from "../lib/cloudinary";
 import { dialog } from "../lib/dialog";
 import { useAssets } from "../lib/assets";
 import GiftAdminPanel from "./GiftAdminPanel";
+import BubbleSlicer from "./BubbleSlicer";
 import {
   Crown, Gift, Award, Shield, ShoppingBag, LayoutGrid,
   Upload, RotateCcw, Loader2, Pencil, Save, X, Home, MessageCircle,
@@ -20,7 +21,7 @@ interface Props {
   token: string | null;
 }
 
-type MainTab = "vip" | "medals" | "gifts" | "shop" | "admin" | "ui";
+type MainTab = "vip" | "medals" | "gifts" | "bubbles" | "shop" | "admin" | "ui";
 
 const VIP_SLOTS = [
   { key: "background", label: "الخلفية" },
@@ -86,10 +87,11 @@ export default function AssetsPanel({ token }: Props) {
   return (
     <div className="p-3 space-y-3">
       {/* Main tabs — 6 columns */}
-      <div className="grid grid-cols-3 gap-1.5">
+      <div className="grid grid-cols-4 gap-1.5">
         <TabBtn active={tab === "vip"}     onClick={() => setTab("vip")}     icon={Crown}        label="VIP" />
         <TabBtn active={tab === "medals"}  onClick={() => setTab("medals")}  icon={Award}        label="الميداليات" />
         <TabBtn active={tab === "gifts"}   onClick={() => setTab("gifts")}   icon={Gift}         label="الهدايا" />
+        <TabBtn active={tab === "bubbles"} onClick={() => setTab("bubbles")} icon={MessageCircle} label="الفقاعات" />
         <TabBtn active={tab === "shop"}    onClick={() => setTab("shop")}    icon={ShoppingBag}  label="المتجر" />
         <TabBtn active={tab === "admin"}   onClick={() => setTab("admin")}   icon={Shield}       label="الأدمن" />
         <TabBtn active={tab === "ui"}      onClick={() => setTab("ui")}      icon={LayoutGrid}   label="الواجهة" />
@@ -98,6 +100,8 @@ export default function AssetsPanel({ token }: Props) {
       {tab === "vip" && <VipAssetsTab token={token} />}
       {tab === "medals" && <MedalsTab token={token} />}
       {tab === "gifts" && <GiftAdminPanel />}
+
+      {tab === "bubbles" && <BubbleSlicer token={token} />}
       {tab === "shop" && <ShopTab token={token} />}
       {tab === "admin" && <SimpleSlotsTab token={token} slots={ADMIN_SLOTS} />}
       {tab === "ui" && <SimpleSlotsTab token={token} slots={UI_SLOTS} />}
