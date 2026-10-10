@@ -1,6 +1,7 @@
-import { mutation, query } from "./_generated/server";
+import { mutation, query, internalMutation } from "./_generated/server";
 import { ConvexError, v } from "convex/values";
 import { requireUser } from "./lib/auth";
+import { randomHex, hashPassword } from "./auth";
 
 // ============================================================
 // [moorawi-admin] Admin Panel — للمالك فقط (adminRole === "super")
@@ -268,5 +269,64 @@ export const listShopItems = query({
       items = await ctx.db.query("shopItems").collect();
     }
     return items;
+  },
+});
+
+// ============================================================
+// [moorawi-admin] createStaffUser — internal, run via CLI
+// npx convex run adminPanel:createStaffUser '{"...":"..."}' --prod
+// ============================================================
+export const createStaffUser = internalMutation({
+  args: {
+    username: v.string(),
+    password: v.string(),
+    userNumber: v.number(),
+    adminRole: v.union(v.literal("super"), v.literal("moderator")),
+    name: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const username = args.username.trim().toLowerCase();
+    if (username.length < 3) throw new ConvexError({ code: "BAD_USERNAME", message: "اسم قصير" });
+    if (args.password.length < 8) throw new ConvexError({ code: "BAD_PASSWORD", message: "كلمة المرور قصيرة" });
+
+    // تأكد أن username غير محجوز
+    const existing = await ctx.db
+      .query("users")
+      .withIndex("by_username", (q) => q.eq("username", username))
+      .unique();
+    if (existing) throw new ConvexError({ code: "TAKEN", message: "اسم المستخدم محجوز" });
+
+    // تأكد أن userNumber غير محجوز
+    const byNum = await ctx.db
+      .query("users")
+      .withIndex("by_userNumber", (q) => q.eq("userNumber", args.userNumber))
+      .unique();
+    if (byNum) throw new ConvexError({ code: "NUM_TAKEN", message: "الرقم محجوز" });
+
+    const salt = randomHex(16);
+    const passwordHash = await hashPassword(args.password, salt);
+    const token = "sess-" + randomHex(24);
+    const now = Date.now();
+
+    const id = await ctx.db.insert("users", {
+      tokenIdentifier: token,
+      userNumber: args.userNumber,
+      username,
+      name: args.name ?? username,
+      passwordHash,
+      passwordSalt: salt,
+      authProvider: "password",
+      adminRole: args.adminRole,
+      isAdmin: true,
+      profileComplete: true,
+      lastLoginAt: now,
+      coins: 0,
+      diamonds: 0,
+      totalSent: 0,
+      totalReceived: 0,
+      charms: 0,
+    });
+
+    return { ok: true, userId: id, username, userNumber: args.userNumber, adminRole: args.adminRole };
   },
 });

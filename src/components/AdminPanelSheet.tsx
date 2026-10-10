@@ -135,7 +135,11 @@ export default function AdminPanelSheet({ onClose }: Props) {
         {/* ===== Header ===== */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 flex-shrink-0">
           <div className="flex items-center gap-2">
-            {editUser ? (
+            {showAssets ? (
+              <button onClick={() => setShowAssets(false)} className="p-2 -ml-2 rounded-full hover:bg-white/10 text-white">
+                <ChevronLeft size={20} className="rotate-180" />
+              </button>
+            ) : editUser ? (
               <button onClick={() => setEditUser(null)} className="p-2 -ml-2 rounded-full hover:bg-white/10 text-white">
                 <ChevronLeft size={20} className="rotate-180" />
               </button>
@@ -145,12 +149,23 @@ export default function AdminPanelSheet({ onClose }: Props) {
               </div>
             )}
             <h2 className="text-white text-lg font-black">
-              {editUser ? `تعديل: ${editUser.username}` : "لوحة المالك"}
+              {showAssets ? "الأصول والصور" : editUser ? `تعديل: ${editUser.username}` : "لوحة المالك"}
             </h2>
           </div>
-          <button onClick={onClose} className="p-2 rounded-full hover:bg-white/10 text-white">
-            <X size={20} />
-          </button>
+          <div className="flex items-center gap-1">
+            {!editUser && !showAssets && (
+              <button
+                onClick={() => setShowAssets(true)}
+                title="الأصول والصور"
+                className="p-2 rounded-full hover:bg-white/10 text-white"
+              >
+                <ImageIcon size={20} />
+              </button>
+            )}
+            <button onClick={onClose} className="p-2 rounded-full hover:bg-white/10 text-white">
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
         {/* ===== Content ===== */}

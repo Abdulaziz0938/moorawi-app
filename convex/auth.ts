@@ -3,7 +3,7 @@ import { ConvexError, v } from "convex/values";
 
 // ============ Helpers ============
 
-function randomHex(len: number): string {
+export function randomHex(len: number): string {
   const arr = new Uint8Array(len);
   if (typeof crypto !== "undefined" && (crypto as any).getRandomValues) {
     (crypto as any).getRandomValues(arr);
@@ -19,7 +19,7 @@ async function sha256Hex(input: string): Promise<string> {
   return Array.from(new Uint8Array(hash), (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-async function hashPassword(password: string, salt: string): Promise<string> {
+export async function hashPassword(password: string, salt: string): Promise<string> {
   let h = await sha256Hex(salt + ":" + password);
   h = await sha256Hex(h + ":" + salt);
   h = await sha256Hex(h + ":" + salt);
