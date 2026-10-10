@@ -160,7 +160,7 @@ function PodiumSlot({
           {hasCharm && (
             <LevelBadge kind="charm" level={levelFromValue(ch)} size="xs" />
           )}
-          {hasVip && (
+          {hasWealth && (
             <LevelBadge kind="wealth" level={levelFromValue(we)} size="xs" />
           )}
           {user.vip > 0 && (
