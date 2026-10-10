@@ -144,7 +144,7 @@ export const grantVip = mutation({
   },
   handler: async (ctx, args) => {
     const me = await requireUser(ctx);
-    if (me.adminRole !== "owner") throw new Error("غير مصرح");
+    if (me.adminRole !== "super" && me.userNumber !== 1) throw new Error("غير مصرح");
     const plan = VIP_LEVELS.find((p) => p.level === args.level);
     if (!plan) throw new Error("مستوى VIP غير صالح");
     const days = args.days ?? VIP_DAYS;
