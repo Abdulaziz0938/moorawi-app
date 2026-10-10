@@ -522,4 +522,16 @@ export default defineSchema({
     updatedAt: v.number(),
     updatedBy: v.optional(v.id("users")),
   }).index("by_key", ["key"]),
+
+  // [moorawi-vip] VIP BENEFITS — per-level features (from DB)
+  // Each level (1-7) has its own ordered list of benefits.
+  // Admin can add/edit/remove/reorder.
+  vipBenefits: defineTable({
+    level: v.number(),         // 1-7
+    order: v.number(),         // sort order within level
+    icon: v.string(),          // lucide icon name (e.g. "Crown", "Eye")
+    textAr: v.string(),
+    textEn: v.optional(v.string()),
+    active: v.boolean(),
+  }).index("by_level", ["level", "order"]),
 });
