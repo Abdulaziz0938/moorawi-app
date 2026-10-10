@@ -4,6 +4,8 @@ import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { X, HelpCircle, Loader2, Home } from "lucide-react";
 import { UserName } from "./UserBadges";
+import LevelBadge from "./LevelBadge";
+import { levelFromValue } from "../lib/levels";
 import MemberRow from "./MemberRow";
 import PodiumSVG from "./PodiumSVG";
 
@@ -149,19 +151,14 @@ function PodiumSlot({
           ID:{user.userNumber}
         </p>
       )}
-
-      {/* Badges row: charm + wealth + vip + admin */}
+      {/* Badges row: charm + wealth + vip */}
       {(hasCharm || hasVip || hasAdmin) && (
         <div className="flex items-center gap-1 mt-1.5 justify-center flex-wrap">
           {hasCharm && (
-            <span className="text-[9px] font-black bg-pink-500/25 border border-pink-400/40 rounded-full px-1.5 py-0.5 text-pink-800">
-              ✨{ch}
-            </span>
+            <LevelBadge kind="charm" level={levelFromValue(ch)} size="xs" />
           )}
           {hasVip && (
-            <span className="text-[9px] font-black bg-yellow-500/25 border border-yellow-400/40 rounded-full px-1.5 py-0.5 text-amber-800">
-              💎{v}
-            </span>
+            <LevelBadge kind="wealth" level={levelFromValue(we)} size="xs" />
           )}
           {user.vip > 0 && (
             <img

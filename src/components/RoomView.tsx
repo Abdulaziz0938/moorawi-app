@@ -646,8 +646,8 @@ export default function RoomView({ roomId, onLeave }: Props) {
                   <button
                     type="button"
                     onClick={() => {
-                      if (owner?._id) {
-                        setMiniProfileUserId(owner._id);
+                      if (owner?.userId) {
+                        setMiniProfileUserId(owner.userId);
                         setMySeatIndexForMiniProfile(null);
                       }
                     }}
