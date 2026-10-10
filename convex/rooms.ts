@@ -4,6 +4,22 @@ import { getMember, requireUser } from "./lib/auth";
 import { vipLevelFromTotalSent, vipLevelFromTotalReceived } from "./lib/vip";
 import { weekKey } from "./lib/week";
 
+const ROOM_NUMBER_START = 10000;
+
+async function getNextRoomNumber(ctx: any): Promise<number> {
+  const counter = await ctx.db
+    .query("counters")
+    .withIndex("by_name", (q: any) => q.eq("name", "roomNumber"))
+    .unique();
+  if (!counter) {
+    await ctx.db.insert("counters", { name: "roomNumber", value: ROOM_NUMBER_START + 1 });
+    return ROOM_NUMBER_START;
+  }
+  const current = counter.value;
+  await ctx.db.patch("counters", counter._id, { value: current + 1 });
+  return current;
+}
+
 export const listPublic = query({
   args: {},
   handler: async (ctx) => {
@@ -64,9 +80,11 @@ export const create = mutation({
 
     const name = args.name.trim();
     if (name.length < 2 || name.length > 40) throw new ConvexError({ code: "BAD_REQUEST", message: "Room name must be 2-40 chars" });
+    const roomNumber = await getNextRoomNumber(ctx);
     const roomId = await ctx.db.insert("rooms", {
       name, description: args.description?.trim() || undefined, ownerId: user._id,
       isPrivate: args.isPrivate, micCount: 20, memberCount: 1,
+      roomNumber,
     });
     await ctx.db.insert("roomMembers", { roomId, userId: user._id, role: "owner" });
     for (let i = 0; i < 20; i++) await ctx.db.insert("micSeats", { roomId, seatIndex: i, locked: false, muted: false });

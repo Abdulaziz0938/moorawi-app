@@ -99,6 +99,8 @@ export default defineSchema({
     backgroundImageId: v.optional(v.id("_storage")),   // legacy
     backgroundUrl: v.optional(v.string()),             // Cloudinary
     micRequestsEnabled: v.optional(v.boolean()),       // طلب المايك
+    // [moorawi-room-id] Public room number (numeric ID)
+    roomNumber: v.optional(v.number()),
     // [moorawi-trophy] Room Trophy (weekly coins spent)
     weeklyTotal: v.optional(v.number()),
     weeklyCycleKey: v.optional(v.string()),           // e.g. "2026-W42"
@@ -108,7 +110,8 @@ export default defineSchema({
     weeklyRewardClaimed: v.optional(v.boolean()),
   })
     .index("by_isPrivate", ["isPrivate"])
-    .index("by_owner", ["ownerId"]),
+    .index("by_owner", ["ownerId"])
+    .index("by_roomNumber", ["roomNumber"]),
 
   roomMembers: defineTable({
     roomId: v.id("rooms"),
