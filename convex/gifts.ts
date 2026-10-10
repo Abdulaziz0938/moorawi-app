@@ -132,8 +132,9 @@ export const send = mutation({
       coins: myCoins - totalPrice,
       totalSent: (user.totalSent ?? 0) + totalPrice,
     });
+    // [moorawi-levels] 1 coin received = 1 Charm XP (Poppo standard)
     await ctx.db.patch("users", args.toUserId, {
-      charms: (target.charms ?? 0) + args.quantity,
+      charms: (target.charms ?? 0) + totalPrice,
       totalReceived: (target.totalReceived ?? 0) + totalPrice,
     });
 
@@ -231,7 +232,7 @@ export const sendBatch = mutation({
     // لكل مستلم: زيادة charms + totalReceived + insert transaction
     for (const target of targets) {
       await ctx.db.patch("users", target._id, {
-        charms: (target.charms ?? 0) + args.quantity,
+        charms: (target.charms ?? 0) + (gift.price * args.quantity),
         totalReceived: (target.totalReceived ?? 0) + gift.price * args.quantity,
       });
       await ctx.db.insert("giftTransactions", {
@@ -324,6 +325,8 @@ export const roomLeaderboard = query({
           avatarUrl,
           vip,
           charmLevel: vipLevelFromTotalReceived(u?.totalReceived ?? 0),
+          charmValue: u?.charms ?? 0,
+          wealthValue: u?.totalSent ?? 0,
           adminRole: u?.adminRole ?? null,
           total: item.total,
         };
