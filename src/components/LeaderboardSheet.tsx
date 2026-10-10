@@ -95,6 +95,7 @@ function PodiumSlot({
   const ch = typeof user.charmValue === "number" ? user.charmValue : 0;
   const we = typeof user.wealthValue === "number" ? user.wealthValue : 0;
   const hasCharm = ch > 0;
+  const hasWealth = we > 0;
   const hasVip = v > 0;
   const hasAdmin = !!user.adminRole;
 
@@ -154,7 +155,7 @@ function PodiumSlot({
         </p>
       )}
       {/* Badges row: charm + wealth + vip */}
-      {(hasCharm || hasVip || hasAdmin) && (
+      {(hasCharm || hasWealth || hasVip || hasAdmin) && (
         <div className="flex items-center gap-1 mt-1.5 justify-center flex-wrap">
           {hasCharm && (
             <LevelBadge kind="charm" level={levelFromValue(ch)} size="xs" />
