@@ -643,15 +643,25 @@ export default function RoomView({ roomId, onLeave }: Props) {
                     ID:{owner?.userNumber ?? "—"} • Lv.0
                   </span>
                 </div>
-                <div className="w-8 h-8 rounded-full overflow-hidden bg-purple-500 flex items-center justify-center text-[11px] font-bold text-white flex-shrink-0 ring-2 ring-purple-400/40">
-                  {owner?.avatarUrl ? (
-                    <img src={owner.avatarUrl} alt="" className="w-full h-full object-cover" />
-                  ) : roomAvatar ? (
-                    <img src={roomAvatar} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    (room.name?.[0] || "?")
-                  )}
-                </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (owner?._id) {
+                        setMiniProfileUserId(owner._id);
+                        setMySeatIndexForMiniProfile(null);
+                      }
+                    }}
+                    className="w-8 h-8 rounded-full overflow-hidden bg-purple-500 flex items-center justify-center text-[11px] font-bold text-white flex-shrink-0 ring-2 ring-purple-400/40 hover:ring-purple-300 transition active:scale-95"
+                    title={owner?.name || "الغرفة"}
+                  >
+                    {owner?.avatarUrl ? (
+                      <img src={owner.avatarUrl} alt="" className="w-full h-full object-cover" />
+                    ) : roomAvatar ? (
+                      <img src={roomAvatar} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      (room.name?.[0] || "?")
+                    )}
+                  </button>
               </div>
             </div>
           </div>
@@ -862,17 +872,26 @@ export default function RoomView({ roomId, onLeave }: Props) {
                     {m.avatarUrl ? <img src={m.avatarUrl} alt="" className="w-full h-full object-cover" /> : (m.senderName?.[0] || "?")}
                   </div>
                   <div className="flex-1 min-w-0">
-                    {/* [moorawi] UserName — unified badges */}
+                    {/* [moorawi] UserName — unified badges (clickable) */}
                     <div className="flex items-center gap-2 flex-wrap">
-                      <UserName
-                        name={m.senderName}
-                        vip={m.senderVip}
-                        charmValue={m.senderCharmValue}
-                        wealthValue={m.senderWealthValue}
-                        adminRole={m.senderAdminRole}
-                        roomRole={m.senderRoomRole}
-                        size="sm"
-                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMiniProfileUserId(m.senderId);
+                          setMySeatIndexForMiniProfile(null);
+                        }}
+                        className="flex items-center gap-2 hover:opacity-80 transition active:scale-95"
+                      >
+                        <UserName
+                          name={m.senderName}
+                          vip={m.senderVip}
+                          charmValue={m.senderCharmValue}
+                          wealthValue={m.senderWealthValue}
+                          adminRole={m.senderAdminRole}
+                          roomRole={m.senderRoomRole}
+                          size="sm"
+                        />
+                      </button>
                       <span className="text-[8px] text-white/40 mr-auto">{formatTime(m.createdAt)}</span>
                     </div>
                     {(m.text || m.imageUrl) && (

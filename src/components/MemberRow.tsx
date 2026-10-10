@@ -1,5 +1,6 @@
-// [moorawi] Member row — unified capsule with 2-line info stack
-import { Home, Shield, User as UserIcon, Mic } from "lucide-react";
+// [moorawi] Member row — uses unified UserName + LevelBadge (Single Source of Truth)
+import { Mic } from "lucide-react";
+import { UserName } from "./UserBadges";
 
 interface Props {
   userId: string;
@@ -31,21 +32,9 @@ export default function MemberRow({
   compact = false,
   onClick,
 }: Props) {
-  const isOwner = roomRole === "owner";
-  const isMod = roomRole === "moderator";
   const onMic = seatIndex !== null && seatIndex !== undefined;
-
-  const v = typeof vip === "number" ? vip : 0;
-  const ch = typeof charmValue === "number" ? charmValue : 0;
-  const we = typeof wealthValue === "number" ? wealthValue : 0;
-  const hasCharm = ch > 0;
-  const hasVip = v > 0;
-  const hasAdmin = adminRole === "super" || adminRole === "moderator";
-  const hasAnyCapsule = hasCharm || hasVip || hasAdmin;
-
   const avatarSize = compact ? 36 : 42;
   const avatarFontSize = compact ? 13 : 16;
-  const nameSize = compact ? "text-[11px]" : "text-xs";
   const subSize = compact ? "text-[9px]" : "text-[10px]";
 
   return (
@@ -57,9 +46,7 @@ export default function MemberRow({
         border: "1px solid rgba(255,255,255,0.1)",
       }}
     >
-      {/* Rank (optional, right-most after avatar) */}
-
-      {/* Avatar (right in RTL) */}
+      {/* Avatar */}
       <div className="relative flex-shrink-0" style={{ width: `${avatarSize}px`, height: `${avatarSize}px` }}>
         <div className="member-avatar-ring" style={{ width: `${avatarSize}px`, height: `${avatarSize}px` }}>
           <div className="member-avatar-inner" style={{ fontSize: `${avatarFontSize}px` }}>
@@ -70,55 +57,31 @@ export default function MemberRow({
             )}
           </div>
         </div>
+        {onMic && (
+          <div className="absolute -bottom-0.5 -left-0.5 w-4 h-4 rounded-full bg-emerald-500 border-2 border-black flex items-center justify-center">
+            <Mic size={8} className="text-white" />
+          </div>
+        )}
       </div>
 
-      {/* Info stack: 2 lines */}
-      <div className="flex flex-col items-start min-w-0 flex-1">
-        {/* Row 1: Name + role icon */}
-        <div className="flex items-center gap-1 max-w-full">
-          <span className={`${nameSize} font-black text-white truncate`}>{name}</span>
-          {isOwner && <Home size={10} className="text-amber-400 flex-shrink-0" fill="currentColor" strokeWidth={1.5} />}
-          {isMod && <Shield size={10} className="text-sky-400 flex-shrink-0" fill="currentColor" strokeWidth={1.5} />}
-          {!isOwner && !isMod && <UserIcon size={9} className="text-emerald-400 flex-shrink-0" fill="currentColor" strokeWidth={1.5} />}
-          {onMic && !compact && (
-            <span className={`${subSize} text-emerald-300 flex items-center gap-0.5 flex-shrink-0`}>
-              <Mic size={8} />
-              <span>{(seatIndex ?? 0) + 1}</span>
-            </span>
-          )}
-        </div>
-
-        {/* Row 2: ID • Lv */}
+      {/* Info stack */}
+      <div className="flex flex-col items-start min-w-0 flex-1 gap-0.5">
+        <UserName
+          name={name}
+          vip={vip}
+          charmValue={charmValue}
+          wealthValue={wealthValue}
+          adminRole={adminRole}
+          roomRole={roomRole}
+          size={compact ? "sm" : "md"}
+          nameClassName="text-white"
+        />
         <div className={`flex items-center gap-1.5 ${subSize} text-white/50 font-bold`} dir="ltr">
           {rank !== undefined && <span className="text-amber-300">#{rank}</span>}
           {userNumber !== null && <span>ID:{userNumber}</span>}
-          <span>Lv.0</span>
+          {onMic && <span>Mic {(seatIndex ?? 0) + 1}</span>}
         </div>
       </div>
-
-      {/* Capsules (left in RTL) */}
-      {hasAnyCapsule && (
-        <div className="flex items-center gap-1 flex-shrink-0">
-          {hasCharm && (
-            <span className="badge-capsule charm">
-              <span>{ch}</span>
-              <span>✨</span>
-            </span>
-          )}
-          {hasVip && (
-            <span className="badge-capsule wealth">
-              <span>{v}</span>
-              <span>💎</span>
-            </span>
-          )}
-          {adminRole === "super" && (
-            <img src="/badges/badge-super.png" alt="" className="h-5 w-5 object-contain flex-shrink-0 badge-glow" />
-          )}
-          {adminRole === "moderator" && (
-            <img src="/badges/badge-admin.png" alt="" className="h-5 w-5 object-contain flex-shrink-0 badge-glow" />
-          )}
-        </div>
-      )}
     </button>
   );
 }
