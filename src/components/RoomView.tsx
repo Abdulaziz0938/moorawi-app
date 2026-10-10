@@ -506,8 +506,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const isOwnerOrMod = myInfo?.role === "owner" || myInfo?.role === "moderator";
 
   // [moorawi-mics] Release mic seat when user closes app
-  const clearMyMic = useMutation(api.mics.clearMyMic);
-  useEffect(() => {
+    useEffect(() => {
     const cleanup = () => {
       clearMyMic({ tokenOverride: deviceId }).catch(() => {});
     };
