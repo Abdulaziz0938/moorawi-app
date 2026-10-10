@@ -1,7 +1,8 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { getMember, requireUser } from "./lib/auth";
-import { vipLevelFromTotalSent, vipLevelFromTotalReceived } from "./lib/vip";
+import { levelFromValue } from "./lib/levels";
+import { activeVipLevel } from "./lib/vip";
 
 const MAX_SEATS = 20;
 
@@ -24,8 +25,8 @@ export const state = query({
           avatarUrl,
           charms: user?.totalReceived ?? 0,  // [moorawi] 1 coin received = 1 charm
           frame: null,
-          userVip: vipLevelFromTotalSent(user?.totalSent ?? 0),
-          userCharmLevel: vipLevelFromTotalReceived(user?.totalReceived ?? 0),
+          userVip: activeVipLevel(user),
+          userCharmLevel: levelFromValue(user?.totalReceived ?? 0),
           adminRole: user?.adminRole ?? null,
         };
       }),

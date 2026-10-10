@@ -1,7 +1,8 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { requireUser } from "./lib/auth";
-import { vipLevelFromTotalSent, vipLevelFromTotalReceived } from "./lib/vip";
+import { levelFromValue } from "./lib/levels";
+import { activeVipLevel } from "./lib/vip";
 
 const MAX_LEN = 500;
 
@@ -32,14 +33,14 @@ export const list = query({
       const sender = await ctx.db.get("users", m.senderId);
       const avatarUrl = sender?.avatarUrl ?? (sender?.avatarId ? await ctx.storage.getUrl(sender.avatarId) : null);
       const imageUrl = m.imageUrl ?? (m.imageId ? await ctx.storage.getUrl(m.imageId) : null);
-      const vip = vipLevelFromTotalSent(sender?.totalSent ?? 0);
+      const vip = activeVipLevel(sender);
       return {
         _id: m._id,
         senderId: m.senderId,
         senderName: m.senderName,
         senderNumber: sender?.userNumber ?? null,
         senderVip: vip,
-        senderCharmLevel: vipLevelFromTotalReceived(sender?.totalReceived ?? 0),
+        senderCharmLevel: levelFromValue(sender?.totalReceived ?? 0),
         senderCharmValue: sender?.charms ?? 0,
         senderWealthValue: sender?.totalSent ?? 0,
         senderAdminRole: sender?.adminRole ?? null,

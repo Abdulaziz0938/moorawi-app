@@ -1,6 +1,6 @@
 import { query } from "./_generated/server";
 import { v } from "convex/values";
-import { vipLevelFromTotalSent, vipLevelFromTotalReceived } from "./lib/vip";
+import { levelFromValue } from "./lib/levels";
 
 // ============================================================
 // [moorawi-profile] Single Source of Truth for user display
@@ -19,8 +19,8 @@ export const getFull = query({
       (user.avatarId ? await ctx.storage.getUrl(user.avatarId) : null);
 
     // --- 2) Levels (from DB, computed) ---
-    const wealthLevel = vipLevelFromTotalSent(user.totalSent ?? 0);
-    const charmLevel = vipLevelFromTotalReceived(user.totalReceived ?? 0);
+    const wealthLevel = levelFromValue(user.totalSent ?? 0);
+    const charmLevel = levelFromValue(user.totalReceived ?? 0);
 
     // --- 3) VIP (real) ---
     const vip = user.vipLevel ?? 0;

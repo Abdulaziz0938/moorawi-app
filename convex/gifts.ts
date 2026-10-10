@@ -1,5 +1,6 @@
 import { ConvexError, v } from "convex/values";
-import { vipLevelFromTotalReceived } from "./lib/vip";
+import { levelFromValue } from "./lib/levels";
+import { activeVipLevel } from "./lib/vip";
 import { mutation, query } from "./_generated/server";
 import { requireUser } from "./lib/auth";
 import { weekKey } from "./lib/week";
@@ -342,20 +343,19 @@ export const roomLeaderboard = query({
     const sorted = Object.values(totals).sort((a, b) => b.total - a.total).slice(0, 20);
 
     // جلب بيانات كل مستخدم
-    const vipThresholds = [1000, 5000, 20000, 50000, 100000, 250000, 500000];
     const enriched = await Promise.all(
       sorted.map(async (item) => {
         const u = await ctx.db.get("users", item.userId);
         // [moorawi-fix] prefer Cloudinary avatarUrl, fallback to legacy storage avatarId
         const avatarUrl = u?.avatarUrl ?? (u?.avatarId ? await ctx.storage.getUrl(u.avatarId) : null);
-        const vip = vipThresholds.filter((x) => (u?.totalSent ?? 0) >= x).length;
+        const vip = activeVipLevel(u);
         return {
           userId: item.userId as string,
           userNumber: u?.userNumber ?? null,
           name: u?.name ?? "ضيف",
           avatarUrl,
           vip,
-          charmLevel: vipLevelFromTotalReceived(u?.totalReceived ?? 0),
+          charmLevel: levelFromValue(u?.totalReceived ?? 0),
           charmValue: u?.charms ?? 0,
           wealthValue: u?.totalSent ?? 0,
           adminRole: u?.adminRole ?? null,

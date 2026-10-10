@@ -1,7 +1,8 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { getMember, requireUser } from "./lib/auth";
-import { vipLevelFromTotalSent, vipLevelFromTotalReceived } from "./lib/vip";
+import { levelFromValue } from "./lib/levels";
+import { activeVipLevel } from "./lib/vip";
 import { weekKey } from "./lib/week";
 
 const ROOM_NUMBER_START = 10000;
@@ -137,8 +138,8 @@ export const members = query({
         username: user?.username ?? null,
         userNumber: user?.userNumber ?? null,
         avatarUrl,
-        vip: vipLevelFromTotalSent(user?.totalSent ?? 0),
-        charmLevel: vipLevelFromTotalReceived(user?.totalReceived ?? 0),
+        vip: activeVipLevel(user),
+        charmLevel: levelFromValue(user?.totalReceived ?? 0),
         charmValue: user?.charms ?? 0,
         wealthValue: user?.totalSent ?? 0,
         adminRole: user?.adminRole ?? null,
