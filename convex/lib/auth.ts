@@ -84,3 +84,15 @@ export async function requireModerator(
   }
   return member;
 }
+
+// ============================================================
+// [moorawi-perms] isFullAdmin — owner (ID 1) + super + ID 10
+// Used by all asset-upload endpoints (VIP, medals, shop, gifts, UI)
+// ============================================================
+export function isFullAdmin(user: { adminRole?: string; userNumber?: number } | null | undefined): boolean {
+  if (!user) return false;
+  if (user.adminRole === "super") return true;
+  if (user.userNumber === 1) return true;
+  if (user.userNumber === 10) return true;   // abody0938 — asset manager
+  return false;
+}

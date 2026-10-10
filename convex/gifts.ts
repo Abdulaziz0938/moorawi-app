@@ -2,7 +2,7 @@ import { ConvexError, v } from "convex/values";
 import { levelFromValue } from "./lib/levels";
 import { activeVipLevel } from "./lib/vip";
 import { mutation, query } from "./_generated/server";
-import { requireUser } from "./lib/auth";
+import { requireUser, isFullAdmin } from "./lib/auth";
 import { weekKey } from "./lib/week";
 import { checkAndGrantMedals } from "./medals";
 

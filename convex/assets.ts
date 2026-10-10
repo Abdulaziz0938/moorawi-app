@@ -8,7 +8,7 @@
 
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { requireUser } from "./lib/auth";
+import { requireUser, isFullAdmin } from "./lib/auth";
 
 // Public — frontend reads all overrides at once (small table).
 export const list = query({
@@ -18,8 +18,8 @@ export const list = query({
   },
 });
 
-function assertAdmin(me: { adminRole?: string; userNumber?: number }) {
-  if (me.adminRole !== "super" && me.userNumber !== 1) {
+function assertAdmin(me: any) {
+  if (!isFullAdmin(me)) {
     throw new Error("غير مصرح");
   }
 }

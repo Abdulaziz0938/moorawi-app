@@ -1,6 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { ConvexError, v } from "convex/values";
-import { requireUser } from "./lib/auth";
+import { requireUser, isFullAdmin } from "./lib/auth";
 
 // ============================================================
 // [moorawi-shop] Shop queries + mutations
@@ -326,7 +326,7 @@ export const updateItem = mutation({
   },
   handler: async (ctx, args) => {
     const me = await requireUser(ctx, args.tokenOverride);
-    if (me.adminRole !== "super" && me.userNumber !== 1) {
+    if (!isFullAdmin(me)) {
       throw new ConvexError({ code: "FORBIDDEN", message: "صلاحيات المالك مطلوبة" });
     }
     const item = await ctx.db.get("shopItems", args.itemId);
@@ -356,7 +356,7 @@ export const listAllAdmin = query({
   args: { tokenOverride: v.optional(v.string()) },
   handler: async (ctx, args) => {
     const me = await requireUser(ctx, args.tokenOverride);
-    if (me.adminRole !== "super" && me.userNumber !== 1) {
+    if (!isFullAdmin(me)) {
       throw new ConvexError({ code: "FORBIDDEN", message: "صلاحيات المالك مطلوبة" });
     }
     return await ctx.db.query("shopItems").collect();

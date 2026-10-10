@@ -14,7 +14,7 @@
 
 import { v } from "convex/values";
 import { mutation, query, internalMutation } from "./_generated/server";
-import { requireUser } from "./lib/auth";
+import { requireUser, isFullAdmin } from "./lib/auth";
 import { activeVipLevel } from "./lib/vip";
 
 // ============================================================
@@ -148,7 +148,7 @@ export const grantVip = mutation({
   },
   handler: async (ctx, args) => {
     const me = await requireUser(ctx);
-    if (me.adminRole !== "super" && me.userNumber !== 1) throw new Error("غير مصرح");
+    if (!isFullAdmin(me)) throw new Error("غير مصرح");
     const plan = VIP_LEVELS.find((p) => p.level === args.level);
     if (!plan) throw new Error("مستوى VIP غير صالح");
     const days = args.days ?? VIP_DAYS;
@@ -245,7 +245,7 @@ export const setVipBenefit = mutation({
   },
   handler: async (ctx, args) => {
     const me = await requireUser(ctx, args.tokenOverride);
-    if (me.adminRole !== "super" && me.userNumber !== 1) throw new Error("غير مصرح");
+    if (!isFullAdmin(me)) throw new Error("غير مصرح");
     if (args.level < 1 || args.level > 7) throw new Error("مستوى غير صالح");
     const trimmed = args.textAr.trim();
     if (trimmed.length < 1) throw new Error("نص فارغ");
@@ -278,7 +278,7 @@ export const removeVipBenefit = mutation({
   args: { id: v.id("vipBenefits"), tokenOverride: v.optional(v.string()) },
   handler: async (ctx, args) => {
     const me = await requireUser(ctx, args.tokenOverride);
-    if (me.adminRole !== "super" && me.userNumber !== 1) throw new Error("غير مصرح");
+    if (!isFullAdmin(me)) throw new Error("غير مصرح");
     await ctx.db.delete("vipBenefits", args.id);
     return { ok: true };
   },
