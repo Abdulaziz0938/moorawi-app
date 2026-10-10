@@ -1,4 +1,5 @@
 import { dialog } from "../lib/dialog";
+import IconOrImage from "./IconOrImage";
 import {
   Crown, Gem, Handshake, Award, Wallet, Star, Mic, Briefcase,
   ShoppingBag, CheckSquare, ShieldCheck, Clock, Headphones,
@@ -32,6 +33,7 @@ export default function ServicesSection({
   const topCards = [
     {
       key: "supporter",
+      assetKey: "ui.service.legend",
       label: "الداعم المحترم",
       sub: "S5 → S100",
       icon: Gem,
@@ -41,6 +43,7 @@ export default function ServicesSection({
     },
     {
       key: "vip",
+      assetKey: "ui.service.store",
       label: "VIP",
       sub: "1 → 7",
       icon: Crown,
@@ -52,25 +55,25 @@ export default function ServicesSection({
 
   // ============ Middle grid: 8 buttons ============
   const gridItems = [
-    { key: "relation", label: "العلاقة",   icon: Handshake,  color: "text-rose-300",     onClick: () => soon("العلاقة") },
-    { key: "level",    label: "مستوى",      icon: Sparkles,   color: "text-amber-300",    onClick: () => soon("المستوى") },
-    { key: "medals",   label: "أوسمة",      icon: Award,      color: "text-yellow-300",   onClick: onOpenMedals ?? (() => soon("الأوسمة")) },
-    { key: "wallet",   label: "محفظة",      icon: Wallet,     color: "text-emerald-300",  onClick: onOpenWallet },
-    { key: "legend",   label: "الأسطورة",   icon: Star,       color: "text-fuchsia-300",  onClick: () => soon("الأسطورة") },
-    { key: "host",     label: "مضيف",       icon: Mic,        color: "text-sky-300",      onClick: () => soon("المضيف") },
-    { key: "agency",   label: "وكالة",      icon: Briefcase,  color: "text-teal-300",     onClick: () => soon("الوكالة") },
-    { key: "store",    label: "متجر",       icon: ShoppingBag, color: "text-pink-300",    onClick: onOpenStore ?? (() => soon("المتجر")) },
+    { key: "relation",      assetKey: "ui.service.relation", label: "العلاقة",   icon: Handshake,  color: "text-rose-300",     onClick: () => soon("العلاقة") },
+    { key: "level",      assetKey: "ui.service.level",    label: "مستوى",      icon: Sparkles,   color: "text-amber-300",    onClick: () => soon("المستوى") },
+    { key: "medals",      assetKey: "ui.service.medals",   label: "أوسمة",      icon: Award,      color: "text-yellow-300",   onClick: onOpenMedals ?? (() => soon("الأوسمة")) },
+    { key: "wallet",      assetKey: "ui.service.wallet",   label: "محفظة",      icon: Wallet,     color: "text-emerald-300",  onClick: onOpenWallet },
+    { key: "legend",      assetKey: "ui.service.legend",   label: "الأسطورة",   icon: Star,       color: "text-fuchsia-300",  onClick: () => soon("الأسطورة") },
+    { key: "host",      assetKey: "ui.service.host",     label: "مضيف",       icon: Mic,        color: "text-sky-300",      onClick: () => soon("المضيف") },
+    { key: "agency",      assetKey: "ui.service.agency",   label: "وكالة",      icon: Briefcase,  color: "text-teal-300",     onClick: () => soon("الوكالة") },
+    { key: "store",      assetKey: "ui.service.store",    label: "متجر",       icon: ShoppingBag, color: "text-pink-300",    onClick: onOpenStore ?? (() => soon("المتجر")) },
   ];
 
   // ============ Bottom list: 7 rows ============
   const listItems = [
-    { key: "missions",   label: "مهام",                     icon: CheckSquare,  color: "text-emerald-300", onClick: onOpenMissions ?? (() => soon("المهام")) },
-    { key: "vipSupport", label: "VIP خاصة بالداعمين",       icon: Crown,        color: "text-purple-300",  onClick: () => soon("VIP خاصة بالداعمين") },
-    { key: "verify",     label: "المصادقة",                 icon: ShieldCheck,  color: "text-blue-300",    onClick: () => soon("المصادقة") },
-    { key: "visits",     label: "الزيارات الأخيرة",         icon: Clock,        color: "text-cyan-300",    onClick: () => soon("الزيارات الأخيرة") },
-    { key: "support",    label: "خدمة عملاء",               icon: Headphones,   color: "text-indigo-300",  onClick: () => soon("خدمة العملاء") },
-    { key: "language",   label: "اللغة",                    icon: Globe,        color: "text-pink-300",    onClick: () => soon("اللغة") },
-    { key: "settings",   label: "إعدادات",                  icon: Settings,     color: "text-white/70",    onClick: onOpenSettings ?? (() => soon("الإعدادات")) },
+    { key: "missions",      assetKey: "ui.service.missions",   label: "مهام",                     icon: CheckSquare,  color: "text-emerald-300", onClick: onOpenMissions ?? (() => soon("المهام")) },
+    { key: "vipSupport",      assetKey: "ui.service.support", label: "VIP خاصة بالداعمين",       icon: Crown,        color: "text-purple-300",  onClick: () => soon("VIP خاصة بالداعمين") },
+    { key: "verify",      assetKey: "ui.service.verify",     label: "المصادقة",                 icon: ShieldCheck,  color: "text-blue-300",    onClick: () => soon("المصادقة") },
+    { key: "visits",      assetKey: "ui.service.visits",     label: "الزيارات الأخيرة",         icon: Clock,        color: "text-cyan-300",    onClick: () => soon("الزيارات الأخيرة") },
+    { key: "support",      assetKey: "ui.service.support",    label: "خدمة عملاء",               icon: Headphones,   color: "text-indigo-300",  onClick: () => soon("خدمة العملاء") },
+    { key: "language",      assetKey: "ui.service.language",   label: "اللغة",                    icon: Globe,        color: "text-pink-300",    onClick: () => soon("اللغة") },
+    { key: "settings",      assetKey: "ui.service.settings",   label: "إعدادات",                  icon: Settings,     color: "text-white/70",    onClick: onOpenSettings ?? (() => soon("الإعدادات")) },
   ];
 
   return (
@@ -104,7 +107,7 @@ export default function ServicesSection({
               onClick={c.onClick}
               className={`relative overflow-hidden rounded-2xl border ${c.border} bg-gradient-to-br ${c.gradient} p-4 flex flex-col items-center gap-1 active:scale-95 transition`}
             >
-              <Icon size={32} className="text-amber-200" fill="currentColor" strokeWidth={1.5} />
+              <IconOrImage assetKey={c.assetKey} Icon={Icon} size={32} className="text-amber-200" fill="currentColor" strokeWidth={1.5} />
               <p className="text-white text-sm font-black">{c.label}</p>
               <p className="text-white/50 text-[10px]">{c.sub}</p>
             </button>
@@ -122,7 +125,7 @@ export default function ServicesSection({
               onClick={g.onClick}
               className="flex flex-col items-center gap-1.5 py-3 rounded-xl hover:bg-white/10 active:scale-95 transition"
             >
-              <Icon size={26} className={g.color} strokeWidth={1.8} />
+              <IconOrImage assetKey={g.assetKey} Icon={Icon} size={26} className={g.color} strokeWidth={1.8} />
               <span className="text-white text-[11px] font-bold">{g.label}</span>
             </button>
           );
@@ -143,7 +146,7 @@ export default function ServicesSection({
             >
               <div className="flex items-center gap-3">
                 <div className={`w-8 h-8 rounded-full bg-white/10 flex items-center justify-center ${it.color}`}>
-                  <Icon size={16} strokeWidth={2} />
+                  <IconOrImage assetKey={it.assetKey} Icon={Icon} size={16} strokeWidth={2} />
                 </div>
                 <span className="text-white text-sm font-bold">{it.label}</span>
               </div>
