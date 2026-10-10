@@ -39,9 +39,9 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 // Query: myVip — current user's VIP state (lazy expiring first)
 // ============================================================
 export const myVip = query({
-  args: {},
-  handler: async (ctx) => {
-    const me = await requireUser(ctx);
+  args: { tokenOverride: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
     const level = activeVipLevel(me);
     return {
       level,
@@ -69,9 +69,9 @@ export const getVipStatus = query({
 // Mutation: buyVip(level) — deduct coins, activate/extend
 // ============================================================
 export const buyVip = mutation({
-  args: { level: v.number() },
+  args: { level: v.number(), tokenOverride: v.optional(v.string()) },
   handler: async (ctx, args) => {
-    const me = await requireUser(ctx);
+    const me = await requireUser(ctx, args.tokenOverride);
     const plan = VIP_LEVELS.find((p) => p.level === args.level);
     if (!plan) throw new Error("مستوى VIP غير صالح");
 

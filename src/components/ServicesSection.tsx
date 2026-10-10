@@ -11,6 +11,7 @@ interface Props {
   onOpenMissions?: () => void;
   onOpenSettings?: () => void;
   onOpenAdmin?: () => void;
+  onOpenVip?: () => void;
   onOpenMedals?: () => void;
   isOwner?: boolean;
 }
@@ -21,6 +22,7 @@ export default function ServicesSection({
   onOpenMissions,
   onOpenSettings,
   onOpenAdmin,
+  onOpenVip,
   onOpenMedals,
   isOwner,
 }: Props) {
@@ -44,7 +46,7 @@ export default function ServicesSection({
       icon: Crown,
       gradient: "from-purple-700/40 to-purple-900/40",
       border: "border-purple-500/30",
-      onClick: () => soon("VIP"),
+      onClick: onOpenVip ?? (() => soon("VIP")),
     },
   ];
 

@@ -6,6 +6,7 @@ import { ChevronLeft, Loader2, Users, Heart, Eye, Home } from "lucide-react";
 import ServicesSection from "./ServicesSection";
 import WalletSheet from "./WalletSheet";
 import ShopSheet from "./ShopSheet";
+import VipShopSheet from "./VipShopSheet";
 import ProfilePage from "./ProfilePage";
 import AdminPanelSheet from "./AdminPanelSheet";
 import MedalsSheet from "./MedalsSheet";
@@ -27,6 +28,7 @@ export default function MeTab({ onEnterRoom }: Props) {
   const [showShop, setShowShop] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
   const [showMedals, setShowMedals] = useState(false);
+  const [showVip, setShowVip] = useState(false);
 
   if (!me) {
     return (
@@ -96,6 +98,7 @@ export default function MeTab({ onEnterRoom }: Props) {
           onOpenWallet={() => setShowWallet(true)}
           onOpenStore={() => setShowShop(true)}
           onOpenMedals={() => setShowMedals(true)}
+          onOpenVip={() => setShowVip(true)}
           isOwner={me.userNumber === 1 || me.adminRole === "super"}
           onOpenAdmin={() => setShowAdmin(true)}
         />
@@ -108,6 +111,7 @@ export default function MeTab({ onEnterRoom }: Props) {
       {showShop && <ShopSheet onClose={() => setShowShop(false)} />}
       {showAdmin && <AdminPanelSheet onClose={() => setShowAdmin(false)} />}
       {showMedals && <MedalsSheet onClose={() => setShowMedals(false)} />}
+      {showVip && <VipShopSheet onClose={() => setShowVip(false)} />}
     </>
   );
 }
