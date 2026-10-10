@@ -73,12 +73,15 @@ async function autoDetectSlices(url: string): Promise<{
           }
 
           const peak = Math.max(...varArr);
-          const threshold = Math.max(20, peak * 0.25);
+          const threshold = Math.max(15, peak * 0.35);
 
           for (let i = 3; i < varArr.length; i++) {
-            if (varArr[i] < threshold) return i;
+            if (varArr[i] < threshold) {
+              // Cap at 20% of dimension — decorations are rarely bigger
+              return Math.min(i, Math.floor(len * 0.2));
+            }
           }
-          return Math.floor(len * 0.2);
+          return Math.floor(len * 0.15);
         };
 
         resolve({
@@ -215,12 +218,13 @@ export default function BubbleSlicer({ token }: Props) {
     borderImageSlice: `${form.sliceTop} ${form.sliceRight} ${form.sliceBottom} ${form.sliceLeft} fill`,
     borderImageRepeat: "stretch",
     color: "#fff",
-    padding: "2px 4px",
     display: "inline-block",
-    maxWidth: 280,
-    minWidth: 80,
+    maxWidth: 260,
+    minWidth: 60,
     wordBreak: "break-word",
-    fontSize: 13,
+    fontSize: 12,
+    lineHeight: 1.4,
+    direction: "rtl",
   } : {};
 
   return (
@@ -286,7 +290,7 @@ export default function BubbleSlicer({ token }: Props) {
             <span className="text-white/40 text-[10px] flex items-center gap-1">
               <Percent size={10} /> نسب:
             </span>
-            {[0.1, 0.15, 0.2, 0.25, 0.3].map((p) => (
+            {[0.05, 0.08, 0.1, 0.12, 0.15].map((p) => (
               <button
                 key={p}
                 onClick={() => applyPreset(p)}
@@ -327,7 +331,7 @@ export default function BubbleSlicer({ token }: Props) {
               </span>
             </div>
             <input
-              type="range" min={0} max={300} value={form[k]}
+              type="range" min={0} max={100} value={form[k]}
               onChange={(e) => setForm({ ...form, [k]: parseInt(e.target.value) })}
               className="w-full accent-cyan-400"
             />
@@ -338,10 +342,11 @@ export default function BubbleSlicer({ token }: Props) {
         {form.imageUrl && (
           <div className="rounded-xl bg-black/30 border border-white/10 p-3">
             <p className="text-white/50 text-[10px] mb-2">معاينة حية</p>
-            <div className="flex flex-col gap-3 items-start">
-              <div style={previewStyle}>مرحباً!</div>
-              <div style={previewStyle}>رسالة متوسطة الطول لاختبار التمدد.</div>
-              <div style={previewStyle}>هذه رسالة طويلة جداً لاختبار كيف تتمدد الفقاعة تلقائياً بحسب طول النص المكتوب بدون تشويه للأركان أو الزخارف الجانبية.</div>
+            <div className="flex flex-col gap-3 items-start w-full">
+              <div style={previewStyle} dir="rtl">مرحباً</div>
+              <div style={previewStyle} dir="rtl">كيف حالك اليوم؟</div>
+              <div style={previewStyle} dir="rtl">هذه رسالة طويلة نوعاً ما لاختبار التمدد التلقائي للنص داخل الفقاعة.</div>
+              <div style={previewStyle} dir="rtl">وهذه رسالة أطول بكثير لنتأكد أن الفقاعة تتمدد بشكل جميل مع النصوص الطويلة جداً بدون تشويه للأركان الذهبية أو الزخارف الجانبية المهمة.</div>
             </div>
           </div>
         )}
