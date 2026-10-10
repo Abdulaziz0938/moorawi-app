@@ -4,6 +4,7 @@ import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { Home, Compass, Image as ImageIcon, MessageCircle, User as UserIcon } from "lucide-react";
 import { getActiveToken } from "../lib/session";
+import IconOrImage from "./IconOrImage";
 import RoomList from "./RoomList";
 import MeTab from "./MeTab";
 
@@ -19,12 +20,12 @@ export default function Dashboard({ onEnterRoom }: Props) {
   const me = useQuery(api.auth.me, { tokenOverride: token });
 
   // ============ Tabs (RTL: الأيمن أولاً) ============
-  const tabs: { key: Tab; label: string; icon: any; badge?: number }[] = [
-    { key: "rooms",     label: "الغرف",   icon: Home },
-    { key: "discover",  label: "اكتشاف", icon: Compass },
-    { key: "moments",   label: "لحظات",  icon: ImageIcon },
-    { key: "messages",  label: "رسائل",  icon: MessageCircle, badge: 0 },
-    { key: "me",        label: "أنا",     icon: UserIcon },
+  const tabs: { key: Tab; label: string; icon: any; assetKey: string; badge?: number }[] = [
+    { key: "rooms",     label: "الغرف",   icon: Home,           assetKey: "ui.nav.home" },
+    { key: "discover",  label: "اكتشاف", icon: Compass,        assetKey: "ui.nav.discover" },
+    { key: "moments",   label: "لحظات",  icon: ImageIcon,      assetKey: "ui.nav.moments" },
+    { key: "messages",  label: "رسائل",  icon: MessageCircle,  assetKey: "ui.nav.messages", badge: 0 },
+    { key: "me",        label: "أنا",     icon: UserIcon,       assetKey: "ui.nav.me" },
   ];
 
   return (
@@ -82,7 +83,7 @@ export default function Dashboard({ onEnterRoom }: Props) {
                 onClick={() => setTab(t.key)}
                 className={`relative flex-1 flex flex-col items-center justify-center gap-1 py-2.5 transition ${active ? "text-white" : "text-white/45 hover:text-white/70"}`}
               >
-                <Icon size={22} strokeWidth={active ? 2.5 : 2} />
+                <IconOrImage assetKey={t.assetKey} Icon={Icon} size={22} strokeWidth={active ? 2.5 : 2} />
                 <span className={`text-[10px] font-bold ${active ? "text-white" : ""}`}>{t.label}</span>
                 {active && (
                   <span className="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-0.5 rounded-full bg-gradient-to-r from-pink-500 to-purple-500" />

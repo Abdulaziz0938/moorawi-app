@@ -13,6 +13,7 @@ import { uploadToCloudinary } from "../lib/cloudinary";
 import SettingsSheet from "./SettingsSheet";
 import GiftSheet from "./GiftSheet";
 import CompactChatInput from "./CompactChatInput";
+import IconOrImage from "./IconOrImage";
 import LeaderboardSheet from "./LeaderboardSheet";
 import MiniProfileSheet from "./MiniProfileSheet";
 import RoomInfoSheet from "./RoomInfoSheet";
@@ -913,14 +914,14 @@ export default function RoomView({ roomId, onLeave }: Props) {
         )}
 
         <footer className="border-t border-white/10 px-2 py-1.5 flex items-center justify-around flex-shrink-0 backdrop-blur-md bg-black/40">
-          <button onClick={() => setShowChatInput((v) => !v)} className={`p-2 rounded-full text-white ${showChatInput ? "bg-purple-600" : "hover:bg-white/10"}`}><MessageCircle size={20} /></button>
+          <button onClick={() => setShowChatInput((v) => !v)} className={`p-2 rounded-full text-white ${showChatInput ? "bg-purple-600" : "hover:bg-white/10"}`}><IconOrImage assetKey="ui.room.chat" Icon={MessageCircle} size={20} /></button>
           {isOnMic && (
             <button onClick={handleToggleMute} className={`p-2 rounded-full transition ${isMuted ? "bg-yellow-600" : "hover:bg-white/10"} text-white`}>
-              {isMuted ? <MicOff size={20} /> : <Mic size={20} />}
+              {isMuted ? <MicOff size={20} /> : <IconOrImage assetKey="ui.room.mic" Icon={Mic} size={20} />}
             </button>
           )}
-          <button onClick={() => setShowSettings(true)} className="p-2 rounded-full hover:bg-white/10 text-white"><Grid2x2 size={20} /></button>
-          <button onClick={() => setShowGifts(true)} className="p-2 rounded-full hover:bg-white/10 text-white"><Gift size={20} /></button>
+          <button onClick={() => setShowSettings(true)} className="p-2 rounded-full hover:bg-white/10 text-white"><IconOrImage assetKey="ui.room.grid" Icon={Grid2x2} size={20} /></button>
+          <button onClick={() => setShowGifts(true)} className="p-2 rounded-full hover:bg-white/10 text-white"><IconOrImage assetKey="ui.room.gift" Icon={Gift} size={20} /></button>
         </footer>
       </div>
 
