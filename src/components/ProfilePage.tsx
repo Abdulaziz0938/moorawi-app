@@ -503,7 +503,6 @@ export default function ProfilePage({
           />
         </div>
       )}
-    </div>
 
       {/* [moorawi-cropper] مقصّ الصورة */}
       {pendingFile && (
@@ -515,6 +514,7 @@ export default function ProfilePage({
           onConfirm={handleCroppedConfirm}
         />
       )}
+    </div>
   );
 }
 
