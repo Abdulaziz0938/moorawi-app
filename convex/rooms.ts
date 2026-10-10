@@ -20,6 +20,20 @@ async function getNextRoomNumber(ctx: any): Promise<number> {
   return current;
 }
 
+const DEFAULT_STAFF_PERMISSIONS = {
+  roomImage: true,
+  roomName: true,
+  announcement: true,
+  welcomeMessage: true,
+  staffSettings: true,
+  blacklist: true,
+  micManagement: true,
+  roomBackground: false,
+  roomLock: false,
+  agencyMode: false,
+  screenClear: false,
+};
+
 export const listPublic = query({
   args: {},
   handler: async (ctx) => {
@@ -85,6 +99,7 @@ export const create = mutation({
       name, description: args.description?.trim() || undefined, ownerId: user._id,
       isPrivate: args.isPrivate, micCount: 20, memberCount: 1,
       roomNumber,
+      staffPermissions: DEFAULT_STAFF_PERMISSIONS,
     });
     await ctx.db.insert("roomMembers", { roomId, userId: user._id, role: "owner" });
     for (let i = 0; i < 20; i++) await ctx.db.insert("micSeats", { roomId, seatIndex: i, locked: false, muted: false });
@@ -204,5 +219,50 @@ export const weeklyTotal = query({
     else if (millions >= 1) tier = 1;
 
     return { total, tier, cycleKey: current };
+  },
+});
+
+// [moorawi-staff] Get staff permissions for a room (owner/mod only)
+export const getStaffPermissions = query({
+  args: { roomId: v.id("rooms") },
+  handler: async (ctx, args) => {
+    const room = await ctx.db.get("rooms", args.roomId);
+    if (!room) return null;
+    return room.staffPermissions ?? {
+      roomImage: true, roomName: true, announcement: true, welcomeMessage: true,
+      staffSettings: true, blacklist: true, micManagement: true,
+      roomBackground: false, roomLock: false, agencyMode: false, screenClear: false,
+    };
+  },
+});
+
+// [moorawi-staff] Update staff permissions (owner only)
+export const updateStaffPermissions = mutation({
+  args: {
+    roomId: v.id("rooms"),
+    permissions: v.object({
+      roomImage: v.boolean(),
+      roomName: v.boolean(),
+      announcement: v.boolean(),
+      welcomeMessage: v.boolean(),
+      staffSettings: v.boolean(),
+      blacklist: v.boolean(),
+      micManagement: v.boolean(),
+      roomBackground: v.boolean(),
+      roomLock: v.boolean(),
+      agencyMode: v.boolean(),
+      screenClear: v.boolean(),
+    }),
+    tokenOverride: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx, args.tokenOverride);
+    const room = await ctx.db.get("rooms", args.roomId);
+    if (!room) throw new ConvexError({ code: "NOT_FOUND", message: "الغرفة غير موجودة" });
+    if (room.ownerId !== user._id) {
+      throw new ConvexError({ code: "FORBIDDEN", message: "للمالك فقط" });
+    }
+    await ctx.db.patch("rooms", args.roomId, { staffPermissions: args.permissions });
+    return { ok: true };
   },
 });

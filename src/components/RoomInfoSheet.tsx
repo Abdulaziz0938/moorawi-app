@@ -4,6 +4,7 @@ import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { getActiveToken } from "../lib/session";
 import { dialog } from "../lib/dialog";
+import StaffSettingsSheet from "./StaffSettingsSheet";
 import {
   X, ChevronLeft, Loader2, Home, Shield, User as UserIcon,
   Bell, Eye, Heart, Gift, Award, Settings, Crown,
@@ -27,6 +28,7 @@ export default function RoomInfoSheet({ roomId, onClose, onUserClick, onOpenStaf
   const room = useQuery(api.rooms.get, { roomId });
   const members = useQuery(api.rooms.members, { roomId });
   const me = useQuery(api.auth.me, { tokenOverride: token });
+  const [showStaff, setShowStaff] = useState(false);
 
   if (!room || members === undefined) {
     return (
@@ -97,7 +99,7 @@ export default function RoomInfoSheet({ roomId, onClose, onUserClick, onOpenStaf
               <button
                 onClick={() => {
                   if (onOpenStaffSettings) onOpenStaffSettings();
-                  else dialog.alert("إعدادات المشرفين — قريباً");
+                  else setShowStaff(true);
                 }}
                 className="rounded-2xl bg-gradient-to-r from-indigo-500/30 to-purple-500/30 border border-indigo-400/40 p-3 flex items-center justify-center gap-2 active:scale-95 transition"
               >
@@ -141,6 +143,11 @@ export default function RoomInfoSheet({ roomId, onClose, onUserClick, onOpenStaf
           <div className="h-4" />
         </div>
       </div>
+
+      {/* Staff Settings Sheet */}
+      {showStaff && (
+        <StaffSettingsSheet roomId={roomId} onClose={() => setShowStaff(false)} />
+      )}
     </div>
   );
 }

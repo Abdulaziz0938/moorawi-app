@@ -101,6 +101,20 @@ export default defineSchema({
     micRequestsEnabled: v.optional(v.boolean()),       // طلب المايك
     // [moorawi-room-id] Public room number (numeric ID)
     roomNumber: v.optional(v.number()),
+    // [moorawi-staff] Staff permissions (toggles)
+    staffPermissions: v.optional(v.object({
+      roomImage: v.boolean(),
+      roomName: v.boolean(),
+      announcement: v.boolean(),
+      welcomeMessage: v.boolean(),
+      staffSettings: v.boolean(),
+      blacklist: v.boolean(),
+      micManagement: v.boolean(),
+      roomBackground: v.boolean(),
+      roomLock: v.boolean(),
+      agencyMode: v.boolean(),
+      screenClear: v.boolean(),
+    })),
     // [moorawi-trophy] Room Trophy (weekly coins spent)
     weeklyTotal: v.optional(v.number()),
     weeklyCycleKey: v.optional(v.string()),           // e.g. "2026-W42"
