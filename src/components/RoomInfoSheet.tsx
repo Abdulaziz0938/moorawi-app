@@ -154,7 +154,7 @@ export default function RoomInfoSheet({ roomId, onClose, onUserClick, onOpenStaf
                   <div className="text-center py-2">
                     <p className="text-emerald-300 text-xs font-black">✅ تم استلام مكافأة هذا الأسبوع</p>
                     <p className="text-white/50 text-[10px] mt-1">
-                      المستوى {rewardStatus.tier}M • {formatNumber(rewardStatus.claimRecord?.coinsAwarded ?? 0)} عملة
+                      المستوى {rewardStatus.claimRecord?.tier ?? 0}M • {formatNumber(rewardStatus.claimRecord?.coinsAwarded ?? 0)} عملة
                     </p>
                   </div>
                 ) : (
