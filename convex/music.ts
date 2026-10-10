@@ -98,12 +98,24 @@ export const currentForRoom = query({
       startedByName = u?.name ?? "—";
     }
 
+    // حساب الموضع الحالي بالثواني (للمزامنة عند الدخول)
+    let positionSec = 0;
+    if (room.currentMusicStartedAt) {
+      if (room.currentMusicIsPaused && room.currentMusicPausedAt != null) {
+        positionSec = room.currentMusicPausedAt;
+      } else {
+        positionSec = Math.floor((Date.now() - room.currentMusicStartedAt) / 1000);
+      }
+    }
+
     return {
       musicId: room.currentMusicId ?? null,
       name: room.currentMusicName ?? "",
       url: room.currentMusicUrl,
       startedByName,
       startedAt: room.currentMusicStartedAt ?? 0,
+      positionSec,
+      isPaused: room.currentMusicIsPaused ?? false,
     };
   },
 });
@@ -140,6 +152,8 @@ export const playForRoom = mutation({
       currentMusicName: track.name,
       currentMusicStartedBy: me._id,
       currentMusicStartedAt: Date.now(),
+      currentMusicIsPaused: false,
+      currentMusicPausedAt: undefined,
     });
     return { ok: true };
   },
@@ -170,6 +184,64 @@ export const stopRoom = mutation({
       currentMusicName: undefined,
       currentMusicStartedBy: undefined,
       currentMusicStartedAt: undefined,
+      currentMusicIsPaused: undefined,
+      currentMusicPausedAt: undefined,
+    });
+    return { ok: true };
+  },
+});
+
+// Pause the current track (records current position)
+export const pauseRoom = mutation({
+  args: {
+    roomId: v.id("rooms"),
+    positionSec: v.number(),
+    tokenOverride: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
+    const room = await ctx.db.get("rooms", args.roomId);
+    if (!room) throw new Error("الغرفة غير موجودة");
+
+    const isStarter = room.currentMusicStartedBy === me._id;
+    const isOwner = room.ownerId === me._id;
+    const isAdmin = me.adminRole === "super" || me.userNumber === 1;
+    if (!isStarter && !isOwner && !isAdmin) {
+      throw new Error("لا يمكنك إيقاف موسيقى شخص آخر");
+    }
+
+    await ctx.db.patch("rooms", args.roomId, {
+      currentMusicIsPaused: true,
+      currentMusicPausedAt: Math.floor(args.positionSec),
+    });
+    return { ok: true };
+  },
+});
+
+// Resume from paused position
+export const resumeRoom = mutation({
+  args: {
+    roomId: v.id("rooms"),
+    tokenOverride: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
+    const room = await ctx.db.get("rooms", args.roomId);
+    if (!room || !room.currentMusicUrl) throw new Error("لا يوجد مقطع");
+
+    const isStarter = room.currentMusicStartedBy === me._id;
+    const isOwner = room.ownerId === me._id;
+    const isAdmin = me.adminRole === "super" || me.userNumber === 1;
+    if (!isStarter && !isOwner && !isAdmin) {
+      throw new Error("لا يمكنك التحكم بموسيقى شخص آخر");
+    }
+
+    // إعادة ضبط startedAt بحيث يكون الموضع الحالي = pausedAt
+    const pausedAt = room.currentMusicPausedAt ?? 0;
+    await ctx.db.patch("rooms", args.roomId, {
+      currentMusicIsPaused: false,
+      currentMusicPausedAt: undefined,
+      currentMusicStartedAt: Date.now() - pausedAt * 1000,
     });
     return { ok: true };
   },
