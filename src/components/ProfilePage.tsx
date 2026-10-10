@@ -13,6 +13,7 @@ import {
 import { UserName } from "./UserBadges";
 import LevelBadge from "./LevelBadge";
 import MedalsRow from "./MedalsRow";
+import ImageCropper from "./ImageCropper";
 import { levelFromValue } from "../lib/levels";
 
 interface Props {
@@ -60,6 +61,7 @@ export default function ProfilePage({
   const assets = useAssets();
   const [newName, setNewName] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [showAvatarMenu, setShowAvatarMenu] = useState(false);
   const [showImagePreview, setShowImagePreview] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -90,11 +92,18 @@ export default function ProfilePage({
   const medals = (profile as any).medals ?? [];
   const room = (profile as any).room;
 
-  const handleAvatarUpload = async (file: File) => {
+  // [moorawi-cropper] بدل الرفع المباشر — نفتح المقصّ أولاً
+  const handleAvatarUpload = (file: File) => {
     if (!isMe) return;
+    setPendingFile(file);
+  };
+
+  // بعد القصّ — نرفع الملف المقصوص فقط
+  const handleCroppedConfirm = async (croppedFile: File) => {
+    setPendingFile(null);
     setUploading(true);
     try {
-      const result = await uploadToCloudinary(file);
+      const result = await uploadToCloudinary(croppedFile);
       await saveAvatar({ avatarUrl: result.url, tokenOverride: deviceId });
       dialog.alert("تم تحديث الصورة");
     } catch (e: any) {
@@ -185,11 +194,11 @@ export default function ProfilePage({
               onClick={handleAvatarClick}
               className="w-32 h-32 rounded-full overflow-hidden bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white text-4xl font-black ring-4 ring-white/30 shadow-2xl active:scale-95 transition-transform"
             >
-              {profile?.avatarUrl ? (
-                <img src={profile.avatarUrl} alt="" className="w-full h-full object-cover" />
-              ) : (
-                <span>{(profile.name?.[0] ?? "?") || "?"}</span>
-              )}
+              <img
+                src={profile?.avatarUrl || "/avatar.png"}
+                alt=""
+                className="w-full h-full object-cover"
+              />
             </button>
             {isMe && (
               <div className="absolute bottom-1 right-1 w-7 h-7 rounded-full bg-black/60 backdrop-blur-xl border border-white/30 flex items-center justify-center pointer-events-none">
@@ -495,6 +504,17 @@ export default function ProfilePage({
         </div>
       )}
     </div>
+
+      {/* [moorawi-cropper] مقصّ الصورة */}
+      {pendingFile && (
+        <ImageCropper
+          file={pendingFile}
+          aspect={1}
+          shape="circle"
+          onCancel={() => setPendingFile(null)}
+          onConfirm={handleCroppedConfirm}
+        />
+      )}
   );
 }
 
@@ -526,5 +546,6 @@ function AssetCategory({ label, count, tone }: { label: string; count: number; t
       </div>
       <p className={`text-xs font-black ${toneMap.text}`}>0</p>
     </div>
+
   );
 }
