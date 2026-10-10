@@ -508,7 +508,6 @@ export default function RoomView({ roomId, onLeave }: Props) {
   // [moorawi-mics] Release mic seat when user closes app
     useEffect(() => {
     const cleanup = () => {
-      clearMyMic({ tokenOverride: deviceId }).catch(() => {});
     };
     window.addEventListener("beforeunload", cleanup);
     return () => {
