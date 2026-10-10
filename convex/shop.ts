@@ -309,3 +309,56 @@ export const unequipItem = mutation({
     return { ok: true };
   },
 });
+
+// ============================================================
+// [moorawi-shop] updateItem — admin can edit name/image/price
+// ============================================================
+export const updateItem = mutation({
+  args: {
+    itemId: v.id("shopItems"),
+    name: v.optional(v.string()),
+    nameEn: v.optional(v.string()),
+    imageUrl: v.optional(v.string()),
+    previewUrl: v.optional(v.string()),
+    price: v.optional(v.number()),
+    active: v.optional(v.boolean()),
+    tokenOverride: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
+    if (me.adminRole !== "super" && me.userNumber !== 1) {
+      throw new ConvexError({ code: "FORBIDDEN", message: "صلاحيات المالك مطلوبة" });
+    }
+    const item = await ctx.db.get("shopItems", args.itemId);
+    if (!item) throw new ConvexError({ code: "NOT_FOUND", message: "المنتج غير موجود" });
+
+    const patch: any = {};
+    if (args.name !== undefined) {
+      const t = args.name.trim();
+      if (t.length < 1) throw new ConvexError({ code: "BAD_NAME", message: "اسم فارغ" });
+      patch.name = t;
+    }
+    if (args.nameEn !== undefined) patch.nameEn = args.nameEn;
+    if (args.imageUrl !== undefined) patch.imageUrl = args.imageUrl;
+    if (args.previewUrl !== undefined) patch.previewUrl = args.previewUrl;
+    if (args.price !== undefined) patch.price = args.price;
+    if (args.active !== undefined) patch.active = args.active;
+
+    if (Object.keys(patch).length > 0) {
+      await ctx.db.patch("shopItems", args.itemId, patch);
+    }
+    return { ok: true };
+  },
+});
+
+// All items for admin panel
+export const listAllAdmin = query({
+  args: { tokenOverride: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
+    if (me.adminRole !== "super" && me.userNumber !== 1) {
+      throw new ConvexError({ code: "FORBIDDEN", message: "صلاحيات المالك مطلوبة" });
+    }
+    return await ctx.db.query("shopItems").collect();
+  },
+});
