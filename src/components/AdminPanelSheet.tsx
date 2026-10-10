@@ -6,8 +6,10 @@ import { dialog } from "../lib/dialog";
 import {
   X, Loader2, Search, Coins, Gem, Ban, ShieldCheck, Crown,
   Users, Home, ShoppingBag, TrendingUp, Plus, Save, ChevronLeft,
-  UserCheck, UserX,
+  UserCheck, UserX, Image as ImageIcon, Upload, RotateCcw,
 } from "lucide-react";
+import { uploadToCloudinary } from "../lib/cloudinary";
+import { useAssets } from "../lib/assets";
 
 interface Props {
   onClose: () => void;
@@ -29,6 +31,7 @@ export default function AdminPanelSheet({ onClose }: Props) {
   const [editUser, setEditUser] = useState<any | null>(null);
   const [editField, setEditField] = useState({ coins: "", diamonds: "", vip: "" });
   const [busy, setBusy] = useState(false);
+  const [showAssets, setShowAssets] = useState(false);
   const [grantAmount, setGrantAmount] = useState("10000");
 
   const usersData = useQuery(api.adminPanel.listUsers, {
@@ -153,8 +156,10 @@ export default function AdminPanelSheet({ onClose }: Props) {
         {/* ===== Content ===== */}
         <div className="flex-1 overflow-y-auto">
 
-          {/* ============ EDIT USER ============ */}
-          {editUser ? (
+          {/* ============ ASSETS ============ */}
+          {showAssets ? (
+            <AssetsPanel token={token} />
+          ) : editUser ? (
             <div className="p-4 space-y-4">
               {/* User info */}
               <div className="rounded-2xl bg-white/5 border border-white/10 p-4 flex items-center gap-3">
@@ -350,6 +355,145 @@ export default function AdminPanelSheet({ onClose }: Props) {
             </>
           )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ============ Assets Panel ============
+const ASSET_ITEMS: { key: string; label: string; fallback: string }[] = [
+  ...Array.from({ length: 7 }, (_, i) => ({
+    key: `vip.pvip.${i + 1}`,
+    label: `شارة VIP ${i + 1} (صغيرة)`,
+    fallback: `/vip/pvip${i + 1}.png`,
+  })),
+  ...Array.from({ length: 7 }, (_, i) => ({
+    key: `vip.banner.${i + 1}`,
+    label: `لافتة VIP ${i + 1}`,
+    fallback: `/vip/vip${i + 1}.png`,
+  })),
+  { key: "admin.super", label: "شارة المالك", fallback: "/badges/badge-super.png" },
+  { key: "admin.moderator", label: "شارة المشرف", fallback: "/badges/badge-admin.png" },
+];
+
+function AssetsPanel({ token }: { token: string | null }) {
+  const assets = useAssets(); // Context — real-time, no extra query
+  const setAsset = useMutation(api.assets.set);
+  const clearAsset = useMutation(api.assets.clear);
+  const [busyKey, setBusyKey] = useState<string | null>(null);
+
+  const handleFile = (key: string, file: File) => {
+    dialog.confirm(
+      `رفع صورة جديدة لـ "${key}"؟`,
+      async () => {
+        setBusyKey(key);
+        try {
+          const res = await uploadToCloudinary(file, "image");
+          await setAsset({ key, imageUrl: res.url, tokenOverride: token ?? undefined });
+          dialog.alert("تم الرفع بنجاح");
+        } catch (e: any) {
+          dialog.alert(e?.message || "فشل الرفع");
+        } finally {
+          setBusyKey(null);
+        }
+      },
+      "رفع صورة",
+      "رفع"
+    );
+  };
+
+  const handleClear = (key: string) => {
+    dialog.confirm(
+      "إعادة الصورة الافتراضية؟ (سيتم حذف التخصيص)",
+      async () => {
+        setBusyKey(key);
+        try {
+          await clearAsset({ key, tokenOverride: token ?? undefined });
+        } catch (e: any) {
+          dialog.alert(e?.message || "فشل");
+        } finally {
+          setBusyKey(null);
+        }
+      },
+      "إعادة تعيين",
+      "إعادة"
+    );
+  };
+
+  const overridden = (key: string) => !!assets[key];
+
+  return (
+    <div className="p-4 space-y-4">
+      <p className="text-white/60 text-xs leading-relaxed">
+        ارفع صوراً مخصصة للأصول. الصورة الافتراضية تبقى كـ fallback.
+        التغييرات تظهر فوراً في كل التطبيق.
+      </p>
+
+      <div className="grid grid-cols-2 gap-3">
+        {ASSET_ITEMS.map((it) => {
+          const isCustom = overridden(it.key);
+          const src = assets[it.key] ?? it.fallback;
+          const isBusy = busyKey === it.key;
+          return (
+            <div
+              key={it.key}
+              className={`rounded-2xl border p-3 flex flex-col items-center gap-2 ${
+                isCustom
+                  ? "border-emerald-400/40 bg-emerald-500/5"
+                  : "border-white/10 bg-white/5"
+              }`}
+            >
+              <div className="w-full h-16 flex items-center justify-center bg-black/30 rounded-xl overflow-hidden">
+                {isBusy ? (
+                  <Loader2 size={18} className="animate-spin text-white/60" />
+                ) : (
+                  <img
+                    src={src}
+                    alt={it.label}
+                    className="max-h-full max-w-full object-contain"
+                    draggable={false}
+                  />
+                )}
+              </div>
+              <p className="text-white text-[10px] font-black text-center leading-tight">
+                {it.label}
+              </p>
+              <p className="text-white/40 text-[8px] font-mono" dir="ltr">
+                {it.key}
+              </p>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <label
+                  className={`px-2 py-1 rounded-lg text-white text-[10px] font-black cursor-pointer flex items-center gap-1 active:scale-95 transition ${
+                    isBusy ? "opacity-50 pointer-events-none" : ""
+                  } bg-blue-500/25 border border-blue-400/40`}
+                >
+                  <Upload size={10} />
+                  رفع
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) handleFile(it.key, f);
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
+                {isCustom && (
+                  <button
+                    onClick={() => handleClear(it.key)}
+                    disabled={isBusy}
+                    className="px-2 py-1 rounded-lg bg-red-500/25 border border-red-400/40 text-white text-[10px] font-black flex items-center gap-1 active:scale-95 transition disabled:opacity-50"
+                  >
+                    <RotateCcw size={10} />
+                    إعادة
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
