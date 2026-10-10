@@ -1,16 +1,33 @@
 {
-  "name": "الدولة المعراوية",
-  "short_name": "المعراوية",
-  "description": "غرف صوتية عربية — تعرف، شارك، والعب",
+  "name": "EZO GROUP — Voice Chat Rooms",
+  "short_name": "EZO GROUP",
+  "description": "دردشة صوتية وغرف وشات روم",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#0f0f1a",
+  "background_color": "#1a0b2e",
   "theme_color": "#a855f7",
   "lang": "ar",
   "dir": "rtl",
   "icons": [
-    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
-    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+    {
+      "src": "/icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ]
 }
