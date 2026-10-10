@@ -29,7 +29,10 @@ export const list = query({
       if (s.userId) mutedByUser.set(s.userId as string, !!s.muted);
     }
 
-    const enriched = await Promise.all(rows.map(async (m) => {
+    const room = await ctx.db.get("rooms", args.roomId);
+  const roomOwnerId = room?.ownerId ?? null;
+
+  const enriched = await Promise.all(rows.map(async (m) => {
       const sender = await ctx.db.get("users", m.senderId);
       const avatarUrl = sender?.avatarUrl ?? (sender?.avatarId ? await ctx.storage.getUrl(sender.avatarId) : null);
       const imageUrl = m.imageUrl ?? (m.imageId ? await ctx.storage.getUrl(m.imageId) : null);
@@ -45,7 +48,7 @@ export const list = query({
         senderWealthValue: sender?.totalSent ?? 0,
         senderAdminRole: sender?.adminRole ?? null,
         senderCharms: sender?.charms ?? 0,
-        senderRoomRole: roleByUser.get(m.senderId as string) ?? null,
+        senderRoomRole: m.senderId === roomOwnerId ? "owner" : (roleByUser.get(m.senderId as string) ?? null),
         senderMuted: mutedByUser.get(m.senderId as string) ?? null,
         avatarUrl,
         text: m.text ?? null,

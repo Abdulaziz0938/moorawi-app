@@ -504,6 +504,19 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const topMembers = members.slice(0, 3);
   const isOnMicRole = myInfo?.role === "speaker" || myInfo?.role === "owner" || myInfo?.role === "moderator";
   const isOwnerOrMod = myInfo?.role === "owner" || myInfo?.role === "moderator";
+
+  // [moorawi-mics] Release mic seat when user closes app
+  const clearMyMic = useMutation(api.mics.clearMyMic);
+  useEffect(() => {
+    const cleanup = () => {
+      clearMyMic({ tokenOverride: deviceId }).catch(() => {});
+    };
+    window.addEventListener("beforeunload", cleanup);
+    return () => {
+      cleanup();
+      window.removeEventListener("beforeunload", cleanup);
+    };
+  }, []);
   const roomAvatar = room.coverUrl || owner?.avatarUrl || null;
 
   const layout = room.micLayout || "m18";

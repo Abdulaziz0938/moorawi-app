@@ -527,3 +527,26 @@ export const listActivity = query({
   },
 });
 
+// ============================================================
+// [moorawi-mics] clearMyMic — client calls on unmount/beforeunload
+// to release the seat when user leaves the app abruptly
+// ============================================================
+export const clearMyMic = mutation({
+  args: { tokenOverride: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx, args.tokenOverride);
+    const seats = await ctx.db.query("micSeats").collect();
+    let cleared = 0;
+    for (const s of seats) {
+      if (s.userId === user._id) {
+        await ctx.db.patch("micSeats", s._id, {
+          userId: undefined,
+          muted: false,
+          adminMuted: false,
+        });
+        cleared += 1;
+      }
+    }
+    return { ok: true, cleared };
+  },
+});
