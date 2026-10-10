@@ -6,7 +6,7 @@ import Dashboard from "./components/Dashboard";
 import RoomView from "./components/RoomView";
 import Onboarding from "./components/Onboarding";
 import AuthScreen from "./components/AuthScreen";
-import { getActiveToken, hasSession } from "./lib/session";
+import { getActiveToken, hasSession, clearSession } from "./lib/session";
 import { Loader2 } from "lucide-react";
 
 function App() {
@@ -55,7 +55,14 @@ function App() {
   if (!me.profileComplete) {
     return (
       <div className="h-[100dvh] w-full overflow-y-auto app-bg" dir="rtl">
-        <Onboarding onComplete={() => setRefreshKey((k) => k + 1)} />
+        <Onboarding
+            onComplete={() => setRefreshKey((k) => k + 1)}
+            onBackToAuth={() => {
+              clearSession();
+              setShowAuth(true);
+              setRefreshKey((k) => k + 1);
+            }}
+          />
       </div>
     );
   }

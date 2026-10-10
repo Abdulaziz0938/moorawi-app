@@ -8,11 +8,12 @@ import { Camera, Check, Loader2, ChevronLeft } from "lucide-react";
 
 interface Props {
   onComplete: () => void;
+  onBackToAuth?: () => void;
 }
 
 type Gender = "male" | "female" | "other";
 
-export default function Onboarding({ onComplete }: Props) {
+export default function Onboarding({ onComplete, onBackToAuth }: Props) {
   const deviceId = getDeviceId();
   const options = useQuery(api.profiles.getOptions);
     const saveAvatar = useMutation(api.profiles.saveAvatar);
@@ -89,6 +90,18 @@ export default function Onboarding({ onComplete }: Props) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-700 via-purple-800 to-purple-900 text-white p-6" dir="rtl">
+      {/* زر "لدي حساب بالفعل" — يعود لصفحة تسجيل الدخول */}
+      {onBackToAuth && (
+        <div className="max-w-md mx-auto mb-4 pt-4">
+          <button
+            onClick={onBackToAuth}
+            className="w-full py-2 rounded-xl bg-white/10 border border-white/20 text-white text-xs font-bold hover:bg-white/20 active:scale-95 transition flex items-center justify-center gap-2"
+          >
+            لدي حساب بالفعل — تسجيل الدخول
+          </button>
+        </div>
+      )}
+
       {/* Progress bar */}
       <div className="max-w-md mx-auto mb-8 pt-4">
         <div className="flex items-center justify-between mb-2">
