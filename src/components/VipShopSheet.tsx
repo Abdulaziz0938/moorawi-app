@@ -1,43 +1,60 @@
-// [moorawi-vip] VIP Shop — 7 tiers, coin purchase
-// Pattern mirrors ShopSheet. All visuals from DB (VIP_LEVELS) + /vip/*.png fallback.
+// [moorawi-vip] VIP Shop — Poppo-style page per level
+// Structure: tabs (7 levels) → banner → 9 asset slots → benefits table → buy footer
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { getActiveToken } from "../lib/session";
 import { dialog } from "../lib/dialog";
 import {
-  X, Crown, Coins, Loader2, Clock, Shield, Sparkles, Eye,
+  X, Crown, Coins, Loader2, Clock, Sparkles, Lock,
+  Gift, Star, Eye, Heart, Percent, TrendingUp, MessageCircle,
+  Zap, ShoppingBag, Wand2, Award, Ban, Ghost, IdCard, Share2,
+  Megaphone, ShieldOff, BadgeCheck, Users, Mic, UserCircle,
+  Car, Home, AudioLines, MicVocal, Bell, Music, Palette,
+  LayoutGrid, Check,
 } from "lucide-react";
 
 interface Props {
   onClose: () => void;
 }
 
-const BENEFITS: { icon: any; text: string }[] = [
-  { icon: Crown,    text: "شارة VIP بجانب الاسم في كل مكان" },
-  { icon: Sparkles, text: "إطار بروفايل مخصص لكل مستوى" },
-  { icon: Eye,      text: "ظهور مميز في قائمة الأعضاء" },
-  { icon: Shield,   text: "حماية إضافية داخل الغرف" },
+// Icon name → lucide component (only those used in seedBenefits)
+const ICONS: Record<string, any> = {
+  Gift, Star, Coins, Eye, Heart, Percent, TrendingUp, MessageCircle,
+  Zap, ShoppingBag, Wand2, Award, Ban, Ghost, IdCard, Share2,
+  Megaphone, ShieldOff, BadgeCheck, Users, Mic, UserCircle,
+  Car, Home, AudioLines, MicVocal, Bell, Music, Palette, LayoutGrid,
+};
+
+// 9 asset slot keys per level (order matters for grid 3x3)
+const VIP_SLOTS: { key: string; label: string }[] = [
+  { key: "logo",     label: "الشعار" },
+  { key: "medal",    label: "الميدالية" },
+  { key: "frame",    label: "الإطار" },
+  { key: "halo",     label: "الهالة" },
+  { key: "card",     label: "البطاقة" },
+  { key: "nickname", label: "الاسم" },
+  { key: "entry",    label: "الدخول" },
+  { key: "wave",     label: "الموجة" },
+  { key: "bubble",   label: "الفقاعات" },
 ];
 
 function formatNum(n: number): string {
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(2) + "M";
-  if (n >= 1_000) return (n / 1_000).toFixed(2) + "K";
+  if (n >= 1_000) return (n / 1_000).toFixed(0) + "K";
   return n.toString();
 }
 
 function formatDate(ts: number): string {
   const d = new Date(ts);
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}/${m}/${day}`;
+  return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, "0")}/${String(d.getDate()).padStart(2, "0")}`;
 }
 
 export default function VipShopSheet({ onClose }: Props) {
   const token = getActiveToken();
   const data = useQuery(api.vip.myVip, { tokenOverride: token });
+  const allBenefits = useQuery(api.vip.getAllBenefits);
   const balance = useQuery(api.wallet.balance, { tokenOverride: token });
   const buyVip = useMutation(api.vip.buyVip);
 
@@ -49,17 +66,33 @@ export default function VipShopSheet({ onClose }: Props) {
   const active = data?.active ?? false;
   const coins = balance?.coins ?? 0;
 
+  const plan = plans.find((p) => p.level === selected);
+
+  // Benefits indexed by level
+  const benefitsByLevel = useMemo(() => {
+    const map: Record<number, any[]> = { 1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [] };
+    for (const b of allBenefits ?? []) {
+      if (!map[b.level]) map[b.level] = [];
+      map[b.level].push(b);
+    }
+    return map;
+  }, [allBenefits]);
+
+  const selectedBenefits = benefitsByLevel[selected] ?? [];
+
   const handleBuy = () => {
-    const plan = plans.find((p) => p.level === selected);
     if (!plan) return;
-    if (coins < plan.priceCoins) {
-      dialog.alert(
-        `تحتاج ${plan.priceCoins.toLocaleString()} عملة — رصيدك ${coins.toLocaleString()}`
-      );
+    if (plan.exclusive) {
+      dialog.alert("هذا المستوى حصري — يُحصل عليه عبر الشحن التركي");
+      return;
+    }
+    const price = plan.priceCoins ?? 0;
+    if (coins < price) {
+      dialog.alert(`تحتاج ${price.toLocaleString()} عملة — رصيدك ${coins.toLocaleString()}`);
       return;
     }
     dialog.confirm(
-      `شراء ${plan.name} بمبلغ ${plan.priceCoins.toLocaleString()} عملة؟`,
+      `شراء ${plan.name} بمبلغ ${price.toLocaleString()} عملة؟`,
       async () => {
         setBusy(true);
         try {
@@ -76,18 +109,17 @@ export default function VipShopSheet({ onClose }: Props) {
     );
   };
 
-  const plan = plans.find((p) => p.level === selected);
-  const owned = plan ? selected <= currentLevel && active : false;
-  const isUpgrade = plan ? selected > currentLevel && active : false;
+  const owned = selected <= currentLevel && active;
+  const isUpgrade = selected > currentLevel && active;
 
   return (
     <div
-      className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm flex items-end justify-center"
+      className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-end justify-center"
       dir="rtl"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md bg-gradient-to-b from-slate-900 to-black rounded-t-3xl h-[90dvh] flex flex-col overflow-hidden"
+        className="w-full max-w-md bg-gradient-to-b from-slate-900 to-black rounded-t-3xl h-[92dvh] flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* ===== Header ===== */}
@@ -114,132 +146,178 @@ export default function VipShopSheet({ onClose }: Props) {
           </div>
         </div>
 
-        {/* ===== Active status bar ===== */}
-        {active && (
-          <div className="mx-4 mt-3 rounded-2xl border border-amber-400/40 bg-gradient-to-r from-amber-500/15 to-purple-500/15 p-3 flex items-center justify-between flex-shrink-0">
-            <div className="flex items-center gap-2">
-              <img
-                src={`/vip/pvip${currentLevel}.png`}
-                alt={`VIP ${currentLevel}`}
-                className="w-9 h-9 object-contain"
-                draggable={false}
-              />
-              <div>
-                <p className="text-amber-200 text-sm font-black">
-                  VIP {currentLevel} نشط
-                </p>
-                <p className="text-white/50 text-[10px] flex items-center gap-1">
-                  <Clock size={10} />
-                  ينتهي {data?.expiresAt ? formatDate(data.expiresAt) : "-"}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ===== Tabs ===== */}
+        {/* ===== Level tabs ===== */}
         <div
-          className="mt-3 px-4 flex gap-2 overflow-x-auto flex-shrink-0 pb-2"
+          className="flex gap-1 px-4 pt-3 pb-2 overflow-x-auto flex-shrink-0"
           style={{ scrollbarWidth: "none" }}
         >
-          {plans.map((p) => {
-            const isSel = p.level === selected;
-            const isOwned = p.level === currentLevel && active;
+          {[7, 6, 5, 4, 3, 2, 1].map((lvl) => {
+            const p = plans.find((x) => x.level === lvl);
+            const isSel = lvl === selected;
+            const isOwned = lvl <= currentLevel && active;
             return (
               <button
-                key={p.level}
-                onClick={() => setSelected(p.level)}
-                className={`flex-shrink-0 px-3 py-2 rounded-xl border transition active:scale-95 ${
+                key={lvl}
+                onClick={() => setSelected(lvl)}
+                className={`flex-shrink-0 px-3 py-1.5 rounded-full border transition active:scale-95 text-xs font-black ${
                   isSel
-                    ? "bg-amber-500/20 border-amber-400/60"
-                    : "bg-white/5 border-white/10"
+                    ? "bg-white/15 border-white/40 text-white"
+                    : "bg-white/5 border-white/10 text-white/60"
                 }`}
               >
-                <span
-                  className={`text-xs font-black ${
-                    isSel ? "text-amber-200" : "text-white/70"
-                  }`}
-                >
-                  VIP {p.level}
-                </span>
-                {isOwned && (
-                  <span className="mr-1 text-[8px] text-amber-300">●</span>
-                )}
+                VIP {lvl}
+                {isOwned && <span className="mr-1 text-[8px] text-amber-300">●</span>}
               </button>
             );
           })}
         </div>
 
         {/* ===== Content ===== */}
-        <div className="flex-1 overflow-y-auto px-4 pb-6">
+        <div className="flex-1 overflow-y-auto">
           {plan && (
-            <div className="space-y-4">
-              {/* Big banner */}
-              <div className="flex flex-col items-center py-4">
-                <img
-                  src={plan.imageUrl || `/vip/vip${plan.level}.png`}
-                  alt={plan.name}
-                  className="w-52 h-auto object-contain drop-shadow-2xl"
-                  draggable={false}
-                />
-              </div>
-
-              {/* Price + duration */}
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-white/60 text-xs">المدة</span>
-                  <span className="text-white text-sm font-black">30 يوم</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-white/60 text-xs">السعر</span>
-                  <div className="flex items-center gap-1.5">
-                    <Coins size={14} className="text-amber-300" />
-                    <span
-                      className="text-amber-200 text-sm font-black tabular-nums"
-                      dir="ltr"
+            <>
+              {/* ===== Banner ===== */}
+              <div
+                className="mx-4 mt-2 rounded-2xl border overflow-hidden relative flex-shrink-0"
+                style={{
+                  borderColor: plan.color + "80",
+                  background: `linear-gradient(135deg, ${plan.color}30 0%, ${plan.accent}15 50%, transparent 100%)`,
+                }}
+              >
+                <div className="aspect-[16/9] flex items-center justify-center relative">
+                  {/* الشعار (لو مرفوع) */}
+                  {(() => {
+                    const slot = VIP_SLOTS[0];
+                    const key = `vip.${slot.key}.${plan.level}`;
+                    return (
+                      <img
+                        key={key}
+                        src={`https://quixotic-squid-253.convex.cloud/api/storage/none`}
+                        alt=""
+                        className="hidden"
+                      />
+                    );
+                  })()}
+                  {/* مؤقتاً: نعرض اسم المستوى بشكل كبير */}
+                  <div className="flex flex-col items-center gap-2">
+                    <div
+                      className="w-24 h-24 rounded-2xl flex items-center justify-center"
+                      style={{ background: `${plan.color}40` }}
                     >
-                      {plan.priceCoins.toLocaleString()}
-                    </span>
+                      <Crown size={56} style={{ color: plan.accent }} strokeWidth={1.2} />
+                    </div>
+                    <p className="text-white text-3xl font-black tracking-wider">
+                      {plan.name}
+                    </p>
+                    {plan.exclusive && (
+                      <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-black/40 border border-amber-400/40 text-amber-200 text-[10px] font-black">
+                        <Lock size={10} />
+                        حصري للشحن التركي
+                      </span>
+                    )}
                   </div>
                 </div>
+                <div className="py-2 text-center text-white/70 text-xs">
+                  ✦ <span className="text-amber-200 font-black">
+                    {selectedBenefits.length} امتيازاً
+                  </span> ✦
+                </div>
               </div>
 
-              {/* Benefits */}
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-3">
-                <p className="text-white text-sm font-black">المزايا</p>
-                {BENEFITS.map((b, i) => {
-                  const Icon = b.icon;
+              {/* ===== 9 asset slots (3x3) ===== */}
+              <div className="mx-4 mt-3 grid grid-cols-3 gap-2">
+                {VIP_SLOTS.map((slot) => {
+                  const key = `vip.${slot.key}.${plan.level}`;
                   return (
-                    <div key={i} className="flex items-center gap-2.5">
-                      <div className="w-7 h-7 rounded-full bg-amber-500/15 border border-amber-400/30 flex items-center justify-center flex-shrink-0">
-                        <Icon size={13} className="text-amber-300" />
-                      </div>
-                      <span className="text-white/80 text-xs">{b.text}</span>
+                    <div
+                      key={slot.key}
+                      className="aspect-square rounded-xl border border-white/10 bg-white/5 flex flex-col items-center justify-center gap-1"
+                      style={{ borderColor: plan.color + "40" }}
+                    >
+                      <Sparkles size={22} style={{ color: plan.accent, opacity: 0.5 }} />
+                      <span className="text-white/60 text-[9px]">{slot.label}</span>
                     </div>
                   );
                 })}
               </div>
 
-              {/* Buy button */}
-              <button
-                onClick={handleBuy}
-                disabled={busy}
-                className="w-full rounded-2xl bg-gradient-to-r from-amber-500 to-purple-600 py-3.5 text-white font-black text-sm flex items-center justify-center gap-2 active:scale-95 transition disabled:opacity-60"
-              >
-                {busy ? (
-                  <Loader2 size={16} className="animate-spin" />
-                ) : (
-                  <Crown size={16} fill="currentColor" />
-                )}
-                {owned
-                  ? "تمديد 30 يوم"
-                  : isUpgrade
-                  ? `ترقية إلى VIP ${plan.level}`
-                  : "شراء"}
-              </button>
-            </div>
+              {/* ===== Benefits ===== */}
+              <div className="mx-4 mt-4 pb-4">
+                <p className="text-center text-white text-sm font-black mb-3">
+                  ✦ امتيازات VIP ✦
+                </p>
+                <div className="rounded-2xl border border-white/10 bg-white/5 divide-y divide-white/5">
+                  {selectedBenefits.length === 0 ? (
+                    <div className="p-6 text-center text-white/40 text-xs">
+                      لا توجد امتيازات بعد
+                    </div>
+                  ) : (
+                    selectedBenefits.map((b) => {
+                      const Icon = ICONS[b.icon] ?? Sparkles;
+                      return (
+                        <div key={b._id} className="flex items-center gap-3 px-4 py-3">
+                          <div
+                            className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                            style={{ background: plan.color + "30" }}
+                          >
+                            <Icon size={14} style={{ color: plan.accent }} />
+                          </div>
+                          <span className="text-white/85 text-sm">{b.textAr}</span>
+                          <Check size={14} className="text-emerald-400 mr-auto" />
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            </>
           )}
         </div>
+
+        {/* ===== Footer (buy) ===== */}
+        {plan && (
+          <div className="flex-shrink-0 border-t border-white/10 px-4 py-3 flex items-center gap-3 bg-black/60 backdrop-blur">
+            <div className="flex flex-col items-start gap-0.5">
+              {plan.exclusive ? (
+                <span className="text-amber-300 text-sm font-black">حصري</span>
+              ) : (
+                <div className="flex items-center gap-1.5">
+                  <Coins size={16} className="text-amber-300" />
+                  <span className="text-amber-200 text-lg font-black tabular-nums" dir="ltr">
+                    {(plan.priceCoins ?? 0).toLocaleString()}
+                  </span>
+                </div>
+              )}
+              <span className="text-white/50 text-[10px] flex items-center gap-1">
+                <Clock size={10} /> 30 يوماً
+              </span>
+            </div>
+            <button
+              onClick={handleBuy}
+              disabled={busy || plan.exclusive}
+              className="flex-1 rounded-xl py-3 text-white font-black text-sm flex items-center justify-center gap-2 active:scale-95 transition disabled:opacity-50"
+              style={{
+                background: plan.exclusive
+                  ? "linear-gradient(90deg, #4b5563, #6b7280)"
+                  : `linear-gradient(90deg, ${plan.color}, ${plan.accent})`,
+              }}
+            >
+              {busy ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : plan.exclusive ? (
+                <>
+                  <Lock size={16} />
+                  الشحن التركي
+                </>
+              ) : (
+                <>
+                  <Crown size={16} fill="currentColor" />
+                  {owned ? "تمديد 30 يوم" : isUpgrade ? `ترقية لـ VIP ${plan.level}` : "اشترِ الآن"}
+                </>
+              )}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
