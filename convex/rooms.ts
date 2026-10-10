@@ -2,6 +2,7 @@ import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { getMember, requireUser } from "./lib/auth";
 import { vipLevelFromTotalSent, vipLevelFromTotalReceived } from "./lib/vip";
+import { weekKey } from "./lib/week";
 
 export const listPublic = query({
   args: {},
@@ -171,7 +172,6 @@ export const weeklyTotal = query({
     if (!room) return { total: 0, tier: 0, cycleKey: "" };
 
     // Lazy reset — if stored cycleKey is old, current week total = 0
-    const { weekKey } = await import("./lib/week");
     const current = weekKey();
     if (room.weeklyCycleKey !== current) {
       return { total: 0, tier: 0, cycleKey: current };
