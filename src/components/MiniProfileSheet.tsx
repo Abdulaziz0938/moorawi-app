@@ -213,7 +213,7 @@ export default function MiniProfileSheet({
             )}
             {vipLevel > 0 && (
               <div className="badge-glow">
-                <img src={resolveAsset(assets, `vip.banner.${vipLevel}`, `/vip/vip${vipLevel}.png`)} alt={`VIP ${vipLevel}`} className="h-6 w-auto object-contain" draggable={false} />
+                <img src={assets[`vip.logo.${vipLevel}`] ?? ""} alt={`VIP ${vipLevel}`} className="h-6 w-auto object-contain" draggable={false} />
               </div>
             )}
           </div>

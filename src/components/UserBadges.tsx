@@ -30,7 +30,8 @@ const SIZES: Record<Size, {
 export function PvipBadge({ level, size = 20 }: { level: number; size?: number }) {
   const assets = useAssets();
   if (!level || level < 1 || level > 7) return null;
-  const src = resolveAsset(assets, `vip.pvip.${level}`, `/vip/pvip${level}.png`);
+  const src = assets[`vip.medal.${level}`];
+  if (!src) return null;
   return (
     <img
       src={src}
@@ -46,7 +47,8 @@ export function PvipBadge({ level, size = 20 }: { level: number; size?: number }
 export function VipBanner({ level, width = 60 }: { level: number; width?: number }) {
   const assets = useAssets();
   if (!level || level < 1 || level > 7) return null;
-  const src = resolveAsset(assets, `vip.banner.${level}`, `/vip/vip${level}.png`);
+  const src = assets[`vip.logo.${level}`];
+  if (!src) return null;
   return (
     <img
       src={src}

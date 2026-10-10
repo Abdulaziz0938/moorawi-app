@@ -164,7 +164,7 @@ function PodiumSlot({
           )}
           {user.vip > 0 && (
             <img
-              src={resolveAsset(assets, `vip.banner.${user.vip}`, `/vip/vip${user.vip}.png`)}
+              src={assets[`vip.logo.${user.vip}`] ?? ""}
               alt=""
               className="h-4 w-auto object-contain badge-glow"
               draggable={false}
