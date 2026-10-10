@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { getActiveToken } from "../lib/session";
@@ -7,7 +7,7 @@ import { dialog } from "../lib/dialog";
 import StaffSettingsSheet from "./StaffSettingsSheet";
 import {
   X, ChevronLeft, Loader2, Home, Shield, User as UserIcon,
-  Bell, Eye, Heart, Gift, Award, Settings, Crown,
+  Bell, Eye, Heart, Gift, Award, Settings, Crown, Trophy,
 } from "lucide-react";
 
 interface Props {
@@ -28,6 +28,9 @@ export default function RoomInfoSheet({ roomId, onClose, onUserClick, onOpenStaf
   const room = useQuery(api.rooms.get, { roomId });
   const members = useQuery(api.rooms.members, { roomId });
   const me = useQuery(api.auth.me, { tokenOverride: token });
+  const rewardStatus = useQuery(api.rewards.getWeeklyRewardStatus, { roomId });
+  const claimReward = useMutation(api.rewards.claimWeeklyReward);
+  const [claiming, setClaiming] = useState(false);
   const [showStaff, setShowStaff] = useState(false);
 
   if (!room || members === undefined) {
@@ -44,6 +47,19 @@ export default function RoomInfoSheet({ roomId, onClose, onUserClick, onOpenStaf
   const owner = members.find((m: any) => m.role === "owner");
   const mods = members.filter((m: any) => m.role === "moderator");
   const isOwnerOrMod = me && (owner?.userId === me._id || mods.some((m: any) => m.userId === me._id));
+  const isOwner = me && owner?.userId === me._id;
+
+  const handleClaimReward = async () => {
+    setClaiming(true);
+    try {
+      const res = await claimReward({ roomId, tokenOverride: token });
+      dialog.alert(`تم استلام ${res.coinsAwarded.toLocaleString()} عملة + VIP${res.vipLevel} × ${res.vipCount} أعضاء`);
+    } catch (e: any) {
+      dialog.alert(e?.message || "فشل الاستلام");
+    } finally {
+      setClaiming(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-[100] flex items-end justify-center" dir="rtl" onClick={onClose}>
@@ -115,6 +131,63 @@ export default function RoomInfoSheet({ roomId, onClose, onUserClick, onOpenStaf
               <span className="text-white text-xs font-black">إشعار</span>
             </button>
           </div>
+
+          {/* [moorawi-trophy] Reward Card (owner only) */}
+          {isOwner && rewardStatus && (
+            <div className="mx-4 mb-4">
+              <div className="rounded-2xl bg-gradient-to-r from-amber-500/20 via-yellow-500/20 to-amber-500/20 border border-amber-400/40 p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <Trophy size={18} className="text-amber-300" />
+                    <p className="text-white text-xs font-black">مكافأة الأسبوع</p>
+                  </div>
+                  <span className="text-amber-200 text-[10px] font-black tabular-nums" dir="ltr">
+                    {formatNumber(rewardStatus.total)} 🪙
+                  </span>
+                </div>
+
+                {rewardStatus.tier === 0 ? (
+                  <p className="text-white/60 text-[10px] text-center py-2">
+                    اجمع 1M على الأقل هذا الأسبوع للحصول على مكافأة
+                  </p>
+                ) : rewardStatus.claimed ? (
+                  <div className="text-center py-2">
+                    <p className="text-emerald-300 text-xs font-black">✅ تم استلام مكافأة هذا الأسبوع</p>
+                    <p className="text-white/50 text-[10px] mt-1">
+                      المستوى {rewardStatus.tier}M • {formatNumber(rewardStatus.claimRecord?.coinsAwarded ?? 0)} عملة
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-around text-center py-2 border-t border-white/10">
+                      <div>
+                        <p className="text-white text-sm font-black tabular-nums" dir="ltr">
+                          {formatNumber(rewardStatus.rewardInfo?.coins ?? 0)}
+                        </p>
+                        <p className="text-white/50 text-[9px]">عملة</p>
+                      </div>
+                      <div>
+                        <p className="text-white text-sm font-black">VIP{rewardStatus.rewardInfo?.vip}</p>
+                        <p className="text-white/50 text-[9px]">المستوى</p>
+                      </div>
+                      <div>
+                        <p className="text-white text-sm font-black">{rewardStatus.rewardInfo?.vipCount}</p>
+                        <p className="text-white/50 text-[9px]">أعضاء</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={handleClaimReward}
+                      disabled={claiming}
+                      className="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-600 text-white text-xs font-black shadow-lg active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 mt-2"
+                    >
+                      {claiming ? <Loader2 size={14} className="animate-spin" /> : <Trophy size={14} />}
+                      استلام مكافأة {rewardStatus.tier}M
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Staff List */}
           <div className="px-4 pb-4">

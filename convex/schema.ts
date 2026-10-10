@@ -80,6 +80,21 @@ export default defineSchema({
     .index("by_username", ["username"])
     .index("by_totalReceived", ["totalReceived"]),
 
+  // [moorawi-trophy] Weekly reward claims log
+  roomWeeklyRewards: defineTable({
+    roomId: v.id("rooms"),
+    ownerId: v.id("users"),
+    cycleKey: v.string(),         // e.g. "2026-W42"
+    tier: v.number(),             // 1, 3, 6 (million)
+    coinsAwarded: v.number(),
+    vipLevel: v.number(),         // VIP level granted to members
+    vipCount: v.number(),         // how many members can get VIP
+    vipClaimedBy: v.optional(v.array(v.id("users"))),  // members who claimed
+    claimedAt: v.number(),
+  })
+    .index("by_room_and_cycle", ["roomId", "cycleKey"])
+    .index("by_owner", ["ownerId"]),
+
   counters: defineTable({
     name: v.string(),
     value: v.number(),

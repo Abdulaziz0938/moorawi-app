@@ -21,6 +21,7 @@ import type * as mics from "../mics.js";
 import type * as profileFull from "../profileFull.js";
 import type * as profiles from "../profiles.js";
 import type * as resetStats from "../resetStats.js";
+import type * as rewards from "../rewards.js";
 import type * as rooms from "../rooms.js";
 import type * as seedMedals from "../seedMedals.js";
 import type * as seedShop from "../seedShop.js";
@@ -51,6 +52,7 @@ declare const fullApi: ApiFromModules<{
   profileFull: typeof profileFull;
   profiles: typeof profiles;
   resetStats: typeof resetStats;
+  rewards: typeof rewards;
   rooms: typeof rooms;
   seedMedals: typeof seedMedals;
   seedShop: typeof seedShop;
