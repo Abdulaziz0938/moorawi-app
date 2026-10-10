@@ -1,4 +1,5 @@
-// [moorawi-bubbles] Chat bubble — reads admin bubbles from DB, smart-scales slices
+// [moorawi-bubbles] Chat bubble — Poppo-style 9-patch (fixed display values)
+// Key: border-image-WIDTH is CONSTANT (34px), only SLICE scales with source.
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { ReactNode } from "react";
@@ -9,10 +10,11 @@ interface Props {
   isOwn?: boolean;
 }
 
-// Target max bubble width on screen (px). Borders scale relative to this.
-const TARGET_MAX_WIDTH = 260;
-// Absolute cap on border thickness to avoid huge decorations on tiny images.
-const MAX_BORDER = 48;
+// Fixed display values — decorations always render at this thickness
+const BORDER = { top: 34, right: 36, bottom: 36, left: 32 };
+const PADDING = { top: 6, right: 12, bottom: 6, left: 12 };
+const MAX_WIDTH = 340;
+const MIN_CONTENT_WIDTH = 80;
 
 function fallbackClass(vip: number): string {
   if (vip <= 0) return "bg-white/5 border border-white/10";
@@ -36,53 +38,40 @@ export default function ChatBubble({ vip, children, isOwn }: Props) {
     (vip > 0 ? undefined : allBubbles?.find((b) => b.key === "bubble.default"));
 
   if (bubble) {
-    const {
-      imageUrl,
-      sliceTop, sliceRight, sliceBottom, sliceLeft,
-      imageWidth, imageHeight,
-    } = bubble as any;
-
-    // Determine image intrinsic size (fallback to reasonable default)
-    const imgW = imageWidth ?? 669;
-    const imgH = imageHeight ?? 373;
-
-    // Scale factor: how much smaller the display is vs the source image
-    const scale = Math.min(1, TARGET_MAX_WIDTH / imgW);
-
-    // Scaled border widths (clamped to MAX_BORDER)
-    const bTop = Math.min(MAX_BORDER, Math.round(sliceTop * scale));
-    const bRight = Math.min(MAX_BORDER, Math.round(sliceRight * scale));
-    const bBottom = Math.min(MAX_BORDER, Math.round(sliceBottom * scale));
-    const bLeft = Math.min(MAX_BORDER, Math.round(sliceLeft * scale));
-
-    // Minimum width so short messages still show decoration properly
-    const minW = bLeft + bRight + 32;
+    const { imageUrl, sliceTop, sliceRight, sliceBottom, sliceLeft } = bubble;
 
     return (
       <div
         style={{
-          borderStyle: "solid",
-          borderWidth: `${bTop}px ${bRight}px ${bBottom}px ${bLeft}px`,
+          // border-image-slice cuts the SOURCE at these positions
           borderImageSource: `url("${imageUrl}")`,
           borderImageSlice: `${sliceTop} ${sliceRight} ${sliceBottom} ${sliceLeft} fill`,
           borderImageRepeat: "stretch",
+          // borderImageWidth shows it at FIXED display size (independent of source)
+          borderImageWidth: `${BORDER.top}px ${BORDER.right}px ${BORDER.bottom}px ${BORDER.left}px`,
+          // borderWidth reserves this space in layout
+          borderStyle: "solid",
+          borderWidth: `${BORDER.top}px ${BORDER.right}px ${BORDER.bottom}px ${BORDER.left}px`,
           boxSizing: "border-box",
-          maxWidth: `${TARGET_MAX_WIDTH}px`,
-          minWidth: `${minW}px`,
+          maxWidth: `${MAX_WIDTH}px`,
+          minWidth: `${
+            BORDER.left + BORDER.right + MIN_CONTENT_WIDTH
+          }px`,
         }}
         className="w-fit mt-1"
       >
         <div
           style={{
+            padding: `${PADDING.top}px ${PADDING.right}px ${PADDING.bottom}px ${PADDING.left}px`,
             direction: "rtl",
             textAlign: "right",
             wordBreak: "normal",
-            overflowWrap: "anywhere",
+            overflowWrap: "break-word",
             whiteSpace: "pre-wrap",
-            lineHeight: 1.35,
-            padding: "2px 4px",
+            lineHeight: 1.45,
+            unicodeBidi: "embed",
           }}
-          className="text-white text-xs"
+          className="text-white text-xs font-medium"
         >
           {children}
         </div>
