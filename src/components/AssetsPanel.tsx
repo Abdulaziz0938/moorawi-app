@@ -63,6 +63,7 @@ const UI_SLOTS: { key: string; label: string }[] = [
   // Services (grid)
   { key: "ui.service.wallet",    label: "خدمات — محفظة" },
   { key: "ui.service.store",     label: "خدمات — متجر" },
+  { key: "ui.service.vip",       label: "خدمات — VIP" },
   { key: "ui.service.medals",    label: "خدمات — أوسمة" },
   { key: "ui.service.relation",  label: "خدمات — العلاقة" },
   { key: "ui.service.level",     label: "خدمات — مستوى" },

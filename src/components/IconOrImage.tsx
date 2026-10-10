@@ -1,5 +1,8 @@
 // [moorawi-ui] Unified icon renderer — shows uploaded image if present,
-// otherwise falls back to lucide icon. Keys map to AssetsPanel UI slots.
+// otherwise falls back to lucide icon.
+//
+// Uploaded images render LARGER than lucide icons by default
+// (imgSize defaults to size * 1.6) because real images need breathing room.
 
 import { useAssets } from "../lib/assets";
 
@@ -7,6 +10,7 @@ interface Props {
   assetKey: string;
   Icon: any;
   size?: number;
+  imgSize?: number;
   className?: string;
   imgClassName?: string;
   fill?: string;
@@ -17,6 +21,7 @@ export default function IconOrImage({
   assetKey,
   Icon,
   size = 26,
+  imgSize,
   className = "",
   imgClassName = "",
   fill,
@@ -25,12 +30,13 @@ export default function IconOrImage({
   const assets = useAssets();
   const src = assets[assetKey];
   if (src) {
+    const s = imgSize ?? Math.round(size * 1.6);
     return (
       <img
         src={src}
         alt=""
         draggable={false}
-        style={{ width: size, height: size }}
+        style={{ width: s, height: s }}
         className={`object-contain ${imgClassName}`}
       />
     );

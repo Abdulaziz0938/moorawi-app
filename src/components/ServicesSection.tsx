@@ -43,7 +43,7 @@ export default function ServicesSection({
     },
     {
       key: "vip",
-      assetKey: "ui.service.store",
+      assetKey: "ui.service.vip",
       label: "VIP",
       sub: "1 → 7",
       icon: Crown,
@@ -107,7 +107,7 @@ export default function ServicesSection({
               onClick={c.onClick}
               className={`relative overflow-hidden rounded-2xl border ${c.border} bg-gradient-to-br ${c.gradient} p-4 flex flex-col items-center gap-1 active:scale-95 transition`}
             >
-              <IconOrImage assetKey={c.assetKey} Icon={Icon} size={32} className="text-amber-200" fill="currentColor" strokeWidth={1.5} />
+              <IconOrImage assetKey={c.assetKey} Icon={Icon} size={32} imgSize={52} className="text-amber-200" fill="currentColor" strokeWidth={1.5} />
               <p className="text-white text-sm font-black">{c.label}</p>
               <p className="text-white/50 text-[10px]">{c.sub}</p>
             </button>
@@ -125,7 +125,7 @@ export default function ServicesSection({
               onClick={g.onClick}
               className="flex flex-col items-center gap-1.5 py-3 rounded-xl hover:bg-white/10 active:scale-95 transition"
             >
-              <IconOrImage assetKey={g.assetKey} Icon={Icon} size={26} className={g.color} strokeWidth={1.8} />
+              <IconOrImage assetKey={g.assetKey} Icon={Icon} size={26} imgSize={44} className={g.color} strokeWidth={1.8} />
               <span className="text-white text-[11px] font-bold">{g.label}</span>
             </button>
           );
@@ -146,7 +146,7 @@ export default function ServicesSection({
             >
               <div className="flex items-center gap-3">
                 <div className={`w-8 h-8 rounded-full bg-white/10 flex items-center justify-center ${it.color}`}>
-                  <IconOrImage assetKey={it.assetKey} Icon={Icon} size={16} strokeWidth={2} />
+                  <IconOrImage assetKey={it.assetKey} Icon={Icon} size={16} imgSize={26} strokeWidth={2} />
                 </div>
                 <span className="text-white text-sm font-bold">{it.label}</span>
               </div>
