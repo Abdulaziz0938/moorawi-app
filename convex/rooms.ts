@@ -267,3 +267,141 @@ export const updateStaffPermissions = mutation({
     return { ok: true };
   },
 });
+
+// ============================================================
+// [moorawi-rooms] Discovery queries — Binmo-style rooms tab
+// ============================================================
+
+// Recently visited rooms (from roomMembers — rooms user joined)
+export const listRecent = query({
+  args: { tokenOverride: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
+
+    const memberships = await ctx.db
+      .query("roomMembers")
+      .withIndex("by_user", (q: any) => q.eq("userId", me._id))
+      .order("desc")
+      .take(30);
+
+    // Dedupe by roomId
+    const seen = new Set<string>();
+    const roomIds: any[] = [];
+    for (const m of memberships) {
+      const key = m.roomId as string;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      roomIds.push(m.roomId);
+      if (roomIds.length >= 20) break;
+    }
+
+    const rooms = [];
+    for (const rid of roomIds) {
+      const r = await ctx.db.get("rooms", rid);
+      if (!r || r.isPrivate) continue;
+      const owner = await ctx.db.get("users", r.ownerId);
+      const ownerAvatar = owner?.avatarUrl ?? (owner?.avatarId ? await ctx.storage.getUrl(owner.avatarId) : null);
+      rooms.push({
+        _id: r._id,
+        name: r.name,
+        coverUrl: r.coverUrl ?? null,
+        welcomeMessage: r.welcomeMessage ?? "",
+        memberCount: r.memberCount,
+        roomNumber: r.roomNumber ?? null,
+        ownerName: owner?.name ?? "—",
+        ownerAvatar,
+        ownerUserNumber: owner?.userNumber ?? null,
+      });
+    }
+    return rooms;
+  },
+});
+
+// Rooms of people I follow
+export const listFollowing = query({
+  args: { tokenOverride: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
+    // Get who I follow
+    const follows = await ctx.db
+      .query("follows")
+      .withIndex("by_follower", (q: any) => q.eq("followerId", me._id))
+      .take(200);
+
+    const followedIds = new Set(follows.map((f: any) => f.followingId as string));
+    if (followedIds.size === 0) return [];
+
+    // Get their rooms
+    const allRooms = await ctx.db.query("rooms").take(300);
+    const rooms = [];
+    for (const r of allRooms) {
+      if (!followedIds.has(r.ownerId as string)) continue;
+      const owner = await ctx.db.get("users", r.ownerId);
+      const ownerAvatar = owner?.avatarUrl ?? (owner?.avatarId ? await ctx.storage.getUrl(owner.avatarId) : null);
+      rooms.push({
+        _id: r._id,
+        name: r.name,
+        coverUrl: r.coverUrl ?? null,
+        welcomeMessage: r.welcomeMessage ?? "",
+        memberCount: r.memberCount,
+        roomNumber: r.roomNumber ?? null,
+        ownerName: owner?.name ?? "—",
+        ownerAvatar,
+        ownerUserNumber: owner?.userNumber ?? null,
+      });
+    }
+    return rooms;
+  },
+});
+
+// Trending — sorted by activity (weeklyTotal + memberCount)
+export const listTrending = query({
+  args: {},
+  handler: async (ctx) => {
+    const rooms = await ctx.db.query("rooms").take(100);
+    // Sort by memberCount desc
+    const sorted = rooms.sort((a, b) => (b.memberCount ?? 0) - (a.memberCount ?? 0));
+    const result = [];
+    for (const r of sorted.slice(0, 30)) {
+      const owner = await ctx.db.get("users", r.ownerId);
+      const ownerAvatar = owner?.avatarUrl ?? (owner?.avatarId ? await ctx.storage.getUrl(owner.avatarId) : null);
+      result.push({
+        _id: r._id,
+        name: r.name,
+        coverUrl: r.coverUrl ?? null,
+        welcomeMessage: r.welcomeMessage ?? "",
+        memberCount: r.memberCount,
+        roomNumber: r.roomNumber ?? null,
+        ownerName: owner?.name ?? "—",
+        ownerAvatar,
+        ownerUserNumber: owner?.userNumber ?? null,
+      });
+    }
+    return result;
+  },
+});
+
+// New — sorted by creation time desc
+export const listNew = query({
+  args: {},
+  handler: async (ctx) => {
+    const rooms = await ctx.db.query("rooms").order("desc").take(30);
+    const result = [];
+    for (const r of rooms) {
+      const owner = await ctx.db.get("users", r.ownerId);
+      const ownerAvatar = owner?.avatarUrl ?? (owner?.avatarId ? await ctx.storage.getUrl(owner.avatarId) : null);
+      result.push({
+        _id: r._id,
+        name: r.name,
+        coverUrl: r.coverUrl ?? null,
+        welcomeMessage: r.welcomeMessage ?? "",
+        memberCount: r.memberCount,
+        roomNumber: r.roomNumber ?? null,
+        ownerName: owner?.name ?? "—",
+        ownerAvatar,
+        ownerUserNumber: owner?.userNumber ?? null,
+      });
+    }
+    return result;
+  },
+});

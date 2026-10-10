@@ -5,7 +5,7 @@ import type { Id } from "../../convex/_generated/dataModel";
 import { Home, Compass, Image as ImageIcon, MessageCircle, User as UserIcon } from "lucide-react";
 import { getActiveToken } from "../lib/session";
 import IconOrImage from "./IconOrImage";
-import RoomList from "./RoomList";
+import RoomsTab from "./RoomsTab";
 import MeTab from "./MeTab";
 
 type Tab = "rooms" | "discover" | "moments" | "messages" | "me";
@@ -32,7 +32,7 @@ export default function Dashboard({ onEnterRoom }: Props) {
     <div className="h-[100dvh] w-full flex flex-col app-bg overflow-hidden" dir="rtl">
       {/* ============ Content ============ */}
       <div className="flex-1 overflow-y-auto pb-20">
-        {tab === "rooms" && <RoomList onEnter={onEnterRoom} />}
+        {tab === "rooms" && <RoomsTab onEnter={onEnterRoom} />}
 
         {tab === "discover" && (
           <div className="h-full flex flex-col items-center justify-center text-white/60 p-8">
