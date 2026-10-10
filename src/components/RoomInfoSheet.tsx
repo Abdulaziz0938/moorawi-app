@@ -144,9 +144,11 @@ export default function RoomInfoSheet({ roomId, onClose, onUserClick, onOpenStaf
         </div>
       </div>
 
-      {/* Staff Settings Sheet */}
+      {/* Staff Settings Sheet — wrapped to prevent closing parent */}
       {showStaff && (
-        <StaffSettingsSheet roomId={roomId} onClose={() => setShowStaff(false)} />
+        <div onClick={(e) => e.stopPropagation()}>
+          <StaffSettingsSheet roomId={roomId} onClose={() => setShowStaff(false)} />
+        </div>
       )}
     </div>
   );
