@@ -51,11 +51,7 @@ export default function MemberRow({
       <div className="relative flex-shrink-0" style={{ width: `${avatarSize}px`, height: `${avatarSize}px` }}>
         <div className="member-avatar-ring" style={{ width: `${avatarSize}px`, height: `${avatarSize}px` }}>
           <div className="member-avatar-inner" style={{ fontSize: `${avatarFontSize}px` }}>
-            {avatarUrl ? (
-              <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
-            ) : (
-              <span>{name[0] || "?"}</span>
-            )}
+            <img src={avatarUrl || "/avatar.png"} alt="" className="w-full h-full object-cover" draggable={false} />
           </div>
         </div>
         {onMic && (
