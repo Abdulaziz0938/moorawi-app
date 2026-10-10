@@ -217,6 +217,11 @@ export const updateShopItem = mutation({
   args: {
     tokenOverride: v.optional(v.string()),
     itemId: v.id("shopItems"),
+    // [moorawi-9patch] chat bubble slice
+    sliceTop: v.optional(v.number()),
+    sliceRight: v.optional(v.number()),
+    sliceBottom: v.optional(v.number()),
+    sliceLeft: v.optional(v.number()),
     imageUrl: v.optional(v.string()),
     previewUrl: v.optional(v.string()),
     price: v.optional(v.number()),
@@ -234,6 +239,11 @@ export const updateShopItem = mutation({
     if (args.price !== undefined) patch.price = args.price;
     if (args.active !== undefined) patch.active = args.active;
     if (args.isHot !== undefined) patch.isHot = args.isHot;
+    // [moorawi-9patch] chat bubble slices
+    if (args.sliceTop !== undefined) patch.sliceTop = args.sliceTop;
+    if (args.sliceRight !== undefined) patch.sliceRight = args.sliceRight;
+    if (args.sliceBottom !== undefined) patch.sliceBottom = args.sliceBottom;
+    if (args.sliceLeft !== undefined) patch.sliceLeft = args.sliceLeft;
 
     await ctx.db.patch("shopItems", args.itemId, patch);
 

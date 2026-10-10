@@ -42,6 +42,8 @@ export const set = mutation({
     sliceRight: v.number(),
     sliceBottom: v.number(),
     sliceLeft: v.number(),
+    imageWidth: v.optional(v.number()),
+    imageHeight: v.optional(v.number()),
     active: v.optional(v.boolean()),
     tokenOverride: v.optional(v.string()),
   },
@@ -61,6 +63,8 @@ export const set = mutation({
       sliceRight: Math.max(0, Math.floor(args.sliceRight)),
       sliceBottom: Math.max(0, Math.floor(args.sliceBottom)),
       sliceLeft: Math.max(0, Math.floor(args.sliceLeft)),
+      imageWidth: args.imageWidth ? Math.floor(args.imageWidth) : undefined,
+      imageHeight: args.imageHeight ? Math.floor(args.imageHeight) : undefined,
       active: args.active ?? true,
     };
 

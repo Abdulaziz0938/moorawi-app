@@ -1,4 +1,4 @@
-// [moorawi-bubbles] Chat bubble — reads admin bubbles from DB, falls back to VIP gradient
+// [moorawi-bubbles] Chat bubble — reads admin bubbles from DB, smart-scales slices
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { ReactNode } from "react";
@@ -8,6 +8,11 @@ interface Props {
   children: ReactNode;
   isOwn?: boolean;
 }
+
+// Target max bubble width on screen (px). Borders scale relative to this.
+const TARGET_MAX_WIDTH = 260;
+// Absolute cap on border thickness to avoid huge decorations on tiny images.
+const MAX_BORDER = 48;
 
 function fallbackClass(vip: number): string {
   if (vip <= 0) return "bg-white/5 border border-white/10";
@@ -31,32 +36,53 @@ export default function ChatBubble({ vip, children, isOwn }: Props) {
     (vip > 0 ? undefined : allBubbles?.find((b) => b.key === "bubble.default"));
 
   if (bubble) {
-    const { imageUrl, sliceTop, sliceRight, sliceBottom, sliceLeft } = bubble;
+    const {
+      imageUrl,
+      sliceTop, sliceRight, sliceBottom, sliceLeft,
+      imageWidth, imageHeight,
+    } = bubble as any;
+
+    // Determine image intrinsic size (fallback to reasonable default)
+    const imgW = imageWidth ?? 669;
+    const imgH = imageHeight ?? 373;
+
+    // Scale factor: how much smaller the display is vs the source image
+    const scale = Math.min(1, TARGET_MAX_WIDTH / imgW);
+
+    // Scaled border widths (clamped to MAX_BORDER)
+    const bTop = Math.min(MAX_BORDER, Math.round(sliceTop * scale));
+    const bRight = Math.min(MAX_BORDER, Math.round(sliceRight * scale));
+    const bBottom = Math.min(MAX_BORDER, Math.round(sliceBottom * scale));
+    const bLeft = Math.min(MAX_BORDER, Math.round(sliceLeft * scale));
+
+    // Minimum width so short messages still show decoration properly
+    const minW = bLeft + bRight + 32;
+
     return (
       <div
         style={{
           borderStyle: "solid",
-          borderWidth: `${sliceTop}px ${sliceRight}px ${sliceBottom}px ${sliceLeft}px`,
+          borderWidth: `${bTop}px ${bRight}px ${bBottom}px ${bLeft}px`,
           borderImageSource: `url("${imageUrl}")`,
           borderImageSlice: `${sliceTop} ${sliceRight} ${sliceBottom} ${sliceLeft} fill`,
           borderImageRepeat: "stretch",
-          color: "#fff",
-          wordBreak: "break-word",
-          // Inner padding compensation — with border-image, content sits inside the border box
-          // We add a small safety inset so text doesn't touch decoration edges
-          direction: "rtl",
+          boxSizing: "border-box",
+          maxWidth: `${TARGET_MAX_WIDTH}px`,
+          minWidth: `${minW}px`,
         }}
-        className="w-fit max-w-[85%] mt-1"
+        className="w-fit mt-1"
       >
         <div
-          className="text-white text-xs whitespace-pre-wrap"
           style={{
-            // Negative-margin trick: extend content box slightly into the border
-            // so long text fills the middle comfortably without hugging decoration
-            margin: "-2px 0",
-            padding: "0 2px",
+            direction: "rtl",
+            textAlign: "right",
+            wordBreak: "normal",
+            overflowWrap: "anywhere",
+            whiteSpace: "pre-wrap",
             lineHeight: 1.35,
+            padding: "2px 4px",
           }}
+          className="text-white text-xs"
         >
           {children}
         </div>
@@ -65,9 +91,7 @@ export default function ChatBubble({ vip, children, isOwn }: Props) {
   }
 
   return (
-    <div
-      className={`w-fit max-w-[85%] mt-1 px-2.5 py-1.5 rounded-2xl rounded-tr-sm ${fallbackClass(vip)}`}
-    >
+    <div className={`w-fit max-w-[85%] mt-1 px-2.5 py-1.5 rounded-2xl rounded-tr-sm ${fallbackClass(vip)}`}>
       {children}
     </div>
   );

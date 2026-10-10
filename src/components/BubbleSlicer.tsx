@@ -190,6 +190,8 @@ export default function BubbleSlicer({ token }: Props) {
         imageUrl: form.imageUrl,
         sliceTop: form.sliceTop, sliceRight: form.sliceRight,
         sliceBottom: form.sliceBottom, sliceLeft: form.sliceLeft,
+        imageWidth: imgDims?.w,
+        imageHeight: imgDims?.h,
         active: true,
         tokenOverride: token ?? undefined,
       });

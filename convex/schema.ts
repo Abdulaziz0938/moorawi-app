@@ -316,6 +316,11 @@ export default defineSchema({
     isNew: v.optional(v.boolean()),
     active: v.boolean(),
     sortOrder: v.optional(v.number()),
+    // [moorawi-9patch] Chat bubble 9-slice insets (CSS border-image)
+    sliceTop: v.optional(v.number()),
+    sliceRight: v.optional(v.number()),
+    sliceBottom: v.optional(v.number()),
+    sliceLeft: v.optional(v.number()),
   })
     .index("by_category_active", ["category", "active"])
     .index("by_active", ["active"]),
@@ -569,6 +574,9 @@ export default defineSchema({
     sliceRight: v.number(),
     sliceBottom: v.number(),
     sliceLeft: v.number(),
+    // [moorawi-9patch] image natural dimensions for smart scaling
+    imageWidth: v.optional(v.number()),
+    imageHeight: v.optional(v.number()),
     active: v.boolean(),
   })
     .index("by_key", ["key"])
