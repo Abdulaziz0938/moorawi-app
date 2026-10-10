@@ -1,5 +1,4 @@
-// [moorawi-bubbles] Chat bubble — Poppo-style 9-patch (fixed display values)
-// Key: border-image-WIDTH is CONSTANT (34px), only SLICE scales with source.
+// [moorawi-bubbles] Chat bubble — 9-patch with proper border-image-width
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { ReactNode } from "react";
@@ -9,12 +8,6 @@ interface Props {
   children: ReactNode;
   isOwn?: boolean;
 }
-
-// Fixed display values — decorations always render at this thickness
-const BORDER = { top: 34, right: 36, bottom: 36, left: 32 };
-const PADDING = { top: 6, right: 12, bottom: 6, left: 12 };
-const MAX_WIDTH = 340;
-const MIN_CONTENT_WIDTH = 80;
 
 function fallbackClass(vip: number): string {
   if (vip <= 0) return "bg-white/5 border border-white/10";
@@ -40,41 +33,47 @@ export default function ChatBubble({ vip, children, isOwn }: Props) {
   if (bubble) {
     const { imageUrl, sliceTop, sliceRight, sliceBottom, sliceLeft } = bubble;
 
+    // Display borders at ~half the source slice (preserves decorations)
+    const scale = 0.5;
+    const bTop = Math.max(28, Math.min(64, Math.round(sliceTop * scale)));
+    const bRight = Math.max(28, Math.min(64, Math.round(sliceRight * scale)));
+    const bBottom = Math.max(28, Math.min(64, Math.round(sliceBottom * scale)));
+    const bLeft = Math.max(28, Math.min(64, Math.round(sliceLeft * scale)));
+
     return (
       <div
+        className="mt-1"
         style={{
-          // border-image-slice cuts the SOURCE at these positions
+          display: "inline-block",
+          borderStyle: "solid",
+          borderWidth: `${bTop}px ${bRight}px ${bBottom}px ${bLeft}px`,
           borderImageSource: `url("${imageUrl}")`,
           borderImageSlice: `${sliceTop} ${sliceRight} ${sliceBottom} ${sliceLeft} fill`,
+          borderImageWidth: `${bTop}px ${bRight}px ${bBottom}px ${bLeft}px`,
           borderImageRepeat: "stretch",
-          // borderImageWidth shows it at FIXED display size (independent of source)
-          borderImageWidth: `${BORDER.top}px ${BORDER.right}px ${BORDER.bottom}px ${BORDER.left}px`,
-          // borderWidth reserves this space in layout
-          borderStyle: "solid",
-          borderWidth: `${BORDER.top}px ${BORDER.right}px ${BORDER.bottom}px ${BORDER.left}px`,
           boxSizing: "border-box",
-          maxWidth: `${MAX_WIDTH}px`,
-          minWidth: `${
-            BORDER.left + BORDER.right + MIN_CONTENT_WIDTH
-          }px`,
+          maxWidth: "300px",
+          verticalAlign: "top",
         }}
-        className="w-fit mt-1"
       >
-        <div
+        <span
           style={{
-            padding: `${PADDING.top}px ${PADDING.right}px ${PADDING.bottom}px ${PADDING.left}px`,
+            display: "inline-block",
+            padding: "4px 8px",
+            color: "white",
+            fontSize: "12px",
+            lineHeight: 1.5,
             direction: "rtl",
             textAlign: "right",
-            wordBreak: "normal",
-            overflowWrap: "break-word",
+            wordBreak: "break-word",
+            overflowWrap: "anywhere",
             whiteSpace: "pre-wrap",
-            lineHeight: 1.45,
-            unicodeBidi: "embed",
+            textShadow: "0 1px 2px rgba(0,0,0,0.7)",
+            fontWeight: 500,
           }}
-          className="text-white text-xs font-medium"
         >
           {children}
-        </div>
+        </span>
       </div>
     );
   }
