@@ -7,6 +7,7 @@ import {
   Ban, Crown, Loader2, Shield, Award, ChevronLeft,
 } from "lucide-react";
 import { UserName } from "./UserBadges";
+import MedalsRow from "./MedalsRow";
 
 interface Props {
   userId: string;
@@ -89,7 +90,7 @@ export default function MiniProfileSheet({
   onInviteToMic,
   targetIsMod = false,
 }: Props) {
-  const profile = useQuery(api.profiles.getById, { userId: userId as Id<"users"> });
+  const profile = useQuery(api.profileFull.getFull, { userId: userId as Id<"users"> });
 
   if (profile === undefined) {
     return (
@@ -150,21 +151,26 @@ export default function MiniProfileSheet({
               {profile.avatarUrl ? (
                 <img src={profile.avatarUrl} alt="" className="w-full h-full object-cover" />
               ) : (
-                <span>{profile.name[0] || "?"}</span>
+                <span>{(profile.name?.[0] ?? "?") || "?"}</span>
               )}
             </button>
 
             <div className="flex items-center justify-center gap-1.5 mt-2">
               <UserName
-                name={profile.name}
-                vip={profile.vip}
-                charmValue={profile.charms}
-                wealthValue={profile.totalSent}
+                name={profile.name ?? "ضيف"}
+                vip={(profile as any).vip ?? 0}
+                charmValue={profile.totalReceived ?? 0}
+                wealthValue={profile.totalSent ?? 0}
                 adminRole={profile.adminRole}
                 roomRole={profile.userNumber === 1 ? "owner" : null}
                 size="md"
                 nameClassName="text-white"
               />
+              {(profile as any).medals && (profile as any).medals.length > 0 && (
+                <div className="mt-2 flex justify-center">
+                  <MedalsRow medals={(profile as any).medals} max={8} size="xs" />
+                </div>
+              )}
             </div>
 
             <div className="flex items-center gap-2 mt-1">

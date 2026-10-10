@@ -10,6 +10,7 @@ import {
   Crown, Loader2, Pencil, Camera, ShieldCheck, Eye, Trash2, ImageIcon, Sparkles, Gem,
 } from "lucide-react";
 import { UserName } from "./UserBadges";
+import MedalsRow from "./MedalsRow";
 
 interface Props {
   userId: string;
@@ -47,7 +48,7 @@ export default function ProfilePage({
   onOpenOwnerPanel,
 }: Props) {
   const deviceId = getDeviceId();
-  const profile = useQuery(api.profiles.getById, { userId: userId as Id<"users"> });
+  const profile = useQuery(api.profileFull.getFull, { userId: userId as Id<"users"> });
   const updateName = useMutation(api.users.updateName);
   const saveAvatar = useMutation(api.profiles.saveAvatar);
   const removeAvatar = useMutation(api.profiles.removeAvatar);
@@ -168,7 +169,7 @@ export default function ProfilePage({
               {profile.avatarUrl ? (
                 <img src={profile.avatarUrl} alt="" className="w-full h-full object-cover" />
               ) : (
-                <span>{profile.name[0] || "?"}</span>
+                <span>{(profile.name?.[0] ?? "?") || "?"}</span>
               )}
             </button>
             {/* Hidden integrated camera indicator (only visual hint) */}
@@ -187,7 +188,7 @@ export default function ProfilePage({
               <input
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
-                placeholder={profile.name}
+                placeholder={profile.name ?? ""}
                 className="flex-1 bg-white/15 backdrop-blur border border-white/25 rounded-xl px-3 py-2 text-white text-sm text-center outline-none focus:border-purple-400"
                 autoFocus
               />
@@ -201,18 +202,23 @@ export default function ProfilePage({
           ) : (
             <div className="flex items-center justify-center gap-2 flex-wrap">
               <UserName
-                name={profile.name}
-                vip={profile.vip}
-                charmValue={profile.charms}
-                wealthValue={profile.totalSent}
+                name={profile.name ?? "ضيف"}
+                vip={(profile as any).vip ?? 0}
+                charmValue={profile.totalReceived ?? 0}
+                wealthValue={profile.totalSent ?? 0}
                 adminRole={profile.adminRole}
                 roomRole={isOwner ? "owner" : null}
                 size="lg"
                 nameClassName="text-white text-xl drop-shadow"
               />
+              {(profile as any).medals && (profile as any).medals.length > 0 && (
+                <div className="mt-2 flex justify-center">
+                  <MedalsRow medals={(profile as any).medals} max={10} size="sm" />
+                </div>
+              )}
               {isMe && (
                 <button
-                  onClick={() => { setNewName(profile.name); setEditingName(true); }}
+                  onClick={() => { setNewName(profile.name ?? ""); setEditingName(true); }}
                   className="w-7 h-7 rounded-full bg-white/15 flex items-center justify-center text-white/80 hover:bg-white/25 flex-shrink-0"
                 >
                   <Pencil size={12} />
