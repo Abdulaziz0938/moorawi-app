@@ -4,6 +4,7 @@ import { api } from "../../convex/_generated/api";
 import { getDeviceId } from "../lib/device";
 import { getSessionUsername } from "../lib/session";
 import { uploadToCloudinary } from "../lib/cloudinary";
+import ImageCropper from "./ImageCropper";
 import { Camera, Check, Loader2, ChevronLeft } from "lucide-react";
 
 interface Props {
@@ -21,6 +22,7 @@ export default function Onboarding({ onComplete, onBackToAuth }: Props) {
 
   const [step, setStep] = useState(1);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [name, setName] = useState("");
   const sessionUsername = getSessionUsername();
   const [username, setUsername] = useState(sessionUsername ?? "");
@@ -41,13 +43,19 @@ export default function Onboarding({ onComplete, onBackToAuth }: Props) {
     username.length >= 3 && !isOwnUsername ? { username } : "skip" as any,
   );
 
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setPendingFile(file);
+    e.target.value = "";
+  };
+
+  const handleCroppedConfirm = async (croppedFile: File) => {
+    setPendingFile(null);
     setLoading(true);
     setError(null);
     try {
-      const result = await uploadToCloudinary(file, "image");
+      const result = await uploadToCloudinary(croppedFile, "image");
       const url = await saveAvatar({ avatarUrl: result.url, tokenOverride: deviceId });
       setAvatarPreview(url);
     } catch (e: any) {
@@ -324,6 +332,17 @@ export default function Onboarding({ onComplete, onBackToAuth }: Props) {
           </div>
         )}
       </div>
+
+      {/* [moorawi-cropper] مقصّ صورة البروفايل */}
+      {pendingFile && (
+        <ImageCropper
+          file={pendingFile}
+          aspect={1}
+          shape="circle"
+          onCancel={() => setPendingFile(null)}
+          onConfirm={handleCroppedConfirm}
+        />
+      )}
     </div>
   );
 }

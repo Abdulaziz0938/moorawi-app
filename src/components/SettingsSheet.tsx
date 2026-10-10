@@ -7,6 +7,7 @@ import { getDeviceId } from "../lib/device";
 import { uploadToCloudinary } from "../lib/cloudinary";
 import { dialog } from "../lib/dialog";
 import GiftAdminPanel from "./GiftAdminPanel";
+import ImageCropper from "./ImageCropper";
 import {
   X, Sparkles, Palette, LayoutGrid, Settings, Lock,
   Briefcase, Activity, Music, Coins, MessageCircle,
@@ -84,6 +85,8 @@ export default function SettingsSheet({
   const [name, setName] = useState(currentName);
   const [welcome, setWelcome] = useState(currentWelcome);
   const [coverUrl, setCoverUrl] = useState(currentCoverUrl);
+  const [pendingCover, setPendingCover] = useState<File | null>(null);
+  const [pendingBg, setPendingBg] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const coverFileRef = useRef<HTMLInputElement>(null);
@@ -94,20 +97,30 @@ export default function SettingsSheet({
     catch (e: any) { dialog.alert(e?.message || "خطأ"); }
   };
 
-  const handleCoverUpload = async (file: File) => {
+  const handleCoverUpload = (file: File) => {
+    setPendingCover(file);
+  };
+
+  const handleCroppedCoverConfirm = async (croppedFile: File) => {
+    setPendingCover(null);
     setUploading(true);
     try {
-      const result = await uploadToCloudinary(file, "image");
+      const result = await uploadToCloudinary(croppedFile, "image");
       await updateRoomInfo({ roomId, coverUrl: result.url, tokenOverride: deviceId });
       setCoverUrl(result.url);
     } catch (e: any) { dialog.alert(e?.message || "فشل"); }
     finally { setUploading(false); }
   };
 
-  const handleBackgroundUpload = async (file: File) => {
+  const handleBackgroundUpload = (file: File) => {
+    setPendingBg(file);
+  };
+
+  const handleCroppedBgConfirm = async (croppedFile: File) => {
+    setPendingBg(null);
     setUploading(true);
     try {
-      const result = await uploadToCloudinary(file, "image");
+      const result = await uploadToCloudinary(croppedFile, "image");
       await updateBackground({ roomId, backgroundUrl: result.url, tokenOverride: deviceId });
       dialog.alert("تم تغيير الخلفية");
     } catch (e: any) { dialog.alert(e?.message || "فشل"); }
@@ -323,6 +336,28 @@ export default function SettingsSheet({
           </div>
         )}
       </div>
+
+      {/* [moorawi-cropper] مقصّ صورة الغرفة (مربّع) */}
+      {pendingCover && (
+        <ImageCropper
+          file={pendingCover}
+          aspect={1}
+          shape="rect"
+          onCancel={() => setPendingCover(null)}
+          onConfirm={handleCroppedCoverConfirm}
+        />
+      )}
+
+      {/* [moorawi-cropper] مقصّ خلفية الغرفة (16:9) */}
+      {pendingBg && (
+        <ImageCropper
+          file={pendingBg}
+          aspect={16/9}
+          shape="rect"
+          onCancel={() => setPendingBg(null)}
+          onConfirm={handleCroppedBgConfirm}
+        />
+      )}
     </div>
   );
 }
