@@ -159,6 +159,7 @@ function bubbleClass(vip: number): string {
 export default function RoomView({ roomId, onLeave }: Props) {
   const deviceId = getDeviceId();
   const room = useQuery(api.rooms.get, { roomId });
+  const roomWeekly = useQuery(api.rooms.weeklyTotal, { roomId });
   const seats = useQuery(api.mics.state, { roomId });
   const members = useQuery(api.rooms.members, { roomId });
   const myInfo = useQuery(api.mics.myInfo, { roomId, tokenOverride: deviceId });
@@ -706,7 +707,14 @@ export default function RoomView({ roomId, onLeave }: Props) {
                 className="h-7 px-2.5 rounded-full bg-gradient-to-r from-amber-500/40 to-yellow-500/30 border border-amber-400/40 hover:opacity-90 flex items-center gap-1 flex-shrink-0 active:scale-95 transition"
               >
                 <Trophy size={12} className="text-amber-300" />
-                <span className="text-[10px] font-black text-white">Leaderboard</span>
+                <span className="text-[10px] font-black text-white tabular-nums" dir="ltr">
+                  {(() => {
+                    const t = roomWeekly?.total ?? 0;
+                    if (t >= 1_000_000) return (t / 1_000_000).toFixed(2) + "M";
+                    if (t >= 1_000) return (t / 1_000).toFixed(1) + "K";
+                    return t.toString();
+                  })()}
+                </span>
               </button>
             </div>
           </div>

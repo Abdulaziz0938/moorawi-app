@@ -162,3 +162,29 @@ export const updateRoomBackground = mutation({
     return null;
   },
 });
+
+// [moorawi-trophy] Get room's weekly spent coins (lazy reset)
+export const weeklyTotal = query({
+  args: { roomId: v.id("rooms") },
+  handler: async (ctx, args) => {
+    const room = await ctx.db.get("rooms", args.roomId);
+    if (!room) return { total: 0, tier: 0, cycleKey: "" };
+
+    // Lazy reset — if stored cycleKey is old, current week total = 0
+    const { weekKey } = await import("./lib/week");
+    const current = weekKey();
+    if (room.weeklyCycleKey !== current) {
+      return { total: 0, tier: 0, cycleKey: current };
+    }
+
+    const total = room.weeklyTotal ?? 0;
+    // Compute tier: 0, 1, 3, 6 (million)
+    const millions = total / 1_000_000;
+    let tier = 0;
+    if (millions >= 6) tier = 6;
+    else if (millions >= 3) tier = 3;
+    else if (millions >= 1) tier = 1;
+
+    return { total, tier, cycleKey: current };
+  },
+});

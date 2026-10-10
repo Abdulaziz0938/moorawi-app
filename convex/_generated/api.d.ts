@@ -14,6 +14,7 @@ import type * as follows from "../follows.js";
 import type * as gifts from "../gifts.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_vip from "../lib/vip.js";
+import type * as lib_week from "../lib/week.js";
 import type * as medals from "../medals.js";
 import type * as messages from "../messages.js";
 import type * as mics from "../mics.js";
@@ -43,6 +44,7 @@ declare const fullApi: ApiFromModules<{
   gifts: typeof gifts;
   "lib/auth": typeof lib_auth;
   "lib/vip": typeof lib_vip;
+  "lib/week": typeof lib_week;
   medals: typeof medals;
   messages: typeof messages;
   mics: typeof mics;

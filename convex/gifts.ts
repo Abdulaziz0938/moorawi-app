@@ -2,10 +2,24 @@ import { ConvexError, v } from "convex/values";
 import { vipLevelFromTotalReceived } from "./lib/vip";
 import { mutation, query } from "./_generated/server";
 import { requireUser } from "./lib/auth";
+import { weekKey } from "./lib/week";
 
 // (تم حذف generateGiftUploadUrl — نستخدم Cloudinary)
 
 // ============ ADMIN: Create gift ============
+// [moorawi-trophy] Update room weekly total (lazy reset)
+async function updateRoomWeekly(ctx: any, roomId: any, amount: number) {
+  const room = await ctx.db.get("rooms", roomId);
+  if (!room) return;
+  const current = weekKey();
+  const sameCycle = room.weeklyCycleKey === current;
+  await ctx.db.patch("rooms", roomId, {
+    weeklyTotal: sameCycle ? (room.weeklyTotal ?? 0) + amount : amount,
+    weeklyCycleKey: current,
+    weeklyResetAt: sameCycle ? room.weeklyResetAt : Date.now(),
+  });
+}
+
 export const createGift = mutation({
   args: {
     name: v.string(),
@@ -162,6 +176,9 @@ export const send = mutation({
       totalPrice,
     });
 
+    // [moorawi-trophy] Add to room weekly total
+    await updateRoomWeekly(ctx, args.roomId, totalPrice);
+
     // لا تنشئ رسالة جديدة إذا كانت استمرار كومبو
     if (!isComboContinuation) {
       await ctx.db.insert("messages", {
@@ -249,6 +266,9 @@ export const sendBatch = mutation({
         batchId,
       });
     }
+
+    // [moorawi-trophy] Add to room weekly total (once per batch)
+    await updateRoomWeekly(ctx, args.roomId, totalPrice);
 
     // رسالة واحدة فقط (بدل N)
     const summary = targets.length === 1
