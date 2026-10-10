@@ -3,6 +3,7 @@ import { vipLevelFromTotalReceived } from "./lib/vip";
 import { mutation, query } from "./_generated/server";
 import { requireUser } from "./lib/auth";
 import { weekKey } from "./lib/week";
+import { checkAndGrantMedals } from "./medals";
 
 // (تم حذف generateGiftUploadUrl — نستخدم Cloudinary)
 
@@ -179,6 +180,10 @@ export const send = mutation({
     // [moorawi-trophy] Add to room weekly total
     await updateRoomWeekly(ctx, args.roomId, totalPrice);
 
+    // [moorawi-medals] Auto-grant medals for sender + receiver
+    await checkAndGrantMedals(ctx, user._id);
+    await checkAndGrantMedals(ctx, args.toUserId);
+
     // لا تنشئ رسالة جديدة إذا كانت استمرار كومبو
     if (!isComboContinuation) {
       await ctx.db.insert("messages", {
@@ -269,6 +274,12 @@ export const sendBatch = mutation({
 
     // [moorawi-trophy] Add to room weekly total (once per batch)
     await updateRoomWeekly(ctx, args.roomId, totalPrice);
+
+    // [moorawi-medals] Auto-grant medals
+    await checkAndGrantMedals(ctx, user._id);
+    for (const target of targets) {
+      await checkAndGrantMedals(ctx, target._id);
+    }
 
     // رسالة واحدة فقط (بدل N)
     const summary = targets.length === 1

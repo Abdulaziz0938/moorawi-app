@@ -168,3 +168,49 @@ export const unequipMedal = mutation({
     return { ok: true };
   },
 });
+
+// ============================================================
+// [moorawi-medals] Auto-grant medals based on thresholds
+// ============================================================
+export async function checkAndGrantMedals(ctx: any, userId: any) {
+  const user = await ctx.db.get("users", userId);
+  if (!user) return 0;
+
+  const allMedals = await ctx.db.query("medals").collect();
+  const owned = await ctx.db
+    .query("userMedals")
+    .withIndex("by_user", (q: any) => q.eq("userId", userId))
+    .collect();
+  const ownedIds = new Set(owned.map((um: any) => um.medalId));
+
+  let granted = 0;
+
+  for (const medal of allMedals) {
+    if (ownedIds.has(medal._id)) continue;
+
+    let value = 0;
+    if (medal.category === "wealth") value = user.totalSent ?? 0;
+    else if (medal.category === "charm") value = user.totalReceived ?? 0;
+    // activity/monthly/weekly/special — handled separately (skipped for now)
+
+    if (value > 0 && value >= (medal.value ?? 0)) {
+      await ctx.db.insert("userMedals", {
+        userId,
+        medalId: medal._id,
+        earnedAt: Date.now(),
+        equipped: false,
+      });
+      granted++;
+    }
+  }
+
+  if (granted > 0) {
+    const fresh = await ctx.db.get("users", userId);
+    await ctx.db.patch("users", userId, {
+      medalCount: (fresh?.medalCount ?? 0) + granted,
+    });
+  }
+
+  return granted;
+}
+
