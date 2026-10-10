@@ -179,53 +179,55 @@ export default function VipShopSheet({ onClose }: Props) {
           {plan && (
             <>
               {/* ===== Banner ===== */}
-              <div
-                className="mx-4 mt-2 rounded-2xl border overflow-hidden relative flex-shrink-0"
-                style={{
-                  borderColor: plan.color + "80",
-                  background: `linear-gradient(135deg, ${plan.color}30 0%, ${plan.accent}15 50%, transparent 100%)`,
-                }}
-              >
-                <div className="aspect-[16/9] flex items-center justify-center relative">
-                  {(() => {
-                    const logoKey = `vip.logo.${plan.level}`;
-                    const logoUrl = assets[logoKey];
-                    if (logoUrl) {
-                      return (
+              {(() => {
+                const bgUrl = assets[`vip.background.${plan.level}`];
+                const heroUrl = assets[`vip.hero.${plan.level}`];
+                return (
+                  <div
+                    className="mx-4 mt-2 rounded-2xl border overflow-hidden relative flex-shrink-0"
+                    style={{
+                      borderColor: plan.color + "80",
+                      background: bgUrl
+                        ? `url(${bgUrl}) center/cover no-repeat`
+                        : `linear-gradient(135deg, ${plan.color}30 0%, ${plan.accent}15 50%, transparent 100%)`,
+                    }}
+                  >
+                    <div className="aspect-[16/9] flex items-center justify-center relative">
+                      {heroUrl ? (
                         <img
-                          src={logoUrl}
+                          src={heroUrl}
                           alt={plan.name}
-                          className="max-h-full max-w-full object-contain"
+                          className="max-h-full max-w-full object-contain drop-shadow-2xl"
+                          draggable={false}
                         />
-                      );
-                    }
-                    return (
-                      <div className="flex flex-col items-center gap-2">
-                        <div
-                          className="w-24 h-24 rounded-2xl flex items-center justify-center"
-                          style={{ background: `${plan.color}40` }}
-                        >
-                          <Crown size={56} style={{ color: plan.accent }} strokeWidth={1.2} />
+                      ) : (
+                        <div className="flex flex-col items-center gap-2">
+                          <div
+                            className="w-24 h-24 rounded-2xl flex items-center justify-center"
+                            style={{ background: `${plan.color}40` }}
+                          >
+                            <Crown size={56} style={{ color: plan.accent }} strokeWidth={1.2} />
+                          </div>
+                          <p className="text-white text-3xl font-black tracking-wider">
+                            {plan.name}
+                          </p>
+                          {plan.exclusive && (
+                            <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-black/40 border border-amber-400/40 text-amber-200 text-[10px] font-black">
+                              <Lock size={10} />
+                              حصري للشحن التركي
+                            </span>
+                          )}
                         </div>
-                        <p className="text-white text-3xl font-black tracking-wider">
-                          {plan.name}
-                        </p>
-                        {plan.exclusive && (
-                          <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-black/40 border border-amber-400/40 text-amber-200 text-[10px] font-black">
-                            <Lock size={10} />
-                            حصري للشحن التركي
-                          </span>
-                        )}
-                      </div>
-                    );
-                  })()}
-                </div>
-                <div className="py-2 text-center text-white/70 text-xs">
-                  ✦ <span className="text-amber-200 font-black">
-                    {selectedBenefits.length} امتيازاً
-                  </span> ✦
-                </div>
-              </div>
+                      )}
+                    </div>
+                    <div className="py-2 text-center text-white/70 text-xs">
+                      ✦ <span className="text-amber-200 font-black">
+                        {selectedBenefits.length} امتيازاً
+                      </span> ✦
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* ===== 9 asset slots (3x3) ===== */}
               <div className="mx-4 mt-3 grid grid-cols-3 gap-2">

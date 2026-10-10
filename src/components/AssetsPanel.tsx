@@ -22,15 +22,17 @@ interface Props {
 type MainTab = "vip" | "medals" | "gifts" | "admin";
 
 const VIP_SLOTS = [
-  { key: "logo",     label: "الشعار" },
-  { key: "medal",    label: "الميدالية" },
-  { key: "frame",    label: "الإطار" },
-  { key: "halo",     label: "الهالة" },
-  { key: "card",     label: "البطاقة" },
-  { key: "nickname", label: "الاسم" },
-  { key: "entry",    label: "الدخول" },
-  { key: "wave",     label: "الموجة" },
-  { key: "bubble",   label: "الفقاعات" },
+  { key: "background", label: "الخلفية" },
+  { key: "hero",       label: "الصورة الرئيسية" },
+  { key: "logo",       label: "الشعار" },
+  { key: "medal",      label: "الميدالية" },
+  { key: "frame",      label: "الإطار" },
+  { key: "halo",       label: "الهالة" },
+  { key: "card",       label: "البطاقة" },
+  { key: "nickname",   label: "الاسم" },
+  { key: "entry",      label: "الدخول" },
+  { key: "wave",       label: "الموجة" },
+  { key: "bubble",     label: "الفقاعات" },
 ];
 
 const ADMIN_SLOTS = [
