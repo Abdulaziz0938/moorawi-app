@@ -9,6 +9,7 @@ import type { Id } from "../../convex/_generated/dataModel";
 import { getDeviceId } from "../lib/device";
 import { uploadToCloudinary } from "../lib/cloudinary";
 import { dialog } from "../lib/dialog";
+import MusicPlayer from "./MusicPlayer";
 import {
   X, Music, Upload, Trash2, Play, Pause, Pencil, Save,
   Loader2, Volume2, VolumeX,
@@ -96,6 +97,11 @@ export default function MusicSheet({ roomId, onClose, currentTrackId }: Props) {
           <button onClick={onClose} className="p-2 rounded-full hover:bg-white/10 text-white">
             <X size={20} />
           </button>
+        </div>
+
+        {/* Now playing (embedded player) */}
+        <div className="px-4 pt-3 flex-shrink-0">
+          <MusicPlayer roomId={roomId} variant="inline" />
         </div>
 
         {/* Upload */}

@@ -1427,7 +1427,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
         </div>
       )}
 
-      <MusicPlayer roomId={roomId} />
+      <MusicPlayer roomId={roomId} variant="hidden" />
       {showMusicSheet && (
         <MusicSheet
           roomId={roomId}
