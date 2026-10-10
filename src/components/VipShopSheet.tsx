@@ -5,6 +5,7 @@ import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { getActiveToken } from "../lib/session";
+import { useAssets } from "../lib/assets";
 import { dialog } from "../lib/dialog";
 import {
   X, Crown, Coins, Loader2, Clock, Sparkles, Lock,
@@ -53,6 +54,7 @@ function formatDate(ts: number): string {
 
 export default function VipShopSheet({ onClose }: Props) {
   const token = getActiveToken();
+  const assets = useAssets();
   const data = useQuery(api.vip.myVip, { tokenOverride: token });
   const allBenefits = useQuery(api.vip.getAllBenefits);
   const balance = useQuery(api.wallet.balance, { tokenOverride: token });
@@ -185,37 +187,38 @@ export default function VipShopSheet({ onClose }: Props) {
                 }}
               >
                 <div className="aspect-[16/9] flex items-center justify-center relative">
-                  {/* الشعار (لو مرفوع) */}
                   {(() => {
-                    const slot = VIP_SLOTS[0];
-                    const key = `vip.${slot.key}.${plan.level}`;
+                    const logoKey = `vip.logo.${plan.level}`;
+                    const logoUrl = assets[logoKey];
+                    if (logoUrl) {
+                      return (
+                        <img
+                          src={logoUrl}
+                          alt={plan.name}
+                          className="max-h-full max-w-full object-contain"
+                        />
+                      );
+                    }
                     return (
-                      <img
-                        key={key}
-                        src={`https://quixotic-squid-253.convex.cloud/api/storage/none`}
-                        alt=""
-                        className="hidden"
-                      />
+                      <div className="flex flex-col items-center gap-2">
+                        <div
+                          className="w-24 h-24 rounded-2xl flex items-center justify-center"
+                          style={{ background: `${plan.color}40` }}
+                        >
+                          <Crown size={56} style={{ color: plan.accent }} strokeWidth={1.2} />
+                        </div>
+                        <p className="text-white text-3xl font-black tracking-wider">
+                          {plan.name}
+                        </p>
+                        {plan.exclusive && (
+                          <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-black/40 border border-amber-400/40 text-amber-200 text-[10px] font-black">
+                            <Lock size={10} />
+                            حصري للشحن التركي
+                          </span>
+                        )}
+                      </div>
                     );
                   })()}
-                  {/* مؤقتاً: نعرض اسم المستوى بشكل كبير */}
-                  <div className="flex flex-col items-center gap-2">
-                    <div
-                      className="w-24 h-24 rounded-2xl flex items-center justify-center"
-                      style={{ background: `${plan.color}40` }}
-                    >
-                      <Crown size={56} style={{ color: plan.accent }} strokeWidth={1.2} />
-                    </div>
-                    <p className="text-white text-3xl font-black tracking-wider">
-                      {plan.name}
-                    </p>
-                    {plan.exclusive && (
-                      <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-black/40 border border-amber-400/40 text-amber-200 text-[10px] font-black">
-                        <Lock size={10} />
-                        حصري للشحن التركي
-                      </span>
-                    )}
-                  </div>
                 </div>
                 <div className="py-2 text-center text-white/70 text-xs">
                   ✦ <span className="text-amber-200 font-black">
@@ -228,14 +231,26 @@ export default function VipShopSheet({ onClose }: Props) {
               <div className="mx-4 mt-3 grid grid-cols-3 gap-2">
                 {VIP_SLOTS.map((slot) => {
                   const key = `vip.${slot.key}.${plan.level}`;
+                  const url = assets[key];
                   return (
                     <div
                       key={slot.key}
-                      className="aspect-square rounded-xl border border-white/10 bg-white/5 flex flex-col items-center justify-center gap-1"
+                      className="aspect-square rounded-xl border border-white/10 bg-black/30 flex items-center justify-center overflow-hidden p-1"
                       style={{ borderColor: plan.color + "40" }}
                     >
-                      <Sparkles size={22} style={{ color: plan.accent, opacity: 0.5 }} />
-                      <span className="text-white/60 text-[9px]">{slot.label}</span>
+                      {url ? (
+                        <img
+                          src={url}
+                          alt={slot.label}
+                          className="max-h-full max-w-full object-contain"
+                          draggable={false}
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center justify-center gap-1">
+                          <Sparkles size={22} style={{ color: plan.accent, opacity: 0.5 }} />
+                          <span className="text-white/60 text-[9px]">{slot.label}</span>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
