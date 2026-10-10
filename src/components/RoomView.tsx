@@ -15,6 +15,7 @@ import GiftSheet from "./GiftSheet";
 import CompactChatInput from "./CompactChatInput";
 import LeaderboardSheet from "./LeaderboardSheet";
 import MiniProfileSheet from "./MiniProfileSheet";
+import RoomInfoSheet from "./RoomInfoSheet";
 import MicRequestsSheet from "./MicRequestsSheet";
 import MembersSheet from "./MembersSheet";
 import ActivitySheet from "./ActivitySheet";
@@ -205,6 +206,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const [showMembers, setShowMembers] = useState(false);
   const [showActivity, setShowActivity] = useState(false);
   const [miniProfileUserId, setMiniProfileUserId] = useState<string | null>(null);
+  const [showRoomInfo, setShowRoomInfo] = useState(false);
   const [mySeatIndexForMiniProfile, setMySeatIndexForMiniProfile] = useState<number | null>(null);
   const [preSelectedGiftUserId, setPreSelectedGiftUserId] = useState<string | null>(null);
   const [fullProfileUserId, setFullProfileUserId] = useState<string | null>(null);
@@ -646,12 +648,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
                 </div>
                   <button
                     type="button"
-                    onClick={() => {
-                      if (owner?.userId) {
-                        setMiniProfileUserId(owner.userId);
-                        setMySeatIndexForMiniProfile(null);
-                      }
-                    }}
+                    onClick={() => setShowRoomInfo(true)}
                     className="w-8 h-8 rounded-full overflow-hidden bg-purple-500 flex items-center justify-center text-[11px] font-bold text-white flex-shrink-0 ring-2 ring-purple-400/40 hover:ring-purple-300 transition active:scale-95"
                     title={owner?.name || "الغرفة"}
                   >
@@ -1246,6 +1243,17 @@ export default function RoomView({ roomId, onLeave }: Props) {
           }}
           onOpenAdminPanel={() => dialog.alert("لوحة الأدمن - قيد التطوير")}
           onOpenOwnerPanel={() => dialog.alert("لوحة المالك - قيد التطوير")}
+        />
+      )}
+
+      {showRoomInfo && (
+        <RoomInfoSheet
+          roomId={roomId}
+          onClose={() => setShowRoomInfo(false)}
+          onUserClick={(uid) => {
+            setShowRoomInfo(false);
+            setMiniProfileUserId(uid);
+          }}
         />
       )}
 
