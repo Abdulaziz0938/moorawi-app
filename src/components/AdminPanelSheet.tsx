@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { uploadToCloudinary } from "../lib/cloudinary";
 import { useAssets } from "../lib/assets";
+import GiftAdminPanel from "./GiftAdminPanel";
 
 interface Props {
   onClose: () => void;
@@ -391,11 +392,14 @@ const ASSET_ITEMS: { key: string; label: string; fallback: string }[] = [
   { key: "admin.moderator", label: "شارة المشرف", fallback: "/badges/badge-admin.png" },
 ];
 
+type AssetsTab = "icons" | "gifts";
+
 function AssetsPanel({ token }: { token: string | null }) {
   const assets = useAssets(); // Context — real-time, no extra query
   const setAsset = useMutation(api.assets.set);
   const clearAsset = useMutation(api.assets.clear);
   const [busyKey, setBusyKey] = useState<string | null>(null);
+  const [assetTab, setAssetTab] = useState<AssetsTab>("icons");
 
   const handleFile = (key: string, file: File) => {
     dialog.confirm(
@@ -439,6 +443,34 @@ function AssetsPanel({ token }: { token: string | null }) {
 
   return (
     <div className="p-4 space-y-4">
+      {/* تبويبات داخلية: أيقونات | هدايا */}
+      <div className="flex gap-2">
+        <button
+          onClick={() => setAssetTab("icons")}
+          className={`flex-1 py-2 rounded-xl text-sm font-black transition ${
+            assetTab === "icons"
+              ? "bg-purple-500/30 border border-purple-400/60 text-white"
+              : "bg-white/5 border border-white/10 text-white/60"
+          }`}
+        >
+          الأيقونات
+        </button>
+        <button
+          onClick={() => setAssetTab("gifts")}
+          className={`flex-1 py-2 rounded-xl text-sm font-black transition ${
+            assetTab === "gifts"
+              ? "bg-purple-500/30 border border-purple-400/60 text-white"
+              : "bg-white/5 border border-white/10 text-white/60"
+          }`}
+        >
+          الهدايا
+        </button>
+      </div>
+
+      {assetTab === "gifts" ? (
+        <GiftAdminPanel />
+      ) : (
+      <>
       <p className="text-white/60 text-xs leading-relaxed">
         ارفع صوراً مخصصة للأصول. الصورة الافتراضية تبقى كـ fallback.
         التغييرات تظهر فوراً في كل التطبيق.
@@ -510,6 +542,8 @@ function AssetsPanel({ token }: { token: string | null }) {
           );
         })}
       </div>
+      </>
+      )}
     </div>
   );
 }
