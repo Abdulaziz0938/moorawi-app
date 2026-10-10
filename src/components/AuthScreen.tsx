@@ -10,6 +10,26 @@ interface Props {
 
 type Mode = "welcome" | "signin" | "signup";
 
+// [moorawi-auth] Fixed video background for all auth screens
+function VideoBackground() {
+  return (
+    <div className="fixed inset-0 -z-10 overflow-hidden">
+      <video
+        src="/auth.mp4"
+        autoPlay
+        loop
+        muted
+        playsInline
+        preload="auto"
+        className="absolute inset-0 w-full h-full object-cover"
+      />
+      {/* طبقة تعتيم + تدرج بنفسجي فوق الفيديو */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-purple-950/60 to-black/80" />
+    </div>
+  );
+}
+
+
 export default function AuthScreen({ onSuccess }: Props) {
   const [mode, setMode] = useState<Mode>("welcome");
   const [username, setUsername] = useState("");
@@ -94,14 +114,15 @@ export default function AuthScreen({ onSuccess }: Props) {
   // ============ Welcome ============
   if (mode === "welcome") {
     return (
-      <div className="min-h-[100dvh] w-full app-bg flex flex-col items-center justify-center p-6" dir="rtl">
-        <div className="w-full max-w-md flex flex-col items-center gap-8">
+      <div className="min-h-[100dvh] w-full flex flex-col items-center justify-center p-6 relative" dir="rtl">
+        <VideoBackground />
+        <div className="w-full max-w-md flex flex-col items-center gap-8 relative z-10">
           <div className="flex flex-col items-center gap-3">
             <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center shadow-2xl">
               <Sparkles size={48} className="text-white" />
             </div>
-            <h1 className="text-white text-3xl font-black mt-2">الدولة المعراوية</h1>
-            <p className="text-white/60 text-sm">انضم لأفضل غرف صوتية</p>
+            <h1 className="text-white text-3xl font-black mt-2" dir="ltr">EZO GROUP</h1>
+            <p className="text-white/70 text-sm font-bold">Voice Chat Rooms</p>
           </div>
 
           <div className="w-full flex flex-col gap-3 mt-4">
@@ -133,8 +154,9 @@ export default function AuthScreen({ onSuccess }: Props) {
   const isSignup = mode === "signup";
 
   return (
-    <div className="min-h-[100dvh] w-full app-bg flex flex-col items-center justify-center p-6" dir="rtl">
-      <div className="w-full max-w-md flex flex-col gap-6">
+    <div className="min-h-[100dvh] w-full flex flex-col items-center justify-center p-6 relative" dir="rtl">
+      <VideoBackground />
+      <div className="w-full max-w-md flex flex-col gap-6 relative z-10">
         <button
           onClick={() => { resetForm(); setMode("welcome"); }}
           className="flex items-center gap-2 text-white/60 hover:text-white transition self-start"
