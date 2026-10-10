@@ -1,6 +1,17 @@
-import { mutation, query } from "./_generated/server";
+import { mutation, query, internalMutation } from "./_generated/server";
 import { ConvexError, v } from "convex/values";
 import { requireUser } from "./lib/auth";
+
+// ============================================================
+// [moorawi-medals] Tier rank — for auto-equip on grant
+// ============================================================
+const TIER_RANK: Record<string, number> = {
+  C: 1, B: 2, A: 3, S: 4, SS: 5, SSS: 6,
+};
+function tierRank(t: string): number {
+  return TIER_RANK[t] ?? 0;
+}
+
 
 // ============================================================
 // [moorawi-medals] Medals queries + mutations
@@ -102,19 +113,41 @@ export const grantMedal = mutation({
       return { ok: true, alreadyOwned: true };
     }
 
+    // ===== Auto-equip logic (Poppo): if new medal tier > current, equip =====
+    const currentEquippedId = user.equippedMedalId;
+    let shouldAutoEquip = false;
+    let autoEquipReason = "first-medal";
+
+    if (!currentEquippedId) {
+      shouldAutoEquip = true;
+    } else {
+      const currentMedal = await ctx.db.get("medals", currentEquippedId);
+      const currentRank = currentMedal ? tierRank(currentMedal.tier) : 0;
+      const newRank = tierRank(medal.tier);
+      if (newRank > currentRank) {
+        shouldAutoEquip = true;
+        autoEquipReason = "higher-tier";
+        // un-equip old
+        const oldUm = existing.find((um) => um.medalId === currentEquippedId);
+        if (oldUm) {
+          await ctx.db.patch("userMedals", oldUm._id, { equipped: false });
+        }
+      }
+    }
+
     await ctx.db.insert("userMedals", {
       userId: args.userId,
       medalId: args.medalId,
       earnedAt: Date.now(),
-      equipped: false,
+      equipped: shouldAutoEquip,
     });
 
-    // Increment user's medalCount
-    await ctx.db.patch("users", args.userId, {
-      medalCount: (user.medalCount ?? 0) + 1,
-    });
+    // Update user: medalCount + equippedMedalId if auto-equipped
+    const patch: any = { medalCount: (user.medalCount ?? 0) + 1 };
+    if (shouldAutoEquip) patch.equippedMedalId = args.medalId;
+    await ctx.db.patch("users", args.userId, patch);
 
-    return { ok: true };
+    return { ok: true, autoEquipped: shouldAutoEquip, reason: shouldAutoEquip ? autoEquipReason : null };
   },
 });
 
@@ -246,5 +279,48 @@ export const updateMedal = mutation({
       await ctx.db.patch("medals", args.medalId, patch);
     }
     return { ok: true };
+  },
+});
+
+// ============================================================
+// [moorawi-medals] migrateAutoEquip — one-time: equip top-tier
+// medal for users who have userMedals but nothing equipped
+// ============================================================
+export const migrateAutoEquip = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const users = await ctx.db.query("users").collect();
+    let fixed = 0;
+
+    for (const u of users) {
+      if (u.equippedMedalId) continue; // already has one
+
+      const ums = await ctx.db
+        .query("userMedals")
+        .withIndex("by_user", (q) => q.eq("userId", u._id))
+        .collect();
+      if (ums.length === 0) continue;
+
+      // Find highest tier
+      let best: any = null;
+      let bestRank = -1;
+      for (const um of ums) {
+        const m = await ctx.db.get("medals", um.medalId);
+        if (!m) continue;
+        const r = tierRank(m.tier);
+        if (r > bestRank) {
+          bestRank = r;
+          best = { um, medal: m };
+        }
+      }
+      if (!best) continue;
+
+      // Set equipped on chosen
+      await ctx.db.patch("userMedals", best.um._id, { equipped: true });
+      await ctx.db.patch("users", u._id, { equippedMedalId: best.medal._id });
+      fixed += 1;
+    }
+
+    return { ok: true, fixed };
   },
 });
