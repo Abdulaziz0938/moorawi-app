@@ -80,11 +80,9 @@ export default function RoomList({ onEnter }: Props) {
         {me && (
           <div className="flex flex-col items-center mb-4">
             <div className="w-20 h-20 rounded-full bg-white/20 border-2 border-white/40 overflow-hidden flex items-center justify-center mb-2">
-              {me.avatarUrl ? (
-                <img src={me.avatarUrl} alt="me" className="w-full h-full object-cover" />
+              <img src={me?.avatarUrl || "/avatar.png"} alt="me" className="w-full h-full object-cover" />
               ) : (
                 <span className="text-3xl font-bold">{me.name?.[0] || "?"}</span>
-              )}
             </div>
             <p className="font-bold text-lg">{me.name}</p>
             <p className="text-xs opacity-70" dir="ltr">@{me.username}</p>

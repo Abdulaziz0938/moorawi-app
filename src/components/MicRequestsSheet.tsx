@@ -79,8 +79,8 @@ export default function MicRequestsSheet({ roomId, onClose }: Props) {
             >
               {/* Avatar */}
               <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white font-black flex-shrink-0 border-2 border-white/30">
-                {req.avatarUrl ? (
-                  <img src={req.avatarUrl} alt="" className="w-full h-full object-cover" />
+                {true ? (
+                  <img src={req.avatarUrl || "/avatar.png"} alt="" className="w-full h-full object-cover" />
                 ) : (
                   <span>{(req.userName?.[0] || "?")}</span>
                 )}

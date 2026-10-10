@@ -1,6 +1,7 @@
 // [moorawi] Member row — uses unified UserName + LevelBadge (Single Source of Truth)
 import { Mic } from "lucide-react";
 import { UserName } from "./UserBadges";
+import UserAvatar from "./UserAvatar";
 
 interface Props {
   userId: string;

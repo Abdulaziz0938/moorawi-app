@@ -153,11 +153,7 @@ export default function MiniProfileSheet({
               onClick={onOpenFullProfile}
               className="w-24 h-24 rounded-full overflow-hidden ring-4 ring-white/40 shadow-2xl bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white font-black text-3xl active:scale-95 transition-transform"
             >
-              {profile.avatarUrl ? (
-                <img src={profile.avatarUrl} alt="" className="w-full h-full object-cover" />
-              ) : (
-                <span>{(profile.name?.[0] ?? "?") || "?"}</span>
-              )}
+              <img src={profile?.avatarUrl || "/avatar.png"} alt="" className="w-full h-full object-cover" />
             </button>
           </div>
 

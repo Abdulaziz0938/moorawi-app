@@ -151,8 +151,8 @@ export default function StaffSettingsSheet({ roomId, onClose }: Props) {
                 {mods.map((m: any) => (
                   <div key={m._id} className="rounded-2xl bg-white/5 border border-white/10 p-2 flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full overflow-hidden bg-white/10 flex items-center justify-center flex-shrink-0">
-                      {m.avatarUrl ? (
-                        <img src={m.avatarUrl} alt="" className="w-full h-full object-cover" />
+                      {true ? (
+                        <img src={m.avatarUrl || "/avatar.png"} alt="" className="w-full h-full object-cover" />
                       ) : (
                         <span className="text-white text-sm font-black">{m.name?.[0] || "?"}</span>
                       )}

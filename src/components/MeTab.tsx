@@ -62,11 +62,7 @@ export default function MeTab({ onEnterRoom }: Props) {
           className="w-full px-4 pt-4 pb-3 flex items-center gap-3 hover:bg-white/5 transition active:bg-white/10"
         >
           <div className="w-14 h-14 rounded-full bg-white/10 border border-white/20 overflow-hidden flex items-center justify-center flex-shrink-0">
-            {profile?.avatarUrl ? (
-              <img src={profile.avatarUrl} alt="" className="w-full h-full object-cover" />
-            ) : (
-              <span className="text-white text-xl font-black">{me.name?.[0] || "?"}</span>
-            )}
+            <img src={profile?.avatarUrl || "/avatar.png"} alt="" className="w-full h-full object-cover" />
           </div>
           <div className="flex-1 min-w-0 text-right">
             <p className="text-white font-black text-base truncate">{me.name || "—"}</p>

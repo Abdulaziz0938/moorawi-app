@@ -180,8 +180,8 @@ export default function AdminPanelSheet({ onClose }: Props) {
               {/* User info */}
               <div className="rounded-2xl bg-white/5 border border-white/10 p-4 flex items-center gap-3">
                 <div className="w-14 h-14 rounded-full bg-white/10 overflow-hidden flex items-center justify-center flex-shrink-0">
-                  {editUser.avatarUrl ? (
-                    <img src={editUser.avatarUrl} alt="" className="w-full h-full object-cover" />
+                  {true ? (
+                    <img src={editUser.avatarUrl || "/avatar.png"} alt="" className="w-full h-full object-cover" />
                   ) : (
                     <span className="text-white text-xl font-black">{editUser.name?.[0] || "?"}</span>
                   )}
@@ -317,8 +317,8 @@ export default function AdminPanelSheet({ onClose }: Props) {
                           className="flex items-center gap-3 flex-1 min-w-0 text-right"
                         >
                           <div className="w-11 h-11 rounded-full bg-white/10 overflow-hidden flex items-center justify-center flex-shrink-0">
-                            {u.avatarUrl ? (
-                              <img src={u.avatarUrl} alt="" className="w-full h-full object-cover" />
+                            {true ? (
+                              <img src={u.avatarUrl || "/avatar.png"} alt="" className="w-full h-full object-cover" />
                             ) : (
                               <span className="text-white text-base font-black">{u.name?.[0] || "?"}</span>
                             )}

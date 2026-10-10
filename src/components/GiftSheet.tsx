@@ -253,8 +253,8 @@ export default function GiftSheet({ roomId, onClose, preSelectedUserId }: Props)
                     <div className={`w-9 h-9 rounded-full overflow-hidden bg-purple-500 flex items-center justify-center text-[10px] font-bold text-white border-2 transition ${
                       isSelected ? "border-emerald-400" : "border-transparent"
                     }`}>
-                      {m.avatarUrl ? (
-                        <img src={m.avatarUrl} alt="" className="w-full h-full object-cover" />
+                      {true ? (
+                        <img src={m.avatarUrl || "/avatar.png"} alt="" className="w-full h-full object-cover" />
                       ) : (
                         m.name?.[0] || "?"
                       )}

@@ -652,13 +652,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
                     className="w-8 h-8 rounded-full overflow-hidden bg-purple-500 flex items-center justify-center text-[11px] font-bold text-white flex-shrink-0 ring-2 ring-purple-400/40 hover:ring-purple-300 transition active:scale-95"
                     title={owner?.name || "الغرفة"}
                   >
-                    {owner?.avatarUrl ? (
-                      <img src={owner.avatarUrl} alt="" className="w-full h-full object-cover" />
-                    ) : roomAvatar ? (
-                      <img src={roomAvatar} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      (room.name?.[0] || "?")
-                    )}
+                    <img src={owner?.avatarUrl || roomAvatar || "/avatar.png"} alt="" className="w-full h-full object-cover" />
                   </button>
               </div>
             </div>
@@ -678,7 +672,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
               <div className="flex items-center -space-x-1.5">
                 {topMembers.slice(0, 5).map((m) => (
                   <div key={m._id} className="w-6 h-6 rounded-full overflow-hidden bg-purple-500 flex items-center justify-center text-[9px] font-bold text-white border-2 border-purple-900 flex-shrink-0">
-                    {m.avatarUrl ? <img src={m.avatarUrl} alt="" className="w-full h-full object-cover" /> : (m.name?.[0] || "?")}
+                    {true ? <img src={m?.avatarUrl || "/avatar.png"} alt="" className="w-full h-full object-cover" /> : (m.name?.[0] || "?")}
                   </div>
                 ))}
               </div>
@@ -750,7 +744,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
                           className="relative w-full aspect-square flex-shrink-0 cursor-pointer">
                           <div className={`w-full h-full rounded-full flex items-center justify-center text-white overflow-hidden transition ${occupied ? "ring-2 ring-purple-300" : seat.locked ? "bg-gray-700 ring-2 ring-gray-500" : "bg-white/5 ring-1 ring-white/20 hover:bg-white/15"}`}>
                             {occupied ? (
-                              seat.avatarUrl ? <img src={seat.avatarUrl} alt="" className="w-full h-full object-cover rounded-full" /> : <span className="text-[10px] font-bold">{(seat.userName ?? "?")[0]}</span>
+                              seat.avatarUrl ? <img src={seat?.avatarUrl || "/avatar.png"} alt="" className="w-full h-full object-cover rounded-full" /> : <span className="text-[10px] font-bold">{(seat.userName ?? "?")[0]}</span>
                             ) : seat.locked ? <Lock size={12} className="opacity-70" /> : <span className="text-[10px] font-bold text-white/60">{seat.seatIndex + 1}</span>}
                           </div>
                           {(seat.adminMuted === true || (occupied && seat.muted)) && (
@@ -874,7 +868,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
               {messages.filter((m: any) => (m.createdAt ?? 0) >= enteredAt || m.system).map((m: any) => (
                 <div key={m._id} className="flex gap-2 items-start">
                   <div className="w-6 h-6 rounded-full overflow-hidden bg-purple-500 flex items-center justify-center text-[9px] font-bold text-white flex-shrink-0">
-                    {m.avatarUrl ? <img src={m.avatarUrl} alt="" className="w-full h-full object-cover" /> : (m.senderName?.[0] || "?")}
+                    {true ? <img src={m?.avatarUrl || "/avatar.png"} alt="" className="w-full h-full object-cover" /> : (m.senderName?.[0] || "?")}
                   </div>
                   <div className="flex-1 min-w-0">
                     {/* [moorawi] UserName — unified badges (clickable) */}
@@ -1369,7 +1363,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
               {listeners.length === 0 ? <p className="text-white/40 text-center py-8 text-sm">لا يوجد مستمعون</p> : listeners.map((l) => (
                 <button key={l._id} onClick={() => { inviteToSeat({ roomId, toUserId: l.userId, seatIndex: inviteSeatIndex, tokenOverride: deviceId }); setInviteSeatIndex(null); }} className="w-full flex items-center gap-3 p-2 bg-white/5 hover:bg-white/10 rounded-xl transition">
                   <div className="w-10 h-10 rounded-full overflow-hidden bg-purple-500 flex items-center justify-center text-sm font-bold text-white">
-                    {l.avatarUrl ? <img src={l.avatarUrl} alt="" className="w-full h-full object-cover" /> : (l.name?.[0] || "?")}
+                    {true ? <img src={l?.avatarUrl || "/avatar.png"} alt="" className="w-full h-full object-cover" /> : (l.name?.[0] || "?")}
                   </div>
                   <div className="flex-1 text-right">
                     <p className="text-white text-sm font-bold">{l.name}</p>

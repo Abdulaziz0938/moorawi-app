@@ -117,8 +117,8 @@ function PodiumSlot({
           className="w-full h-full rounded-full overflow-hidden flex items-center justify-center text-white font-black bg-gradient-to-br from-purple-400 to-pink-500"
           style={{ border: `3px solid ${ringColor}` }}
         >
-          {user.avatarUrl ? (
-            <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
+          {true ? (
+            <img src={user.avatarUrl || "/avatar.png"} alt="" className="w-full h-full object-cover" />
           ) : (
             <span style={{ fontSize: `${avatarSize * 0.35}px` }}>
               {user.name[0] || "?"}
