@@ -129,7 +129,15 @@ export default defineSchema({
       roomLock: v.boolean(),
       agencyMode: v.boolean(),
       screenClear: v.boolean(),
-    })),
+    },)),
+    // [moorawi-music] Shared room music — everyone in room hears it
+    // Each client can mute locally without affecting others.
+    currentMusicId: v.optional(v.id("userMusic")),
+    currentMusicUrl: v.optional(v.string()),
+    currentMusicName: v.optional(v.string()),
+    currentMusicStartedBy: v.optional(v.id("users")),
+    currentMusicStartedAt: v.optional(v.number()),
+
     // [moorawi-trophy] Room Trophy (weekly coins spent)
     weeklyTotal: v.optional(v.number()),
     weeklyCycleKey: v.optional(v.string()),           // e.g. "2026-W42"
@@ -493,6 +501,19 @@ export default defineSchema({
   })
     .index("by_user_and_mission", ["userId", "missionId"])
     .index("by_user_and_cycle", ["userId", "cycleKey"]),
+
+
+  // ================================================================
+  // [moorawi-music] USER MUSIC LIBRARY (personal, private)
+  // Each user uploads their own tracks. Only they can see/play them.
+  // ================================================================
+  userMusic: defineTable({
+    userId: v.id("users"),
+    name: v.string(),
+    url: v.string(),
+    durationSec: v.optional(v.number()),
+    uploadedAt: v.number(),
+  }).index("by_user", ["userId"]),
 
   // ================================================================
   // [moorawi-verification] VERIFICATION REQUESTS

@@ -20,6 +20,7 @@ import type * as lib_week from "../lib/week.js";
 import type * as medals from "../medals.js";
 import type * as messages from "../messages.js";
 import type * as mics from "../mics.js";
+import type * as music from "../music.js";
 import type * as profileFull from "../profileFull.js";
 import type * as profiles from "../profiles.js";
 import type * as resetStats from "../resetStats.js";
@@ -54,6 +55,7 @@ declare const fullApi: ApiFromModules<{
   medals: typeof medals;
   messages: typeof messages;
   mics: typeof mics;
+  music: typeof music;
   profileFull: typeof profileFull;
   profiles: typeof profiles;
   resetStats: typeof resetStats;

@@ -4,7 +4,7 @@ import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import {
   Mic, MicOff, LogOut, Loader2, Heart, Trophy, Bell, Crown, Shield, Home, User,
-  MessageCircle, Gift, Grid2x2, Share2, Minimize2, ArrowRight,
+  MessageCircle, Gift, Grid2x2, Share2, Minimize2, ArrowRight, Music,
   Lock, Unlock, UserPlus, Move, X, Check,
 } from "lucide-react";
 import { agoraManager } from "../lib/agora";
@@ -12,6 +12,8 @@ import { getDeviceId } from "../lib/device";
 import { uploadToCloudinary } from "../lib/cloudinary";
 import SettingsSheet from "./SettingsSheet";
 import GiftSheet from "./GiftSheet";
+import MusicSheet from "./MusicSheet";
+import MusicPlayer from "./MusicPlayer";
 import CompactChatInput from "./CompactChatInput";
 import IconOrImage from "./IconOrImage";
 import LeaderboardSheet from "./LeaderboardSheet";
@@ -222,6 +224,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const requestMicMutation = useMutation(api.mics.requestMic);
   const cancelMyRequestMutation = useMutation(api.mics.cancelMyRequest);
   const [showGifts, setShowGifts] = useState(false);
+  const [showMusicSheet, setShowMusicSheet] = useState(false);
   const [showChatInput, setShowChatInput] = useState(false);
   const [openSeatMenu, setOpenSeatMenu] = useState<number | null>(null);
   const [openSeatMenuPos, setOpenSeatMenuPos] = useState<{ x: number; y: number } | null>(null);
@@ -921,6 +924,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
             </button>
           )}
           <button onClick={() => setShowSettings(true)} className="p-2 rounded-full hover:bg-white/10 text-white"><IconOrImage assetKey="ui.room.grid" Icon={Grid2x2} size={20} imgSize={26} /></button>
+          <button onClick={() => setShowMusicSheet(true)} className="p-2 rounded-full hover:bg-white/10 text-white" title="موسيقى"><Music size={20} /></button>
           <button onClick={() => setShowGifts(true)} className="p-2 rounded-full hover:bg-white/10 text-white"><IconOrImage assetKey="ui.room.gift" Icon={Gift} size={20} imgSize={26} /></button>
         </footer>
       </div>
@@ -1423,6 +1427,13 @@ export default function RoomView({ roomId, onLeave }: Props) {
         </div>
       )}
 
+      <MusicPlayer roomId={roomId} />
+      {showMusicSheet && (
+        <MusicSheet
+          roomId={roomId}
+          onClose={() => setShowMusicSheet(false)}
+        />
+      )}
       {showGifts && (
         <GiftSheet
           roomId={roomId}
