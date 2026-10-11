@@ -17,6 +17,7 @@ import RelationsSheet from "./RelationsSheet";
 import LevelSheet from "./LevelSheet";
 import SupporterSheet from "./SupporterSheet";
 import LegendSheet from "./LegendSheet";
+import MissionsSheet from "./MissionsSheet";
 import ProfilePage from "./ProfilePage";
 import AdminPanelSheet from "./AdminPanelSheet";
 import MedalsSheet from "./MedalsSheet";
@@ -47,6 +48,7 @@ export default function MeTab({ onEnterRoom }: Props) {
   const [showLevel, setShowLevel] = useState(false);
   const [showSupporter, setShowSupporter] = useState(false);
   const [showLegend, setShowLegend] = useState(false);
+  const [showMissions, setShowMissions] = useState(false);
 
   // [moorawi-nav] Back button closes each overlay
   useBackButton(showFullProfile, () => setShowFullProfile(false));
@@ -63,6 +65,7 @@ export default function MeTab({ onEnterRoom }: Props) {
   useBackButton(showLevel, () => setShowLevel(false));
   useBackButton(showSupporter, () => setShowSupporter(false));
   useBackButton(showLegend, () => setShowLegend(false));
+  useBackButton(showMissions, () => setShowMissions(false));
 
   if (!me) {
     return (
@@ -136,6 +139,7 @@ export default function MeTab({ onEnterRoom }: Props) {
           onOpenWallet={() => setShowWallet(true)}
           onOpenStore={() => setShowShop(true)}
           onOpenMedals={() => setShowMedals(true)}
+          onOpenMissions={() => setShowMissions(true)}
           onOpenVip={() => setShowVip(true)}
           onOpenHost={() => setShowAgency("host")}
           onOpenAgency={() => setShowAgency("agent")}
@@ -178,6 +182,7 @@ export default function MeTab({ onEnterRoom }: Props) {
       {showLevel && <LevelSheet onClose={() => setShowLevel(false)} />}
       {showSupporter && <SupporterSheet onClose={() => setShowSupporter(false)} />}
       {showLegend && <LegendSheet onClose={() => setShowLegend(false)} />}
+      {showMissions && <MissionsSheet onClose={() => setShowMissions(false)} />}
     </>
   );
 }

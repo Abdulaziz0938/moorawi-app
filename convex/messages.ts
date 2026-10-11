@@ -70,7 +70,9 @@ export const send = mutation({
     const text = args.text?.trim() ?? "";
     if (!text && !args.imageUrl) throw new ConvexError({ code: "BAD_REQUEST", message: "الرسالة فارغة" });
     if (text.length > MAX_LEN) throw new ConvexError({ code: "BAD_REQUEST", message: "الرسالة طويلة" });
-    await ctx.db.insert("messages", { roomId: args.roomId, senderId: user._id, senderName: user.name ?? "ضيف", text: text || undefined, imageUrl: args.imageUrl, system: false });
+    await ctx.db.insert("messages", { roomId: args.roomId, senderId: user._id, senderName: user.name ?? "ضيف", text: text || undefined, imageUrl: args.imageUrl, system: false })
+
+    await recordMissionProgress(ctx, user._id, ["daily_10_messages", "weekly_500_messages"]);;
     return null;
   },
 });
@@ -86,3 +88,34 @@ export const remove = mutation({
     return null;
   },
 });
+
+async function recordMissionProgress(ctx: any, userId: any, keys: string[], amount = 1) {
+  const dailyCycle = new Date().toISOString().slice(0, 10);
+  const onejan = new Date(new Date().getFullYear(), 0, 1);
+  const week = Math.ceil(((new Date().getTime() - onejan.getTime()) / 86400000 + onejan.getDay() + 1) / 7);
+  const weeklyCycle = `${new Date().getFullYear()}-W${week}`;
+  const missions = await ctx.db.query("missions").collect();
+  for (const key of keys) {
+    const m = missions.find((x: any) => x.key === key);
+    if (!m) continue;
+    const cycle = m.type === "weekly" ? weeklyCycle : dailyCycle;
+    const existing = await ctx.db
+      .query("userMissions")
+      .withIndex("by_user_and_mission", (q: any) => q.eq("userId", userId).eq("missionId", m._id))
+      .filter((q: any) => q.eq(q.field("cycleKey"), cycle))
+      .first();
+    if (existing) {
+      if (existing.claimedAt) continue;
+      await ctx.db.patch("userMissions", existing._id, {
+        progress: Math.min((existing.progress ?? 0) + amount, m.target),
+      });
+    } else {
+      await ctx.db.insert("userMissions", {
+        userId,
+        missionId: m._id,
+        progress: Math.min(amount, m.target),
+        cycleKey: cycle,
+      });
+    }
+  }
+}

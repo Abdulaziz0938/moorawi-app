@@ -163,6 +163,7 @@ export const send = mutation({
       coins: myCoins - totalPrice,
       totalSent: (user.totalSent ?? 0) + totalPrice,
     });
+    await recordMissionProgress(ctx, user._id, ["daily_send_gift", "daily_5_gifts", "weekly_50_gifts"]);
     // [moorawi-levels] 1 coin received = 1 Charm XP
     await ctx.db.patch("users", args.toUserId, {
       charms: (target.charms ?? 0) + totalPrice,
@@ -548,3 +549,36 @@ export const latestGlobalBroadcast = query({
     };
   },
 });
+
+// [moorawi-missions] Helper لتسجيل تقدم المهام
+async function recordMissionProgress(ctx: any, userId: any, keys: string[], amount = 1) {
+  const dailyCycle = new Date().toISOString().slice(0, 10);
+  const onejan = new Date(new Date().getFullYear(), 0, 1);
+  const week = Math.ceil(((new Date().getTime() - onejan.getTime()) / 86400000 + onejan.getDay() + 1) / 7);
+  const weeklyCycle = `${new Date().getFullYear()}-W${week}`;
+
+  const missions = await ctx.db.query("missions").collect();
+  for (const key of keys) {
+    const m = missions.find((x: any) => x.key === key);
+    if (!m) continue;
+    const cycle = m.type === "weekly" ? weeklyCycle : dailyCycle;
+    const existing = await ctx.db
+      .query("userMissions")
+      .withIndex("by_user_and_mission", (q: any) => q.eq("userId", userId).eq("missionId", m._id))
+      .filter((q: any) => q.eq(q.field("cycleKey"), cycle))
+      .first();
+    if (existing) {
+      if (existing.claimedAt) continue;
+      await ctx.db.patch("userMissions", existing._id, {
+        progress: Math.min((existing.progress ?? 0) + amount, m.target),
+      });
+    } else {
+      await ctx.db.insert("userMissions", {
+        userId,
+        missionId: m._id,
+        progress: Math.min(amount, m.target),
+        cycleKey: cycle,
+      });
+    }
+  }
+}
