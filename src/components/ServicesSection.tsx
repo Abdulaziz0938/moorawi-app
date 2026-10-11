@@ -22,6 +22,8 @@ interface Props {
   onOpenLevel?: () => void;
   onOpenSupporter?: () => void;
   onOpenLegend?: () => void;
+  onOpenSupporterVip?: () => void;
+  onOpenLanguage?: () => void;
   onLogout?: () => void;
   onOpenMedals?: () => void;
   isOwner?: boolean;
@@ -43,6 +45,8 @@ export default function ServicesSection({
   onOpenLevel,
   onOpenSupporter,
   onOpenLegend,
+  onOpenSupporterVip,
+  onOpenLanguage,
   onLogout,
   onOpenMedals,
   isOwner,
@@ -88,11 +92,11 @@ export default function ServicesSection({
   // ============ Bottom list: 7 rows ============
   const listItems = [
     { key: "missions",      assetKey: "ui.service.missions",   label: "مهام",                     icon: CheckSquare,  color: "text-emerald-300", onClick: onOpenMissions ?? (() => soon("المهام")) },
-    { key: "vipSupport",      assetKey: "ui.service.support", label: "VIP خاصة بالداعمين",       icon: Crown,        color: "text-purple-300",  onClick: () => soon("VIP خاصة بالداعمين") },
+    { key: "vipSupport",      assetKey: "ui.service.support", label: "VIP خاصة بالداعمين",       icon: Crown,        color: "text-purple-300",  onClick: onOpenSupporterVip ?? (() => soon("VIP خاصة بالداعمين")) },
     { key: "verify",      assetKey: "ui.service.verify",     label: "المصادقة",                 icon: ShieldCheck,  color: "text-blue-300",    onClick: onOpenVerify ?? (() => soon("المصادقة")) },
     { key: "visits",      assetKey: "ui.service.visits",     label: "الزيارات الأخيرة",         icon: Clock,        color: "text-cyan-300",    onClick: onOpenVisits ?? (() => soon("الزيارات الأخيرة")) },
     { key: "support",      assetKey: "ui.service.support",    label: "خدمة عملاء",               icon: Headphones,   color: "text-indigo-300",  onClick: onOpenSupport ?? (() => soon("خدمة العملاء")) },
-    { key: "language",      assetKey: "ui.service.language",   label: "اللغة",                    icon: Globe,        color: "text-pink-300",    onClick: () => soon("اللغة") },
+    { key: "language",      assetKey: "ui.service.language",   label: "اللغة",                    icon: Globe,        color: "text-pink-300",    onClick: onOpenLanguage ?? (() => soon("اللغة")) },
     { key: "settings",      assetKey: "ui.service.settings",   label: "إعدادات",                  icon: Settings,     color: "text-white/70",    onClick: onOpenSettings ?? (() => soon("الإعدادات")) },
   ];
 

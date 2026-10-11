@@ -1241,8 +1241,8 @@ export default function RoomView({ roomId, onLeave }: Props) {
             setFullProfileIsMe(false);
             setShowGifts(true);
           }}
-          onOpenAdminPanel={() => dialog.alert("لوحة الأدمن - قيد التطوير")}
-          onOpenOwnerPanel={() => dialog.alert("لوحة المالك - قيد التطوير")}
+          onOpenAdminPanel={() => { setFullProfileUserId(null); }}
+          onOpenOwnerPanel={() => { setFullProfileUserId(null); }}
         />
       )}
 

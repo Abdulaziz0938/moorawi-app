@@ -18,6 +18,8 @@ import LevelSheet from "./LevelSheet";
 import SupporterSheet from "./SupporterSheet";
 import LegendSheet from "./LegendSheet";
 import MissionsSheet from "./MissionsSheet";
+import SupporterVipSheet from "./SupporterVipSheet";
+import LanguageSheet from "./LanguageSheet";
 import ProfilePage from "./ProfilePage";
 import AdminPanelSheet from "./AdminPanelSheet";
 import MedalsSheet from "./MedalsSheet";
@@ -49,6 +51,8 @@ export default function MeTab({ onEnterRoom }: Props) {
   const [showSupporter, setShowSupporter] = useState(false);
   const [showLegend, setShowLegend] = useState(false);
   const [showMissions, setShowMissions] = useState(false);
+  const [showSupporterVip, setShowSupporterVip] = useState(false);
+  const [showLanguage, setShowLanguage] = useState(false);
 
   // [moorawi-nav] Back button closes each overlay
   useBackButton(showFullProfile, () => setShowFullProfile(false));
@@ -66,6 +70,8 @@ export default function MeTab({ onEnterRoom }: Props) {
   useBackButton(showSupporter, () => setShowSupporter(false));
   useBackButton(showLegend, () => setShowLegend(false));
   useBackButton(showMissions, () => setShowMissions(false));
+  useBackButton(showSupporterVip, () => setShowSupporterVip(false));
+  useBackButton(showLanguage, () => setShowLanguage(false));
 
   if (!me) {
     return (
@@ -150,6 +156,8 @@ export default function MeTab({ onEnterRoom }: Props) {
           onOpenLevel={() => setShowLevel(true)}
           onOpenSupporter={() => setShowSupporter(true)}
           onOpenLegend={() => setShowLegend(true)}
+          onOpenSupporterVip={() => setShowSupporterVip(true)}
+          onOpenLanguage={() => setShowLanguage(true)}
           onLogout={() => {
             dialog.confirm(
               "هل تريد تسجيل الخروج من الحساب؟",
@@ -183,6 +191,8 @@ export default function MeTab({ onEnterRoom }: Props) {
       {showSupporter && <SupporterSheet onClose={() => setShowSupporter(false)} />}
       {showLegend && <LegendSheet onClose={() => setShowLegend(false)} />}
       {showMissions && <MissionsSheet onClose={() => setShowMissions(false)} />}
+      {showSupporterVip && <SupporterVipSheet onClose={() => setShowSupporterVip(false)} />}
+      {showLanguage && <LanguageSheet onClose={() => setShowLanguage(false)} />}
     </>
   );
 }
