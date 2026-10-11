@@ -708,3 +708,229 @@ export const deleteAgency = internalMutation({
     return { ok: true };
   },
 });
+
+// ============================================================
+// [moorawi-agency] adminSalariesReport — جدول الرواتب الشامل
+// يعرض كل المضيفين مع بياناتهم الشهرية
+// ============================================================
+export const adminSalariesReport = query({
+  args: {
+    month: v.optional(v.string()),         // "2026-10" — default: current
+    agencyId: v.optional(v.id("agencies")),
+    tokenOverride: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
+    if (!isFullAdmin(me)) throw new Error("غير مصرح");
+
+    const month = args.month ?? new Date().toISOString().slice(0, 7);
+
+    // اجلب كل المضيفين
+    const hosts = await ctx.db.query("agencyHosts").collect();
+    const activeHosts = hosts.filter((h) => h.status === "active");
+
+    // فلترة حسب الوكالة
+    const filtered = args.agencyId
+      ? activeHosts.filter((h) => h.agencyId === args.agencyId)
+      : activeHosts;
+
+    const enriched = await Promise.all(
+      filtered.map(async (h) => {
+        const u = await ctx.db.get("users", h.userId);
+        const agency = await ctx.db.get("agencies", h.agencyId);
+
+        if (!u) return null;
+
+        const income = u.hostIncomeMonth ?? 0;
+        const diamonds = u.diamonds ?? 0;
+        const hours = u.hostHoursMonth ?? 0;
+        const days = u.hostDaysMonth ?? 0;
+
+        // حساب المستوى + الراتب المتوقع
+        const level = levelFromAchieved(income);
+        const levelData = HOST_LEVELS.find((L) => L.level === level);
+
+        // الماس المحتفظ به = الماس المُتبقي في الحساب
+        const diamondsHeld = diamonds;
+        // الماس المكتسب (30% من الدخل)
+        const diamondsEarned = Math.floor(income * 0.3);
+        // الماس المصروف = المكتسب - المحتفظ (بشكل تقريبي)
+        const diamondsSpent = Math.max(0, diamondsEarned - diamondsHeld);
+
+        // راتب الماس حسب الماس المتبقي
+        const diamondLevel = levelFromAchieved(diamondsHeld / 0.3);
+        const diamondLevelData = HOST_LEVELS.find((L) => L.level === diamondLevel);
+        const diamondSalary = diamondLevelData?.dia ?? 0;
+        const baseSalary = levelData?.base ?? 0;
+        const totalSalary = baseSalary + diamondSalary;
+        const agencyCut = levelData?.agency ?? 0;
+
+        return {
+          _id: h._id,
+          userId: h.userId,
+          userName: u.name ?? "—",
+          userNumber: u.userNumber ?? null,
+          userAvatar: u.avatarUrl ?? null,
+          agencyId: h.agencyId,
+          agencyName: agency?.name ?? "—",
+          agencyNumber: agency?.agencyNumber ?? null,
+          days,
+          hours,
+          diamondsHeld,
+          diamondsEarned,
+          diamondsSpent,
+          income,
+          level,
+          targetCoins: levelData?.target ?? 0,
+          baseSalary,
+          diamondSalary,
+          totalSalary,
+          agencyCut,
+          note: "",
+        };
+      })
+    );
+
+    // إحصائيات عامة
+    const valid = enriched.filter((x) => x !== null) as any[];
+    const totals = {
+      count: valid.length,
+      totalIncome: valid.reduce((s, r) => s + r.income, 0),
+      totalDiamonds: valid.reduce((s, r) => s + r.diamondsHeld, 0),
+      totalBase: valid.reduce((s, r) => s + r.baseSalary, 0),
+      totalDiamond: valid.reduce((s, r) => s + r.diamondSalary, 0),
+      totalSalary: valid.reduce((s, r) => s + r.totalSalary, 0),
+      totalAgencyCut: valid.reduce((s, r) => s + r.agencyCut, 0),
+    };
+
+    return { month, hosts: valid, totals };
+  },
+});
+
+// ============================================================
+// [moorawi-agency] adminAgenciesReport — جدول الوكالات
+// ============================================================
+export const adminAgenciesReport = query({
+  args: { tokenOverride: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
+    if (!isFullAdmin(me)) throw new Error("غير مصرح");
+
+    const agencies = await ctx.db.query("agencies").collect();
+
+    const enriched = await Promise.all(
+      agencies.map(async (a) => {
+        const owner = await ctx.db.get("users", a.ownerId);
+        const hosts = await ctx.db
+          .query("agencyHosts")
+          .withIndex("by_agency", (q) => q.eq("agencyId", a._id).eq("status", "active"))
+          .collect();
+
+        // حساب مجموع النقاط
+        let totalIncome = 0;
+        let totalDiamonds = 0;
+        let totalSalary = 0;
+        let totalAgencyCut = 0;
+
+        for (const h of hosts) {
+          const u = await ctx.db.get("users", h.userId);
+          if (!u) continue;
+          const income = u.hostIncomeMonth ?? 0;
+          const level = levelFromAchieved(income);
+          const levelData = HOST_LEVELS.find((L) => L.level === level);
+          totalIncome += income;
+          totalDiamonds += u.diamonds ?? 0;
+          totalSalary += levelData?.total ?? 0;
+          totalAgencyCut += levelData?.agency ?? 0;
+        }
+
+        // تحديث مستوى الوكالة من مجموع النقاط
+        const newLevel = agencyLevelFromPoints(totalIncome);
+
+        return {
+          _id: a._id,
+          name: a.name,
+          agencyNumber: a.agencyNumber ?? null,
+          level: newLevel,
+          ownerId: a.ownerId,
+          ownerName: owner?.name ?? "—",
+          ownerNumber: owner?.userNumber ?? null,
+          hostCount: hosts.length,
+          totalIncome,
+          totalDiamonds,
+          totalSalary,
+          totalAgencyCut,
+          createdAt: a.createdAt,
+        };
+      })
+    );
+
+    const totals = {
+      count: enriched.length,
+      totalHosts: enriched.reduce((s, a) => s + a.hostCount, 0),
+      totalIncome: enriched.reduce((s, a) => s + a.totalIncome, 0),
+      totalSalary: enriched.reduce((s, a) => s + a.totalSalary, 0),
+    };
+
+    return { agencies: enriched, totals };
+  },
+});
+
+// ============================================================
+// [moorawi-agency] hostRequests — طلبات الانضمام لوكالة معينة
+// يعرض الملف الشخصي كامل + أزرار قبول/رفض
+// ============================================================
+export const hostRequests = query({
+  args: { tokenOverride: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
+    if (!me.agencyId) throw new Error("أنت لست وكيلاً");
+
+    // تأكد أنه مالك الوكالة
+    const agency = await ctx.db.get("agencies", me.agencyId);
+    if (!agency) throw new Error("الوكالة غير موجودة");
+    if (agency.ownerId !== me._id && !isFullAdmin(me)) {
+      throw new Error("غير مصرح");
+    }
+
+    const reqs = await ctx.db
+      .query("agencyRequests")
+      .withIndex("by_agency", (q) => q.eq("agencyId", me.agencyId!).eq("status", "pending"))
+      .collect();
+
+    const enriched = await Promise.all(
+      reqs.map(async (r) => {
+        const u = await ctx.db.get("users", r.userId);
+        if (!u) return null;
+
+        // إحصائيات المستخدم
+        const wealthLevel = Math.min(100, Math.floor(Math.log10((u.totalSent ?? 0) / 500 + 1) * 25));
+        const vip = activeVipLevel(u);
+
+        return {
+          _id: r._id,
+          userId: r.userId,
+          createdAt: r.createdAt,
+          // بيانات المستخدم
+          name: u.name ?? "—",
+          userNumber: u.userNumber ?? null,
+          username: u.username ?? null,
+          avatarUrl: u.avatarUrl ?? (u.avatarId ? await ctx.storage.getUrl(u.avatarId) : null),
+          bio: u.bio ?? null,
+          age: u.age ?? null,
+          gender: u.gender ?? null,
+          country: u.country ?? null,
+          vipLevel: vip,
+          totalSent: u.totalSent ?? 0,
+          totalReceived: u.totalReceived ?? 0,
+          charms: u.charms ?? 0,
+          diamonds: u.diamonds ?? 0,
+          wealthLevel,
+          verificationStatus: u.verificationStatus ?? null,
+        };
+      })
+    );
+
+    return enriched.filter((x) => x !== null);
+  },
+});

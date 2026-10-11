@@ -6,12 +6,13 @@ import { dialog } from "../lib/dialog";
 import {
   X, Loader2, Search, Coins, Gem, Ban, ShieldCheck, Crown,
   Users, Home, ShoppingBag, TrendingUp, Plus, Save, ChevronLeft,
-  UserCheck, UserX, Image as ImageIcon, Upload, RotateCcw, Briefcase,
+  UserCheck, UserX, Image as ImageIcon, Upload, RotateCcw, Briefcase, BarChart3,
 } from "lucide-react";
 import { uploadToCloudinary } from "../lib/cloudinary";
 import { useAssets } from "../lib/assets";
 import AssetsPanel from "./AssetsPanel";
 import AgencyRequestsPanel from "./AgencyRequestsPanel";
+import AgencyAdminReport from "./AgencyAdminReport";
 
 interface Props {
   onClose: () => void;
@@ -43,6 +44,7 @@ export default function AdminPanelSheet({ onClose }: Props) {
   const [busy, setBusy] = useState(false);
   const [showAssets, setShowAssets] = useState(false);
   const [showAgencyRequests, setShowAgencyRequests] = useState(false);
+  const [showAdminReport, setShowAdminReport] = useState(false);
 
   const [grantAmount, setGrantAmount] = useState("10000");
 
@@ -198,12 +200,19 @@ export default function AdminPanelSheet({ onClose }: Props) {
               </div>
             )}
             <h2 className="text-white text-lg font-black">
-              {showAgencyRequests ? "طلبات الوكالات" : showAssets ? "الأصول والصور" : editUser ? `تعديل: ${editUser.username}` : "لوحة المالك"}
+              {showAdminReport ? "تقارير الوكالات" : showAgencyRequests ? "طلبات الوكالات" : showAssets ? "الأصول والصور" : editUser ? `تعديل: ${editUser.username}` : "لوحة المالك"}
             </h2>
           </div>
           <div className="flex items-center gap-1">
-            {!editUser && !showAssets && !showAgencyRequests && (
+            {!editUser && !showAssets && !showAgencyRequests && !showAdminReport && (
               <>
+                <button
+                  onClick={() => setShowAdminReport(true)}
+                  title="تقارير الوكالات"
+                  className="p-2 rounded-full hover:bg-white/10 text-white"
+                >
+                  <BarChart3 size={20} />
+                </button>
                 <button
                   onClick={() => setShowAgencyRequests(true)}
                   title="طلبات الوكالات"
@@ -229,8 +238,10 @@ export default function AdminPanelSheet({ onClose }: Props) {
         {/* ===== Content ===== */}
         <div className="flex-1 overflow-y-auto">
 
-          {/* ============ AGENCY REQUESTS ============ */}
-          {showAgencyRequests ? (
+          {/* ============ AGENCY ADMIN REPORT ============ */}
+          {showAdminReport ? (
+            <AgencyAdminReport onClose={() => setShowAdminReport(false)} />
+          ) : showAgencyRequests ? (
             <AgencyRequestsPanel token={token} />
           ) : showAssets ? (
             <AssetsPanel token={token} />
