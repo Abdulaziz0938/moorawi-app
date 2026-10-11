@@ -224,7 +224,10 @@ export const myRequests = query({
 });
 
 export const agencyHosts = query({
-  args: { agencyId: v.id("agencies") },
+  args: {
+    agencyId: v.id("agencies"),
+    tokenOverride: v.optional(v.string()),
+  },
   handler: async (ctx, args) => {
     const hosts = await ctx.db
       .query("agencyHosts")
@@ -253,7 +256,10 @@ export const agencyHosts = query({
 });
 
 export const agencyRequests = query({
-  args: { agencyId: v.id("agencies") },
+  args: {
+    agencyId: v.id("agencies"),
+    tokenOverride: v.optional(v.string()),
+  },
   handler: async (ctx, args) => {
     const reqs = await ctx.db
       .query("agencyRequests")
