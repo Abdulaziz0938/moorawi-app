@@ -340,3 +340,57 @@ export const createStaffUser = internalMutation({
     return { ok: true, userId: id, username, userNumber: args.userNumber, adminRole: args.adminRole };
   },
 });
+
+// ============================================================
+// [moorawi-admin] setAdminRole — internal (CLI only)
+// ============================================================
+export const setAdminRole = internalMutation({
+  args: {
+    userId: v.id("users"),
+    adminRole: v.union(v.literal("super"), v.literal("moderator"), v.null()),
+  },
+  handler: async (ctx, args) => {
+    const u = await ctx.db.get("users", args.userId);
+    if (!u) throw new ConvexError({ code: "NOT_FOUND", message: "المستخدم غير موجود" });
+    await ctx.db.patch("users", args.userId, {
+      adminRole: args.adminRole ?? undefined,
+      isAdmin: args.adminRole !== null,
+    });
+    return { ok: true, userId: args.userId, adminRole: args.adminRole };
+  },
+});
+
+// ============================================================
+// [moorawi-admin] updateShopItemAssets — moderator can update images only
+// ============================================================
+export const updateShopItemAssets = mutation({
+  args: {
+    tokenOverride: v.optional(v.string()),
+    itemId: v.id("shopItems"),
+    imageUrl: v.optional(v.string()),
+    previewUrl: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
+    if (
+      me.adminRole !== "super" &&
+      me.adminRole !== "moderator" &&
+      me.userNumber !== 1
+    ) {
+      throw new ConvexError({ code: "FORBIDDEN", message: "صلاحيات مطلوبة" });
+    }
+    const patch: any = {};
+    if (args.imageUrl !== undefined) patch.imageUrl = args.imageUrl;
+    if (args.previewUrl !== undefined) patch.previewUrl = args.previewUrl;
+    if (Object.keys(patch).length === 0) return { ok: true, changed: 0 };
+
+    await ctx.db.patch("shopItems", args.itemId, patch);
+    await ctx.db.insert("auditLogs", {
+      adminId: me._id,
+      adminName: me.name ?? me.username ?? "أدمن",
+      action: "updateShopItemAssets",
+      target: `item:${args.itemId}`,
+    });
+    return { ok: true, changed: Object.keys(patch).length };
+  },
+});

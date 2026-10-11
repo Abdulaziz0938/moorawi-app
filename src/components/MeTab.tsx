@@ -49,6 +49,10 @@ export default function MeTab({ onEnterRoom }: Props) {
           setShowFullProfile(false);
           setShowAdmin(true);
         }}
+        onOpenAdminPanel={() => {
+          setShowFullProfile(false);
+          setShowAdmin(true);
+        }}
       />
     );
   }

@@ -86,13 +86,25 @@ export async function requireModerator(
 }
 
 // ============================================================
-// [moorawi-perms] isFullAdmin — owner (ID 1) + super + ID 10
-// Used by all asset-upload endpoints (VIP, medals, shop, gifts, UI)
+// [moorawi-perms] isFullAdmin — owner (ID 1) + super ONLY
+// Full control: users, coins, VIP, roles, medal grant
 // ============================================================
 export function isFullAdmin(user: { adminRole?: string; userNumber?: number } | null | undefined): boolean {
   if (!user) return false;
   if (user.adminRole === "super") return true;
   if (user.userNumber === 1) return true;
-  if (user.userNumber === 10) return true;   // abody0938 — asset manager
+  return false;
+}
+
+// ============================================================
+// [moorawi-perms] isAssetManager — asset upload only
+// Adds: ID 10 (abody0938) + moderator role
+// Allowed: image upload, medal image/name edit, bubble edit
+// ============================================================
+export function isAssetManager(user: { adminRole?: string; userNumber?: number } | null | undefined): boolean {
+  if (!user) return false;
+  if (isFullAdmin(user)) return true;
+  if (user.userNumber === 10) return true;
+  if (user.adminRole === "moderator") return true;
   return false;
 }

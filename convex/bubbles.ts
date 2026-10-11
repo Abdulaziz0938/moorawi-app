@@ -27,7 +27,11 @@ export const getByKey = query({
 });
 
 function assertAdmin(me: { adminRole?: string; userNumber?: number }) {
-  if (me.adminRole !== "super" && me.userNumber !== 1) {
+  if (
+    me.adminRole !== "super" &&
+    me.adminRole !== "moderator" &&
+    me.userNumber !== 1
+  ) {
     throw new Error("غير مصرح");
   }
 }

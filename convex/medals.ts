@@ -1,6 +1,6 @@
 import { mutation, query, internalMutation } from "./_generated/server";
 import { ConvexError, v } from "convex/values";
-import { requireUser, isFullAdmin } from "./lib/auth";
+import { requireUser, isFullAdmin, isAssetManager } from "./lib/auth";
 
 // ============================================================
 // [moorawi-medals] Tier rank — for auto-equip on grant
@@ -260,7 +260,7 @@ export const updateMedal = mutation({
   },
   handler: async (ctx, args) => {
     const me = await requireUser(ctx, args.tokenOverride);
-    if (!isFullAdmin(me)) {
+    if (!isAssetManager(me)) {
       throw new ConvexError({ code: "FORBIDDEN", message: "صلاحيات المالك مطلوبة" });
     }
     const medal = await ctx.db.get("medals", args.medalId);

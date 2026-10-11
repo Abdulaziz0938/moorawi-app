@@ -8,7 +8,7 @@
 
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { requireUser, isFullAdmin } from "./lib/auth";
+import { requireUser, isAssetManager } from "./lib/auth";
 
 // Public — frontend reads all overrides at once (small table).
 export const list = query({
@@ -18,11 +18,7 @@ export const list = query({
   },
 });
 
-function assertAdmin(me: any) {
-  if (!isFullAdmin(me)) {
-    throw new Error("غير مصرح");
-  }
-}
+
 
 export const set = mutation({
   args: {
@@ -32,7 +28,7 @@ export const set = mutation({
   },
   handler: async (ctx, args) => {
     const me = await requireUser(ctx, args.tokenOverride);
-    assertAdmin(me);
+    if (!isAssetManager(me)) throw new Error("غير مصرح");
     const existing = await ctx.db
       .query("assets")
       .withIndex("by_key", (q) => q.eq("key", args.key))
@@ -61,7 +57,7 @@ export const clear = mutation({
   },
   handler: async (ctx, args) => {
     const me = await requireUser(ctx, args.tokenOverride);
-    assertAdmin(me);
+    if (!isAssetManager(me)) throw new Error("غير مصرح");
     const existing = await ctx.db
       .query("assets")
       .withIndex("by_key", (q) => q.eq("key", args.key))
