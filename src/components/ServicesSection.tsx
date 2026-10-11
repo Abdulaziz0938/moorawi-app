@@ -142,9 +142,10 @@ export default function ServicesSection({
               }`}
             >
               <div className="flex items-center gap-3">
-                <div className={`w-14 h-14 rounded-full bg-white/10 flex items-center justify-center ${it.color} overflow-hidden`}>
-                  <IconOrImage assetKey={it.assetKey} Icon={Icon} size={24} imgSize={56} strokeWidth={2} imgClassName="w-full h-full object-contain scale-110" />
+                <div className={`w-11 h-11 rounded-full bg-white/10 flex items-center justify-center ${it.color}`}>
+                  <IconOrImage assetKey={it.assetKey} Icon={Icon} size={16} imgSize={44} strokeWidth={2} />
                 </div>
+                <span className="text-white text-sm font-bold">{it.label}</span>
               </div>
               <ChevronLeft size={18} className="text-white/40" />
             </button>
