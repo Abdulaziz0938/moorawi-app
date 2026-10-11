@@ -27,6 +27,7 @@ import type * as mics from "../mics.js";
 import type * as music from "../music.js";
 import type * as profileFull from "../profileFull.js";
 import type * as profiles from "../profiles.js";
+import type * as relationships from "../relationships.js";
 import type * as resetStats from "../resetStats.js";
 import type * as rewards from "../rewards.js";
 import type * as rooms from "../rooms.js";
@@ -66,6 +67,7 @@ declare const fullApi: ApiFromModules<{
   music: typeof music;
   profileFull: typeof profileFull;
   profiles: typeof profiles;
+  relationships: typeof relationships;
   resetStats: typeof resetStats;
   rewards: typeof rewards;
   rooms: typeof rooms;
