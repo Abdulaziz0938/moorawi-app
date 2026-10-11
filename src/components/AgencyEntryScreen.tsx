@@ -9,6 +9,7 @@ import AgencyCreateForm from "./AgencyCreateForm";
 import HostRequestsPanel from "./HostRequestsPanel";
 import MyHostView from "./MyHostView";
 import AgencyOverviewView from "./AgencyOverviewView";
+import MiniProfileSheet from "./MiniProfileSheet";
 import {
   ChevronRight, Search, Loader2, Briefcase, Mic, Users,
   Clock, Check, X, Plus, Award, Shield, Gift,
@@ -28,12 +29,13 @@ export default function AgencyEntryScreen({ initialTab = "host", onClose }: Prop
   const [tab, setTab] = useState<Tab>(initialTab);
   const [view, setView] = useState<View>("landing");
   const [showPending, setShowPending] = useState(false);
+  const [previewUserId, setPreviewUserId] = useState<any>(null);
 
   if (!me) return null;
 
   // إذا كان في وكالة → صفحة الوكالة
   if (me.agencyId) {
-    return <MyAgencyView onClose={onClose} tab={tab} />;
+    return <MyAgencyView onClose={onClose} tab={tab} onPreviewUser={setPreviewUserId} />;
   }
 
   // ===== Views =====
@@ -97,6 +99,14 @@ export default function AgencyEntryScreen({ initialTab = "host", onClose }: Prop
 
       {/* Pending Modal */}
       {showPending && <PendingModal onClose={() => setShowPending(false)} />}
+
+      {/* User Preview */}
+      {previewUserId && (
+        <MiniProfileSheet
+          userId={previewUserId}
+          onClose={() => setPreviewUserId(null)}
+        />
+      )}
     </div>
   );
 }
@@ -381,7 +391,7 @@ function CreateRequestsView({ onClose, onBack }: { onClose: () => void; onBack: 
 // ============================================================
 // MY AGENCY VIEW (placeholder — يُبنى لاحقاً)
 // ============================================================
-function MyAgencyView({ onClose, tab }: { onClose: () => void; tab: Tab }) {
+function MyAgencyView({ onClose, tab, onPreviewUser }: { onClose: () => void; tab: Tab; onPreviewUser: (id: any) => void }) {
   const [showRequests, setShowRequests] = useState(false);
   const deviceId = getDeviceId();
   const me = useQuery(api.profiles.me, { tokenOverride: deviceId });
@@ -408,6 +418,7 @@ function MyAgencyView({ onClose, tab }: { onClose: () => void; tab: Tab }) {
       <AgencyOverviewView
         onClose={onClose}
         onShowRequests={() => setShowRequests(true)}
+        onUserClick={onPreviewUser}
       />
     );
   }
