@@ -75,31 +75,45 @@ export default function RoomsTab({ onEnter }: Props) {
 
   return (
     <div className="max-w-md mx-auto pb-24">
-      {/* ============ Top Bar: home | search | tabs ============ */}
+      {/* ============ Top Bar: (search | tabs) ... home ============ */}
       <div className="px-4 pt-3 pb-3 flex items-center justify-between">
-        {/* Left: home icon */}
+        {/* Left: search + tabs */}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowSearch(!showSearch)}
+            className={`w-10 h-10 rounded-2xl border flex items-center justify-center active:scale-95 transition ${
+              showSearch ? "bg-purple-500/40 border-purple-400/60 text-white" : "bg-white/10 border-white/15 text-white"
+            }`}
+          >
+            <Search size={18} />
+          </button>
+          <div className="flex items-center gap-4" dir="rtl">
+            <TopTabBtn active={mainTab === "mine"}  onClick={() => setMainTab("mine")}  label="الخاص بي" />
+            <TopTabBtn active={mainTab === "trend"} onClick={() => setMainTab("trend")} label="ترند" />
+            <TopTabBtn active={mainTab === "live"}  onClick={() => setMainTab("live")}  label="لايف" />
+          </div>
+        </div>
+
+        {/* Right: home icon */}
         <button
           onClick={() => myRoom ? onEnter(myRoom._id) : setShowCreate(true)}
           className="w-11 h-11 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center text-white active:scale-95 transition"
         >
           <Home size={20} />
         </button>
-
-        {/* Middle-right: tabs + search */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-4" dir="rtl">
-            <TopTabBtn active={mainTab === "mine"}  onClick={() => setMainTab("mine")}  label="الخاص بي" />
-            <TopTabBtn active={mainTab === "trend"} onClick={() => setMainTab("trend")} label="ترند" />
-            <TopTabBtn active={mainTab === "live"}  onClick={() => setMainTab("live")}  label="لايف" />
-          </div>
-          <button
-            onClick={() => setShowSearch(!showSearch)}
-            className="w-10 h-10 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center text-white active:scale-95 transition"
-          >
-            <Search size={18} />
-          </button>
-        </div>
       </div>
+
+      {/* ============ Search Bar (expandable) ============ */}
+      {showSearch && (
+        <div className="px-4 pb-3">
+          <input
+            type="text"
+            placeholder="ابحث عن غرفة بالاسم أو الرقم..."
+            autoFocus
+            className="w-full bg-white/10 border border-white/20 rounded-2xl py-2.5 pr-4 pl-4 text-white placeholder:text-white/40 text-sm focus:outline-none focus:border-purple-400"
+          />
+        </div>
+      )}
 
       {/* ============ Content ============ */}
       <div className="px-4 py-3">
