@@ -526,3 +526,46 @@ export const publicRoomsWithStats = query({
     return enriched;
   },
 });
+
+// ============================================================
+// [moorawi-rooms] search — by name or roomNumber
+// ============================================================
+export const search = query({
+  args: { q: v.string() },
+  handler: async (ctx, args) => {
+    const q = args.q.trim().toLowerCase();
+    if (q.length < 1) return [];
+
+    const rooms = await ctx.db.query("rooms").collect();
+    const isNum = /^\d+$/.test(q);
+
+    const matched = rooms.filter((r) => {
+      if (r.isPrivate) return false;
+      const nameMatch = (r.name ?? "").toLowerCase().includes(q);
+      const numMatch = isNum && r.roomNumber !== undefined && String(r.roomNumber).includes(q);
+      return nameMatch || numMatch;
+    }).slice(0, 30);
+
+    const enriched = await Promise.all(
+      matched.map(async (r) => {
+        const owner = await ctx.db.get("users", r.ownerId);
+        const members = await ctx.db
+          .query("roomMembers")
+          .withIndex("by_room", (q2) => q2.eq("roomId", r._id))
+          .collect();
+        return {
+          _id: r._id,
+          name: r.name,
+          coverUrl: r.coverUrl ?? null,
+          welcomeMessage: r.welcomeMessage ?? "",
+          memberCount: r.memberCount ?? 0,
+          onlineCount: members.length,
+          roomNumber: r.roomNumber ?? null,
+          ownerName: owner?.name ?? "—",
+          ownerUserNumber: owner?.userNumber ?? null,
+        };
+      })
+    );
+    return enriched;
+  },
+});

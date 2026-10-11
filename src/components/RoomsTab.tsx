@@ -6,6 +6,7 @@ import type { Id } from "../../convex/_generated/dataModel";
 import { getDeviceId } from "../lib/device";
 import { dialog } from "../lib/dialog";
 import UserAvatar from "./UserAvatar";
+import RoomSearchScreen from "./RoomSearchScreen";
 import { UserName } from "./UserBadges";
 import {
   Home, Plus, X, Check, Loader2, Search, Lock,
@@ -80,10 +81,8 @@ export default function RoomsTab({ onEnter }: Props) {
         {/* Left: search + tabs */}
         <div className="flex items-center gap-3">
           <button
-            onClick={() => setShowSearch(!showSearch)}
-            className={`w-10 h-10 rounded-2xl border flex items-center justify-center active:scale-95 transition ${
-              showSearch ? "bg-purple-500/40 border-purple-400/60 text-white" : "bg-white/10 border-white/15 text-white"
-            }`}
+            onClick={() => setShowSearch(true)}
+            className="w-10 h-10 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center text-white active:scale-95 transition"
           >
             <Search size={18} />
           </button>
@@ -103,18 +102,6 @@ export default function RoomsTab({ onEnter }: Props) {
         </button>
       </div>
 
-      {/* ============ Search Bar (expandable) ============ */}
-      {showSearch && (
-        <div className="px-4 pb-3">
-          <input
-            type="text"
-            placeholder="ابحث عن غرفة بالاسم أو الرقم..."
-            autoFocus
-            className="w-full bg-white/10 border border-white/20 rounded-2xl py-2.5 pr-4 pl-4 text-white placeholder:text-white/40 text-sm focus:outline-none focus:border-purple-400"
-          />
-        </div>
-      )}
-
       {/* ============ Content ============ */}
       <div className="px-4 py-3">
         {mainTab === "mine" && (
@@ -130,6 +117,14 @@ export default function RoomsTab({ onEnter }: Props) {
         {mainTab === "trend" && <TrendTab onEnter={handleJoin} />}
         {mainTab === "live" && <LiveTab />}
       </div>
+
+      {/* ============ Search Screen ============ */}
+      {showSearch && (
+        <RoomSearchScreen
+          onClose={() => setShowSearch(false)}
+          onEnter={onEnter}
+        />
+      )}
 
       {/* ============ Create Modal ============ */}
       {showCreate && (
