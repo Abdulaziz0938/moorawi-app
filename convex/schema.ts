@@ -43,6 +43,9 @@ export default defineSchema({
     hostIncomeMonth: v.optional(v.number()),
     hostHoursMonth: v.optional(v.number()),
     hostDaysMonth: v.optional(v.number()),
+    // [moorawi-missions] Daily login streak
+    loginStreak: v.optional(v.number()),
+    lastLoginRewardAt: v.optional(v.number()),
     vipLevel: v.optional(v.number()),                     // 0-7
     vipExpiresAt: v.optional(v.number()),
 
