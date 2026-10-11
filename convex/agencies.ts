@@ -934,3 +934,67 @@ export const hostRequests = query({
     return enriched.filter((x) => x !== null);
   },
 });
+
+// ============================================================
+// [moorawi-agency] directCreateAgency — إنشاء مباشر للمالك (CLI)
+// ============================================================
+export const directCreateAgency = internalMutation({
+  args: {
+    userId: v.id("users"),
+    agencyName: v.string(),
+    description: v.optional(v.string()),
+    logoUrl: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const user = await ctx.db.get("users", args.userId);
+    if (!user) throw new Error("المستخدم غير موجود");
+    if (user.agencyId) throw new Error("لديه وكالة بالفعل");
+
+    const agencyNumber = await getNextAgencyNumber(ctx);
+    const agencyId = await ctx.db.insert("agencies", {
+      name: args.agencyName,
+      agencyNumber,
+      ownerId: args.userId,
+      level: "D",
+      totalPoints30d: 0,
+      hostCount: 0,
+      totalEarned: 0,
+      description: args.description,
+      logoUrl: args.logoUrl,
+      createdAt: Date.now(),
+    });
+
+    // ربط المستخدم كمالك
+    await ctx.db.patch("users", args.userId, {
+      agencyId,
+      agencyNumber,
+      isHost: true,
+    });
+
+    await ctx.db.insert("agencyHosts", {
+      agencyId,
+      userId: args.userId,
+      status: "active",
+      joinedAt: Date.now(),
+    });
+
+    await ctx.db.patch("agencies", agencyId, {
+      hostCount: 1,
+    });
+
+    return { ok: true, agencyId, agencyNumber, ownerName: user.name };
+  },
+});
+
+// ============================================================
+// [moorawi-agency] approveVerification — توثيق مباشر (CLI)
+// ============================================================
+export const approveVerification = internalMutation({
+  args: { userId: v.id("users") },
+  handler: async (ctx, args) => {
+    await ctx.db.patch("users", args.userId, {
+      verificationStatus: "approved",
+    });
+    return { ok: true };
+  },
+});

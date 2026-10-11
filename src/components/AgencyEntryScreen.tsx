@@ -7,6 +7,7 @@ import { uploadToCloudinary } from "../lib/cloudinary";
 import { dialog } from "../lib/dialog";
 import AgencyCreateForm from "./AgencyCreateForm";
 import HostRequestsPanel from "./HostRequestsPanel";
+import MyHostView from "./MyHostView";
 import {
   ChevronRight, Search, Loader2, Briefcase, Mic, Users,
   Clock, Check, X, Plus, Award, Shield, Gift,
@@ -386,32 +387,29 @@ function CreateRequestsView({ onClose, onBack }: { onClose: () => void; onBack: 
 // ============================================================
 function MyAgencyView({ onClose, tab }: { onClose: () => void; tab: Tab }) {
   const [showRequests, setShowRequests] = useState(false);
+  const deviceId = getDeviceId();
+  const me = useQuery(api.profiles.me, { tokenOverride: deviceId });
 
   if (showRequests) {
     return <HostRequestsPanel onClose={onClose} onBack={() => setShowRequests(false)} />;
   }
 
+  // تبويب "مضيف" → بياناتي كمضيف
+  if (tab === "host") {
+    return <MyHostView onClose={onClose} onShowRequests={() => setShowRequests(true)} />;
+  }
+
+  // تبويب "وكالة" → placeholder للوكالة (يُبنى لاحقاً)
   return (
     <div className="fixed inset-0 z-[160] bg-gradient-to-b from-slate-900 via-slate-950 to-black flex flex-col" dir="rtl">
       <div className="px-4 pt-4 pb-3 flex items-center gap-2 border-b border-white/10">
         <button onClick={onClose} className="w-10 h-10 rounded-full bg-white/10 border border-white/15 flex items-center justify-center text-white">
           <ChevronRight size={20} />
         </button>
-        <h1 className="text-white text-base font-black flex-1">
-          {tab === "host" ? "بياناتي كمضيف" : "وكالتي"}
-        </h1>
-        {tab === "host" && (
-          <button
-            onClick={() => setShowRequests(true)}
-            className="px-3 py-2 rounded-xl bg-purple-600 text-white text-xs font-black flex items-center gap-1.5 active:scale-95"
-          >
-            <Users size={14} />
-            طلبات الانضمام
-          </button>
-        )}
+        <h1 className="text-white text-base font-black flex-1">وكالتي</h1>
       </div>
-      <div className="flex-1 flex items-center justify-center text-white/40">
-        <p className="text-sm">قيد التطوير — الصفحة الكاملة في الأمر القادم</p>
+      <div className="flex-1 flex flex-col items-center justify-center text-white/40 gap-2">
+        <p className="text-sm">بيانات الوكالة الكاملة — قريباً</p>
       </div>
     </div>
   );
