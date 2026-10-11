@@ -157,6 +157,7 @@ export const myStatus = query({
       isHost: me.isHost ?? false,
       agencyId: me.agencyId ?? null,
       agencyName: agency?.name ?? null,
+      agencyNumber: agency?.agencyNumber ?? null,
       hostLevel: myLevel,
       incomeThisMonth: income,
       hoursThisMonth: hours,
