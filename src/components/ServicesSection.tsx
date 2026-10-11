@@ -20,6 +20,7 @@ interface Props {
   onOpenVerify?: () => void;
   onOpenRelations?: () => void;
   onOpenLevel?: () => void;
+  onOpenSupporter?: () => void;
   onLogout?: () => void;
   onOpenMedals?: () => void;
   isOwner?: boolean;
@@ -39,6 +40,7 @@ export default function ServicesSection({
   onOpenVerify,
   onOpenRelations,
   onOpenLevel,
+  onOpenSupporter,
   onLogout,
   onOpenMedals,
   isOwner,
@@ -55,7 +57,7 @@ export default function ServicesSection({
       icon: Gem,
       gradient: "from-amber-700/40 to-amber-900/40",
       border: "border-amber-500/30",
-      onClick: () => soon("الداعم المحترم"),
+      onClick: onOpenSupporter ?? (() => soon("الداعم المحترم")),
     },
     {
       key: "vip",

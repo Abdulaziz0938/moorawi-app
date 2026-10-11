@@ -15,6 +15,7 @@ import SupportSheet from "./SupportSheet";
 import VerificationSheet from "./VerificationSheet";
 import RelationsSheet from "./RelationsSheet";
 import LevelSheet from "./LevelSheet";
+import SupporterSheet from "./SupporterSheet";
 import ProfilePage from "./ProfilePage";
 import AdminPanelSheet from "./AdminPanelSheet";
 import MedalsSheet from "./MedalsSheet";
@@ -43,6 +44,7 @@ export default function MeTab({ onEnterRoom }: Props) {
   const [showVerify, setShowVerify] = useState(false);
   const [showRelations, setShowRelations] = useState(false);
   const [showLevel, setShowLevel] = useState(false);
+  const [showSupporter, setShowSupporter] = useState(false);
 
   // [moorawi-nav] Back button closes each overlay
   useBackButton(showFullProfile, () => setShowFullProfile(false));
@@ -57,6 +59,7 @@ export default function MeTab({ onEnterRoom }: Props) {
   useBackButton(showVerify, () => setShowVerify(false));
   useBackButton(showRelations, () => setShowRelations(false));
   useBackButton(showLevel, () => setShowLevel(false));
+  useBackButton(showSupporter, () => setShowSupporter(false));
 
   if (!me) {
     return (
@@ -138,6 +141,7 @@ export default function MeTab({ onEnterRoom }: Props) {
           onOpenVerify={() => setShowVerify(true)}
           onOpenRelations={() => setShowRelations(true)}
           onOpenLevel={() => setShowLevel(true)}
+          onOpenSupporter={() => setShowSupporter(true)}
           onLogout={() => {
             dialog.confirm(
               "هل تريد تسجيل الخروج من الحساب؟",
@@ -168,6 +172,7 @@ export default function MeTab({ onEnterRoom }: Props) {
       {showVerify && <VerificationSheet onClose={() => setShowVerify(false)} />}
       {showRelations && <RelationsSheet onClose={() => setShowRelations(false)} />}
       {showLevel && <LevelSheet onClose={() => setShowLevel(false)} />}
+      {showSupporter && <SupporterSheet onClose={() => setShowSupporter(false)} />}
     </>
   );
 }
