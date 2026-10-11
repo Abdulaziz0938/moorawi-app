@@ -405,3 +405,124 @@ export const listNew = query({
     return result;
   },
 });
+
+// ============================================================
+// [moorawi-rankings] wealthRanking — top 3 spenders (last 30 days)
+// ============================================================
+export const wealthRanking = query({
+  args: {},
+  handler: async (ctx) => {
+    const since = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    const txs = await ctx.db.query("giftTransactions").collect();
+    const filtered = txs.filter((t) => t._creationTime >= since);
+
+    const totals: Record<string, number> = {};
+    for (const t of filtered) {
+      const k = t.fromUserId as string;
+      totals[k] = (totals[k] ?? 0) + t.totalPrice;
+    }
+
+    const sorted = Object.entries(totals)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 3);
+
+    const enriched = await Promise.all(
+      sorted.map(async ([userId, total], idx) => {
+        const u = await ctx.db.get("users", userId as any);
+        return {
+          rank: idx + 1,
+          userId,
+          name: u?.name ?? "ضيف",
+          userNumber: u?.userNumber ?? null,
+          avatarUrl: u?.avatarUrl ?? (u?.avatarId ? await ctx.storage.getUrl(u.avatarId) : null),
+          total,
+          vip: activeVipLevel(u),
+        };
+      })
+    );
+    return enriched;
+  },
+});
+
+// ============================================================
+// [moorawi-rankings] cpRanking — top CP pairs by loveScore
+// ============================================================
+export const cpRanking = query({
+  args: {},
+  handler: async (ctx) => {
+    const rels = await ctx.db.query("relationships").collect();
+    const cps = rels.filter((r) => (r.type === "cp" || r.type === "trueLove") && r.status === "active");
+    const sorted = cps.sort((a, b) => (b.loveScore ?? 0) - (a.loveScore ?? 0)).slice(0, 2);
+
+    const enriched = await Promise.all(
+      sorted.map(async (r) => {
+        const u1 = await ctx.db.get("users", r.userId1);
+        const u2 = await ctx.db.get("users", r.userId2);
+        return {
+          _id: r._id,
+          type: r.type,
+          loveScore: r.loveScore,
+          since: r.since,
+          user1: {
+            userId: r.userId1,
+            name: u1?.name ?? "ضيف",
+            userNumber: u1?.userNumber ?? null,
+            avatarUrl: u1?.avatarUrl ?? (u1?.avatarId ? await ctx.storage.getUrl(u1.avatarId) : null),
+            vip: activeVipLevel(u1),
+          },
+          user2: {
+            userId: r.userId2,
+            name: u2?.name ?? "ضيف",
+            userNumber: u2?.userNumber ?? null,
+            avatarUrl: u2?.avatarUrl ?? (u2?.avatarId ? await ctx.storage.getUrl(u2.avatarId) : null),
+            vip: activeVipLevel(u2),
+          },
+        };
+      })
+    );
+    return enriched;
+  },
+});
+
+// ============================================================
+// [moorawi-rankings] publicRoomsWithStats — rooms sorted by activity
+// Each room enriched with onlineCount + top3 rank (if top 3)
+// ============================================================
+export const publicRoomsWithStats = query({
+  args: {},
+  handler: async (ctx) => {
+    const rooms = await ctx.db.query("rooms").collect();
+    const publicRooms = rooms.filter((r) => !r.isPrivate);
+
+    // Sort by weeklyTotal desc (best proxy for activity)
+    const sorted = publicRooms
+      .sort((a, b) => (b.weeklyTotal ?? 0) - (a.weeklyTotal ?? 0))
+      .slice(0, 40);
+
+    const enriched = await Promise.all(
+      sorted.slice(0, 30).map(async (r, idx) => {
+        const owner = await ctx.db.get("users", r.ownerId);
+        const members = await ctx.db
+          .query("roomMembers")
+          .withIndex("by_room", (q) => q.eq("roomId", r._id))
+          .collect();
+
+        return {
+          _id: r._id,
+          name: r.name,
+          coverUrl: r.coverUrl ?? null,
+          welcomeMessage: r.welcomeMessage ?? "",
+          memberCount: r.memberCount ?? 0,
+          onlineCount: members.length,
+          roomNumber: r.roomNumber ?? null,
+          weeklyTotal: r.weeklyTotal ?? 0,
+          rank: idx + 1,
+          ownerName: owner?.name ?? "—",
+          ownerAvatar: owner?.avatarUrl ?? (owner?.avatarId ? await ctx.storage.getUrl(owner.avatarId) : null),
+          ownerUserNumber: owner?.userNumber ?? null,
+        };
+      })
+    );
+    return enriched;
+  },
+});
