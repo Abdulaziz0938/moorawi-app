@@ -15,6 +15,8 @@ interface Props {
   imgClassName?: string;
   fill?: string;
   strokeWidth?: number;
+  /** When true, image fills 100% of its parent (parent must have size) */
+  fillParent?: boolean;
 }
 
 export default function IconOrImage({
@@ -26,10 +28,21 @@ export default function IconOrImage({
   imgClassName = "",
   fill,
   strokeWidth,
+  fillParent = false,
 }: Props) {
   const assets = useAssets();
   const src = assets[assetKey];
   if (src) {
+    if (fillParent) {
+      return (
+        <img
+          src={src}
+          alt=""
+          draggable={false}
+          className={`w-full h-full object-contain ${imgClassName}`}
+        />
+      );
+    }
     const s = imgSize ?? Math.round(size * 1.6);
     return (
       <img

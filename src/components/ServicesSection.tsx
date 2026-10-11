@@ -105,9 +105,11 @@ export default function ServicesSection({
             <button
               key={c.key}
               onClick={c.onClick}
-              className={`relative overflow-hidden rounded-2xl border ${c.border} bg-gradient-to-br ${c.gradient} p-4 flex flex-col items-center gap-1 active:scale-95 transition`}
+              className={`relative overflow-hidden rounded-2xl border ${c.border} bg-gradient-to-br ${c.gradient} p-2 flex flex-col items-center active:scale-95 transition`}
             >
-              <IconOrImage assetKey={c.assetKey} Icon={Icon} size={32} imgSize={72} className="text-amber-200" fill="currentColor" strokeWidth={1.5} />
+              <div className="w-full aspect-square max-h-28 flex items-center justify-center">
+                <IconOrImage assetKey={c.assetKey} Icon={Icon} size={32} imgSize={72} fillParent className="text-amber-200" fill="currentColor" strokeWidth={1.5} />
+              </div>
             </button>
           );
         })}
@@ -123,7 +125,9 @@ export default function ServicesSection({
               onClick={g.onClick}
               className="flex flex-col items-center gap-1.5 py-3 rounded-xl hover:bg-white/10 active:scale-95 transition"
             >
-              <IconOrImage assetKey={g.assetKey} Icon={Icon} size={26} imgSize={64} className={g.color} strokeWidth={1.8} />
+              <div className="w-full aspect-square flex items-center justify-center">
+                <IconOrImage assetKey={g.assetKey} Icon={Icon} size={26} imgSize={64} fillParent className={g.color} strokeWidth={1.8} />
+              </div>
             </button>
           );
         })}

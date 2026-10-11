@@ -83,7 +83,9 @@ export default function Dashboard({ onEnterRoom }: Props) {
                 onClick={() => setTab(t.key)}
                 className={`relative flex-1 flex flex-col items-center justify-center gap-1 py-2.5 transition ${active ? "text-white" : "text-white/45 hover:text-white/70"}`}
               >
-                <IconOrImage assetKey={t.assetKey} Icon={Icon} size={32} imgSize={56} strokeWidth={active ? 2.5 : 2} imgClassName={active ? "" : "opacity-75"} />
+                <div className="w-10 h-10 flex items-center justify-center">
+                  <IconOrImage assetKey={t.assetKey} Icon={Icon} size={28} imgSize={40} fillParent strokeWidth={active ? 2.5 : 2} imgClassName={active ? "" : "opacity-75"} />
+                </div>
                 {active && (
                   <span className="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-0.5 rounded-full bg-gradient-to-r from-pink-500 to-purple-500" />
                 )}
