@@ -3,7 +3,7 @@ import IconOrImage from "./IconOrImage";
 import {
   Crown, Gem, Handshake, Award, Wallet, Star, Mic, Briefcase,
   ShoppingBag, CheckSquare, ShieldCheck, Clock, Headphones,
-  Globe, Settings, ChevronLeft, Sparkles,
+  Globe, Settings, ChevronLeft, Sparkles, LogOut,
 } from "lucide-react";
 
 interface Props {
@@ -13,6 +13,7 @@ interface Props {
   onOpenSettings?: () => void;
   onOpenAdmin?: () => void;
   onOpenVip?: () => void;
+  onLogout?: () => void;
   onOpenMedals?: () => void;
   isOwner?: boolean;
 }
@@ -24,6 +25,7 @@ export default function ServicesSection({
   onOpenSettings,
   onOpenAdmin,
   onOpenVip,
+  onLogout,
   onOpenMedals,
   isOwner,
 }: Props) {
@@ -156,6 +158,17 @@ export default function ServicesSection({
           );
         })}
       </div>
+
+      {/* ============ LOGOUT ============ */}
+      {onLogout && (
+        <button
+          onClick={onLogout}
+          className="w-full rounded-2xl border border-red-500/40 bg-red-500/10 p-4 flex items-center justify-center gap-2 text-red-300 text-sm font-black hover:bg-red-500/20 active:scale-95 transition"
+        >
+          <LogOut size={18} />
+          تسجيل الخروج
+        </button>
+      )}
     </div>
   );
 }

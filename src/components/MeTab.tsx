@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { getActiveToken } from "../lib/session";
+import { getActiveToken, clearSession } from "../lib/session";
 import { ChevronLeft, Loader2, Users, Heart, Eye, Home } from "lucide-react";
 import ServicesSection from "./ServicesSection";
 import WalletSheet from "./WalletSheet";
@@ -103,6 +103,12 @@ export default function MeTab({ onEnterRoom }: Props) {
           onOpenStore={() => setShowShop(true)}
           onOpenMedals={() => setShowMedals(true)}
           onOpenVip={() => setShowVip(true)}
+          onLogout={() => {
+            if (confirm("هل تريد تسجيل الخروج؟")) {
+              clearSession();
+              window.location.reload();
+            }
+          }}
           isOwner={me.userNumber === 1 || me.adminRole === "super"}
           onOpenAdmin={() => setShowAdmin(true)}
         />
