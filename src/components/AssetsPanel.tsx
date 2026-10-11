@@ -15,7 +15,7 @@ import {
   Crown, Gift, Award, Shield, ShoppingBag, LayoutGrid,
   Upload, RotateCcw, Loader2, Pencil, Save, X, Home, MessageCircle,
   Image as ImageIcon, Compass, User, Mic, Grid2x2, Send, Bell,
-  Trophy, Heart, Search, ChevronLeft, Hash, Settings, Users,
+  Trophy, Heart, Search, ChevronLeft, Hash, Settings, Users, Megaphone,
 } from "lucide-react";
 
 interface Props {
@@ -88,9 +88,10 @@ export default function AssetsPanel({ token }: Props) {
   return (
     <div className="p-3 space-y-3">
       {/* Main tabs — 6 columns */}
-      <div className="grid grid-cols-5 gap-1.5">
+      <div className="grid grid-cols-4 gap-1.5">
         <TabBtn active={tab === "vip"}     onClick={() => setTab("vip")}     icon={Crown}        label="VIP" />
         <TabBtn active={tab === "medals"}  onClick={() => setTab("medals")}  icon={Award}        label="الميداليات" />
+        <TabBtn active={tab === "banners"} onClick={() => setTab("banners")} icon={Megaphone}    label="إعلانات" />
         <TabBtn active={tab === "gifts"}   onClick={() => setTab("gifts")}   icon={Gift}         label="الهدايا" />
         <TabBtn active={tab === "bubbles"} onClick={() => setTab("bubbles")} icon={MessageCircle} label="الفقاعات" />
         <TabBtn active={tab === "shop"}    onClick={() => setTab("shop")}    icon={ShoppingBag}  label="المتجر" />
@@ -297,7 +298,7 @@ function MedalsTab({ token }: { token: string | null }) {
 // ============================ Shop tab
 function ShopTab({ token }: { token: string | null }) {
   const items = useQuery(api.shop.listAllAdmin, { tokenOverride: token ?? undefined });
-  const updateItem = useMutation(api.shop.updateItem);
+  const updateItem = useMutation(api.shop.updateItemAssets);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [editId, setEditId] = useState<Id<"shopItems"> | null>(null);
   const [editName, setEditName] = useState("");

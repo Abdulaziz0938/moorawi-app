@@ -1,6 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { ConvexError, v } from "convex/values";
-import { requireUser, isFullAdmin } from "./lib/auth";
+import { requireUser, isFullAdmin, isAssetManager } from "./lib/auth";
 
 // ============================================================
 // [moorawi-shop] Shop queries + mutations
@@ -356,9 +356,47 @@ export const listAllAdmin = query({
   args: { tokenOverride: v.optional(v.string()) },
   handler: async (ctx, args) => {
     const me = await requireUser(ctx, args.tokenOverride);
-    if (!isFullAdmin(me)) {
-      throw new ConvexError({ code: "FORBIDDEN", message: "صلاحيات المالك مطلوبة" });
+    if (!isAssetManager(me)) {
+      throw new ConvexError({ code: "FORBIDDEN", message: "صلاحيات مطلوبة" });
     }
     return await ctx.db.query("shopItems").collect();
+  },
+});
+
+// ============================================================
+// [moorawi-shop] updateItemAssets — moderator can edit name/image only
+// price + active remain super-admin only
+// ============================================================
+export const updateItemAssets = mutation({
+  args: {
+    itemId: v.id("shopItems"),
+    name: v.optional(v.string()),
+    nameEn: v.optional(v.string()),
+    imageUrl: v.optional(v.string()),
+    previewUrl: v.optional(v.string()),
+    tokenOverride: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
+    if (!isAssetManager(me)) {
+      throw new ConvexError({ code: "FORBIDDEN", message: "صلاحيات مطلوبة" });
+    }
+    const item = await ctx.db.get("shopItems", args.itemId);
+    if (!item) throw new ConvexError({ code: "NOT_FOUND", message: "المنتج غير موجود" });
+
+    const patch: any = {};
+    if (args.name !== undefined) {
+      const t = args.name.trim();
+      if (t.length < 1) throw new ConvexError({ code: "BAD_NAME", message: "اسم فارغ" });
+      patch.name = t;
+    }
+    if (args.nameEn !== undefined) patch.nameEn = args.nameEn;
+    if (args.imageUrl !== undefined) patch.imageUrl = args.imageUrl;
+    if (args.previewUrl !== undefined) patch.previewUrl = args.previewUrl;
+
+    if (Object.keys(patch).length > 0) {
+      await ctx.db.patch("shopItems", args.itemId, patch);
+    }
+    return { ok: true };
   },
 });
