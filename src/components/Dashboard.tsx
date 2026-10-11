@@ -81,10 +81,10 @@ export default function Dashboard({ onEnterRoom }: Props) {
               <button
                 key={t.key}
                 onClick={() => setTab(t.key)}
-                className={`relative flex-1 flex flex-col items-center justify-center gap-1 py-2.5 transition ${active ? "text-white" : "text-white/45 hover:text-white/70"}`}
+                className={`relative flex-1 flex flex-col items-center justify-center gap-0 py-1 transition ${active ? "text-white" : "text-white/45 hover:text-white/70"}`}
               >
-                <div className="w-10 h-10 flex items-center justify-center">
-                  <IconOrImage assetKey={t.assetKey} Icon={Icon} size={28} imgSize={40} fillParent strokeWidth={active ? 2.5 : 2} imgClassName={active ? "" : "opacity-75"} />
+                <div className="w-16 h-16 flex items-center justify-center">
+                  <IconOrImage assetKey={t.assetKey} Icon={Icon} size={36} imgSize={48} fillParent strokeWidth={active ? 2.5 : 2} imgClassName={active ? "" : "opacity-75"} />
                 </div>
                 {active && (
                   <span className="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-0.5 rounded-full bg-gradient-to-r from-pink-500 to-purple-500" />
