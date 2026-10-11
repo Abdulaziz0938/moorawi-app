@@ -14,7 +14,7 @@ interface Props {
 
 type View = "main" | "recharge" | "exchange" | "history";
 
-// Poppo-style recharge packages
+// Ezo recharge packages
 const PACKAGES = [
   { coins: 1000,   usdCents: 49,    bonus: 0,     label: "USD 0.49" },
   { coins: 2000,   usdCents: 99,    bonus: 0,     label: "USD 0.99", highlight: true, tag: "مرة واحدة" },

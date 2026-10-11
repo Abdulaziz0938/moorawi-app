@@ -9,6 +9,7 @@
  */
 
 import type * as adminPanel from "../adminPanel.js";
+import type * as agencies from "../agencies.js";
 import type * as assets from "../assets.js";
 import type * as auth from "../auth.js";
 import type * as banners from "../banners.js";
@@ -46,6 +47,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   adminPanel: typeof adminPanel;
+  agencies: typeof agencies;
   assets: typeof assets;
   auth: typeof auth;
   banners: typeof banners;

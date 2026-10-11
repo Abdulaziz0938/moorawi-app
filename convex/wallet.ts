@@ -162,7 +162,7 @@ export const recharge = mutation({
   },
 });
 
-// Exchange diamonds → coins (1 diamond = 1 coin، حسب Poppo)
+// Exchange diamonds → coins (1 diamond = 1 coin)
 export const exchangeDiamonds = mutation({
   args: {
     diamonds: v.number(),

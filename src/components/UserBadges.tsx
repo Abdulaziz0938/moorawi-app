@@ -181,7 +181,7 @@ export function UserName({
 
   return (
     <div className={`flex items-center ${s.gap} ${wrap ? "flex-wrap" : ""} min-w-0`}>
-      {/* 1. Role icon — Poppo style */}
+      {/* 1. Role icon */}
       {showRole && role === "super" && (
         <Crown size={s.role} className="text-amber-400 flex-shrink-0" fill="currentColor" strokeWidth={1.5} />
       )}

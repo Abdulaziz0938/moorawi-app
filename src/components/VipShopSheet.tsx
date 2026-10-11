@@ -1,4 +1,4 @@
-// [moorawi-vip] VIP Shop — Poppo-style page per level
+// [moorawi-vip] VIP Shop — Ezo-style page per level
 // Structure: tabs (7 levels) → banner → 9 asset slots → benefits table → buy footer
 
 import { useState, useMemo } from "react";

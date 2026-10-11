@@ -269,7 +269,7 @@ export const updateStaffPermissions = mutation({
 });
 
 // ============================================================
-// [moorawi-rooms] Discovery queries — Binmo-style rooms tab
+// [moorawi-rooms] Discovery queries — Ezo rooms tab
 // ============================================================
 
 // Recently visited rooms (from roomMembers — rooms user joined)

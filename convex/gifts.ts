@@ -6,6 +6,21 @@ import { requireUser, isFullAdmin } from "./lib/auth";
 import { weekKey } from "./lib/week";
 import { checkAndGrantMedals } from "./medals";
 
+
+// [moorawi-agency] حساب مستوى المضيف من دخله الشهري
+function levelFromAchieved(achieved: number): number {
+  const T = [0, 20_000, 40_000, 80_000, 126_000, 220_000, 320_000,
+    460_000, 580_000, 850_000, 1_250_000, 1_850_000, 3_500_000,
+    5_250_000, 7_000_000, 10_500_000];
+  let lvl = 0;
+  for (let i = 1; i < T.length; i++) {
+    if (achieved >= T[i]) lvl = i;
+    else break;
+  }
+  return lvl;
+}
+
+
 // (تم حذف generateGiftUploadUrl — نستخدم Cloudinary)
 
 // ============ ADMIN: Create gift ============
@@ -148,7 +163,7 @@ export const send = mutation({
       coins: myCoins - totalPrice,
       totalSent: (user.totalSent ?? 0) + totalPrice,
     });
-    // [moorawi-levels] 1 coin received = 1 Charm XP (Poppo standard)
+    // [moorawi-levels] 1 coin received = 1 Charm XP
     await ctx.db.patch("users", args.toUserId, {
       charms: (target.charms ?? 0) + totalPrice,
       totalReceived: (target.totalReceived ?? 0) + totalPrice,
@@ -254,9 +269,17 @@ export const sendBatch = mutation({
 
     // لكل مستلم: زيادة charms + totalReceived + insert transaction
     for (const target of targets) {
+      const perTarget = gift.price * args.quantity;
       await ctx.db.patch("users", target._id, {
-        charms: (target.charms ?? 0) + (gift.price * args.quantity),
-        totalReceived: (target.totalReceived ?? 0) + gift.price * args.quantity,
+        charms: (target.charms ?? 0) + perTarget,
+        totalReceived: (target.totalReceived ?? 0) + perTarget,
+        // [moorawi-agency] 30% ماس للمضيف، 70% لعضو عادي
+        ...(target.agencyId ? {
+          diamonds: (target.diamonds ?? 0) + Math.floor(perTarget * 0.3),
+          hostIncomeMonth: (target.hostIncomeMonth ?? 0) + perTarget,
+        } : {
+          diamonds: (target.diamonds ?? 0) + Math.floor(perTarget * 0.7),
+        }),
       });
       await ctx.db.insert("giftTransactions", {
         roomId: args.roomId,

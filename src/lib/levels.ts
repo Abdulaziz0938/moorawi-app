@@ -1,4 +1,4 @@
-// [moorawi-levels] Poppo-style 0-100 levels for Charm & Wealth
+// [moorawi-levels] 0-100 levels for Charm & Wealth
 // Lookup table with consistent ×3.5 growth per segment (10 segments)
 //
 // Segment milestones:

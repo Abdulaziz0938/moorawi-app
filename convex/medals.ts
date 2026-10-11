@@ -113,7 +113,7 @@ export const grantMedal = mutation({
       return { ok: true, alreadyOwned: true };
     }
 
-    // ===== Auto-equip logic (Poppo): if new medal tier > current, equip =====
+    // ===== Auto-equip logic: if new medal tier > current, equip =====
     const currentEquippedId = user.equippedMedalId;
     let shouldAutoEquip = false;
     let autoEquipReason = "first-medal";

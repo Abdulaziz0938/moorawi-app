@@ -284,7 +284,7 @@ export const removeVipBenefit = mutation({
   },
 });
 
-// Seed once — populate defaults from Poppo screenshots.
+// Seed once — populate default VIP benefits.
 // Skips if any benefits already exist for that level.
 export const seedBenefits = internalMutation({
   args: {},
