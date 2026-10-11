@@ -8,6 +8,7 @@ import { dialog } from "../lib/dialog";
 import AgencyCreateForm from "./AgencyCreateForm";
 import HostRequestsPanel from "./HostRequestsPanel";
 import MyHostView from "./MyHostView";
+import AgencyOverviewView from "./AgencyOverviewView";
 import {
   ChevronRight, Search, Loader2, Briefcase, Mic, Users,
   Clock, Check, X, Plus, Award, Shield, Gift,
@@ -399,19 +400,12 @@ function MyAgencyView({ onClose, tab }: { onClose: () => void; tab: Tab }) {
     return <MyHostView onClose={onClose} onShowRequests={() => setShowRequests(true)} />;
   }
 
-  // تبويب "وكالة" → placeholder للوكالة (يُبنى لاحقاً)
+  // تبويب "وكالة" → بيانات الوكالة الكاملة
   return (
-    <div className="fixed inset-0 z-[160] bg-gradient-to-b from-slate-900 via-slate-950 to-black flex flex-col" dir="rtl">
-      <div className="px-4 pt-4 pb-3 flex items-center gap-2 border-b border-white/10">
-        <button onClick={onClose} className="w-10 h-10 rounded-full bg-white/10 border border-white/15 flex items-center justify-center text-white">
-          <ChevronRight size={20} />
-        </button>
-        <h1 className="text-white text-base font-black flex-1">وكالتي</h1>
-      </div>
-      <div className="flex-1 flex flex-col items-center justify-center text-white/40 gap-2">
-        <p className="text-sm">بيانات الوكالة الكاملة — قريباً</p>
-      </div>
-    </div>
+    <AgencyOverviewView
+      onClose={onClose}
+      onShowRequests={() => setShowRequests(true)}
+    />
   );
 }
 
