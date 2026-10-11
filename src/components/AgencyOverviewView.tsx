@@ -14,11 +14,12 @@ import {
 interface Props {
   onClose: () => void;
   onShowRequests?: () => void;
+  onUserClick?: (userId: any) => void;
 }
 
 type Tab = "info" | "hosts" | "review" | "members";
 
-export default function AgencyOverviewView({ onClose, onShowRequests }: Props) {
+export default function AgencyOverviewView({ onClose, onShowRequests, onUserClick }: Props) {
   const deviceId = getDeviceId();
   const me = useQuery(api.profiles.me, { tokenOverride: deviceId });
   const agency = useQuery(
@@ -63,9 +64,9 @@ export default function AgencyOverviewView({ onClose, onShowRequests }: Props) {
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-4">
         {tab === "info" && <AgencyInfo agency={agency} isOwner={isOwner} />}
-        {tab === "hosts" && <HostsList agencyId={agency._id} />}
+        {tab === "hosts" && <HostsList agencyId={agency._id} onUserClick={onUserClick} />}
         {tab === "review" && isOwner && <ReviewPanel onShowRequests={onShowRequests} />}
-        {tab === "members" && <MembersList agencyId={agency._id} />}
+        {tab === "members" && <HostsList agencyId={agency._id} onUserClick={onUserClick} />}
       </div>
     </Wrap>
   );
@@ -178,9 +179,9 @@ function AgencyInfo({ agency, isOwner }: any) {
 }
 
 // ============================================================
-// Hosts List
+// Hosts List (Excel-style rows)
 // ============================================================
-function HostsList({ agencyId }: { agencyId: any }) {
+function HostsList({ agencyId, onUserClick }: { agencyId: any; onUserClick?: (id: any) => void }) {
   const deviceId = getDeviceId();
   const hosts = useQuery(api.agencies.agencyHosts, {
     agencyId,
@@ -204,27 +205,88 @@ function HostsList({ agencyId }: { agencyId: any }) {
     <div className="space-y-2">
       <p className="text-white/50 text-xs text-center mb-2">{hosts.length} مضيف</p>
       {hosts.map((h: any) => (
-        <div key={h._id} className="rounded-2xl bg-white/5 border border-white/10 p-3 flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full overflow-hidden bg-purple-700 flex items-center justify-center flex-shrink-0">
-            <UserAvatar avatarUrl={h.avatarUrl} name={h.name} className="w-full h-full" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-white text-sm font-black truncate">{h.name}</p>
-            <p className="text-white/50 text-[10px]" dir="ltr">ID:{h.userNumber ?? "—"}</p>
-            <div className="flex items-center gap-2 mt-0.5">
-              <span className="text-emerald-300 text-[10px] flex items-center gap-0.5">
-                <TrendingUp size={9} /> {formatNum(h.incomeThisMonth)}
+        <HostRow key={h._id} host={h} onUserClick={onUserClick} />
+      ))}
+    </div>
+  );
+}
+
+// ============================================================
+// Host Row (Excel-style)
+// ============================================================
+function HostRow({ host, onUserClick }: any) {
+  const [showStats, setShowStats] = useState(false);
+
+  return (
+    <button
+      onClick={() => setShowStats((v) => !v)}
+      className="w-full rounded-2xl bg-white/5 border border-white/10 p-3 text-right active:bg-white/10 transition"
+    >
+      {/* Top row: avatar + name + VIP */}
+      <div className="flex items-center gap-3">
+        <div
+          onClick={(e) => {
+            e.stopPropagation();
+            if (onUserClick) onUserClick(host.userId);
+          }}
+          className="w-14 h-14 rounded-full overflow-hidden bg-purple-700 flex items-center justify-center flex-shrink-0 border-2 border-white/15"
+        >
+          <UserAvatar avatarUrl={host.avatarUrl} name={host.name} className="w-full h-full" />
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-end gap-2 flex-wrap">
+            {host.hostLevel > 0 && (
+              <span className="px-1.5 py-0.5 rounded bg-gradient-to-r from-amber-500 to-yellow-600 text-black text-[9px] font-black">
+                Lv.{host.hostLevel}
               </span>
-              <span className="text-cyan-300 text-[10px]">
-                💎 {formatNum(h.diamondsHeld)}
-              </span>
-            </div>
+            )}
+            <p className="text-white text-sm font-black truncate">{host.name}</p>
           </div>
-          <div className="px-2 py-1 rounded-full bg-amber-500/20 border border-amber-400/40">
-            <span className="text-amber-200 text-[10px] font-black">Lv.{h.hostLevel}</span>
+          <p className="text-white/40 text-[10px] mt-0.5 text-left" dir="ltr">
+            ID:{host.userNumber ?? "—"}
+          </p>
+        </div>
+
+        {/* Chevron */}
+        <ChevronRight size={16} className={`text-white/30 transition-transform ${showStats ? "rotate-90" : ""}`} />
+      </div>
+
+      {/* Stats row (grid 4 columns) */}
+      {showStats && (
+        <div className="grid grid-cols-4 gap-2 mt-3 pt-3 border-t border-white/5">
+          <StatMini label="أيام" value={host.days ?? 0} color="text-purple-300" />
+          <StatMini label="ساعات" value={formatNum(host.hours ?? 0)} color="text-blue-300" />
+          <StatMini label="ماس" value={formatNum(host.diamondsHeld ?? 0)} color="text-cyan-300" />
+          <StatMini label="قيمة السحر" value={formatNum(host.incomeThisMonth ?? 0)} color="text-pink-300" />
+        </div>
+      )}
+
+      {/* Compact preview (always visible) */}
+      {!showStats && (
+        <div className="flex items-center justify-between mt-2 pt-2 border-t border-white/5">
+          <span className="text-white/50 text-[10px]">
+            {host.days ?? 0} يوم · {formatNum(host.hours ?? 0)} ساعة
+          </span>
+          <div className="flex items-center gap-3">
+            <span className="text-cyan-300 text-[10px] font-bold">
+              💎 {formatNum(host.diamondsHeld ?? 0)}
+            </span>
+            <span className="text-pink-300 text-[10px] font-bold">
+              🎁 {formatNum(host.incomeThisMonth ?? 0)}
+            </span>
           </div>
         </div>
-      ))}
+      )}
+    </button>
+  );
+}
+
+function StatMini({ label, value, color }: any) {
+  return (
+    <div className="flex flex-col items-center gap-0.5">
+      <span className={`text-[11px] font-black ${color}`}>{value}</span>
+      <span className="text-white/40 text-[9px]">{label}</span>
     </div>
   );
 }
@@ -243,40 +305,6 @@ function ReviewPanel({ onShowRequests }: any) {
         <p className="text-white font-black text-sm">طلبات الانضمام</p>
         <p className="text-white/60 text-xs">مراجعة طلبات المضيفين الجدد</p>
       </button>
-    </div>
-  );
-}
-
-// ============================================================
-// Members List
-// ============================================================
-function MembersList({ agencyId }: { agencyId: any }) {
-  const deviceId = getDeviceId();
-  const hosts = useQuery(api.agencies.agencyHosts, {
-    agencyId,
-    tokenOverride: deviceId,
-  } as any);
-
-  if (hosts === undefined) {
-    return <div className="flex justify-center py-12"><Loader2 size={24} className="animate-spin text-white/40" /></div>;
-  }
-
-  return (
-    <div className="space-y-2">
-      {hosts.map((h: any) => (
-        <div key={h._id} className="rounded-2xl bg-white/5 border border-white/10 p-3 flex items-center gap-3">
-          <div className="w-11 h-11 rounded-full overflow-hidden bg-purple-700 flex items-center justify-center flex-shrink-0">
-            <UserAvatar avatarUrl={h.avatarUrl} name={h.name} className="w-full h-full" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-white text-xs font-black truncate">{h.name}</p>
-            <p className="text-white/40 text-[10px]" dir="ltr">ID:{h.userNumber ?? "—"}</p>
-          </div>
-          <span className="text-white/40 text-[10px]">
-            انضم {new Date(h.joinedAt).toLocaleDateString("ar-EG")}
-          </span>
-        </div>
-      ))}
     </div>
   );
 }
