@@ -22,7 +22,7 @@ interface Props {
   token: string | null;
 }
 
-type MainTab = "vip" | "medals" | "gifts" | "banners" | "admin";
+type MainTab = "vip" | "medals" | "gifts" | "bubbles" | "shop" | "banners" | "admin" | "ui";
 
 const VIP_SLOTS = [
   { key: "background", label: "الخلفية" },
