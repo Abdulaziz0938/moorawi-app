@@ -265,6 +265,32 @@ export const claimDailyLogin = mutation({
       lastLoginRewardAt: now,
     } as any);
 
+    // [moorawi-missions] سجّل تقدم مهمة daily_login
+    const dailyCycle = dayKey(new Date(now));
+    const loginMission = await ctx.db
+      .query("missions")
+      .filter((q) => q.eq(q.field("key"), "daily_login"))
+      .first();
+    if (loginMission) {
+      const existing = await ctx.db
+        .query("userMissions")
+        .withIndex("by_user_and_mission", (q) => q.eq("userId", me._id).eq("missionId", loginMission._id))
+        .filter((q) => q.eq(q.field("cycleKey"), dailyCycle))
+        .first();
+      if (existing) {
+        await ctx.db.patch("userMissions", existing._id, {
+          progress: loginMission.target,
+        });
+      } else {
+        await ctx.db.insert("userMissions", {
+          userId: me._id,
+          missionId: loginMission._id,
+          progress: loginMission.target,
+          cycleKey: dailyCycle,
+        });
+      }
+    }
+
     return { ok: true, reward, streak: streak + 1, dayIndex: dayIndex + 1 };
   },
 });
