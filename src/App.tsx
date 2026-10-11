@@ -8,11 +8,15 @@ import Onboarding from "./components/Onboarding";
 import AuthScreen from "./components/AuthScreen";
 import { getActiveToken, hasSession, clearSession } from "./lib/session";
 import { Loader2 } from "lucide-react";
+import { useBackButton } from "./lib/hooks/useBackButton";
 
 function App() {
   const [token, setToken] = useState<string>(() => getActiveToken());
   const [showAuth, setShowAuth] = useState<boolean>(() => !hasSession());
   const [currentRoomId, setCurrentRoomId] = useState<Id<"rooms"> | null>(null);
+
+  // Back button → leave room
+  useBackButton(!!currentRoomId, () => setCurrentRoomId(null));
   const [refreshKey, setRefreshKey] = useState(0);
 
   const me = useQuery(api.auth.me, { tokenOverride: token });

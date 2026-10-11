@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "convex/react";
+import { useBackButton } from "../lib/hooks/useBackButton";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { Home, Compass, Image as ImageIcon, MessageCircle, User as UserIcon } from "lucide-react";
@@ -16,6 +17,9 @@ interface Props {
 
 export default function Dashboard({ onEnterRoom }: Props) {
   const [tab, setTab] = useState<Tab>("rooms");
+
+  // Back button → return to rooms tab
+  useBackButton(tab !== "rooms", () => setTab("rooms"));
   const token = getActiveToken();
   const me = useQuery(api.auth.me, { tokenOverride: token });
 

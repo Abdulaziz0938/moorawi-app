@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { getActiveToken, clearSession } from "../lib/session";
+import { useBackButton } from "../lib/hooks/useBackButton";
 import { dialog } from "../lib/dialog";
 import { ChevronLeft, Loader2, Users, Heart, Eye, Home } from "lucide-react";
 import ServicesSection from "./ServicesSection";
@@ -32,6 +33,15 @@ export default function MeTab({ onEnterRoom }: Props) {
   const [showMedals, setShowMedals] = useState(false);
   const [showVip, setShowVip] = useState(false);
   const [showAgency, setShowAgency] = useState<null | "host" | "agent">(null);
+
+  // [moorawi-nav] Back button closes each overlay
+  useBackButton(showFullProfile, () => setShowFullProfile(false));
+  useBackButton(showWallet, () => setShowWallet(false));
+  useBackButton(showShop, () => setShowShop(false));
+  useBackButton(showAdmin, () => setShowAdmin(false));
+  useBackButton(showMedals, () => setShowMedals(false));
+  useBackButton(showVip, () => setShowVip(false));
+  useBackButton(showAgency !== null, () => setShowAgency(null));
 
   if (!me) {
     return (
