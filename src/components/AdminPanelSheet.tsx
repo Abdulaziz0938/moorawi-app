@@ -12,6 +12,7 @@ import { uploadToCloudinary } from "../lib/cloudinary";
 import { useAssets } from "../lib/assets";
 import AssetsPanel from "./AssetsPanel";
 import AgencyRequestsPanel from "./AgencyRequestsPanel";
+import VerificationPanel from "./VerificationPanel";
 import AgencyAdminReport from "./AgencyAdminReport";
 
 interface Props {
@@ -45,6 +46,7 @@ export default function AdminPanelSheet({ onClose }: Props) {
   const [showAssets, setShowAssets] = useState(false);
   const [showAgencyRequests, setShowAgencyRequests] = useState(false);
   const [showAdminReport, setShowAdminReport] = useState(false);
+  const [showVerifications, setShowVerifications] = useState(false);
 
   const [grantAmount, setGrantAmount] = useState("10000");
 
@@ -200,12 +202,19 @@ export default function AdminPanelSheet({ onClose }: Props) {
               </div>
             )}
             <h2 className="text-white text-lg font-black">
-              {showAdminReport ? "تقارير الوكالات" : showAgencyRequests ? "طلبات الوكالات" : showAssets ? "الأصول والصور" : editUser ? `تعديل: ${editUser.username}` : "لوحة المالك"}
+              {showVerifications ? "طلبات التوثيق" : showAdminReport ? "تقارير الوكالات" : showAgencyRequests ? "طلبات الوكالات" : showAssets ? "الأصول والصور" : editUser ? `تعديل: ${editUser.username}` : "لوحة المالك"}
             </h2>
           </div>
           <div className="flex items-center gap-1">
-            {!editUser && !showAssets && !showAgencyRequests && !showAdminReport && (
+            {!editUser && !showAssets && !showAgencyRequests && !showAdminReport && !showVerifications && (
               <>
+                <button
+                  onClick={() => setShowVerifications(true)}
+                  title="طلبات التوثيق"
+                  className="p-2 rounded-full hover:bg-white/10 text-white"
+                >
+                  <ShieldCheck size={20} />
+                </button>
                 <button
                   onClick={() => setShowAdminReport(true)}
                   title="تقارير الوكالات"
@@ -238,8 +247,10 @@ export default function AdminPanelSheet({ onClose }: Props) {
         {/* ===== Content ===== */}
         <div className="flex-1 overflow-y-auto">
 
-          {/* ============ AGENCY ADMIN REPORT ============ */}
-          {showAdminReport ? (
+          {/* ============ VERIFICATIONS ============ */}
+          {showVerifications ? (
+            <VerificationPanel token={token} />
+          ) : showAdminReport ? (
             <AgencyAdminReport onClose={() => setShowAdminReport(false)} />
           ) : showAgencyRequests ? (
             <AgencyRequestsPanel token={token} />
