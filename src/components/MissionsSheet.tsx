@@ -35,7 +35,7 @@ export default function MissionsSheet({ onClose }: Props) {
   if (data === undefined) {
     return (
       <div className="fixed inset-0 z-[160] bg-gradient-to-b from-slate-900 to-black flex flex-col" dir="rtl">
-        <Header onClose={onClose} title="المهام" />
+        <Header onClose={onClose} title="المهام" assetKey="ui.sheet.mission" />
         <Spinner />
       </div>
     );
@@ -46,7 +46,7 @@ export default function MissionsSheet({ onClose }: Props) {
 
   return (
     <div className="fixed inset-0 z-[160] bg-gradient-to-b from-slate-900 to-black flex flex-col" dir="rtl">
-      <Header onClose={onClose} title="المهام" />
+      <Header onClose={onClose} title="المهام" assetKey="ui.sheet.mission" />
 
       {/* Tabs */}
       <div className="flex items-center gap-2 px-4 pb-3 flex-shrink-0">

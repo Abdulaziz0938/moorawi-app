@@ -21,7 +21,7 @@ export default function SupporterSheet({ onClose, onUserClick }: Props) {
 
   return (
     <div className="fixed inset-0 z-[160] bg-gradient-to-b from-slate-900 to-black flex flex-col" dir="rtl">
-      <Header onClose={onClose} title="الداعم المحترم" />
+      <Header onClose={onClose} title="الداعم المحترم" assetKey="ui.sheet.supporter" />
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
 

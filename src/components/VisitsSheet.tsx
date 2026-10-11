@@ -15,7 +15,7 @@ export default function VisitsSheet({ onClose, onUserClick }: Props) {
 
   return (
     <div className="fixed inset-0 z-[160] bg-gradient-to-b from-slate-900 to-black flex flex-col" dir="rtl">
-      <Header onClose={onClose} title="الزيارات الأخيرة" icon={Eye} />
+      <Header onClose={onClose} title="الزيارات الأخيرة" icon={Eye} assetKey="ui.sheet.visits" />
       <div className="flex-1 overflow-y-auto p-4">
         {visits === undefined ? (
           <Spinner />
@@ -51,13 +51,19 @@ export default function VisitsSheet({ onClose, onUserClick }: Props) {
   );
 }
 
-export function Header({ onClose, title, icon: Icon }: any) {
+export function Header({ onClose, title, icon: Icon, assetKey }: any) {
+  const assets = useAssets();
+  const customIcon = assetKey ? assets[assetKey] : null;
   return (
     <div className="px-4 pt-4 pb-3 flex items-center gap-2 border-b border-white/10 flex-shrink-0">
       <button onClick={onClose} className="w-10 h-10 rounded-full bg-white/10 border border-white/15 flex items-center justify-center text-white active:scale-95">
         <ChevronRight size={20} />
       </button>
-      {Icon && <Icon size={18} className="text-white/70" />}
+      {customIcon ? (
+        <img src={customIcon} alt="" className="w-7 h-7 object-contain" draggable={false} />
+      ) : Icon ? (
+        <Icon size={18} className="text-white/70" />
+      ) : null}
       <h1 className="text-white text-base font-black flex-1">{title}</h1>
     </div>
   );
