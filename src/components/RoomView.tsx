@@ -918,15 +918,15 @@ export default function RoomView({ roomId, onLeave }: Props) {
         )}
 
         <footer className="border-t border-white/10 px-2 py-1.5 flex items-center justify-around flex-shrink-0 backdrop-blur-md bg-black/40">
-          <button onClick={() => setShowChatInput((v) => !v)} className={`p-2 rounded-full text-white ${showChatInput ? "bg-purple-600" : "hover:bg-white/10"}`}><IconOrImage assetKey="ui.room.chat" Icon={MessageCircle} size={20} imgSize={26} /></button>
+          <button onClick={() => setShowChatInput((v) => !v)} className={`p-2 rounded-full text-white ${showChatInput ? "bg-purple-600" : "hover:bg-white/10"}`}><IconOrImage assetKey="ui.room.chat" Icon={MessageCircle} size={32} imgSize={48} /></button>
           {isOnMic && (
             <button onClick={handleToggleMute} className={`p-2 rounded-full transition ${isMuted ? "bg-yellow-600" : "hover:bg-white/10"} text-white`}>
-              {isMuted ? <MicOff size={20} /> : <IconOrImage assetKey="ui.room.mic" Icon={Mic} size={20} imgSize={26} />}
+              {isMuted ? <MicOff size={32} /> : <IconOrImage assetKey="ui.room.mic" Icon={Mic} size={32} imgSize={48} />}
             </button>
           )}
-          <button onClick={() => setShowSettings(true)} className="p-2 rounded-full hover:bg-white/10 text-white"><IconOrImage assetKey="ui.room.grid" Icon={Grid2x2} size={20} imgSize={26} /></button>
+          <button onClick={() => setShowSettings(true)} className="p-2 rounded-full hover:bg-white/10 text-white"><IconOrImage assetKey="ui.room.grid" Icon={Grid2x2} size={32} imgSize={48} /></button>
           <button onClick={() => setShowMusicSheet(true)} className="p-2 rounded-full hover:bg-white/10 text-white" title="موسيقى"><Music size={20} /></button>
-          <button onClick={() => setShowGifts(true)} className="p-2 rounded-full hover:bg-white/10 text-white"><IconOrImage assetKey="ui.room.gift" Icon={Gift} size={20} imgSize={26} /></button>
+          <button onClick={() => setShowGifts(true)} className="p-2 rounded-full hover:bg-white/10 text-white"><IconOrImage assetKey="ui.room.gift" Icon={Gift} size={32} imgSize={48} /></button>
         </footer>
       </div>
 
