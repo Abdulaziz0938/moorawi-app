@@ -17,14 +17,6 @@ function App() {
   const [currentRoomId, setCurrentRoomId] = useState<Id<"rooms"> | null>(null);
   const [showDailyLogin, setShowDailyLogin] = useState(false);
 
-  // فتح نافذة الدخول اليومي تلقائياً
-  useEffect(() => {
-    if (dailyStatus?.canClaimDaily && me) {
-      const t = setTimeout(() => setShowDailyLogin(true), 800);
-      return () => clearTimeout(t);
-    }
-  }, [dailyStatus?.canClaimDaily, me?._id]);
-
   // Back button → leave room
   useBackButton(!!currentRoomId, () => setCurrentRoomId(null));
   const [refreshKey, setRefreshKey] = useState(0);
@@ -36,6 +28,14 @@ function App() {
     api.missions.myProgress,
     me ? { tokenOverride: token } : "skip" as any
   );
+
+  // [moorawi-missions] فتح نافذة الدخول اليومي تلقائياً
+  useEffect(() => {
+    if (dailyStatus?.canClaimDaily && me) {
+      const t = setTimeout(() => setShowDailyLogin(true), 800);
+      return () => clearTimeout(t);
+    }
+  }, [dailyStatus?.canClaimDaily, me?._id]);
 
   // [moorawi-auth] يُستدعى من AuthScreen مع session token الجديد مباشرة
   const handleAuthSuccess = (sessionToken: string) => {
