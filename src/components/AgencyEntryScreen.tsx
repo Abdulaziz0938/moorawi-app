@@ -5,6 +5,7 @@ import { api } from "../../convex/_generated/api";
 import { getDeviceId } from "../lib/device";
 import { uploadToCloudinary } from "../lib/cloudinary";
 import { dialog } from "../lib/dialog";
+import AgencyCreateForm from "./AgencyCreateForm";
 import {
   ChevronRight, Search, Loader2, Briefcase, Mic, Users,
   Clock, Check, X, Plus, Award, Shield, Gift,
@@ -44,7 +45,7 @@ export default function AgencyEntryScreen({ initialTab = "host", onClose }: Prop
   }
 
   if (view === "createRequest") {
-    return <CreateRequest onClose={onClose} onBack={() => setView("landing")} />;
+    return <AgencyCreateForm onClose={() => setView("landing")} />;
   }
 
   if (view === "createRequests") {
@@ -333,89 +334,6 @@ function JoinSearch({ onClose }: { onClose: () => void }) {
   );
 }
 
-// ============================================================
-// CREATE REQUEST
-// ============================================================
-function CreateRequest({ onClose, onBack }: { onClose: () => void; onBack: () => void }) {
-  const deviceId = getDeviceId();
-  const [name, setName] = useState("");
-  const [desc, setDesc] = useState("");
-  const [logo, setLogo] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const submit = useMutation(api.agencies.submitCreateRequest);
-
-  const handleUpload = async (file: File) => {
-    setUploading(true);
-    try {
-      const res = await uploadToCloudinary(file, "image");
-      setLogo(res.url);
-    } catch (e: any) { dialog.alert(e?.message || "فشل"); }
-    finally { setUploading(false); }
-  };
-
-  const handleSubmit = async () => {
-    if (name.trim().length < 2) return dialog.alert("اسم الوكالة قصير");
-    setBusy(true);
-    try {
-      await submit({ agencyName: name.trim(), description: desc.trim() || undefined, logoUrl: logo || undefined, tokenOverride: deviceId });
-      dialog.alert("تم إرسال الطلب — سيتم مراجعته قريباً");
-      onBack();
-    } catch (e: any) { dialog.alert(e?.message || "فشل"); }
-    finally { setBusy(false); }
-  };
-
-  return (
-    <div className="fixed inset-0 z-[160] bg-gradient-to-b from-slate-900 via-slate-950 to-black flex flex-col" dir="rtl">
-      <div className="px-4 pt-4 pb-3 flex items-center gap-2 border-b border-white/10">
-        <button onClick={onBack} className="w-10 h-10 rounded-full bg-white/10 border border-white/15 flex items-center justify-center text-white">
-          <ChevronRight size={20} />
-        </button>
-        <h1 className="text-white text-base font-black">طلب إنشاء وكالة</h1>
-      </div>
-
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {/* Logo */}
-        <label className="block cursor-pointer rounded-2xl border-2 border-dashed border-white/20 bg-black/30 overflow-hidden aspect-square">
-          <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleUpload(f); e.target.value = ""; }} />
-          {uploading ? (
-            <div className="aspect-square flex items-center justify-center"><Loader2 size={28} className="animate-spin text-white/50" /></div>
-          ) : logo ? (
-            <img src={logo} alt="" className="aspect-square w-full object-cover" />
-          ) : (
-            <div className="aspect-square flex flex-col items-center justify-center gap-2 text-white/50">
-              <Plus size={32} />
-              <span className="text-xs">شعار الوكالة (اختياري)</span>
-            </div>
-          )}
-        </label>
-
-        <input
-          type="text" autoFocus value={name} onChange={(e) => setName(e.target.value)}
-          placeholder="اسم الوكالة *"
-          maxLength={30}
-          className="w-full bg-white/10 border border-white/15 rounded-2xl px-4 py-3 text-white text-sm focus:outline-none focus:border-purple-400"
-        />
-
-        <textarea
-          value={desc} onChange={(e) => setDesc(e.target.value)}
-          placeholder="وصف مختصر (اختياري)"
-          maxLength={200}
-          rows={4}
-          className="w-full bg-white/10 border border-white/15 rounded-2xl px-4 py-3 text-white text-sm focus:outline-none focus:border-purple-400 resize-none"
-        />
-
-        <button
-          onClick={handleSubmit}
-          disabled={busy || uploading || name.trim().length < 2}
-          className="w-full rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 py-4 text-white font-black text-base disabled:opacity-40 active:scale-95"
-        >
-          {busy ? <Loader2 size={20} className="animate-spin mx-auto" /> : "إرسال الطلب"}
-        </button>
-      </div>
-    </div>
-  );
-}
 
 // ============================================================
 // MY REQUESTS (للمستخدم)

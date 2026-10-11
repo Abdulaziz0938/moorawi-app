@@ -508,14 +508,43 @@ export const submitCreateRequest = mutation({
     agencyName: v.string(),
     description: v.optional(v.string()),
     logoUrl: v.optional(v.string()),
+    fullName: v.string(),
+    idNumber: v.string(),
+    phone: v.string(),
+    bio: v.string(),
     tokenOverride: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const me = await requireUser(ctx, args.tokenOverride);
     if (me.agencyId) throw new Error("أنت في وكالة بالفعل");
 
+    // ===== شروط إلزامية =====
+    if (me.verificationStatus !== "approved") {
+      throw new Error("يجب توثيق حسابك أولاً");
+    }
+    // مستوى الثراء من totalSent
+    const wealthThresholds = [
+      500, 6000, 17500, 60000, 175000, 600000, 2_100_000, 7_500_000,
+      26_000_000, 90_000_000, 320_000_000, 1_100_000_000, 4_000_000_000,
+    ];
+    // حساب المستوى بمقارنة بسيطة (30 يعني تجاوز عدة عتبات)
+    // نستورد levelFromValue من lib/levels لكن داخل convex
+    const { levelFromValue } = await import("./lib/levels");
+    const wealthLevel = levelFromValue(me.totalSent ?? 0);
+    if (wealthLevel < 30) {
+      throw new Error("مستوى الثراء يجب أن يكون 30 أو أعلى");
+    }
+
     const name = args.agencyName.trim();
     if (name.length < 2) throw new Error("اسم الوكالة قصير جداً");
+    const fullName = args.fullName.trim();
+    if (fullName.length < 3) throw new Error("الاسم الكامل قصير");
+    const idNumber = args.idNumber.trim();
+    if (idNumber.length < 4) throw new Error("رقم الهوية غير صالح");
+    const phone = args.phone.trim();
+    if (phone.length < 6) throw new Error("رقم الهاتف غير صالح");
+    const bio = args.bio.trim();
+    if (bio.length < 10) throw new Error("عرّف نفسك (10 أحرف على الأقل)");
 
     // فحص طلب معلق
     const pending = await ctx.db
@@ -536,6 +565,10 @@ export const submitCreateRequest = mutation({
       agencyName: name,
       description: args.description,
       logoUrl: args.logoUrl,
+      fullName,
+      idNumber,
+      phone,
+      bio,
       status: "pending",
       createdAt: Date.now(),
     });

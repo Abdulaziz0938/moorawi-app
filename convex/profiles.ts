@@ -41,6 +41,13 @@ export const me = query({
         profileComplete: user.profileComplete ?? false,
         isAdmin: user.isAdmin ?? false,
         adminRole: user.adminRole ?? null,
+        totalSent: user.totalSent ?? 0,
+        totalReceived: user.totalReceived ?? 0,
+        charms: user.charms ?? 0,
+        coins: user.coins ?? 0,
+        diamonds: user.diamonds ?? 0,
+        vipLevel: user.vipLevel ?? 0,
+        verificationStatus: user.verificationStatus ?? null,
       };
     } catch {
       return null;

@@ -702,6 +702,11 @@ export default defineSchema({
     agencyName: v.string(),
     description: v.optional(v.string()),
     logoUrl: v.optional(v.string()),
+    // [moorawi-agency] حقول النموذج الجديدة
+    fullName: v.optional(v.string()),
+    idNumber: v.optional(v.string()),
+    phone: v.optional(v.string()),
+    bio: v.optional(v.string()),
     status: v.union(v.literal("pending"), v.literal("approved"), v.literal("rejected")),
     createdAt: v.number(),
     reviewedAt: v.optional(v.number()),
@@ -710,5 +715,15 @@ export default defineSchema({
   })
     .index("by_user", ["userId", "status"])
     .index("by_status", ["status", "createdAt"]),
+
+
+  // ================================================================
+  // [moorawi-config] إعدادات عامة (قابلة للتعديل من لوحة الإدارة)
+  // ================================================================
+  config: defineTable({
+    key: v.string(),
+    value: v.string(),
+    updatedAt: v.number(),
+  }).index("by_key", ["key"]),
 
 });
