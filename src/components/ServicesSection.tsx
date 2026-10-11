@@ -21,6 +21,7 @@ interface Props {
   onOpenRelations?: () => void;
   onOpenLevel?: () => void;
   onOpenSupporter?: () => void;
+  onOpenLegend?: () => void;
   onLogout?: () => void;
   onOpenMedals?: () => void;
   isOwner?: boolean;
@@ -41,6 +42,7 @@ export default function ServicesSection({
   onOpenRelations,
   onOpenLevel,
   onOpenSupporter,
+  onOpenLegend,
   onLogout,
   onOpenMedals,
   isOwner,
@@ -77,7 +79,7 @@ export default function ServicesSection({
     { key: "level",      assetKey: "ui.service.level",    label: "مستوى",      icon: Sparkles,   color: "text-amber-300",    onClick: onOpenLevel ?? (() => soon("المستوى")) },
     { key: "medals",      assetKey: "ui.service.medals",   label: "أوسمة",      icon: Award,      color: "text-yellow-300",   onClick: onOpenMedals ?? (() => soon("الأوسمة")) },
     { key: "wallet",      assetKey: "ui.service.wallet",   label: "محفظة",      icon: Wallet,     color: "text-emerald-300",  onClick: onOpenWallet },
-    { key: "legend",      assetKey: "ui.service.legend",   label: "الأسطورة",   icon: Star,       color: "text-fuchsia-300",  onClick: () => soon("الأسطورة") },
+    { key: "legend",      assetKey: "ui.service.legend",   label: "الأسطورة",   icon: Star,       color: "text-fuchsia-300",  onClick: onOpenLegend ?? (() => soon("الأسطورة")) },
     { key: "host",      assetKey: "ui.service.host",     label: "مضيف",       icon: Mic,        color: "text-sky-300",      onClick: onOpenHost ?? (() => soon("المضيف")) },
     { key: "agency",      assetKey: "ui.service.agency",   label: "وكالة",      icon: Briefcase,  color: "text-teal-300",     onClick: onOpenAgency ?? (() => soon("الوكالة")) },
     { key: "store",      assetKey: "ui.service.store",    label: "متجر",       icon: ShoppingBag, color: "text-pink-300",    onClick: onOpenStore ?? (() => soon("المتجر")) },

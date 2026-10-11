@@ -569,3 +569,41 @@ export const search = query({
     return enriched;
   },
 });
+
+// ============================================================
+// [moorawi-rankings] legendTop — أعلى 3 حسب الفئة
+// ============================================================
+export const legendTop = query({
+  args: { category: v.union(v.literal("wealth"), v.literal("charm"), v.literal("gifters")) },
+  handler: async (ctx, args) => {
+    const users = await ctx.db.query("users").collect();
+
+    let sorted = users;
+    if (args.category === "wealth") {
+      sorted = users.sort((a, b) => (b.totalSent ?? 0) - (a.totalSent ?? 0));
+    } else if (args.category === "charm") {
+      sorted = users.sort((a, b) => (b.charms ?? 0) - (a.charms ?? 0));
+    } else {
+      // gifters = عدد الهدايا المرسلة (تقريب من totalSent)
+      sorted = users.sort((a, b) => (b.totalSent ?? 0) - (a.totalSent ?? 0));
+    }
+
+    const top = sorted.slice(0, 3);
+    const enriched = await Promise.all(
+      top.map(async (u) => {
+        let value = 0;
+        if (args.category === "wealth" || args.category === "gifters") value = u.totalSent ?? 0;
+        else value = u.charms ?? 0;
+
+        return {
+          userId: u._id,
+          name: u.name ?? "—",
+          userNumber: u.userNumber ?? null,
+          avatarUrl: u.avatarUrl ?? (u.avatarId ? await ctx.storage.getUrl(u.avatarId) : null),
+          value,
+        };
+      })
+    );
+    return enriched;
+  },
+});
