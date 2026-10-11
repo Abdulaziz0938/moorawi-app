@@ -6,17 +6,18 @@ import { dialog } from "../lib/dialog";
 import {
   X, Loader2, Search, Coins, Gem, Ban, ShieldCheck, Crown,
   Users, Home, ShoppingBag, TrendingUp, Plus, Save, ChevronLeft,
-  UserCheck, UserX, Image as ImageIcon, Upload, RotateCcw,
+  UserCheck, UserX, Image as ImageIcon, Upload, RotateCcw, Briefcase,
 } from "lucide-react";
 import { uploadToCloudinary } from "../lib/cloudinary";
 import { useAssets } from "../lib/assets";
 import AssetsPanel from "./AssetsPanel";
+import AgencyRequestsPanel from "./AgencyRequestsPanel";
 
 interface Props {
   onClose: () => void;
 }
 
-type View = "main" | "userEdit";
+type View = "main" | "userEdit" | "agencyRequests";
 
 function formatNum(n: number): string {
   if (n >= 1_000_000_000) return (n / 1_000_000_000).toFixed(2) + "B";
@@ -41,6 +42,7 @@ export default function AdminPanelSheet({ onClose }: Props) {
   const [editField, setEditField] = useState({ coins: "", diamonds: "", vip: "" });
   const [busy, setBusy] = useState(false);
   const [showAssets, setShowAssets] = useState(false);
+  const [showAgencyRequests, setShowAgencyRequests] = useState(false);
 
   const [grantAmount, setGrantAmount] = useState("10000");
 
@@ -178,7 +180,11 @@ export default function AdminPanelSheet({ onClose }: Props) {
         {/* ===== Header ===== */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 flex-shrink-0">
           <div className="flex items-center gap-2">
-            {showAssets ? (
+            {showAgencyRequests ? (
+              <button onClick={() => setShowAgencyRequests(false)} className="p-2 -ml-2 rounded-full hover:bg-white/10 text-white">
+                <ChevronLeft size={20} className="rotate-180" />
+              </button>
+            ) : showAssets ? (
               <button onClick={() => setShowAssets(false)} className="p-2 -ml-2 rounded-full hover:bg-white/10 text-white">
                 <ChevronLeft size={20} className="rotate-180" />
               </button>
@@ -192,18 +198,27 @@ export default function AdminPanelSheet({ onClose }: Props) {
               </div>
             )}
             <h2 className="text-white text-lg font-black">
-              {showAssets ? "الأصول والصور" : editUser ? `تعديل: ${editUser.username}` : "لوحة المالك"}
+              {showAgencyRequests ? "طلبات الوكالات" : showAssets ? "الأصول والصور" : editUser ? `تعديل: ${editUser.username}` : "لوحة المالك"}
             </h2>
           </div>
           <div className="flex items-center gap-1">
-            {!editUser && !showAssets && (
-              <button
-                onClick={() => setShowAssets(true)}
-                title="الأصول والصور"
-                className="p-2 rounded-full hover:bg-white/10 text-white"
-              >
-                <ImageIcon size={20} />
-              </button>
+            {!editUser && !showAssets && !showAgencyRequests && (
+              <>
+                <button
+                  onClick={() => setShowAgencyRequests(true)}
+                  title="طلبات الوكالات"
+                  className="p-2 rounded-full hover:bg-white/10 text-white"
+                >
+                  <Briefcase size={20} />
+                </button>
+                <button
+                  onClick={() => setShowAssets(true)}
+                  title="الأصول والصور"
+                  className="p-2 rounded-full hover:bg-white/10 text-white"
+                >
+                  <ImageIcon size={20} />
+                </button>
+              </>
             )}
             <button onClick={onClose} className="p-2 rounded-full hover:bg-white/10 text-white">
               <X size={20} />
@@ -214,8 +229,10 @@ export default function AdminPanelSheet({ onClose }: Props) {
         {/* ===== Content ===== */}
         <div className="flex-1 overflow-y-auto">
 
-          {/* ============ ASSETS ============ */}
-          {showAssets ? (
+          {/* ============ AGENCY REQUESTS ============ */}
+          {showAgencyRequests ? (
+            <AgencyRequestsPanel token={token} />
+          ) : showAssets ? (
             <AssetsPanel token={token} />
           ) : editUser ? (
             <div className="p-4 space-y-4">
