@@ -12,7 +12,11 @@ interface Props { onClose: () => void; onUserClick?: (id: any) => void; }
 export default function VisitsSheet({ onClose, onUserClick }: Props) {
   useBackButton(true, onClose);
   const deviceId = getDeviceId();
-  const visits = useQuery(api.visits.recent, { tokenOverride: deviceId } as any);
+  const me = useQuery(api.profiles.me, { tokenOverride: deviceId });
+  const visits = useQuery(
+    api.visits.recent,
+    me ? { userId: me._id } : "skip" as any
+  );
 
   return (
     <div className="fixed inset-0 z-[160] bg-gradient-to-b from-slate-900 to-black flex flex-col" dir="rtl">

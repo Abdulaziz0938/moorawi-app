@@ -36,6 +36,7 @@ import type * as seedMedals from "../seedMedals.js";
 import type * as seedShop from "../seedShop.js";
 import type * as shop from "../shop.js";
 import type * as users from "../users.js";
+import type * as verification from "../verification.js";
 import type * as vip from "../vip.js";
 import type * as visits from "../visits.js";
 import type * as voice from "../voice.js";
@@ -77,6 +78,7 @@ declare const fullApi: ApiFromModules<{
   seedShop: typeof seedShop;
   shop: typeof shop;
   users: typeof users;
+  verification: typeof verification;
   vip: typeof vip;
   visits: typeof visits;
   voice: typeof voice;
