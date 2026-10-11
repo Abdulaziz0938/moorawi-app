@@ -24,6 +24,10 @@ export const me = query({
       const user = await requireUser(ctx, args.tokenOverride);
       const avatarUrl = user.avatarUrl ?? (user.avatarId ? await ctx.storage.getUrl(user.avatarId) : null);
       return {
+      agencyId: user.agencyId ?? null,
+      agencyNumber: user.agencyNumber ?? null,
+      isHost: user.isHost ?? false,
+      hostLevel: user.hostLevel ?? 0,
         _id: user._id,
         userNumber: user.userNumber ?? null,
         username: user.username ?? null,

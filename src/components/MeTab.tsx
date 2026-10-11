@@ -8,6 +8,7 @@ import ServicesSection from "./ServicesSection";
 import WalletSheet from "./WalletSheet";
 import ShopSheet from "./ShopSheet";
 import VipShopSheet from "./VipShopSheet";
+import AgencyEntryScreen from "./AgencyEntryScreen";
 import ProfilePage from "./ProfilePage";
 import AdminPanelSheet from "./AdminPanelSheet";
 import MedalsSheet from "./MedalsSheet";
@@ -30,6 +31,7 @@ export default function MeTab({ onEnterRoom }: Props) {
   const [showAdmin, setShowAdmin] = useState(false);
   const [showMedals, setShowMedals] = useState(false);
   const [showVip, setShowVip] = useState(false);
+  const [showAgency, setShowAgency] = useState<null | "host" | "agent">(null);
 
   if (!me) {
     return (
@@ -104,6 +106,8 @@ export default function MeTab({ onEnterRoom }: Props) {
           onOpenStore={() => setShowShop(true)}
           onOpenMedals={() => setShowMedals(true)}
           onOpenVip={() => setShowVip(true)}
+          onOpenHost={() => setShowAgency("host")}
+          onOpenAgency={() => setShowAgency("agent")}
           onLogout={() => {
             dialog.confirm(
               "هل تريد تسجيل الخروج من الحساب؟",
@@ -128,6 +132,7 @@ export default function MeTab({ onEnterRoom }: Props) {
       {showAdmin && <AdminPanelSheet onClose={() => setShowAdmin(false)} />}
       {showMedals && <MedalsSheet onClose={() => setShowMedals(false)} />}
       {showVip && <VipShopSheet onClose={() => setShowVip(false)} />}
+      {showAgency && <AgencyEntryScreen initialTab={showAgency} onClose={() => setShowAgency(null)} />}
     </>
   );
 }
