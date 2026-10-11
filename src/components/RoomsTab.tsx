@@ -1,18 +1,16 @@
-// [moorawi-rooms] RoomsTab — Binmo-style rooms discovery
-// Tabs: mine | trend | live
-// Sub-tabs (mine): recent | following
-// Sub-tabs (trend): thisRoom | new | hourly
-
-import { useState } from "react";
+// [moorawi-rooms] RoomsTab — Binmo-style discovery
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { getDeviceId } from "../lib/device";
 import { dialog } from "../lib/dialog";
 import UserAvatar from "./UserAvatar";
+import { UserName } from "./UserBadges";
 import {
   Home, Plus, X, Check, Loader2, Search, Lock,
-  Signal, Users, Flame, Sparkles, Clock, Trophy,
+  Users, Flame, Sparkles, Clock, Crown, Heart,
+  ChevronLeft, ChevronRight,
 } from "lucide-react";
 
 interface Props {
@@ -21,20 +19,10 @@ interface Props {
 
 type MainTab = "mine" | "trend" | "live";
 type MineSub = "recent" | "following";
-type TrendSub = "thisRoom" | "new" | "hourly";
 
-type RoomCard = {
-  _id: Id<"rooms">;
-  name: string;
-  coverUrl: string | null;
-  welcomeMessage: string;
-  memberCount: number;
-  roomNumber: number | null;
-  ownerName: string;
-  ownerAvatar: string | null;
-  ownerUserNumber: number | null;
-};
-
+// ============================================================
+// MAIN COMPONENT
+// ============================================================
 export default function RoomsTab({ onEnter }: Props) {
   const deviceId = getDeviceId();
   const me = useQuery(api.profiles.me, { tokenOverride: deviceId });
@@ -44,174 +32,534 @@ export default function RoomsTab({ onEnter }: Props) {
 
   const [mainTab, setMainTab] = useState<MainTab>("mine");
   const [mineSub, setMineSub] = useState<MineSub>("recent");
-  const [trendSub, setTrendSub] = useState<TrendSub>("thisRoom");
   const [showCreate, setShowCreate] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
   const [newName, setNewName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  // Data queries — only run when relevant
   const recent = useQuery(api.rooms.listRecent,
     mainTab === "mine" && mineSub === "recent" ? { tokenOverride: deviceId } : "skip" as any);
   const following = useQuery(api.rooms.listFollowing,
     mainTab === "mine" && mineSub === "following" ? { tokenOverride: deviceId } : "skip" as any);
-  const trending = useQuery(api.rooms.listTrending,
-    mainTab === "trend" && trendSub === "thisRoom" ? {} : "skip" as any);
-  const newRooms = useQuery(api.rooms.listNew,
-    mainTab === "trend" && trendSub === "new" ? {} : "skip" as any);
 
-  const handleCreate = async () => {
-    if (!newName.trim()) return;
-    setIsCreating(true);
-    try {
-      const roomId = await createRoom({ name: newName.trim(), isPrivate: false, tokenOverride: deviceId });
-      setNewName(""); setShowCreate(false); onEnter(roomId);
-    } catch (e: any) { dialog.alert(e.message || "خطأ"); }
-    finally { setIsCreating(false); }
+  const handleCopyId = () => {
+    if (!me?.userNumber) return;
+    navigator.clipboard.writeText(String(me.userNumber)).catch(() => {});
+    setCopied(true); setTimeout(() => setCopied(false), 1500);
   };
 
   const handleJoin = async (roomId: Id<"rooms">) => {
     try {
       await joinRoom({ roomId, tokenOverride: deviceId });
       onEnter(roomId);
-    } catch (e: any) { dialog.alert(e.message || "خطأ"); }
+    } catch (e: any) {
+      dialog.alert(e?.message || "فشل الدخول");
+    }
   };
 
-  const handleCopyId = async () => {
-    if (!me?.userNumber) return;
-    try { await navigator.clipboard.writeText(String(me.userNumber)); }
-    catch {
-      const ta = document.createElement("textarea");
-      ta.value = String(me.userNumber); document.body.appendChild(ta); ta.select();
-      document.execCommand("copy"); document.body.removeChild(ta);
+  const handleCreate = async () => {
+    if (!newName.trim()) return;
+    setIsCreating(true);
+    try {
+      const roomId = await createRoom({ name: newName.trim(), isPrivate: false, tokenOverride: deviceId });
+      setShowCreate(false);
+      setNewName("");
+      onEnter(roomId);
+    } catch (e: any) {
+      dialog.alert(e?.message || "فشل الإنشاء");
+    } finally {
+      setIsCreating(false);
     }
-    setCopied(true); setTimeout(() => setCopied(false), 1500);
   };
 
   return (
-    <div className="max-w-md mx-auto">
-      {/* ============ Top Header (avatar + ID) ============ */}
-      {me && (
-        <div className="px-4 pt-3 pb-2 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <button onClick={handleCopyId} className="flex items-center gap-1.5 bg-white/10 hover:bg-white/15 border border-white/15 rounded-full px-2.5 py-1 transition active:scale-95">
-              <div className="w-7 h-7 rounded-full overflow-hidden bg-purple-500 flex items-center justify-center">
-                <UserAvatar avatarUrl={me?.avatarUrl} name={me?.name} className="w-full h-full" />
-              </div>
-              <span className="text-white text-[11px] font-black" dir="ltr">ID:{me.userNumber}</span>
-              {copied && <Check size={10} className="text-green-300" />}
-            </button>
-          </div>
-          <div className="text-white text-sm font-black" dir="rtl">{me.name}</div>
+    <div className="max-w-md mx-auto pb-24">
+      {/* ============ Top Bar ============ */}
+      <div className="px-4 pt-3 pb-2 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <button onClick={handleCopyId} className="flex items-center gap-1.5 bg-white/10 hover:bg-white/15 border border-white/15 rounded-full px-2.5 py-1 transition active:scale-95">
+            <div className="w-7 h-7 rounded-full overflow-hidden bg-purple-500 flex items-center justify-center">
+              <UserAvatar avatarUrl={me?.avatarUrl} name={me?.name} className="w-full h-full" />
+            </div>
+            <span className="text-white text-[11px] font-black" dir="ltr">ID:{me?.userNumber}</span>
+            {copied && <Check size={10} className="text-green-300" />}
+          </button>
         </div>
-      )}
+        <div className="text-white text-sm font-black" dir="rtl">{me?.name}</div>
+      </div>
 
-      {/* ============ My Room Button ============ */}
-      <div className="px-4 pb-3">
+      {/* ============ Actions Row (Search + My Room) ============ */}
+      <div className="px-4 pb-3 flex gap-2">
+        <button
+          onClick={() => setShowSearch(!showSearch)}
+          className="w-12 h-12 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center text-white active:scale-95 transition"
+        >
+          <Search size={20} />
+        </button>
         {myRoom ? (
           <button
             onClick={() => onEnter(myRoom._id)}
-            className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white py-2.5 rounded-2xl flex items-center justify-center gap-2 font-black text-sm active:scale-95 transition shadow-lg"
+            className="flex-1 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black text-sm active:scale-95 transition flex items-center justify-center gap-2"
           >
             <Home size={18} /> غرفتي
           </button>
         ) : (
           <button
             onClick={() => setShowCreate(true)}
-            className="w-full bg-white/10 hover:bg-white/15 border border-white/15 text-white py-2.5 rounded-2xl flex items-center justify-center gap-2 font-black text-sm active:scale-95 transition relative"
+            className="flex-1 rounded-2xl bg-white/10 border border-white/15 text-white font-black text-sm active:scale-95 transition flex items-center justify-center gap-2"
           >
-            <div className="relative">
-              <Home size={18} />
-              <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-500 rounded-full flex items-center justify-center border-2 border-purple-900">
-                <Plus size={8} className="text-white" strokeWidth={3} />
-              </div>
+            <Home size={18} />
+            <span>إنشاء غرفة</span>
+            <div className="w-4 h-4 bg-emerald-500 rounded-full flex items-center justify-center">
+              <Plus size={10} className="text-white" strokeWidth={3} />
             </div>
-            إنشاء غرفة جديدة
           </button>
         )}
       </div>
 
       {/* ============ Main Tabs ============ */}
       <div className="px-4 flex items-center justify-center gap-6 border-b border-white/10">
-        <MainTabBtn active={mainTab === "mine"} onClick={() => setMainTab("mine")} label="الخاص بي" />
+        <MainTabBtn active={mainTab === "mine"}  onClick={() => setMainTab("mine")}  label="الخاص بي" />
         <MainTabBtn active={mainTab === "trend"} onClick={() => setMainTab("trend")} label="ترند" />
-        <MainTabBtn active={mainTab === "live"} onClick={() => setMainTab("live")} label="لايف" />
+        <MainTabBtn active={mainTab === "live"}  onClick={() => setMainTab("live")}  label="لايف" />
       </div>
 
       {/* ============ Content ============ */}
       <div className="px-4 py-3">
         {mainTab === "mine" && (
-          <>
-            <div className="flex items-center gap-4 mb-3">
-              <SubTabBtn active={mineSub === "recent"} onClick={() => setMineSub("recent")} label="حديث" />
-              <SubTabBtn active={mineSub === "following"} onClick={() => setMineSub("following")} label="المتابعين" />
-            </div>
-            {mineSub === "recent" && <RoomList rooms={recent} onEnter={handleJoin} empty="لا توجد غرف زرتها بعد" />}
-            {mineSub === "following" && <RoomList rooms={following} onEnter={handleJoin} empty="لا تتابع أحداً بعد" />}
-          </>
+          <MineTab
+            mineSub={mineSub}
+            setMineSub={setMineSub}
+            recent={recent}
+            following={following}
+            myRoom={myRoom}
+            onEnter={handleJoin}
+          />
         )}
+        {mainTab === "trend" && <TrendTab onEnter={handleJoin} />}
+        {mainTab === "live" && <LiveTab />}
+      </div>
 
-        {mainTab === "trend" && (
-          <>
-            <div className="flex items-center justify-center gap-3 mb-3">
-              <SubTabIcon active={trendSub === "thisRoom"} onClick={() => setTrendSub("thisRoom")} icon={Home} label="هذه الغرفة" />
-              <SubTabIcon active={trendSub === "new"} onClick={() => setTrendSub("new")} icon={Sparkles} label="جديد" badge="NEW" />
-              <SubTabIcon active={trendSub === "hourly"} onClick={() => setTrendSub("hourly")} icon={Flame} label="تصنيف الساعات" />
-            </div>
-            {trendSub === "thisRoom" && <RoomGrid rooms={trending} onEnter={handleJoin} empty="لا توجد غرف" />}
-            {trendSub === "new" && <RoomGrid rooms={newRooms} onEnter={handleJoin} empty="لا توجد غرف جديدة" />}
-            {trendSub === "hourly" && (
-              <div className="text-center py-12 text-white/50">
-                <Trophy size={40} className="mx-auto mb-2 opacity-40" />
-                <p className="text-sm font-bold">تصنيف الساعات</p>
-                <p className="text-xs mt-1">قريباً</p>
-              </div>
-            )}
-          </>
-        )}
+      {/* ============ Create Modal ============ */}
+      {showCreate && (
+        <CreateRoomModal
+          value={newName}
+          onChange={setNewName}
+          onCancel={() => { setShowCreate(false); setNewName(""); }}
+          onConfirm={handleCreate}
+          busy={isCreating}
+        />
+      )}
+    </div>
+  );
+}
 
-        {mainTab === "live" && (
-          <div className="text-center py-12 text-white/50">
-            <Signal size={40} className="mx-auto mb-2 opacity-40" />
-            <p className="text-sm font-bold">البث المباشر</p>
-            <p className="text-xs mt-1">قريباً</p>
-          </div>
+// ============================================================
+// MINE TAB
+// ============================================================
+function MineTab({ mineSub, setMineSub, recent, following, myRoom, onEnter }: any) {
+  return (
+    <>
+      {/* My room info card */}
+      {myRoom && (
+        <div className="mb-4">
+          <MyRoomCard room={myRoom} onEnter={onEnter} />
+        </div>
+      )}
+
+      {/* Sub tabs */}
+      <div className="flex items-center gap-4 mb-3">
+        <SubTabBtn active={mineSub === "recent"} onClick={() => setMineSub("recent")} label="حديث" />
+        <SubTabBtn active={mineSub === "following"} onClick={() => setMineSub("following")} label="المتابعين" />
+      </div>
+
+      {mineSub === "recent" && <RoomList rooms={recent} onEnter={onEnter} empty="لا توجد غرف زرتها بعد" />}
+      {mineSub === "following" && <RoomList rooms={following} onEnter={onEnter} empty="لا تتابع أحداً بعد" />}
+    </>
+  );
+}
+
+// ============================================================
+// MY ROOM CARD
+// ============================================================
+function MyRoomCard({ room, onEnter }: any) {
+  return (
+    <button
+      onClick={() => onEnter(room._id)}
+      className="w-full rounded-2xl overflow-hidden bg-gradient-to-br from-purple-900/40 to-indigo-900/40 border border-purple-400/30 p-3 flex items-center gap-3 active:scale-95 transition"
+    >
+      {/* Cover */}
+      <div className="w-16 h-16 rounded-2xl overflow-hidden bg-black/40 flex-shrink-0 flex items-center justify-center">
+        {room.coverUrl ? (
+          <img src={room.coverUrl} alt="" className="w-full h-full object-cover" />
+        ) : (
+          <Home size={26} className="text-purple-300/60" />
         )}
       </div>
 
-      {/* ============ Create Room Modal ============ */}
-      {showCreate && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-[100]" onClick={() => setShowCreate(false)}>
-          <div className="bg-gradient-to-b from-slate-900 to-black rounded-3xl p-6 max-w-sm w-full border border-white/10" onClick={(e) => e.stopPropagation()}>
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-white text-lg font-black">غرفة جديدة</h2>
-              <button onClick={() => setShowCreate(false)} className="text-white/60 hover:text-white"><X size={20} /></button>
-            </div>
-            <input
-              type="text"
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              placeholder="اسم الغرفة"
-              className="w-full bg-white/10 border border-white/20 rounded-2xl p-3 text-white placeholder:text-white/40 focus:outline-none focus:border-purple-400 mb-4"
-              maxLength={40}
-              autoFocus
+      {/* Info */}
+      <div className="flex-1 min-w-0 text-right">
+        <p className="text-white text-sm font-black truncate">{room.name}</p>
+        <p className="text-white/50 text-[10px]" dir="ltr">ID:{room.roomNumber ?? "—"}</p>
+        <div className="flex items-center gap-3 mt-1 justify-end">
+          <span className="text-emerald-300 text-[10px] flex items-center gap-1">
+            <Users size={10} /> {room.memberCount ?? 0} متصل
+          </span>
+        </div>
+      </div>
+
+      <ChevronLeft size={18} className="text-white/40 flex-shrink-0" />
+    </button>
+  );
+}
+
+// ============================================================
+// TREND TAB
+// ============================================================
+function TrendTab({ onEnter }: { onEnter: (id: Id<"rooms">) => void }) {
+  return (
+    <div className="space-y-4">
+      {/* Banners */}
+      <BannerSlideshow />
+
+      {/* Rankings row */}
+      <div className="grid grid-cols-2 gap-3">
+        <WealthRankingBox />
+        <CpRankingBox />
+      </div>
+
+      {/* Rooms grid */}
+      <RoomsWithStatsGrid onEnter={onEnter} />
+    </div>
+  );
+}
+
+// ============================================================
+// LIVE TAB
+// ============================================================
+function LiveTab() {
+  return (
+    <div className="text-center py-16 text-white/50">
+      <Flame size={48} className="mx-auto mb-3 opacity-30" />
+      <p className="text-sm font-bold">البث المباشر</p>
+      <p className="text-xs mt-1">قريباً</p>
+    </div>
+  );
+}
+
+// ============================================================
+// BANNER SLIDESHOW
+// ============================================================
+function BannerSlideshow() {
+  const banners = useQuery(api.banners.list);
+  const [idx, setIdx] = useState(0);
+
+  useEffect(() => {
+    if (!banners || banners.length <= 1) return;
+    const t = setInterval(() => {
+      setIdx((i) => (i + 1) % banners.length);
+    }, 4500);
+    return () => clearInterval(t);
+  }, [banners]);
+
+  useEffect(() => {
+    if (banners && idx >= banners.length) setIdx(0);
+  }, [banners, idx]);
+
+  if (!banners || banners.length === 0) {
+    return (
+      <div className="aspect-video rounded-2xl bg-gradient-to-br from-purple-900/30 to-pink-900/30 border border-white/10 flex items-center justify-center">
+        <p className="text-white/40 text-xs">لا توجد إعلانات</p>
+      </div>
+    );
+  }
+
+  const banner = banners[idx];
+
+  return (
+    <div className="relative aspect-video rounded-2xl overflow-hidden border border-white/10 bg-black/40">
+      <img src={banner.imageUrl} alt={banner.title ?? ""} className="absolute inset-0 w-full h-full object-cover" />
+
+      {/* Nav buttons */}
+      {banners.length > 1 && (
+        <>
+          <button
+            onClick={() => setIdx((i) => (i - 1 + banners.length) % banners.length)}
+            className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 backdrop-blur flex items-center justify-center text-white active:scale-95"
+          >
+            <ChevronLeft size={16} />
+          </button>
+          <button
+            onClick={() => setIdx((i) => (i + 1) % banners.length)}
+            className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 backdrop-blur flex items-center justify-center text-white active:scale-95"
+          >
+            <ChevronRight size={16} />
+          </button>
+        </>
+      )}
+
+      {/* Dots */}
+      {banners.length > 1 && (
+        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
+          {banners.map((_, i) => (
+            <span
+              key={i}
+              className={`w-1.5 h-1.5 rounded-full transition ${i === idx ? "bg-white w-4" : "bg-white/50"}`}
             />
-            <button
-              onClick={handleCreate}
-              disabled={isCreating || !newName.trim()}
-              className="w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white py-3 rounded-2xl font-black disabled:opacity-50 active:scale-95 transition"
-            >
-              {isCreating ? "جاري الإنشاء..." : "إنشاء"}
-            </button>
-          </div>
+          ))}
         </div>
       )}
     </div>
   );
 }
 
-// ============================ Sub-components
+// ============================================================
+// WEALTH RANKING BOX
+// ============================================================
+function WealthRankingBox() {
+  const ranking = useQuery(api.rooms.wealthRanking);
 
+  const order = [1, 0, 2]; // silver, gold, bronze (left to right)
+  const positions = ["silver", "gold", "bronze"];
+
+  return (
+    <div className="rounded-2xl bg-gradient-to-br from-amber-900/30 to-orange-900/30 border border-amber-400/30 p-3">
+      <div className="flex items-center justify-center gap-1 mb-2">
+        <Crown size={14} className="text-amber-300" />
+        <p className="text-white text-xs font-black">ترتيب الثروة</p>
+      </div>
+      <div className="flex items-end justify-center gap-2 h-24">
+        {positions.map((pos, idx) => {
+          const item = ranking?.[order[idx]];
+          const isGold = pos === "gold";
+          const isSilver = pos === "silver";
+          const size = isGold ? "w-14 h-14" : "w-11 h-11";
+          const borderColor = isGold ? "border-amber-300" : isSilver ? "border-slate-200" : "border-orange-500";
+          const label = isGold ? "1" : isSilver ? "2" : "3";
+          return (
+            <div key={pos} className={`flex flex-col items-center ${isGold ? "mb-1" : ""}`}>
+              <div className={`${size} rounded-full overflow-hidden border-2 ${borderColor} bg-purple-700 flex items-center justify-center`}>
+                {item?.avatarUrl ? (
+                  <img src={item.avatarUrl} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-white text-xs font-black">{item?.name?.[0] ?? "?"}</span>
+                )}
+              </div>
+              <span className={`text-[8px] font-black text-white mt-0.5 ${isGold ? "text-amber-200" : isSilver ? "text-slate-100" : "text-orange-300"}`}>
+                #{label}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+      {(!ranking || ranking.length === 0) && (
+        <p className="text-white/40 text-[9px] text-center mt-1">لا توجد بيانات</p>
+      )}
+    </div>
+  );
+}
+
+// ============================================================
+// CP RANKING BOX
+// ============================================================
+function CpRankingBox() {
+  const ranking = useQuery(api.rooms.cpRanking);
+  const pair = ranking?.[0];
+
+  return (
+    <div className="rounded-2xl bg-gradient-to-br from-pink-900/30 to-rose-900/30 border border-pink-400/30 p-3">
+      <div className="flex items-center justify-center gap-1 mb-2">
+        <Heart size={14} className="text-pink-300" fill="currentColor" />
+        <p className="text-white text-xs font-black">كوبل</p>
+      </div>
+      <div className="flex items-center justify-center gap-2 h-24">
+        {pair ? (
+          <>
+            <div className="flex flex-col items-center">
+              <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-pink-300 bg-purple-700 flex items-center justify-center">
+                {pair.user1.avatarUrl ? (
+                  <img src={pair.user1.avatarUrl} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-white text-xs font-black">{pair.user1.name[0]}</span>
+                )}
+              </div>
+              <p className="text-white/70 text-[8px] mt-0.5 truncate max-w-[48px]">{pair.user1.name}</p>
+            </div>
+            <Heart size={16} className="text-pink-400 mb-4" fill="currentColor" />
+            <div className="flex flex-col items-center">
+              <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-pink-300 bg-purple-700 flex items-center justify-center">
+                {pair.user2.avatarUrl ? (
+                  <img src={pair.user2.avatarUrl} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-white text-xs font-black">{pair.user2.name[0]}</span>
+                )}
+              </div>
+              <p className="text-white/70 text-[8px] mt-0.5 truncate max-w-[48px]">{pair.user2.name}</p>
+            </div>
+          </>
+        ) : (
+          <p className="text-white/40 text-[9px]">لا يوجد كوبل</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// ROOMS WITH STATS GRID (top 3 ranked)
+// ============================================================
+function RoomsWithStatsGrid({ onEnter }: { onEnter: (id: Id<"rooms">) => void }) {
+  const rooms = useQuery(api.rooms.publicRoomsWithStats);
+
+  if (rooms === undefined) {
+    return (
+      <div className="flex justify-center py-10">
+        <Loader2 size={24} className="animate-spin text-white/40" />
+      </div>
+    );
+  }
+
+  if (rooms.length === 0) {
+    return (
+      <div className="text-center py-10 text-white/50">
+        <Home size={40} className="mx-auto mb-2 opacity-30" />
+        <p className="text-sm font-bold">لا توجد غرف</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-2 gap-3">
+      {rooms.map((r: any) => (
+        <RoomCardGrid key={r._id} room={r} onEnter={onEnter} />
+      ))}
+    </div>
+  );
+}
+
+function RoomCardGrid({ room, onEnter }: { room: any; onEnter: (id: Id<"rooms">) => void }) {
+  const showRank = room.rank <= 3;
+  const rankColors = ["from-amber-400 to-yellow-500", "from-slate-200 to-slate-400", "from-orange-500 to-amber-700"];
+
+  return (
+    <button
+      onClick={() => onEnter(room._id)}
+      className="relative rounded-2xl overflow-hidden aspect-square bg-gradient-to-br from-purple-900/40 to-indigo-900/40 border border-white/10 active:scale-95 transition"
+    >
+      {/* Cover */}
+      {room.coverUrl ? (
+        <img src={room.coverUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
+      ) : (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <Home size={40} className="text-purple-300/40" />
+        </div>
+      )}
+
+      {/* Dark overlay bottom */}
+      <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/95 via-black/60 to-transparent" />
+
+      {/* Rank badge (top-left) */}
+      {showRank && (
+        <div className={`absolute top-1.5 left-1.5 w-7 h-7 rounded-full bg-gradient-to-br ${rankColors[room.rank - 1]} flex items-center justify-center text-[11px] font-black text-black shadow-lg border-2 border-white/40`}>
+          {room.rank}
+        </div>
+      )}
+
+      {/* Bottom info */}
+      <div className="absolute inset-x-0 bottom-0 p-2 text-right">
+        <p className="text-white text-[11px] font-black truncate">{room.name}</p>
+        <div className="flex items-center gap-2 mt-0.5 justify-end">
+          <span className="text-emerald-300 text-[9px] flex items-center gap-0.5">
+            <Users size={8} /> {room.onlineCount}
+          </span>
+          <span className="text-white/50 text-[9px]">ID:{room.roomNumber ?? "—"}</span>
+        </div>
+      </div>
+    </button>
+  );
+}
+
+// ============================================================
+// ROOM LIST (Mine tab — smaller rows)
+// ============================================================
+function RoomList({ rooms, onEnter, empty }: any) {
+  if (rooms === undefined) {
+    return <div className="flex justify-center py-10"><Loader2 size={20} className="animate-spin text-white/40" /></div>;
+  }
+  if (rooms.length === 0) {
+    return (
+      <div className="text-center py-10 text-white/40">
+        <p className="text-xs">{empty}</p>
+      </div>
+    );
+  }
+  return (
+    <div className="space-y-2">
+      {rooms.map((r: any) => (
+        <button
+          key={r._id}
+          onClick={() => onEnter(r._id)}
+          className="w-full rounded-2xl bg-white/5 border border-white/10 p-2 flex items-center gap-3 active:scale-95 transition"
+        >
+          <div className="w-14 h-14 rounded-xl overflow-hidden bg-black/40 flex-shrink-0 flex items-center justify-center">
+            {r.coverUrl ? (
+              <img src={r.coverUrl} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <Home size={20} className="text-purple-300/50" />
+            )}
+          </div>
+          <div className="flex-1 min-w-0 text-right">
+            <p className="text-white text-xs font-black truncate">{r.name}</p>
+            <p className="text-white/50 text-[10px] truncate">{r.welcomeMessage || "—"}</p>
+          </div>
+          <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
+            <span className="text-emerald-300 text-[9px] flex items-center gap-0.5">
+              <Users size={9} /> {r.memberCount ?? 0}
+            </span>
+            <span className="text-white/40 text-[9px]">ID:{r.roomNumber ?? "—"}</span>
+          </div>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ============================================================
+// CREATE ROOM MODAL
+// ============================================================
+function CreateRoomModal({ value, onChange, onCancel, onConfirm, busy }: any) {
+  return (
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-[100]" onClick={onCancel}>
+      <div className="bg-gradient-to-b from-slate-900 to-black rounded-3xl p-6 max-w-sm w-full border border-white/10" onClick={(e) => e.stopPropagation()}>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-white text-lg font-black">غرفة جديدة</h2>
+          <button onClick={onCancel} className="text-white/60 hover:text-white"><X size={20} /></button>
+        </div>
+        <input
+          autoFocus
+          type="text"
+          placeholder="اسم الغرفة"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          maxLength={30}
+          className="w-full bg-white/10 border border-white/20 rounded-2xl p-3 text-white placeholder:text-white/40 focus:outline-none focus:border-purple-400 mb-4"
+        />
+        <button
+          onClick={onConfirm}
+          disabled={busy || !value.trim()}
+          className="w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white py-3 rounded-2xl font-black disabled:opacity-50 active:scale-95 transition"
+        >
+          {busy ? <Loader2 size={18} className="animate-spin mx-auto" /> : "إنشاء"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// SMALL BUTTONS
+// ============================================================
 function MainTabBtn({ active, onClick, label }: any) {
   return (
     <button onClick={onClick} className={`relative py-3 text-sm font-black transition ${active ? "text-white" : "text-white/50"}`}>
@@ -227,108 +575,5 @@ function SubTabBtn({ active, onClick, label }: any) {
       {label}
       {active && <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-emerald-400" />}
     </button>
-  );
-}
-
-function SubTabIcon({ active, onClick, icon: Icon, label, badge }: any) {
-  return (
-    <button onClick={onClick} className={`relative flex items-center gap-1 px-3 py-1.5 rounded-full border transition text-[11px] font-black ${
-      active ? "bg-white/15 border-white/30 text-white" : "bg-white/5 border-white/10 text-white/60"
-    }`}>
-      <Icon size={12} />
-      {label}
-      {badge && <span className="absolute -top-1.5 -right-1.5 px-1 py-0.5 rounded text-[7px] bg-red-500 text-white font-black">{badge}</span>}
-    </button>
-  );
-}
-
-// ============================ Room List (compact, one column)
-function RoomList({ rooms, onEnter, empty }: any) {
-  if (rooms === undefined) {
-    return <div className="flex justify-center py-12"><Loader2 className="animate-spin text-white/40" size={24} /></div>;
-  }
-  if (rooms.length === 0) {
-    return <div className="text-center py-12 text-white/40 text-sm">{empty}</div>;
-  }
-  return (
-    <div className="space-y-2.5">
-      {rooms.map((r: RoomCard) => (
-        <button
-          key={r._id}
-          onClick={() => onEnter(r._id)}
-          className="w-full bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-3 flex items-center gap-3 active:scale-[0.98] transition text-right"
-        >
-          <div className="w-14 h-14 rounded-xl overflow-hidden bg-purple-900/40 flex-shrink-0 relative">
-            {r.coverUrl ? (
-              <img src={r.coverUrl} alt="" className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-white/40 text-lg font-black">
-                {r.name?.[0] || "?"}
-              </div>
-            )}
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1.5">
-              <p className="text-white text-sm font-black truncate">{r.name}</p>
-            </div>
-            <div className="flex items-center gap-2 mt-0.5">
-              <span className="text-white/50 text-[10px] font-mono" dir="ltr">
-                {r.roomNumber ? `ID:${r.roomNumber}` : ""}
-              </span>
-              <span className="text-emerald-400 text-[10px] font-black flex items-center gap-0.5">
-                <Signal size={10} /> {r.memberCount}
-              </span>
-            </div>
-            {r.welcomeMessage && (
-              <p className="text-white/40 text-[10px] truncate mt-0.5">{r.welcomeMessage}</p>
-            )}
-          </div>
-        </button>
-      ))}
-    </div>
-  );
-}
-
-// ============================ Room Grid (two columns, Binmo-style)
-function RoomGrid({ rooms, onEnter, empty }: any) {
-  if (rooms === undefined) {
-    return <div className="flex justify-center py-12"><Loader2 className="animate-spin text-white/40" size={24} /></div>;
-  }
-  if (rooms.length === 0) {
-    return <div className="text-center py-12 text-white/40 text-sm">{empty}</div>;
-  }
-  return (
-    <div className="grid grid-cols-2 gap-3">
-      {rooms.map((r: RoomCard) => (
-        <button
-          key={r._id}
-          onClick={() => onEnter(r._id)}
-          className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl overflow-hidden flex flex-col active:scale-[0.98] transition text-right"
-        >
-          {/* Cover image square */}
-          <div className="aspect-square bg-purple-900/40 relative">
-            {r.coverUrl ? (
-              <img src={r.coverUrl} alt="" className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-white/30 text-3xl font-black">
-                {r.name?.[0] || "?"}
-              </div>
-            )}
-            {/* Member count badge */}
-            <div className="absolute bottom-2 right-2 bg-black/60 backdrop-blur px-1.5 py-0.5 rounded-full flex items-center gap-1">
-              <Signal size={9} className="text-emerald-400" />
-              <span className="text-white text-[10px] font-black">{r.memberCount}</span>
-            </div>
-          </div>
-          {/* Info */}
-          <div className="p-2">
-            <p className="text-white text-[11px] font-black truncate">{r.name}</p>
-            {r.welcomeMessage && (
-              <p className="text-white/45 text-[9px] truncate mt-0.5">{r.welcomeMessage}</p>
-            )}
-          </div>
-        </button>
-      ))}
-    </div>
   );
 }
