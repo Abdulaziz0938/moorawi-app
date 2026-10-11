@@ -34,6 +34,17 @@ export default function AdminPanelSheet({ onClose }: Props) {
   const [busy, setBusy] = useState(false);
   const [showAssets, setShowAssets] = useState(false);
 
+  const [grantAmount, setGrantAmount] = useState("10000");
+
+  const usersData = useQuery(api.adminPanel.listUsers, {
+    tokenOverride: token,
+    search: search.trim() || undefined,
+    limit: 30,
+  });
+
+  const updateUser = useMutation(api.adminPanel.updateUser);
+  const grantCoins = useMutation(api.adminPanel.grantCoins);
+
   // [moorawi-perms] Asset managers (ID 10 / moderator) → assets only
   const meData = useQuery(api.auth.me, { tokenOverride: token });
   const isSuperAdmin = !!meData && (meData.adminRole === "super" || meData.userNumber === 1);
@@ -63,16 +74,7 @@ export default function AdminPanelSheet({ onClose }: Props) {
       </div>
     );
   }
-  const [grantAmount, setGrantAmount] = useState("10000");
 
-  const usersData = useQuery(api.adminPanel.listUsers, {
-    tokenOverride: token,
-    search: search.trim() || undefined,
-    limit: 30,
-  });
-
-  const updateUser = useMutation(api.adminPanel.updateUser);
-  const grantCoins = useMutation(api.adminPanel.grantCoins);
 
   const handleOpenEdit = (u: any) => {
     setEditUser(u);
