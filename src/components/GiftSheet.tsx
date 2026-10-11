@@ -445,7 +445,7 @@ export default function GiftSheet({ roomId, onClose, preSelectedUserId }: Props)
               <h3 className="text-white font-bold text-sm mb-2 text-center">شحن الرصيد</h3>
               <div className="grid grid-cols-3 gap-1.5 mb-2">
                 {[1000, 5000, 10000, 25000, 50000, 100000].map((amt) => (
-                  <button key={amt} onClick={() => dialog.alert(`قريباً: ${amt} عملة`)}
+                  <button key={amt} onClick={() => { setShowRecharge(false); if ((window as any).__ezo_openWallet) (window as any).__ezo_openWallet(); else dialog.alert("افتح المحفظة من تبويب أنا"); }}
                     className="bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-500/40 rounded-lg p-2 flex flex-col items-center gap-0.5">
                     <Coins size={14} className="text-yellow-400" />
                     <span className="text-yellow-300 text-[10px] font-bold">{amt}</span>

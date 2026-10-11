@@ -124,7 +124,12 @@ export default function RoomInfoSheet({ roomId, onClose, onUserClick, onOpenStaf
               </button>
             )}
             <button
-              onClick={() => dialog.alert("الإشعارات — قريباً")}
+              onClick={() => {
+                const enabled = localStorage.getItem("ezo_room_notif") !== "off";
+                const next = enabled ? "off" : "on";
+                localStorage.setItem("ezo_room_notif", next);
+                dialog.alert(next === "on" ? "✅ تم تفعيل الإشعارات" : "🔕 تم إيقاف الإشعارات");
+              }}
               className="rounded-2xl bg-white/5 border border-white/15 p-3 flex items-center justify-center gap-2 active:scale-95 transition"
             >
               <Bell size={16} className="text-white/70" />

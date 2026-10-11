@@ -22,6 +22,9 @@ interface Props {
   isTargetOnMic?: boolean;
   onClose: () => void;
   onOpenGift?: () => void;
+  onOpenChat?: () => void;
+  onFollowToggle?: () => void;
+  isFollowing?: boolean;
   onOpenFullProfile?: () => void;
   onKick?: () => void;
   onBan?: () => void;
@@ -66,7 +69,7 @@ function IconCircle({ icon, onClick, size = 52 }: { icon: React.ReactNode; onCli
 export default function MiniProfileSheet({
   userId, roomId, currentUserRole,
   isMySeat, isMySeatMuted, isTargetOnMic,
-  onClose, onOpenGift, onOpenFullProfile,
+  onClose, onOpenGift, onOpenFullProfile, onOpenChat, onFollowToggle, isFollowing,
   onKick, onBan, onMute, onRemoveFromSeat,
   onPromote, onDemote, onInviteToMic,
   targetIsMod = false,
@@ -277,8 +280,8 @@ export default function MiniProfileSheet({
             <>
               <div className="mx-4 mt-4 mb-3 flex items-center justify-center gap-4">
                 <IconCircle icon={<Gift size={22} />} size={54} onClick={onOpenGift} />
-                <IconCircle icon={<MessageCircle size={22} />} size={54} onClick={() => dialog.alert("قريباً")} />
-                <IconCircle icon={<UserPlus size={22} />} size={54} onClick={() => dialog.alert("قريباً")} />
+                <IconCircle icon={<MessageCircle size={22} />} size={54} onClick={onOpenChat ?? (() => dialog.alert("قريباً"))} />
+                <IconCircle icon={<UserPlus size={22} />} size={54} onClick={onFollowToggle ?? (() => dialog.alert("قريباً"))} />
               </div>
 
               {roomId && (
