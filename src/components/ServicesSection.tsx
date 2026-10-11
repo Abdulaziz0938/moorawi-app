@@ -15,6 +15,11 @@ interface Props {
   onOpenVip?: () => void;
   onOpenHost?: () => void;
   onOpenAgency?: () => void;
+  onOpenVisits?: () => void;
+  onOpenSupport?: () => void;
+  onOpenVerify?: () => void;
+  onOpenRelations?: () => void;
+  onOpenLevel?: () => void;
   onLogout?: () => void;
   onOpenMedals?: () => void;
   isOwner?: boolean;
@@ -29,6 +34,11 @@ export default function ServicesSection({
   onOpenVip,
   onOpenHost,
   onOpenAgency,
+  onOpenVisits,
+  onOpenSupport,
+  onOpenVerify,
+  onOpenRelations,
+  onOpenLevel,
   onLogout,
   onOpenMedals,
   isOwner,
@@ -61,8 +71,8 @@ export default function ServicesSection({
 
   // ============ Middle grid: 8 buttons ============
   const gridItems = [
-    { key: "relation",      assetKey: "ui.service.relation", label: "العلاقة",   icon: Handshake,  color: "text-rose-300",     onClick: () => soon("العلاقة") },
-    { key: "level",      assetKey: "ui.service.level",    label: "مستوى",      icon: Sparkles,   color: "text-amber-300",    onClick: () => soon("المستوى") },
+    { key: "relation",      assetKey: "ui.service.relation", label: "العلاقة",   icon: Handshake,  color: "text-rose-300",     onClick: onOpenRelations ?? (() => soon("العلاقة")) },
+    { key: "level",      assetKey: "ui.service.level",    label: "مستوى",      icon: Sparkles,   color: "text-amber-300",    onClick: onOpenLevel ?? (() => soon("المستوى")) },
     { key: "medals",      assetKey: "ui.service.medals",   label: "أوسمة",      icon: Award,      color: "text-yellow-300",   onClick: onOpenMedals ?? (() => soon("الأوسمة")) },
     { key: "wallet",      assetKey: "ui.service.wallet",   label: "محفظة",      icon: Wallet,     color: "text-emerald-300",  onClick: onOpenWallet },
     { key: "legend",      assetKey: "ui.service.legend",   label: "الأسطورة",   icon: Star,       color: "text-fuchsia-300",  onClick: () => soon("الأسطورة") },
@@ -75,9 +85,9 @@ export default function ServicesSection({
   const listItems = [
     { key: "missions",      assetKey: "ui.service.missions",   label: "مهام",                     icon: CheckSquare,  color: "text-emerald-300", onClick: onOpenMissions ?? (() => soon("المهام")) },
     { key: "vipSupport",      assetKey: "ui.service.support", label: "VIP خاصة بالداعمين",       icon: Crown,        color: "text-purple-300",  onClick: () => soon("VIP خاصة بالداعمين") },
-    { key: "verify",      assetKey: "ui.service.verify",     label: "المصادقة",                 icon: ShieldCheck,  color: "text-blue-300",    onClick: () => soon("المصادقة") },
-    { key: "visits",      assetKey: "ui.service.visits",     label: "الزيارات الأخيرة",         icon: Clock,        color: "text-cyan-300",    onClick: () => soon("الزيارات الأخيرة") },
-    { key: "support",      assetKey: "ui.service.support",    label: "خدمة عملاء",               icon: Headphones,   color: "text-indigo-300",  onClick: () => soon("خدمة العملاء") },
+    { key: "verify",      assetKey: "ui.service.verify",     label: "المصادقة",                 icon: ShieldCheck,  color: "text-blue-300",    onClick: onOpenVerify ?? (() => soon("المصادقة")) },
+    { key: "visits",      assetKey: "ui.service.visits",     label: "الزيارات الأخيرة",         icon: Clock,        color: "text-cyan-300",    onClick: onOpenVisits ?? (() => soon("الزيارات الأخيرة")) },
+    { key: "support",      assetKey: "ui.service.support",    label: "خدمة عملاء",               icon: Headphones,   color: "text-indigo-300",  onClick: onOpenSupport ?? (() => soon("خدمة العملاء")) },
     { key: "language",      assetKey: "ui.service.language",   label: "اللغة",                    icon: Globe,        color: "text-pink-300",    onClick: () => soon("اللغة") },
     { key: "settings",      assetKey: "ui.service.settings",   label: "إعدادات",                  icon: Settings,     color: "text-white/70",    onClick: onOpenSettings ?? (() => soon("الإعدادات")) },
   ];

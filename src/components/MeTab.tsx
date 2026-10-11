@@ -10,6 +10,11 @@ import WalletSheet from "./WalletSheet";
 import ShopSheet from "./ShopSheet";
 import VipShopSheet from "./VipShopSheet";
 import AgencyEntryScreen from "./AgencyEntryScreen";
+import VisitsSheet from "./VisitsSheet";
+import SupportSheet from "./SupportSheet";
+import VerificationSheet from "./VerificationSheet";
+import RelationsSheet from "./RelationsSheet";
+import LevelSheet from "./LevelSheet";
 import ProfilePage from "./ProfilePage";
 import AdminPanelSheet from "./AdminPanelSheet";
 import MedalsSheet from "./MedalsSheet";
@@ -33,6 +38,11 @@ export default function MeTab({ onEnterRoom }: Props) {
   const [showMedals, setShowMedals] = useState(false);
   const [showVip, setShowVip] = useState(false);
   const [showAgency, setShowAgency] = useState<null | "host" | "agent">(null);
+  const [showVisits, setShowVisits] = useState(false);
+  const [showSupport, setShowSupport] = useState(false);
+  const [showVerify, setShowVerify] = useState(false);
+  const [showRelations, setShowRelations] = useState(false);
+  const [showLevel, setShowLevel] = useState(false);
 
   // [moorawi-nav] Back button closes each overlay
   useBackButton(showFullProfile, () => setShowFullProfile(false));
@@ -42,6 +52,11 @@ export default function MeTab({ onEnterRoom }: Props) {
   useBackButton(showMedals, () => setShowMedals(false));
   useBackButton(showVip, () => setShowVip(false));
   useBackButton(showAgency !== null, () => setShowAgency(null));
+  useBackButton(showVisits, () => setShowVisits(false));
+  useBackButton(showSupport, () => setShowSupport(false));
+  useBackButton(showVerify, () => setShowVerify(false));
+  useBackButton(showRelations, () => setShowRelations(false));
+  useBackButton(showLevel, () => setShowLevel(false));
 
   if (!me) {
     return (
@@ -118,6 +133,11 @@ export default function MeTab({ onEnterRoom }: Props) {
           onOpenVip={() => setShowVip(true)}
           onOpenHost={() => setShowAgency("host")}
           onOpenAgency={() => setShowAgency("agent")}
+          onOpenVisits={() => setShowVisits(true)}
+          onOpenSupport={() => setShowSupport(true)}
+          onOpenVerify={() => setShowVerify(true)}
+          onOpenRelations={() => setShowRelations(true)}
+          onOpenLevel={() => setShowLevel(true)}
           onLogout={() => {
             dialog.confirm(
               "هل تريد تسجيل الخروج من الحساب؟",
@@ -143,6 +163,11 @@ export default function MeTab({ onEnterRoom }: Props) {
       {showMedals && <MedalsSheet onClose={() => setShowMedals(false)} />}
       {showVip && <VipShopSheet onClose={() => setShowVip(false)} />}
       {showAgency && <AgencyEntryScreen initialTab={showAgency} onClose={() => setShowAgency(null)} />}
+      {showVisits && <VisitsSheet onClose={() => setShowVisits(false)} />}
+      {showSupport && <SupportSheet onClose={() => setShowSupport(false)} />}
+      {showVerify && <VerificationSheet onClose={() => setShowVerify(false)} />}
+      {showRelations && <RelationsSheet onClose={() => setShowRelations(false)} />}
+      {showLevel && <LevelSheet onClose={() => setShowLevel(false)} />}
     </>
   );
 }
