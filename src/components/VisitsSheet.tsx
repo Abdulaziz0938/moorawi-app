@@ -4,6 +4,7 @@ import { api } from "../../convex/_generated/api";
 import { getDeviceId } from "../lib/device";
 import { useBackButton } from "../lib/hooks/useBackButton";
 import UserAvatar from "./UserAvatar";
+import { useAssets } from "../lib/assets";
 import { ChevronRight, Loader2, Clock, Eye, User } from "lucide-react";
 
 interface Props { onClose: () => void; onUserClick?: (id: any) => void; }
