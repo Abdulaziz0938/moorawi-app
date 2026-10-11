@@ -75,54 +75,30 @@ export default function RoomsTab({ onEnter }: Props) {
 
   return (
     <div className="max-w-md mx-auto pb-24">
-      {/* ============ Top Bar ============ */}
-      <div className="px-4 pt-3 pb-2 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <button onClick={handleCopyId} className="flex items-center gap-1.5 bg-white/10 hover:bg-white/15 border border-white/15 rounded-full px-2.5 py-1 transition active:scale-95">
-            <div className="w-7 h-7 rounded-full overflow-hidden bg-purple-500 flex items-center justify-center">
-              <UserAvatar avatarUrl={me?.avatarUrl} name={me?.name} className="w-full h-full" />
-            </div>
-            <span className="text-white text-[11px] font-black" dir="ltr">ID:{me?.userNumber}</span>
-            {copied && <Check size={10} className="text-green-300" />}
+      {/* ============ Top Bar: home | search | tabs ============ */}
+      <div className="px-4 pt-3 pb-3 flex items-center justify-between">
+        {/* Left: home icon */}
+        <button
+          onClick={() => myRoom ? onEnter(myRoom._id) : setShowCreate(true)}
+          className="w-11 h-11 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center text-white active:scale-95 transition"
+        >
+          <Home size={20} />
+        </button>
+
+        {/* Middle-right: tabs + search */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4" dir="rtl">
+            <TopTabBtn active={mainTab === "mine"}  onClick={() => setMainTab("mine")}  label="الخاص بي" />
+            <TopTabBtn active={mainTab === "trend"} onClick={() => setMainTab("trend")} label="ترند" />
+            <TopTabBtn active={mainTab === "live"}  onClick={() => setMainTab("live")}  label="لايف" />
+          </div>
+          <button
+            onClick={() => setShowSearch(!showSearch)}
+            className="w-10 h-10 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center text-white active:scale-95 transition"
+          >
+            <Search size={18} />
           </button>
         </div>
-        <div className="text-white text-sm font-black" dir="rtl">{me?.name}</div>
-      </div>
-
-      {/* ============ Actions Row (Search + My Room) ============ */}
-      <div className="px-4 pb-3 flex gap-2">
-        <button
-          onClick={() => setShowSearch(!showSearch)}
-          className="w-12 h-12 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center text-white active:scale-95 transition"
-        >
-          <Search size={20} />
-        </button>
-        {myRoom ? (
-          <button
-            onClick={() => onEnter(myRoom._id)}
-            className="flex-1 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black text-sm active:scale-95 transition flex items-center justify-center gap-2"
-          >
-            <Home size={18} /> غرفتي
-          </button>
-        ) : (
-          <button
-            onClick={() => setShowCreate(true)}
-            className="flex-1 rounded-2xl bg-white/10 border border-white/15 text-white font-black text-sm active:scale-95 transition flex items-center justify-center gap-2"
-          >
-            <Home size={18} />
-            <span>إنشاء غرفة</span>
-            <div className="w-4 h-4 bg-emerald-500 rounded-full flex items-center justify-center">
-              <Plus size={10} className="text-white" strokeWidth={3} />
-            </div>
-          </button>
-        )}
-      </div>
-
-      {/* ============ Main Tabs ============ */}
-      <div className="px-4 flex items-center justify-center gap-6 border-b border-white/10">
-        <MainTabBtn active={mainTab === "mine"}  onClick={() => setMainTab("mine")}  label="الخاص بي" />
-        <MainTabBtn active={mainTab === "trend"} onClick={() => setMainTab("trend")} label="ترند" />
-        <MainTabBtn active={mainTab === "live"}  onClick={() => setMainTab("live")}  label="لايف" />
       </div>
 
       {/* ============ Content ============ */}
@@ -560,11 +536,11 @@ function CreateRoomModal({ value, onChange, onCancel, onConfirm, busy }: any) {
 // ============================================================
 // SMALL BUTTONS
 // ============================================================
-function MainTabBtn({ active, onClick, label }: any) {
+function TopTabBtn({ active, onClick, label }: any) {
   return (
-    <button onClick={onClick} className={`relative py-3 text-sm font-black transition ${active ? "text-white" : "text-white/50"}`}>
+    <button onClick={onClick} className={`relative pb-1 text-sm font-black transition ${active ? "text-white" : "text-white/50"}`}>
       {label}
-      {active && <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-gradient-to-r from-pink-500 to-purple-500" />}
+      {active && <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-gradient-to-r from-pink-500 to-purple-500" />}
     </button>
   );
 }
