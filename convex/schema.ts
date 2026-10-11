@@ -37,6 +37,7 @@ export default defineSchema({
     // [moorawi-vip] VIP
     // [moorawi-agency] Host fields
     agencyId: v.optional(v.id("agencies")),
+    agencyNumber: v.optional(v.number()),
     isHost: v.optional(v.boolean()),
     hostLevel: v.optional(v.number()),
     hostIncomeMonth: v.optional(v.number()),
@@ -605,6 +606,7 @@ export default defineSchema({
   // ================================================================
   agencies: defineTable({
     name: v.string(),
+    agencyNumber: v.optional(v.number()),
     ownerId: v.id("users"),
     level: v.union(
       v.literal("D"), v.literal("C"), v.literal("B"),
@@ -690,5 +692,23 @@ export default defineSchema({
     entryRewardLevel: v.optional(v.number()),
   })
     .index("by_level", ["level"]),
+
+
+  // ================================================================
+  // [moorawi-agency] طلبات إنشاء وكالة جديدة
+  // ================================================================
+  agencyCreateRequests: defineTable({
+    userId: v.id("users"),
+    agencyName: v.string(),
+    description: v.optional(v.string()),
+    logoUrl: v.optional(v.string()),
+    status: v.union(v.literal("pending"), v.literal("approved"), v.literal("rejected")),
+    createdAt: v.number(),
+    reviewedAt: v.optional(v.number()),
+    reviewedBy: v.optional(v.id("users")),
+    note: v.optional(v.string()),
+  })
+    .index("by_user", ["userId", "status"])
+    .index("by_status", ["status", "createdAt"]),
 
 });

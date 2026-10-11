@@ -44,6 +44,28 @@ function levelFromAchieved(achieved: number): number {
   return lvl;
 }
 
+
+
+// ============================================================
+// [moorawi-agency] توليد رقم وكالة فريد (3 أرقام ثم 4 ثم 5...)
+// ============================================================
+async function getNextAgencyNumber(ctx: any): Promise<number> {
+  const counter = await ctx.db
+    .query("counters")
+    .withIndex("by_name", (q: any) => q.eq("name", "agencyNumber"))
+    .unique();
+
+  if (!counter) {
+    // البداية من 100 (3 أرقام)
+    await ctx.db.insert("counters", { name: "agencyNumber", value: 101 });
+    return 100;
+  }
+
+  const current = counter.value;
+  await ctx.db.patch("counters", counter._id, { value: current + 1 });
+  return current;
+}
+
 // ============================================================
 // SEED LEVELS (internal — run once)
 // ============================================================
@@ -275,8 +297,10 @@ export const createAgency = mutation({
       .first();
     if (existing) throw new Error("لديك وكالة بالفعل");
 
+    const agencyNumber = await getNextAgencyNumber(ctx);
     const id = await ctx.db.insert("agencies", {
       name,
+      agencyNumber,
       ownerId: me._id,
       level: "D",
       totalPoints30d: 0,
@@ -473,5 +497,181 @@ export const updateHostStats = mutation({
     });
 
     return { ok: true, newIncome, newLevel };
+  },
+});
+
+// ============================================================
+// [moorawi-agency] طلبات إنشاء وكالة
+// ============================================================
+export const submitCreateRequest = mutation({
+  args: {
+    agencyName: v.string(),
+    description: v.optional(v.string()),
+    logoUrl: v.optional(v.string()),
+    tokenOverride: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
+    if (me.agencyId) throw new Error("أنت في وكالة بالفعل");
+
+    const name = args.agencyName.trim();
+    if (name.length < 2) throw new Error("اسم الوكالة قصير جداً");
+
+    // فحص طلب معلق
+    const pending = await ctx.db
+      .query("agencyCreateRequests")
+      .withIndex("by_user", (q) => q.eq("userId", me._id).eq("status", "pending"))
+      .first();
+    if (pending) throw new Error("لديك طلب قيد المراجعة");
+
+    // فحص أن الاسم غير محجوز
+    const existing = await ctx.db
+      .query("agencies")
+      .filter((q) => q.eq(q.field("name"), name))
+      .first();
+    if (existing) throw new Error("اسم الوكالة محجوز");
+
+    const id = await ctx.db.insert("agencyCreateRequests", {
+      userId: me._id,
+      agencyName: name,
+      description: args.description,
+      logoUrl: args.logoUrl,
+      status: "pending",
+      createdAt: Date.now(),
+    });
+    return { ok: true, requestId: id };
+  },
+});
+
+export const myCreateRequests = query({
+  args: { tokenOverride: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
+    const reqs = await ctx.db
+      .query("agencyCreateRequests")
+      .withIndex("by_user", (q) => q.eq("userId", me._id))
+      .collect();
+    return reqs.sort((a, b) => b.createdAt - a.createdAt);
+  },
+});
+
+export const listCreateRequests = query({
+  args: { tokenOverride: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
+    if (!isFullAdmin(me)) throw new Error("غير مصرح");
+    const reqs = await ctx.db
+      .query("agencyCreateRequests")
+      .withIndex("by_status", (q) => q.eq("status", "pending"))
+      .collect();
+    const enriched = await Promise.all(
+      reqs.map(async (r) => {
+        const u = await ctx.db.get("users", r.userId);
+        return {
+          ...r,
+          userName: u?.name ?? "—",
+          userNumber: u?.userNumber ?? null,
+          userAvatar: u?.avatarUrl ?? (u?.avatarId ? await ctx.storage.getUrl(u.avatarId) : null),
+        };
+      })
+    );
+    return enriched;
+  },
+});
+
+export const reviewCreateRequest = mutation({
+  args: {
+    requestId: v.id("agencyCreateRequests"),
+    approve: v.boolean(),
+    note: v.optional(v.string()),
+    tokenOverride: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
+    if (!isFullAdmin(me)) throw new Error("غير مصرح");
+
+    const req = await ctx.db.get("agencyCreateRequests", args.requestId);
+    if (!req) throw new Error("الطلب غير موجود");
+    if (req.status !== "pending") throw new Error("تمت مراجعة الطلب مسبقاً");
+
+    if (args.approve) {
+      // فحص أن المستخدم ليس في وكالة
+      const user = await ctx.db.get("users", req.userId);
+      if (user?.agencyId) throw new Error("المستخدم في وكالة بالفعل");
+
+      const agencyNumber = await getNextAgencyNumber(ctx);
+      const agencyId = await ctx.db.insert("agencies", {
+        name: req.agencyName,
+        agencyNumber,
+        ownerId: req.userId,
+        level: "D",
+        totalPoints30d: 0,
+        hostCount: 0,
+        totalEarned: 0,
+        description: req.description,
+        logoUrl: req.logoUrl,
+        createdAt: Date.now(),
+      });
+
+      // ربط المالك كـ owner
+      await ctx.db.patch("users", req.userId, {
+        agencyId,
+        agencyNumber,
+        isHost: true,
+      });
+
+      await ctx.db.patch("agencyCreateRequests", args.requestId, {
+        status: "approved",
+        reviewedAt: Date.now(),
+        reviewedBy: me._id,
+        note: args.note,
+      });
+
+      return { ok: true, approved: true, agencyId, agencyNumber };
+    } else {
+      await ctx.db.patch("agencyCreateRequests", args.requestId, {
+        status: "rejected",
+        reviewedAt: Date.now(),
+        reviewedBy: me._id,
+        note: args.note,
+      });
+      return { ok: true, approved: false };
+    }
+  },
+});
+
+// ============================================================
+// [moorawi-agency] البحث بالرقم
+// ============================================================
+export const findByNumber = query({
+  args: { number: v.number() },
+  handler: async (ctx, args) => {
+    const agency = await ctx.db
+      .query("agencies")
+      .filter((q) => q.eq(q.field("agencyNumber"), args.number))
+      .first();
+    if (!agency) return null;
+    const owner = await ctx.db.get("users", agency.ownerId);
+    const hosts = await ctx.db
+      .query("agencyHosts")
+      .withIndex("by_agency", (q) => q.eq("agencyId", agency._id).eq("status", "active"))
+      .collect();
+    return {
+      ...agency,
+      ownerName: owner?.name ?? "—",
+      ownerAvatar: owner?.avatarUrl ?? (owner?.avatarId ? await ctx.storage.getUrl(owner.avatarId) : null),
+      activeHostCount: hosts.length,
+    };
+  },
+});
+
+// ============================================================
+// [moorawi-agency] حذف وكالة (استخدام داخلي/تنظيف)
+// ============================================================
+export const deleteAgency = internalMutation({
+  args: { agencyId: v.id("agencies") },
+  handler: async (ctx, args) => {
+    await ctx.db.delete("agencies", args.agencyId);
+    return { ok: true };
   },
 });
