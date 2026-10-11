@@ -85,7 +85,7 @@ export default function ServicesSection({
           className="w-full rounded-2xl border border-red-500/40 bg-gradient-to-r from-red-600/30 to-orange-600/30 p-3 flex items-center justify-between active:scale-95 transition"
         >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-orange-600 flex items-center justify-center">
+            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-red-500 to-orange-600 flex items-center justify-center">
               <Crown size={20} className="text-white" />
             </div>
             <div className="text-right">
@@ -107,7 +107,7 @@ export default function ServicesSection({
               onClick={c.onClick}
               className={`relative overflow-hidden rounded-2xl border ${c.border} bg-gradient-to-br ${c.gradient} p-4 flex flex-col items-center gap-1 active:scale-95 transition`}
             >
-              <IconOrImage assetKey={c.assetKey} Icon={Icon} size={32} imgSize={52} className="text-amber-200" fill="currentColor" strokeWidth={1.5} />
+              <IconOrImage assetKey={c.assetKey} Icon={Icon} size={56} imgSize={88} className="text-amber-200" fill="currentColor" strokeWidth={1.5} />
               <p className="text-white text-sm font-black">{c.label}</p>
               <p className="text-white/50 text-[10px]">{c.sub}</p>
             </button>
@@ -125,7 +125,7 @@ export default function ServicesSection({
               onClick={g.onClick}
               className="flex flex-col items-center gap-1.5 py-3 rounded-xl hover:bg-white/10 active:scale-95 transition"
             >
-              <IconOrImage assetKey={g.assetKey} Icon={Icon} size={26} imgSize={44} className={g.color} strokeWidth={1.8} />
+              <IconOrImage assetKey={g.assetKey} Icon={Icon} size={44} imgSize={72} className={g.color} strokeWidth={1.8} />
               <span className="text-white text-[11px] font-bold">{g.label}</span>
             </button>
           );
@@ -145,8 +145,8 @@ export default function ServicesSection({
               }`}
             >
               <div className="flex items-center gap-3">
-                <div className={`w-8 h-8 rounded-full bg-white/10 flex items-center justify-center ${it.color}`}>
-                  <IconOrImage assetKey={it.assetKey} Icon={Icon} size={16} imgSize={26} strokeWidth={2} />
+                <div className={`w-14 h-14 rounded-full bg-white/10 flex items-center justify-center ${it.color}`}>
+                  <IconOrImage assetKey={it.assetKey} Icon={Icon} size={28} imgSize={48} strokeWidth={2} />
                 </div>
                 <span className="text-white text-sm font-bold">{it.label}</span>
               </div>
