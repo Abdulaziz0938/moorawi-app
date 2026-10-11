@@ -176,6 +176,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const takeSeat = useMutation(api.mics.takeSeat);
   const leaveSeat = useMutation(api.mics.leaveSeat);
   const clearMySeats = useMutation(api.mics.clearMySeats);
+  const toggleFollow = useMutation(api.follows.toggle);
   const toggleLock = useMutation(api.mics.toggleLock);
   const toggleMuteSeat = useMutation(api.mics.toggleMuteSeat);
   const toggleAdminMute = useMutation(api.mics.toggleAdminMute);
@@ -1272,6 +1273,17 @@ export default function RoomView({ roomId, onLeave }: Props) {
             setMiniProfileUserId(null);
             setMySeatIndexForMiniProfile(null);
             setShowGifts(true);
+          }}
+          onOpenChat={() => {
+            setMiniProfileUserId(null);
+            setMySeatIndexForMiniProfile(null);
+            setShowChatInput(true);
+          }}
+          onFollowToggle={() => {
+            if (!miniProfileUserId) return;
+            toggleFollow({ targetUserId: miniProfileUserId as any, tokenOverride: getDeviceId() })
+              .then(() => dialog.alert("تم التحديث"))
+              .catch((e: any) => dialog.alert(e?.message || "فشل"));
           }}
           onOpenFullProfile={() => {
             setFullProfileUserId(miniProfileUserId);

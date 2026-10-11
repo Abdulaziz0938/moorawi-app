@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { getActiveToken, clearSession } from "../lib/session";
@@ -53,6 +53,12 @@ export default function MeTab({ onEnterRoom }: Props) {
   const [showMissions, setShowMissions] = useState(false);
   const [showSupporterVip, setShowSupporterVip] = useState(false);
   const [showLanguage, setShowLanguage] = useState(false);
+
+  // [moorawi-global] ربط زر الشحن من GiftSheet
+  useEffect(() => {
+    (window as any).__ezo_openWallet = () => setShowWallet(true);
+    return () => { delete (window as any).__ezo_openWallet; };
+  }, []);
 
   // [moorawi-nav] Back button closes each overlay
   useBackButton(showFullProfile, () => setShowFullProfile(false));
