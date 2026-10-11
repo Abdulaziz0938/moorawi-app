@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { getActiveToken } from "../lib/session";
@@ -33,6 +33,36 @@ export default function AdminPanelSheet({ onClose }: Props) {
   const [editField, setEditField] = useState({ coins: "", diamonds: "", vip: "" });
   const [busy, setBusy] = useState(false);
   const [showAssets, setShowAssets] = useState(false);
+
+  // [moorawi-perms] Asset managers (ID 10 / moderator) → assets only
+  const meData = useQuery(api.auth.me, { tokenOverride: token });
+  const isSuperAdmin = !!meData && (meData.adminRole === "super" || meData.userNumber === 1);
+
+  if (meData && !isSuperAdmin) {
+    return (
+      <div className="fixed inset-0 z-[150] bg-black/80 backdrop-blur-sm flex items-end justify-center" dir="rtl" onClick={onClose}>
+        <div
+          className="w-full max-w-md bg-gradient-to-b from-purple-950/40 via-slate-900 to-black rounded-t-3xl h-[92dvh] flex flex-col overflow-hidden border-t border-purple-500/30"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 flex-shrink-0">
+            <div className="flex items-center gap-2">
+              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                <ImageIcon size={18} className="text-white" />
+              </div>
+              <h2 className="text-white text-lg font-black">الأصول والصور</h2>
+            </div>
+            <button onClick={onClose} className="p-2 rounded-full hover:bg-white/10 text-white">
+              <X size={20} />
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            <AssetsPanel token={token} />
+          </div>
+        </div>
+      </div>
+    );
+  }
   const [grantAmount, setGrantAmount] = useState("10000");
 
   const usersData = useQuery(api.adminPanel.listUsers, {
