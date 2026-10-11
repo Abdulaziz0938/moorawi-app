@@ -33,11 +33,6 @@ export default function AgencyEntryScreen({ initialTab = "host", onClose }: Prop
 
   // إذا كان في وكالة → صفحة الوكالة
   if (me.agencyId) {
-    if (tab === "agent") {
-      // هل هو مالك الوكالة؟
-      const isOwner = true; // TODO: check
-      return <MyAgencyView onClose={onClose} tab={tab} />;
-    }
     return <MyAgencyView onClose={onClose} tab={tab} />;
   }
 
@@ -390,23 +385,35 @@ function MyAgencyView({ onClose, tab }: { onClose: () => void; tab: Tab }) {
   const [showRequests, setShowRequests] = useState(false);
   const deviceId = getDeviceId();
   const me = useQuery(api.profiles.me, { tokenOverride: deviceId });
+  const agency = useQuery(
+    api.agencies.myAgency,
+    me?.agencyId ? { tokenOverride: deviceId } : "skip" as any
+  );
 
   if (showRequests) {
     return <HostRequestsPanel onClose={onClose} onBack={() => setShowRequests(false)} />;
   }
 
-  // تبويب "مضيف" → بياناتي كمضيف
+  // تحديد هل هو المالك
+  const isOwner = !!me && !!agency && agency.ownerId === me._id;
+
+  // تبويب "مضيف" → بياناتي كمضيف (للجميع)
   if (tab === "host") {
-    return <MyHostView onClose={onClose} onShowRequests={() => setShowRequests(true)} />;
+    return <MyHostView onClose={onClose} isOwner={isOwner} onShowRequests={isOwner ? () => setShowRequests(true) : undefined} />;
   }
 
-  // تبويب "وكالة" → بيانات الوكالة الكاملة
-  return (
-    <AgencyOverviewView
-      onClose={onClose}
-      onShowRequests={() => setShowRequests(true)}
-    />
-  );
+  // تبويب "وكالة" → إن كان مالك: كل الوكالة، وإلا: بياناتي فقط
+  if (isOwner) {
+    return (
+      <AgencyOverviewView
+        onClose={onClose}
+        onShowRequests={() => setShowRequests(true)}
+      />
+    );
+  }
+
+  // المضيف العادي → بياناته كمضيف + زر المغادرة
+  return <MyHostView onClose={onClose} isOwner={false} />;
 }
 
 // ============================================================

@@ -1,18 +1,20 @@
 // [moorawi-agency] بياناتي كمضيف
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { getDeviceId } from "../lib/device";
+import { dialog } from "../lib/dialog";
 import {
   ChevronRight, Loader2, Clock, Users, TrendingUp, Award,
-  Briefcase, Target, DollarSign, Heart, Calendar, Info,
+  Briefcase, Target, DollarSign, Heart, Calendar, Info, LogOut,
 } from "lucide-react";
 
 interface Props {
   onClose: () => void;
   onShowRequests?: () => void;
+  isOwner?: boolean;
 }
 
-export default function MyHostView({ onClose, onShowRequests }: Props) {
+export default function MyHostView({ onClose, onShowRequests, isOwner = false }: Props) {
   const deviceId = getDeviceId();
   const status = useQuery(api.agencies.myStatus, { tokenOverride: deviceId });
 
@@ -135,12 +137,46 @@ export default function MyHostView({ onClose, onShowRequests }: Props) {
           </p>
         </div>
 
+        {/* Leave Button (للمضيف غير المالك) */}
+        {!isOwner && <LeaveButton />}
+
       </div>
     </div>
   );
 }
 
 // ============================================================
+function LeaveButton() {
+  const deviceId = getDeviceId();
+  const leaveAgency = useMutation(api.agencies.leaveAgency);
+
+  const handleLeave = () => {
+    dialog.confirm(
+      "هل أنت متأكد من مغادرة الوكالة؟",
+      async () => {
+        try {
+          await leaveAgency({ tokenOverride: deviceId });
+          dialog.alert("تم مغادرة الوكالة");
+        } catch (e: any) {
+          dialog.alert(e?.message || "فشل");
+        }
+      },
+      "مغادرة",
+      "مغادرة"
+    );
+  };
+
+  return (
+    <button
+      onClick={handleLeave}
+      className="w-full rounded-2xl bg-red-500/10 border border-red-400/30 py-3.5 text-red-300 text-sm font-black flex items-center justify-center gap-2 active:scale-95"
+    >
+      <LogOut size={16} />
+      مغادرة الوكالة
+    </button>
+  );
+}
+
 function Header({ onClose, title, onShowRequests }: { onClose: () => void; title: string; onShowRequests?: () => void }) {
   return (
     <div className="px-4 pt-4 pb-3 flex items-center gap-2 border-b border-white/10 flex-shrink-0">
