@@ -581,4 +581,15 @@ export default defineSchema({
   })
     .index("by_key", ["key"])
     .index("by_active", ["active"]),
+
+  // [moorawi-banners] Promotional banners (16:9 slideshow in Trend tab)
+  banners: defineTable({
+    imageUrl: v.string(),
+    title: v.optional(v.string()),
+    linkRoomId: v.optional(v.id("rooms")),
+    order: v.number(),
+    active: v.boolean(),
+    updatedAt: v.number(),
+    updatedBy: v.optional(v.id("users")),
+  }).index("by_active_order", ["active", "order"]),
 });
