@@ -27,7 +27,15 @@ function formatNum(n: number): string {
 
 export default function AdminPanelSheet({ onClose }: Props) {
   const token = getActiveToken();
-  const stats = useQuery(api.adminPanel.stats, { tokenOverride: token });
+  // [moorawi-perms] meData FIRST — determines access
+  const meData = useQuery(api.auth.me, { tokenOverride: token });
+  const isSuperAdmin = !!meData && (meData.adminRole === "super" || meData.userNumber === 1);
+
+  // stats + listUsers only run for super admins
+  const stats = useQuery(
+    api.adminPanel.stats,
+    isSuperAdmin ? { tokenOverride: token } : "skip" as any
+  );
   const [search, setSearch] = useState("");
   const [editUser, setEditUser] = useState<any | null>(null);
   const [editField, setEditField] = useState({ coins: "", diamonds: "", vip: "" });
@@ -36,18 +44,20 @@ export default function AdminPanelSheet({ onClose }: Props) {
 
   const [grantAmount, setGrantAmount] = useState("10000");
 
-  const usersData = useQuery(api.adminPanel.listUsers, {
-    tokenOverride: token,
-    search: search.trim() || undefined,
-    limit: 30,
-  });
+  const usersData = useQuery(
+    api.adminPanel.listUsers,
+    isSuperAdmin
+      ? {
+          tokenOverride: token,
+          search: search.trim() || undefined,
+          limit: 30,
+        }
+      : "skip" as any
+  );
 
   const updateUser = useMutation(api.adminPanel.updateUser);
   const grantCoins = useMutation(api.adminPanel.grantCoins);
 
-  // [moorawi-perms] Asset managers (ID 10 / moderator) → assets only
-  const meData = useQuery(api.auth.me, { tokenOverride: token });
-  const isSuperAdmin = !!meData && (meData.adminRole === "super" || meData.userNumber === 1);
 
   if (meData && !isSuperAdmin) {
     return (
