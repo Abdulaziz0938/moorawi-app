@@ -35,6 +35,13 @@ export default defineSchema({
     totalRecharged: v.optional(v.number()),               // إجمالي العملات المشحونة
 
     // [moorawi-vip] VIP
+    // [moorawi-agency] Host fields
+    agencyId: v.optional(v.id("agencies")),
+    isHost: v.optional(v.boolean()),
+    hostLevel: v.optional(v.number()),
+    hostIncomeMonth: v.optional(v.number()),
+    hostHoursMonth: v.optional(v.number()),
+    hostDaysMonth: v.optional(v.number()),
     vipLevel: v.optional(v.number()),                     // 0-7
     vipExpiresAt: v.optional(v.number()),
 
@@ -592,4 +599,96 @@ export default defineSchema({
     updatedAt: v.number(),
     updatedBy: v.optional(v.id("users")),
   }).index("by_active_order", ["active", "order"]),
+
+  // ================================================================
+  // [moorawi-agency] AGENCY SYSTEM
+  // ================================================================
+  agencies: defineTable({
+    name: v.string(),
+    ownerId: v.id("users"),
+    level: v.union(
+      v.literal("D"), v.literal("C"), v.literal("B"),
+      v.literal("A"), v.literal("S")
+    ),
+    totalPoints30d: v.number(),
+    hostCount: v.number(),
+    totalEarned: v.number(),         // إجمالي أرباح الوكالة (جوهرة)
+    description: v.optional(v.string()),
+    logoUrl: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_owner", ["ownerId"])
+    .index("by_level", ["level"]),
+
+  // علاقة المضيف بالوكالة
+  agencyHosts: defineTable({
+    agencyId: v.id("agencies"),
+    userId: v.id("users"),
+    status: v.union(v.literal("active"), v.literal("left"), v.literal("kicked")),
+    joinedAt: v.number(),
+    leftAt: v.optional(v.number()),
+  })
+    .index("by_agency", ["agencyId", "status"])
+    .index("by_user", ["userId"])
+    .index("by_user_status", ["userId", "status"]),
+
+  // طلبات الانضمام
+  agencyRequests: defineTable({
+    agencyId: v.id("agencies"),
+    userId: v.id("users"),
+    status: v.union(v.literal("pending"), v.literal("approved"), v.literal("rejected")),
+    createdAt: v.number(),
+    reviewedAt: v.optional(v.number()),
+  })
+    .index("by_agency", ["agencyId", "status"])
+    .index("by_user", ["userId", "status"]),
+
+  // أرباح المضيف الشهرية (يُسجَّل مرة واحدة نهاية كل شهر)
+  hostMonthlyEarnings: defineTable({
+    hostId: v.id("users"),
+    agencyId: v.optional(v.id("agencies")),
+    month: v.string(),               // "2026-10"
+    targetCoins: v.number(),         // هدف الفئة الحالية
+    achievedCoins: v.number(),       // ما حققه فعلاً
+    diamondsEarned: v.number(),      // 30% مُنزَّل للرصيد
+    diamondsSpent: v.number(),       // ما صرفه
+    diamondsHeld: v.number(),        // ما بقي في الحساب
+    currentLevel: v.number(),        // 1-15
+    baseSalary: v.number(),          // راتب العملات بالدولار
+    diamondSalary: v.number(),       // راتب الماس بالدولار
+    totalSalary: v.number(),         // الإجمالي
+    agencyCut: v.number(),           // نصيب الوكالة
+    broadcastHours: v.number(),
+    broadcastDays: v.number(),
+    halfSeasonReached: v.boolean(),  // وصل نصف الموسم
+    targetReached: v.boolean(),      // حقق التارجت
+    vipRewardDays: v.optional(v.number()),
+    frameRewardId: v.optional(v.string()),
+    entryRewardId: v.optional(v.string()),
+    status: v.union(v.literal("pending"), v.literal("paid"), v.literal("rejected")),
+    createdAt: v.number(),
+    paidAt: v.optional(v.number()),
+  })
+    .index("by_host_month", ["hostId", "month"])
+    .index("by_agency_month", ["agencyId", "month"])
+    .index("by_month_status", ["month", "status"]),
+
+  // جدول مستويات المضيفين (ثابت — للقراءة)
+  hostLevels: defineTable({
+    level: v.number(),                  // 1-15
+    daysRequired: v.number(),           // 15/10/8/0
+    hoursPerDay: v.number(),            // 20/15/12/0
+    targetCoins: v.number(),            // 20K...10.5M
+    halfSeasonCoins: v.number(),        // 6K...3.15M
+    baseSalary: v.number(),             // 7$...2,500$
+    diamondSalary: v.number(),          // 6$...3,600$
+    totalSalary: v.number(),            // 13$...6,100$
+    agencySalary: v.number(),           // 4$...1,400$
+    vipRewardDays: v.optional(v.number()),
+    vipRewardCount: v.optional(v.number()),
+    frameRewardLevel: v.optional(v.number()),
+    entryRewardLevel: v.optional(v.number()),
+  })
+    .index("by_level", ["level"]),
+
 });
