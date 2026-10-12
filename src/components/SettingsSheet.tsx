@@ -37,6 +37,7 @@ interface Props {
   micRequestsEnabled: boolean;
   onClose: () => void;
   onOpenActivity?: () => void;
+  onOpenSubSheet?: (key: string) => void;
 }
 
 type Tab = "main" | "layout" | "editRoom" | "background" | "gifts";
@@ -57,7 +58,7 @@ function LayoutPreview({ layoutKey }: { layoutKey: string }) {
 }
 
 export default function SettingsSheet({
-  roomId, currentLayout, isOwnerOrMod, currentName, currentWelcome, currentCoverUrl, micRequestsEnabled, onClose, onOpenActivity,
+  roomId, currentLayout, isOwnerOrMod, currentName, currentWelcome, currentCoverUrl, micRequestsEnabled, onClose, onOpenActivity, onOpenSubSheet,
 }: Props) {
   const deviceId = getDeviceId();
   const updateLayout = useMutation(api.rooms.updateLayout);
@@ -168,15 +169,24 @@ export default function SettingsSheet({
       return;
     }
 
+    // ==== Sub-sheets (تُفتح كـ overlay فوق كل شيء) ====
+    const subSheetKeys = ["lock", "role", "spend", "music", "deco", "car-effects", "gift-effects", "bg-process", "mini-chat", "voice-changer"];
+    if (subSheetKeys.includes(key)) {
+      if (onOpenSubSheet) {
+        onClose();         // نغلق SettingsSheet ثم نفتح الـ sub-sheet
+        onOpenSubSheet(key);
+      }
+      return;
+    }
+
+    // ==== Tabs داخل SettingsSheet ====
     if (key === "layout") setTab("layout");
     else if (key === "editRoom") setTab("editRoom");
     else if (key === "background") setTab("background");
     else if (key === "gifts") setTab("gifts");
     else if (key === "activity") {
       if (onOpenActivity) onOpenActivity();
-      else dialog.alert("ميزة غير مفعّلة");
     }
-    else dialog.alert(`"${key}" - قيد التطوير`);
   };
 
   const titles: Record<Tab, string> = {

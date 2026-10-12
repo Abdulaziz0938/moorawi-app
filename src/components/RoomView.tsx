@@ -11,6 +11,7 @@ import { agoraManager } from "../lib/agora";
 import { getDeviceId } from "../lib/device";
 import { uploadToCloudinary } from "../lib/cloudinary";
 import SettingsSheet from "./SettingsSheet";
+import RoomLockSheet from "./RoomLockSheet";
 import GiftSheet from "./GiftSheet";
 import MusicSheet from "./MusicSheet";
 import MusicPlayer from "./MusicPlayer";
@@ -209,6 +210,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const [showBackMenu, setShowBackMenu] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [activeSubSheet, setActiveSubSheet] = useState<string | null>(null);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showMembers, setShowMembers] = useState(false);
   const [showActivity, setShowActivity] = useState(false);
@@ -1479,7 +1481,8 @@ export default function RoomView({ roomId, onLeave }: Props) {
           currentName={room.name} currentWelcome={room.welcomeMessage ?? ""} currentCoverUrl={room.coverUrl ?? null}
           micRequestsEnabled={!!room?.micRequestsEnabled}
           onClose={() => setShowSettings(false)}
-          onOpenActivity={() => { setShowSettings(false); setShowActivity(true); }} />
+          onOpenActivity={() => { setShowSettings(false); setShowActivity(true); }}
+          onOpenSubSheet={(key) => setActiveSubSheet(key)} />
       )}
     </div>
   );
