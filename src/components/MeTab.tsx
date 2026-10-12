@@ -20,6 +20,7 @@ import LegendSheet from "./LegendSheet";
 import MissionsSheet from "./MissionsSheet";
 import SupporterVipSheet from "./SupporterVipSheet";
 import LanguageSheet from "./LanguageSheet";
+import UserSettingsSheet from "./UserSettingsSheet";
 import ProfilePage from "./ProfilePage";
 import AdminPanelSheet from "./AdminPanelSheet";
 import MedalsSheet from "./MedalsSheet";
@@ -53,6 +54,7 @@ export default function MeTab({ onEnterRoom }: Props) {
   const [showMissions, setShowMissions] = useState(false);
   const [showSupporterVip, setShowSupporterVip] = useState(false);
   const [showLanguage, setShowLanguage] = useState(false);
+  const [showUserSettings, setShowUserSettings] = useState(false);
 
   // [moorawi-global] ربط زر الشحن من GiftSheet
   useEffect(() => {
@@ -78,6 +80,7 @@ export default function MeTab({ onEnterRoom }: Props) {
   useBackButton(showMissions, () => setShowMissions(false));
   useBackButton(showSupporterVip, () => setShowSupporterVip(false));
   useBackButton(showLanguage, () => setShowLanguage(false));
+  useBackButton(showUserSettings, () => setShowUserSettings(false));
 
   if (!me) {
     return (
@@ -164,6 +167,7 @@ export default function MeTab({ onEnterRoom }: Props) {
           onOpenLegend={() => setShowLegend(true)}
           onOpenSupporterVip={() => setShowSupporterVip(true)}
           onOpenLanguage={() => setShowLanguage(true)}
+          onOpenSettings={() => setShowUserSettings(true)}
           onLogout={() => {
             dialog.confirm(
               "هل تريد تسجيل الخروج من الحساب؟",
@@ -199,6 +203,18 @@ export default function MeTab({ onEnterRoom }: Props) {
       {showMissions && <MissionsSheet onClose={() => setShowMissions(false)} />}
       {showSupporterVip && <SupporterVipSheet onClose={() => setShowSupporterVip(false)} />}
       {showLanguage && <LanguageSheet onClose={() => setShowLanguage(false)} />}
+      {showUserSettings && (
+        <UserSettingsSheet
+          onClose={() => setShowUserSettings(false)}
+          onOpenLanguage={() => { setShowUserSettings(false); setShowLanguage(true); }}
+          onOpenVerify={() => { setShowUserSettings(false); setShowVerify(true); }}
+          onOpenProfile={() => { setShowUserSettings(false); setShowFullProfile(true); }}
+          onOpenSupport={() => { setShowUserSettings(false); setShowSupport(true); }}
+          onLogout={() => {
+            dialog.confirm("تسجيل الخروج؟", () => { clearSession(); window.location.reload(); }, "خروج", "خروج");
+          }}
+        />
+      )}
     </>
   );
 }
