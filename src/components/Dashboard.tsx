@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useQuery } from "convex/react";
 import { useBackButton } from "../lib/hooks/useBackButton";
 import MessagesTab from "./MessagesTab";
+import MomentsTab from "./MomentsTab";
+import DiscoverTab from "./DiscoverTab";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { Home, Compass, Image as ImageIcon, MessageCircle, User as UserIcon } from "lucide-react";
@@ -39,21 +41,9 @@ export default function Dashboard({ onEnterRoom }: Props) {
       <div className="flex-1 overflow-y-auto pb-20">
         {tab === "rooms" && <RoomsTab onEnter={onEnterRoom} />}
 
-        {tab === "discover" && (
-          <div className="h-full flex flex-col items-center justify-center text-white/60 p-8">
-            <Compass size={64} className="mb-4 opacity-40" />
-            <p className="text-lg font-bold">اكتشاف</p>
-            <p className="text-sm mt-1">قريباً</p>
-          </div>
-        )}
+        {tab === "discover" && <DiscoverTab onEnterRoom={onEnterRoom} />}
 
-        {tab === "moments" && (
-          <div className="h-full flex flex-col items-center justify-center text-white/60 p-8">
-            <ImageIcon size={64} className="mb-4 opacity-40" />
-            <p className="text-lg font-bold">لحظات</p>
-            <p className="text-sm mt-1">قريباً</p>
-          </div>
-        )}
+        {tab === "moments" && <MomentsTab />}
 
         {tab === "messages" && <MessagesTab />}
 
