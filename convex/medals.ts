@@ -2,6 +2,12 @@ import { mutation, query, internalMutation } from "./_generated/server";
 import { ConvexError, v } from "convex/values";
 import { requireUser, isFullAdmin, isAssetManager } from "./lib/auth";
 
+
+// [ezo-types] Medals categories union
+const MEDAL_CATEGORIES = ["wealth", "charm", "activity", "special", "vip", "level", "relation", "other"] as const;
+type MedalCategory = typeof MEDAL_CATEGORIES[number];
+
+
 // ============================================================
 // [moorawi-medals] Tier rank — for auto-equip on grant
 // ============================================================
@@ -19,13 +25,13 @@ function tierRank(t: string): number {
 
 // List all active medals (grouped by category)
 export const listAll = query({
-  args: { category: v.optional(v.string()) },
+  args: { category: v.optional(v.union(...MEDAL_CATEGORIES.map((c) => v.literal(c)))) },
   handler: async (ctx, args) => {
     if (args.category) {
       return await ctx.db
         .query("medals")
         .withIndex("by_category_active", (q) =>
-          q.eq("category", args.category as any).eq("active", true),
+          q.eq("category", args.category!).eq("active", true),
         )
         .collect();
     }

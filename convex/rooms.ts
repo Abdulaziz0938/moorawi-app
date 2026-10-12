@@ -4,6 +4,7 @@ import { getMember, requireUser } from "./lib/auth";
 import { levelFromValue } from "./lib/levels";
 import { activeVipLevel } from "./lib/vip";
 import { weekKey } from "./lib/week";
+import type { Id } from "./_generated/dataModel";
 
 const ROOM_NUMBER_START = 10000;
 
@@ -442,7 +443,7 @@ export const wealthRanking = query({
 
     const enriched = await Promise.all(
       sorted.map(async ([userId, total], idx) => {
-        const u = await ctx.db.get("users", userId as any);
+        const u = await ctx.db.get("users", userId as Id<"users">);
         return {
           rank: idx + 1,
           userId,

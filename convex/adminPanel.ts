@@ -266,19 +266,11 @@ export const listShopItems = query({
   },
   handler: async (ctx, args) => {
     await requireSuperAdmin(ctx, args.tokenOverride);
-    let items;
+    const all = await ctx.db.query("shopItems").take(500);
     if (args.category) {
-      items = await ctx.db
-        .query("shopItems")
-        .withIndex("by_category_active", (q) => q.eq("category", args.category as any))
-        .collect();
-      // Also inactive (withIndex may filter only active — use collect with filter)
-      const all = await ctx.db.query("shopItems").collect();
-      items = all.filter((i) => i.category === args.category);
-    } else {
-      items = await ctx.db.query("shopItems").collect();
+      return all.filter((i) => i.category === args.category);
     }
-    return items;
+    return all;
   },
 });
 
