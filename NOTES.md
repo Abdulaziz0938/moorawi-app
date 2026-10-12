@@ -1,4 +1,4 @@
-# NOTES — مشروع الدولة المعراوية (moorawi-app)
+# NOTES — مشروع Ezo Group Voice Chat Rooms (moorawi-app)
 
 آخر تحديث: 2026-10-10
 Owner ID: 1 (username: abdulaziz0938)
