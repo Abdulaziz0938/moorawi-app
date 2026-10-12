@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "convex/react";
 import { useBackButton } from "../lib/hooks/useBackButton";
+import MessagesTab from "./MessagesTab";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { Home, Compass, Image as ImageIcon, MessageCircle, User as UserIcon } from "lucide-react";
@@ -54,13 +55,7 @@ export default function Dashboard({ onEnterRoom }: Props) {
           </div>
         )}
 
-        {tab === "messages" && (
-          <div className="h-full flex flex-col items-center justify-center text-white/60 p-8">
-            <MessageCircle size={64} className="mb-4 opacity-40" />
-            <p className="text-lg font-bold">رسائل</p>
-            <p className="text-sm mt-1">قريباً</p>
-          </div>
-        )}
+        {tab === "messages" && <MessagesTab />}
 
         {tab === "me" && <MeTab />}
 

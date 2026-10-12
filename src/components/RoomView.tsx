@@ -19,6 +19,7 @@ import ChatBubble from "./ChatBubble";
 import IconOrImage from "./IconOrImage";
 import LeaderboardSheet from "./LeaderboardSheet";
 import MiniProfileSheet from "./MiniProfileSheet";
+import ChatThreadSheet from "./ChatThreadSheet";
 import RoomInfoSheet from "./RoomInfoSheet";
 import MicRequestsSheet from "./MicRequestsSheet";
 import MembersSheet from "./MembersSheet";
@@ -177,6 +178,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const leaveSeat = useMutation(api.mics.leaveSeat);
   const clearMySeats = useMutation(api.mics.clearMySeats);
   const toggleFollow = useMutation(api.follows.toggle);
+  const openDM = useMutation(api.directMessages.openWith);
   const toggleLock = useMutation(api.mics.toggleLock);
   const toggleMuteSeat = useMutation(api.mics.toggleMuteSeat);
   const toggleAdminMute = useMutation(api.mics.toggleAdminMute);
@@ -211,6 +213,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const [showMembers, setShowMembers] = useState(false);
   const [showActivity, setShowActivity] = useState(false);
   const [miniProfileUserId, setMiniProfileUserId] = useState<string | null>(null);
+  const [dmConversationId, setDmConversationId] = useState<string | null>(null);
   const [showRoomInfo, setShowRoomInfo] = useState(false);
   const [mySeatIndexForMiniProfile, setMySeatIndexForMiniProfile] = useState<number | null>(null);
   const [preSelectedGiftUserId, setPreSelectedGiftUserId] = useState<string | null>(null);
@@ -1258,6 +1261,13 @@ export default function RoomView({ roomId, onLeave }: Props) {
         />
       )}
 
+      {dmConversationId && (
+        <ChatThreadSheet
+          conversationId={dmConversationId}
+          onClose={() => setDmConversationId(null)}
+        />
+      )}
+
       {miniProfileUserId && (
         <MiniProfileSheet
           userId={miniProfileUserId}
@@ -1274,10 +1284,19 @@ export default function RoomView({ roomId, onLeave }: Props) {
             setMySeatIndexForMiniProfile(null);
             setShowGifts(true);
           }}
-          onOpenChat={() => {
-            setMiniProfileUserId(null);
-            setMySeatIndexForMiniProfile(null);
-            setShowChatInput(true);
+          onOpenChat={async () => {
+            if (!miniProfileUserId) return;
+            try {
+              const res = await openDM({
+                otherUserId: miniProfileUserId as any,
+                tokenOverride: getDeviceId(),
+              });
+              setMiniProfileUserId(null);
+              setMySeatIndexForMiniProfile(null);
+              setDmConversationId(res.conversationId);
+            } catch (e: any) {
+              dialog.alert(e?.message || "فشل");
+            }
           }}
           onFollowToggle={() => {
             if (!miniProfileUserId) return;
