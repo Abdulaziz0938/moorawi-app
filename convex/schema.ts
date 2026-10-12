@@ -150,6 +150,16 @@ export default defineSchema({
     currentMusicStartedAt: v.optional(v.number()),
     currentMusicPausedAt: v.optional(v.number()),  // seconds position when paused
     currentMusicIsPaused: v.optional(v.boolean()),
+    // [ezo-music] Advanced music system
+    musicPlayMode: v.optional(v.union(
+      v.literal("single"),
+      v.literal("loop"),
+      v.literal("sequence"),
+      v.literal("shuffle"),
+    )),
+    currentMusicCoverUrl: v.optional(v.string()),
+    currentMusicDurationSec: v.optional(v.number()),
+    currentMusicCategory: v.optional(v.string()),
 
     // [ezo-lock] Room lock
     isLocked: v.optional(v.boolean()),
@@ -567,8 +577,13 @@ export default defineSchema({
     name: v.string(),
     url: v.string(),
     durationSec: v.optional(v.number()),
+    coverUrl: v.optional(v.string()),
+    category: v.optional(v.string()),
+    isPublic: v.optional(v.boolean()),       // مكتبة عامة (من الأدمن)
     uploadedAt: v.number(),
-  }).index("by_user", ["userId"]),
+  })
+    .index("by_user", ["userId"])
+    .index("by_public", ["isPublic", "uploadedAt"]),
 
   // ================================================================
   // [moorawi-verification] VERIFICATION REQUESTS
@@ -865,5 +880,25 @@ export default defineSchema({
     createdAt: v.number(),
   })
     .index("by_moment", ["momentId", "createdAt"]),
+
+
+  // ================================================================
+  // [ezo-music] قائمة تشغيل الغرفة (Queue)
+  // ================================================================
+  musicQueue: defineTable({
+    roomId: v.id("rooms"),
+    userId: v.id("users"),
+    musicId: v.id("userMusic"),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("playing"),
+      v.literal("played"),
+      v.literal("skipped"),
+    ),
+    addedAt: v.number(),
+    playedAt: v.optional(v.number()),
+  })
+    .index("by_room_status", ["roomId", "status", "addedAt"])
+    .index("by_room_and_user", ["roomId", "userId"]),
 
 });
