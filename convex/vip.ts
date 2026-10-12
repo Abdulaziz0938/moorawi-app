@@ -149,13 +149,13 @@ export const grantVip = mutation({
   },
   handler: async (ctx, args) => {
     const me = await requireUser(ctx);
-    if (!isFullAdmin(me)) throw new Error("غير مصرح");
+    if (!isFullAdmin(me)) throw new ConvexError({ code: "FORBIDDEN", message: "غير مصرح" });
     const plan = VIP_LEVELS.find((p) => p.level === args.level);
-    if (!plan) throw new Error("مستوى VIP غير صالح");
+    if (!plan) throw new ConvexError({ code: "BAD_REQUEST", message: "مستوى VIP غير صالح" });
     const days = args.days ?? VIP_DAYS;
 
     const target = await ctx.db.get("users", args.userId);
-    if (!target) throw new Error("المستخدم غير موجود");
+    if (!target) throw new ConvexError({ code: "NOT_FOUND", message: "المستخدم غير موجود" });
 
     const now = Date.now();
     const currentExpiry = (target.vipExpiresAt && target.vipExpiresAt > now) ? target.vipExpiresAt : now;
@@ -246,14 +246,14 @@ export const setVipBenefit = mutation({
   },
   handler: async (ctx, args) => {
     const me = await requireUser(ctx, args.tokenOverride);
-    if (!isFullAdmin(me)) throw new Error("غير مصرح");
-    if (args.level < 1 || args.level > 7) throw new Error("مستوى غير صالح");
+    if (!isFullAdmin(me)) throw new ConvexError({ code: "FORBIDDEN", message: "غير مصرح" });
+    if (args.level < 1 || args.level > 7) throw new ConvexError({ code: "BAD_REQUEST", message: "مستوى غير صالح" });
     const trimmed = args.textAr.trim();
-    if (trimmed.length < 1) throw new Error("نص فارغ");
+    if (trimmed.length < 1) throw new ConvexError({ code: "BAD_REQUEST", message: "نص فارغ" });
 
     if (args.id) {
       const existing = await ctx.db.get("vipBenefits", args.id);
-      if (!existing) throw new Error("الميزة غير موجودة");
+      if (!existing) throw new ConvexError({ code: "NOT_FOUND", message: "الميزة غير موجودة" });
       await ctx.db.patch("vipBenefits", args.id, {
         level: args.level,
         order: args.order,
@@ -279,7 +279,7 @@ export const removeVipBenefit = mutation({
   args: { id: v.id("vipBenefits"), tokenOverride: v.optional(v.string()) },
   handler: async (ctx, args) => {
     const me = await requireUser(ctx, args.tokenOverride);
-    if (!isFullAdmin(me)) throw new Error("غير مصرح");
+    if (!isFullAdmin(me)) throw new ConvexError({ code: "FORBIDDEN", message: "غير مصرح" });
     await ctx.db.delete("vipBenefits", args.id);
     return { ok: true };
   },
