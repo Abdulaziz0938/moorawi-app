@@ -1,9 +1,10 @@
-// [ezo-ui] Pull-to-Refresh — تحديث السحب من الأعلى
+// [ezo-ui] Pull-to-Refresh — تحديث ذكي (فقط من الأعلى فعلاً)
 import { useEffect, useRef, useState } from "react";
 import { RefreshCw } from "lucide-react";
 
 const THRESHOLD = 70;
 const MAX_PULL = 120;
+const TOP_THRESHOLD = 2; // نسمح بحد 2px للـ scroll لجبر الأخطاء العشرية
 
 interface Props {
   children: React.ReactNode;
@@ -16,34 +17,58 @@ export default function PullToRefresh({ children, onRefresh, className = "" }: P
   const [pullDist, setPullDist] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const startY = useRef<number | null>(null);
+  const armed = useRef(false); // هل نحن في وضع "جاهز للسحب"؟
 
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
 
+    // ============ TOUCH START ============
     const onTouchStart = (e: TouchEvent) => {
-      if (el.scrollTop <= 0 && !refreshing) {
-        startY.current = e.touches[0].clientY;
-      } else {
+      if (refreshing) {
+        armed.current = false;
         startY.current = null;
+        return;
       }
+      // هل نحن في أعلى الصفحة تماماً؟
+      const atTop = el.scrollTop <= TOP_THRESHOLD;
+      armed.current = atTop;
+      startY.current = atTop ? e.touches[0].clientY : null;
     };
 
+    // ============ TOUCH MOVE ============
     const onTouchMove = (e: TouchEvent) => {
-      if (startY.current === null) return;
+      if (!armed.current || startY.current === null) return;
+
+      // ✅ التحقق المستمر: إذا خرجنا من الأعلى → إلغاء
+      if (el.scrollTop > TOP_THRESHOLD) {
+        armed.current = false;
+        startY.current = null;
+        setPullDist(0);
+        return;
+      }
+
       const dy = e.touches[0].clientY - startY.current;
-      if (dy > 0 && el.scrollTop <= 0) {
-        // مقاومة تدريجية
+
+      if (dy > 0) {
+        // نمنع الـ native scroll (passive: false)
+        if (e.cancelable) e.preventDefault();
         const resisted = Math.min(MAX_PULL, Math.pow(dy, 0.85) * 0.9);
         setPullDist(resisted);
-      } else if (dy <= 0) {
+      } else {
+        // المستخدم يمرر لأسفل → ليس pull
         setPullDist(0);
-        startY.current = null;
       }
     };
 
+    // ============ TOUCH END ============
     const onTouchEnd = async () => {
-      if (startY.current === null) return;
+      if (!armed.current) {
+        setPullDist(0);
+        startY.current = null;
+        return;
+      }
+      armed.current = false;
       const dist = pullDist;
       startY.current = null;
 
@@ -54,7 +79,6 @@ export default function PullToRefresh({ children, onRefresh, className = "" }: P
         try {
           await onRefresh?.();
         } catch {}
-        // على الأقل 500ms دوران
         const elapsed = Date.now() - start;
         if (elapsed < 500) await new Promise((r) => setTimeout(r, 500 - elapsed));
         setRefreshing(false);
@@ -64,14 +88,24 @@ export default function PullToRefresh({ children, onRefresh, className = "" }: P
       }
     };
 
+    // ============ TOUCH CANCEL ============
+    const onTouchCancel = () => {
+      armed.current = false;
+      startY.current = null;
+      setPullDist(0);
+    };
+
     el.addEventListener("touchstart", onTouchStart, { passive: true });
-    el.addEventListener("touchmove", onTouchMove, { passive: true });
+    // ⚠️ passive: false — للسماح بـ preventDefault
+    el.addEventListener("touchmove", onTouchMove, { passive: false });
     el.addEventListener("touchend", onTouchEnd);
+    el.addEventListener("touchcancel", onTouchCancel);
 
     return () => {
       el.removeEventListener("touchstart", onTouchStart);
       el.removeEventListener("touchmove", onTouchMove);
       el.removeEventListener("touchend", onTouchEnd);
+      el.removeEventListener("touchcancel", onTouchCancel);
     };
   }, [pullDist, refreshing, onRefresh]);
 
@@ -79,14 +113,28 @@ export default function PullToRefresh({ children, onRefresh, className = "" }: P
   const rotation = refreshing ? undefined : Math.min(360, pullDist * 3);
 
   return (
-    <div ref={containerRef} className={`relative h-full overflow-y-auto ${className}`}>
+    <div
+      ref={containerRef}
+      className={`relative h-full overflow-y-auto ${className}`}
+      style={{
+        // ✅ منع pull-to-refresh الأصلي في المتصفح
+        overscrollBehaviorY: "contain",
+        // ✅ السماح بالـ pan-y فقط (يمنع zoom)
+        touchAction: "pan-y",
+      }}
+    >
       {/* Indicator */}
       <div
         className="absolute inset-x-0 top-0 flex justify-center pointer-events-none z-10"
         style={{
-          transform: `translateY(${refreshing ? 20 : Math.max(-50, pullDist - 50)}px)`,
+          transform: refreshing
+            ? "translateY(20px)"
+            : `translateY(${Math.max(-50, pullDist - 50)}px)`,
           opacity: showIndicator ? 1 : 0,
-          transition: refreshing || pullDist === 0 ? "transform 0.3s ease, opacity 0.2s ease" : "none",
+          transition:
+            refreshing || pullDist === 0
+              ? "transform 0.3s ease, opacity 0.2s ease"
+              : "none",
         }}
       >
         <div className="w-10 h-10 rounded-full bg-white/15 backdrop-blur-xl border border-white/25 shadow-2xl flex items-center justify-center">
@@ -98,13 +146,15 @@ export default function PullToRefresh({ children, onRefresh, className = "" }: P
         </div>
       </div>
 
-      {/* Content — يتحرك مع السحب */}
+      {/* Content */}
       <div
         style={{
-          transform: pullDist > 0 || refreshing
-            ? `translateY(${refreshing ? 60 : pullDist}px)`
-            : undefined,
-          transition: refreshing || pullDist === 0 ? "transform 0.3s ease" : "none",
+          transform:
+            pullDist > 0 || refreshing
+              ? `translateY(${refreshing ? 60 : pullDist}px)`
+              : undefined,
+          transition:
+            refreshing || pullDist === 0 ? "transform 0.3s ease" : "none",
         }}
       >
         {children}
