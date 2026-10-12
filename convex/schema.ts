@@ -151,6 +151,42 @@ export default defineSchema({
     currentMusicPausedAt: v.optional(v.number()),  // seconds position when paused
     currentMusicIsPaused: v.optional(v.boolean()),
 
+    // [ezo-lock] Room lock
+    isLocked: v.optional(v.boolean()),
+    lockPassword: v.optional(v.string()),
+
+    // [ezo-deco] Room decorations (shopItem IDs)
+    roomDecorations: v.optional(v.array(v.id("shopItems"))),
+
+    // [ezo-effects] Room visual effects
+    screenEffect: v.optional(v.union(
+      v.literal("none"),
+      v.literal("blur"),
+      v.literal("dim"),
+      v.literal("warm"),
+      v.literal("cool"),
+    )),
+
+    // [ezo-effects] Active vehicle effect (shopItem ID)
+    vehicleEffectId: v.optional(v.id("shopItems")),
+    vehicleEffectStartedAt: v.optional(v.number()),
+
+    // [ezo-effects] Active gift effect (shopItem ID)
+    giftEffectId: v.optional(v.id("shopItems")),
+    giftEffectStartedAt: v.optional(v.number()),
+
+    // [ezo-ui] Mini chat toggle
+    miniChatEnabled: v.optional(v.boolean()),
+
+    // [ezo-voice] Voice changer effect (client-side processing hint)
+    voiceChangerEffect: v.optional(v.union(
+      v.literal("none"),
+      v.literal("robot"),
+      v.literal("chipmunk"),
+      v.literal("deep"),
+      v.literal("echo"),
+    )),
+
     // [moorawi-trophy] Room Trophy (weekly coins spent)
     weeklyTotal: v.optional(v.number()),
     weeklyCycleKey: v.optional(v.string()),           // e.g. "2026-W42"
@@ -354,6 +390,7 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_user_and_category", ["userId", "category"])
     .index("by_user_and_equipped", ["userId", "isEquipped"])
+    .index("by_user_and_item", ["userId", "itemId"])
     .index("by_expiresAt", ["expiresAt"]),
 
   // ================================================================

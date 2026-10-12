@@ -608,3 +608,409 @@ export const legendTop = query({
     return enriched;
   },
 });
+
+// ================================================================
+// [ezo-lock] قفل الغرفة
+// ================================================================
+export const toggleRoomLock = mutation({
+  args: {
+    roomId: v.id("rooms"),
+    locked: v.boolean(),
+    password: v.optional(v.string()),
+    tokenOverride: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
+    const room = await ctx.db.get("rooms", args.roomId);
+    if (!room) throw new Error("الغرفة غير موجودة");
+
+    // فقط owner أو مشرف مع صلاحية roomLock
+    const member = await ctx.db
+      .query("roomMembers")
+      .withIndex("by_room_and_user", (q) => q.eq("roomId", args.roomId).eq("userId", me._id))
+      .unique();
+    if (!member || (member.role !== "owner" && member.role !== "moderator")) {
+      throw new Error("غير مصرح");
+    }
+    if (member.role === "moderator" && !room.staffPermissions?.roomLock) {
+      throw new Error("ليس لديك صلاحية قفل الغرفة");
+    }
+
+    const patch: any = { isLocked: args.locked };
+    if (args.locked && args.password && args.password.length > 0) {
+      patch.lockPassword = args.password;
+    } else if (!args.locked) {
+      patch.lockPassword = undefined;
+    }
+    await ctx.db.patch("rooms", args.roomId, patch);
+    return { ok: true };
+  },
+});
+
+// فحص كلمة مرور الغرفة
+export const verifyRoomPassword = mutation({
+  args: {
+    roomId: v.id("rooms"),
+    password: v.string(),
+    tokenOverride: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const room = await ctx.db.get("rooms", args.roomId);
+    if (!room) throw new Error("الغرفة غير موجودة");
+    if (!room.isLocked) return { ok: true };
+    if (room.lockPassword && room.lockPassword !== args.password) {
+      throw new Error("كلمة المرور خاطئة");
+    }
+    return { ok: true };
+  },
+});
+
+// ================================================================
+// [ezo-music] تشغيل الموسيقى في الغرفة
+// ================================================================
+export const playRoomMusic = mutation({
+  args: {
+    roomId: v.id("rooms"),
+    musicId: v.id("userMusic"),
+    tokenOverride: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
+    const room = await ctx.db.get("rooms", args.roomId);
+    if (!room) throw new Error("الغرفة غير موجودة");
+
+    const member = await ctx.db
+      .query("roomMembers")
+      .withIndex("by_room_and_user", (q) => q.eq("roomId", args.roomId).eq("userId", me._id))
+      .unique();
+    if (!member || (member.role !== "owner" && member.role !== "moderator")) {
+      throw new Error("غير مصرح");
+    }
+
+    const music = await ctx.db.get("userMusic", args.musicId);
+    if (!music) throw new Error("الأغنية غير موجودة");
+
+    await ctx.db.patch("rooms", args.roomId, {
+      currentMusicId: args.musicId,
+      currentMusicUrl: music.url,
+      currentMusicName: music.name,
+      currentMusicStartedBy: me._id,
+      currentMusicStartedAt: Date.now(),
+      currentMusicPausedAt: undefined,
+      currentMusicIsPaused: false,
+    });
+    return { ok: true };
+  },
+});
+
+export const pauseRoomMusic = mutation({
+  args: {
+    roomId: v.id("rooms"),
+    positionSec: v.number(),
+    tokenOverride: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
+    const room = await ctx.db.get("rooms", args.roomId);
+    if (!room) throw new Error("الغرفة غير موجودة");
+    const member = await ctx.db
+      .query("roomMembers")
+      .withIndex("by_room_and_user", (q) => q.eq("roomId", args.roomId).eq("userId", me._id))
+      .unique();
+    if (!member || (member.role !== "owner" && member.role !== "moderator")) {
+      throw new Error("غير مصرح");
+    }
+    await ctx.db.patch("rooms", args.roomId, {
+      currentMusicPausedAt: args.positionSec,
+      currentMusicIsPaused: true,
+    });
+    return { ok: true };
+  },
+});
+
+export const resumeRoomMusic = mutation({
+  args: { roomId: v.id("rooms"), tokenOverride: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
+    const room = await ctx.db.get("rooms", args.roomId);
+    if (!room) throw new Error("الغرفة غير موجودة");
+    const member = await ctx.db
+      .query("roomMembers")
+      .withIndex("by_room_and_user", (q) => q.eq("roomId", args.roomId).eq("userId", me._id))
+      .unique();
+    if (!member || (member.role !== "owner" && member.role !== "moderator")) {
+      throw new Error("غير مصرح");
+    }
+    await ctx.db.patch("rooms", args.roomId, { currentMusicIsPaused: false });
+    return { ok: true };
+  },
+});
+
+export const stopRoomMusic = mutation({
+  args: { roomId: v.id("rooms"), tokenOverride: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
+    const room = await ctx.db.get("rooms", args.roomId);
+    if (!room) throw new Error("الغرفة غير موجودة");
+    const member = await ctx.db
+      .query("roomMembers")
+      .withIndex("by_room_and_user", (q) => q.eq("roomId", args.roomId).eq("userId", me._id))
+      .unique();
+    if (!member || (member.role !== "owner" && member.role !== "moderator")) {
+      throw new Error("غير مصرح");
+    }
+    await ctx.db.patch("rooms", args.roomId, {
+      currentMusicId: undefined,
+      currentMusicUrl: undefined,
+      currentMusicName: undefined,
+      currentMusicStartedBy: undefined,
+      currentMusicStartedAt: undefined,
+      currentMusicPausedAt: undefined,
+      currentMusicIsPaused: undefined,
+    });
+    return { ok: true };
+  },
+});
+
+// ================================================================
+// [ezo-spend] صرف في الغرفة (دعم المالك + كأس الروم)
+// ================================================================
+export const spendInRoom = mutation({
+  args: {
+    roomId: v.id("rooms"),
+    amount: v.number(),
+    tokenOverride: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
+    if (args.amount <= 0) throw new Error("المبلغ غير صالح");
+    const room = await ctx.db.get("rooms", args.roomId);
+    if (!room) throw new Error("الغرفة غير موجودة");
+
+    const myCoins = me.coins ?? 0;
+    if (myCoins < args.amount) throw new Error("رصيدك غير كافٍ");
+
+    // خصم مني
+    await ctx.db.patch("users", me._id, {
+      coins: myCoins - args.amount,
+      totalSent: (me.totalSent ?? 0) + args.amount,
+    });
+
+    // إضافة للمالك
+    const owner = await ctx.db.get("users", room.ownerId);
+    if (owner) {
+      await ctx.db.patch("users", owner._id, {
+        coins: (owner.coins ?? 0) + args.amount,
+        totalReceived: (owner.totalReceived ?? 0) + args.amount,
+        charms: (owner.charms ?? 0) + args.amount,
+      });
+    }
+
+    // تحديث كأس الروم
+    await ctx.db.patch("rooms", args.roomId, {
+      weeklyTotal: (room.weeklyTotal ?? 0) + args.amount,
+    });
+
+    // سجل العملية
+    await ctx.db.insert("walletTransactions", {
+      userId: me._id,
+      type: "spend",
+      amount: -args.amount,
+      balanceAfter: myCoins - args.amount,
+      meta: `دعم في غرفة: ${room.name}`,
+      createdAt: Date.now(),
+    });
+
+    return { ok: true, amount: args.amount };
+  },
+});
+
+// ================================================================
+// [ezo-deco] ديكور الغرفة (إضافة/إزالة عنصر مملوك)
+// ================================================================
+export const addRoomDecoration = mutation({
+  args: {
+    roomId: v.id("rooms"),
+    itemId: v.id("shopItems"),
+    tokenOverride: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
+    const room = await ctx.db.get("rooms", args.roomId);
+    if (!room) throw new Error("الغرفة غير موجودة");
+    if (room.ownerId !== me._id) throw new Error("فقط المالك يمكنه إضافة ديكور");
+
+    const item = await ctx.db.get("shopItems", args.itemId);
+    if (!item) throw new Error("المنتج غير موجود");
+    if (item.category !== "decoration") throw new Error("هذا ليس ديكور");
+
+    // تأكد أن المالك يملك العنصر
+    const inv = await ctx.db
+      .query("userInventory")
+      .withIndex("by_user_and_item", (q) => q.eq("userId", me._id).eq("itemId", args.itemId))
+      .first();
+    if (!inv) throw new Error("لا تملك هذا الديكور");
+
+    const current = room.roomDecorations ?? [];
+    if (current.includes(args.itemId)) return { ok: true, already: true };
+
+    await ctx.db.patch("rooms", args.roomId, {
+      roomDecorations: [...current, args.itemId],
+    });
+    return { ok: true };
+  },
+});
+
+export const removeRoomDecoration = mutation({
+  args: {
+    roomId: v.id("rooms"),
+    itemId: v.id("shopItems"),
+    tokenOverride: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
+    const room = await ctx.db.get("rooms", args.roomId);
+    if (!room) throw new Error("الغرفة غير موجودة");
+    if (room.ownerId !== me._id) throw new Error("فقط المالك");
+
+    const current = room.roomDecorations ?? [];
+    await ctx.db.patch("rooms", args.roomId, {
+      roomDecorations: current.filter((id) => id !== args.itemId),
+    });
+    return { ok: true };
+  },
+});
+
+// ================================================================
+// [ezo-effects] تأثيرات الغرفة (خلفية/مركبة/هدية/صوت)
+// ================================================================
+export const setScreenEffect = mutation({
+  args: {
+    roomId: v.id("rooms"),
+    effect: v.union(
+      v.literal("none"),
+      v.literal("blur"),
+      v.literal("dim"),
+      v.literal("warm"),
+      v.literal("cool"),
+    ),
+    tokenOverride: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
+    const room = await ctx.db.get("rooms", args.roomId);
+    if (!room) throw new Error("الغرفة غير موجودة");
+    const member = await ctx.db
+      .query("roomMembers")
+      .withIndex("by_room_and_user", (q) => q.eq("roomId", args.roomId).eq("userId", me._id))
+      .unique();
+    if (!member || (member.role !== "owner" && member.role !== "moderator")) {
+      throw new Error("غير مصرح");
+    }
+    await ctx.db.patch("rooms", args.roomId, { screenEffect: args.effect });
+    return { ok: true };
+  },
+});
+
+export const triggerVehicleEffect = mutation({
+  args: {
+    roomId: v.id("rooms"),
+    itemId: v.id("shopItems"),
+    tokenOverride: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
+    const room = await ctx.db.get("rooms", args.roomId);
+    if (!room) throw new Error("الغرفة غير موجودة");
+
+    const item = await ctx.db.get("shopItems", args.itemId);
+    if (!item) throw new Error("العنصر غير موجود");
+    if (item.category !== "vehicle" && item.category !== "entryEffect") {
+      throw new Error("هذا ليس مركبة/دخول");
+    }
+
+    const inv = await ctx.db
+      .query("userInventory")
+      .withIndex("by_user_and_item", (q) => q.eq("userId", me._id).eq("itemId", args.itemId))
+      .first();
+    if (!inv) throw new Error("لا تملك هذا العنصر");
+
+    await ctx.db.patch("rooms", args.roomId, {
+      vehicleEffectId: args.itemId,
+      vehicleEffectStartedAt: Date.now(),
+    });
+    return { ok: true };
+  },
+});
+
+export const triggerGiftEffect = mutation({
+  args: {
+    roomId: v.id("rooms"),
+    itemId: v.id("shopItems"),
+    tokenOverride: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
+    const room = await ctx.db.get("rooms", args.roomId);
+    if (!room) throw new Error("الغرفة غير موجودة");
+
+    const item = await ctx.db.get("shopItems", args.itemId);
+    if (!item) throw new Error("العنصر غير موجود");
+    if (item.category !== "entryEffect") throw new Error("هذا ليس تأثير هدية");
+
+    const inv = await ctx.db
+      .query("userInventory")
+      .withIndex("by_user_and_item", (q) => q.eq("userId", me._id).eq("itemId", args.itemId))
+      .first();
+    if (!inv) throw new Error("لا تملك هذا العنصر");
+
+    await ctx.db.patch("rooms", args.roomId, {
+      giftEffectId: args.itemId,
+      giftEffectStartedAt: Date.now(),
+    });
+    return { ok: true };
+  },
+});
+
+export const setVoiceChanger = mutation({
+  args: {
+    roomId: v.id("rooms"),
+    effect: v.union(
+      v.literal("none"),
+      v.literal("robot"),
+      v.literal("chipmunk"),
+      v.literal("deep"),
+      v.literal("echo"),
+    ),
+    tokenOverride: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
+    const room = await ctx.db.get("rooms", args.roomId);
+    if (!room) throw new Error("الغرفة غير موجودة");
+    await ctx.db.patch("rooms", args.roomId, { voiceChangerEffect: args.effect });
+    return { ok: true };
+  },
+});
+
+export const toggleMiniChat = mutation({
+  args: {
+    roomId: v.id("rooms"),
+    enabled: v.boolean(),
+    tokenOverride: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
+    const room = await ctx.db.get("rooms", args.roomId);
+    if (!room) throw new Error("الغرفة غير موجودة");
+    const member = await ctx.db
+      .query("roomMembers")
+      .withIndex("by_room_and_user", (q) => q.eq("roomId", args.roomId).eq("userId", me._id))
+      .unique();
+    if (!member || (member.role !== "owner" && member.role !== "moderator")) {
+      throw new Error("غير مصرح");
+    }
+    await ctx.db.patch("rooms", args.roomId, { miniChatEnabled: args.enabled });
+    return { ok: true };
+  },
+});
