@@ -4,7 +4,7 @@ import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import {
   Mic, MicOff, LogOut, Loader2, Heart, Trophy, Bell, Crown, Shield, Home, User,
-  MessageCircle, Gift, Grid2x2, Share2, Minimize2, ArrowRight, Music,
+  MessageCircle, Gift, Grid2x2, Share2, Minimize2, Maximize2, ArrowRight, Music,
   Lock, Unlock, UserPlus, Move, X, Check,
 } from "lucide-react";
 import { agoraManager } from "../lib/agora";
@@ -208,6 +208,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const [remoteCount, setRemoteCount] = useState(0);
 
   const [showBackMenu, setShowBackMenu] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [activeSubSheet, setActiveSubSheet] = useState<string | null>(null);
@@ -611,6 +612,18 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const currentSeatMenuData = openSeatMenu !== null ? seats.find((s) => s.seatIndex === openSeatMenu) : null;
   const isMySeat = currentSeatMenuData?.userId === myInfo.userId;
 
+  if (isMinimized) {
+    return (
+      <div className="fixed top-4 right-4 z-[300] rounded-full bg-gray-900/95 backdrop-blur border border-white/20 shadow-2xl px-3 py-2 flex items-center gap-3" dir="rtl">
+        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+        <span className="text-white text-xs font-black truncate max-w-[120px]">{room.name}</span>
+        <button onClick={() => setIsMinimized(false)} className="w-8 h-8 rounded-full bg-purple-600 hover:bg-purple-700 flex items-center justify-center text-white active:scale-90 transition">
+          <Maximize2 size={14} />
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col overflow-hidden fixed inset-0 mx-auto" dir="rtl"
       style={{ maxWidth: "28rem", backgroundImage: room.backgroundUrl ? `url(${room.backgroundUrl})` : undefined, backgroundSize: "cover", backgroundPosition: "center" }}>
@@ -727,8 +740,8 @@ export default function RoomView({ roomId, onLeave }: Props) {
             <div className="fixed inset-0 z-20" onClick={() => setShowBackMenu(false)} />
             <div className="absolute top-20 right-2 z-30 bg-gray-900/95 backdrop-blur rounded-xl shadow-2xl border border-white/10 py-1 w-40">
               <button onClick={handleLeave} className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs"><LogOut size={14} /> مغادرة</button>
-              <button className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs"><Minimize2 size={14} /> تصغير</button>
-              <button className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs"><Share2 size={14} /> مشاركة</button>
+              <button onClick={() => { setShowBackMenu(false); setIsMinimized(true); }} className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs"><Minimize2 size={14} /> تصغير</button>
+              <button onClick={() => { navigator.clipboard.writeText(`https://moorawi-app.vercel.app/room/${roomId}`); setShowBackMenu(false); }} className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs"><Share2 size={14} /> مشاركة</button>
             </div>
           </>
         )}
