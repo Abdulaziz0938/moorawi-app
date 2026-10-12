@@ -101,7 +101,22 @@ export const getFull = query({
     // --- 9) Verification ---
     const verified = user.verificationStatus === "approved";
 
-    // --- 8) Current room (if user recently joined) ---
+    // --- 8a) Owned room (user's own room) ---
+    let ownedRoom = null;
+    const owned = await ctx.db
+      .query("rooms")
+      .withIndex("by_owner", (q) => q.eq("ownerId", user._id))
+      .first();
+    if (owned) {
+      ownedRoom = {
+        _id: owned._id,
+        name: owned.name,
+        roomNumber: owned.roomNumber ?? null,
+        coverUrl: owned.coverUrl ?? null,
+      };
+    }
+
+    // --- 8b) Current room (if user recently joined) ---
     let currentRoom = null;
     const memberships = await ctx.db
       .query("roomMembers")
@@ -172,6 +187,7 @@ export const getFull = query({
 
       // Verification
       verified,
+      ownedRoom,
       currentRoom,
     };
   },

@@ -8,7 +8,7 @@ import { uploadToCloudinary } from "../lib/cloudinary";
 import { dialog } from "../lib/dialog";
 import {
   X, Home, Gift, MessageCircle, UserPlus, Crown, Loader2,
-  Pencil, Camera, Eye, Trash2, ImageIcon, Copy, Check,
+  Pencil, Camera, Eye, Trash2, ImageIcon, Copy, Check, Radio,
 } from "lucide-react";
 import { UserName } from "./UserBadges";
 import LevelBadge from "./LevelBadge";
@@ -266,6 +266,37 @@ export default function ProfilePage({
             <span className="text-[10px] bg-white/15 backdrop-blur border border-white/20 text-white px-2 py-0.5 rounded-full">{profile.country}</span>
           )}
         </div>
+
+        {/* ============ 3.5 Room actions ============ */}
+        {(profile as any).ownedRoom && (
+          <div className="flex items-center justify-center gap-2 mt-3 px-4">
+            <button
+              onClick={() => {
+                if (onEnterRoom && (profile as any).ownedRoom) {
+                  onEnterRoom((profile as any).ownedRoom._id);
+                }
+              }}
+              className="rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 px-4 py-2.5 text-white text-xs font-black flex items-center gap-2 active:scale-95 transition"
+            >
+              <Home size={14} />
+              زيارة غرفة
+            </button>
+            {(profile as any).currentRoom && (
+              <button
+                onClick={() => {
+                  if (onEnterRoom && (profile as any).currentRoom) {
+                    onEnterRoom((profile as any).currentRoom._id);
+                  }
+                }}
+                className="rounded-2xl bg-gradient-to-r from-purple-500 to-pink-500 px-4 py-2.5 text-white text-xs font-black flex items-center gap-2 active:scale-95 transition"
+                title={`يدخل الآن غرفة ${(profile as any).currentRoom.name}`}
+              >
+                <Radio size={14} />
+                تتبع
+              </button>
+            )}
+          </div>
+        )}
 
         {/* ============ 4. Charm + Wealth + VIP ============ */}
         <div className="flex items-center justify-center gap-2 mt-3 flex-wrap">

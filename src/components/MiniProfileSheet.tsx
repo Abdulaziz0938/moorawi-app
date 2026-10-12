@@ -6,8 +6,7 @@ import type { Id } from "../../convex/_generated/dataModel";
 import { dialog } from "../lib/dialog";
 import {
   X, Gift, MessageCircle, UserPlus, Mic, MicOff, ArrowDown,
-  Ban, Crown, Loader2, Shield, Copy, Check,
-} from "lucide-react";
+  Ban, Crown, Loader2, Shield, Copy, Check, Home, Radio } from "lucide-react";
 import { UserName } from "./UserBadges";
 import LevelBadge from "./LevelBadge";
 import MedalsRow from "./MedalsRow";
@@ -26,6 +25,7 @@ interface Props {
   onFollowToggle?: () => void;
   isFollowing?: boolean;
   onOpenFullProfile?: () => void;
+  onEnterRoom?: (roomId: any) => void;
   onKick?: () => void;
   onBan?: () => void;
   onMute?: () => void;
@@ -69,7 +69,7 @@ function IconCircle({ icon, onClick, size = 52 }: { icon: React.ReactNode; onCli
 export default function MiniProfileSheet({
   userId, roomId, currentUserRole,
   isMySeat, isMySeatMuted, isTargetOnMic,
-  onClose, onOpenGift, onOpenFullProfile, onOpenChat, onFollowToggle, isFollowing,
+  onClose, onOpenGift, onOpenFullProfile, onOpenChat, onFollowToggle, isFollowing, onEnterRoom,
   onKick, onBan, onMute, onRemoveFromSeat,
   onPromote, onDemote, onInviteToMic,
   targetIsMod = false,
