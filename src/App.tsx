@@ -10,6 +10,7 @@ import { getActiveToken, hasSession, clearSession } from "./lib/session";
 import { Loader2 } from "lucide-react";
 import { useBackButton } from "./lib/hooks/useBackButton";
 import DailyLoginModal from "./components/DailyLoginModal";
+import InstallBanner from "./components/InstallBanner";
 
 function App() {
   const [token, setToken] = useState<string>(() => getActiveToken());
@@ -96,6 +97,7 @@ function App() {
         <Dashboard onEnterRoom={setCurrentRoomId} />
       )}
       {showDailyLogin && <DailyLoginModal onClose={() => setShowDailyLogin(false)} />}
+      {me.profileComplete && <InstallBanner />}
     </div>
   );
 }

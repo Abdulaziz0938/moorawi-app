@@ -7,18 +7,45 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-    <link rel="manifest" href="/manifest.json" />
+    <link rel="manifest" href="/manifest.webmanifest" />
 
+    <!-- ===== Viewport ===== -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+
+    <!-- ===== PWA ===== -->
     <meta name="theme-color" content="#1a0b2e" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="EZO GROUP" />
+    <meta name="application-name" content="EZO GROUP" />
+    <meta name="format-detection" content="telephone=no" />
+
+    <!-- ===== SEO ===== -->
     <meta name="description" content="EZO GROUP — Voice Chat Rooms | دردشة صوتية وغرف وشات" />
+    <meta name="keywords" content="دردشة صوتية, غرف صوتية, EZO GROUP, شات صوتي" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- ===== Open Graph (Facebook, WhatsApp, Discord) ===== -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="EZO GROUP — Voice Chat Rooms" />
+    <meta property="og:description" content="دردشة صوتية وغرف وشات روم" />
+    <meta property="og:image" content="/icon-512.png" />
+    <meta property="og:locale" content="ar_AR" />
+    <meta property="og:site_name" content="EZO GROUP" />
+
+    <!-- ===== Twitter Card ===== -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="EZO GROUP — Voice Chat Rooms" />
+    <meta name="twitter:description" content="دردشة صوتية وغرف وشات روم" />
+    <meta name="twitter:image" content="/icon-512.png" />
+
     <title>EZO GROUP — Voice Chat Rooms</title>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+      <script src="/registerSW.js" defer></script>
   </body>
 </html>
