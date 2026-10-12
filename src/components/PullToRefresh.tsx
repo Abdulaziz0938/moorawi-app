@@ -101,7 +101,9 @@ export default function PullToRefresh({ children, onRefresh, className = "" }: P
       {/* Content — يتحرك مع السحب */}
       <div
         style={{
-          transform: `translateY(${refreshing ? 60 : pullDist}px)`,
+          transform: pullDist > 0 || refreshing
+            ? `translateY(${refreshing ? 60 : pullDist}px)`
+            : undefined,
           transition: refreshing || pullDist === 0 ? "transform 0.3s ease" : "none",
         }}
       >
