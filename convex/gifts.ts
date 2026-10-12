@@ -189,7 +189,7 @@ export const send = mutation({
       toName: target.name ?? "ضيف",
       giftId: gift._id,
       giftName: gift.name,
-      giftIcon: "🎁",
+      giftIcon: gift.mediaUrl ?? "",
       quantity: args.quantity,
       totalPrice,
     });
@@ -290,7 +290,7 @@ export const sendBatch = mutation({
         toName: target.name ?? "ضيف",
         giftId: gift._id,
         giftName: gift.name,
-        giftIcon: "🎁",
+        giftIcon: gift.mediaUrl ?? "",
         quantity: args.quantity,
         totalPrice: gift.price * args.quantity,
         batchId,

@@ -12,7 +12,8 @@
 // - Admin can grant for free via `grantVip`.
 // - `checkAndExpire` is a lazy sweep — called by myVip() and profileFull.
 
-import { v } from "convex/values";
+import { v } from "convex/values"
+import { ConvexError } from "convex/values";
 import { mutation, query, internalMutation } from "./_generated/server";
 import { requireUser, isFullAdmin } from "./lib/auth";
 import { activeVipLevel } from "./lib/vip";
@@ -73,15 +74,15 @@ export const buyVip = mutation({
   handler: async (ctx, args) => {
     const me = await requireUser(ctx, args.tokenOverride);
     const plan = VIP_LEVELS.find((p) => p.level === args.level);
-    if (!plan) throw new Error("مستوى VIP غير صالح");
+    if (!plan) throw new ConvexError({ code: "BAD_REQUEST", message: "مستوى VIP غير صالح" });
     if (plan.exclusive || plan.priceCoins === null) {
-      throw new Error("هذا المستوى حصري — يُحصل عليه عبر الشحن التركي");
+      throw new ConvexError({ code: "FORBIDDEN", message: "هذا المستوى حصري — يُحصل عليه عبر الشحن التركي" });
     }
     const price = plan.priceCoins; // narrowed to number
 
     const balance = me.coins ?? 0;
     if (balance < price) {
-      throw new Error(`تحتاج ${price.toLocaleString()} عملة — رصيدك ${balance.toLocaleString()}`);
+      throw new ConvexError({ code: "INSUFFICIENT_BALANCE", message: `تحتاج ${price.toLocaleString()} عملة — رصيدك ${balance.toLocaleString()}` });
     }
 
     const now = Date.now();

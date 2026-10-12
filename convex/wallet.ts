@@ -85,6 +85,11 @@ export const spend = mutation({
     if (args.amount <= 0) {
       throw new ConvexError({ code: "BAD_REQUEST", message: "المبلغ يجب أن يكون أكبر من صفر" });
     }
+    // [SECURITY] Hard cap per call. Replace with real payment gateway webhook before production.
+    const MAX_RECHARGE = 1_000_000;
+    if (args.amount > MAX_RECHARGE) {
+      throw new ConvexError({ code: "BAD_REQUEST", message: `الحد الأقصى ${MAX_RECHARGE.toLocaleString()} عملة لكل عملية` });
+    }
     const user = await requireUser(ctx, args.tokenOverride);
     const currentBalance = user.coins ?? 0;
     if (currentBalance < args.amount) {
@@ -190,7 +195,7 @@ export const exchangeDiamonds = mutation({
       "exchange",
       args.diamonds,
       newCoins,
-      `تبديل ${args.diamonds} 💎 → ${args.diamonds} 💰`,
+      `تبديل ${args.diamonds} ماس → ${args.diamonds} عملة`,
     );
     return { ok: true, newCoins, newDiamonds };
   },
