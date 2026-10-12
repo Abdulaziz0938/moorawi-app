@@ -1484,6 +1484,13 @@ export default function RoomView({ roomId, onLeave }: Props) {
           onOpenActivity={() => { setShowSettings(false); setShowActivity(true); }}
           onOpenSubSheet={(key) => setActiveSubSheet(key)} />
       )}
+
+        {activeSubSheet === "lock" && (
+          <RoomLockSheet
+            roomId={roomId}
+            onClose={() => setActiveSubSheet(null)}
+          />
+        )}
     </div>
   );
 }

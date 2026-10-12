@@ -117,6 +117,14 @@ export const join = mutation({
     const existing = await getMember(ctx, args.roomId, user._id);
     if (existing?.banned) throw new ConvexError({ code: "FORBIDDEN", message: "You are banned" });
     if (existing) return null;
+
+    // [ezo-lock] فحص القفل — المالك/المشرف/السوبر يتخطون القفل
+    const isOwner = room.ownerId === user._id;
+    const isSuper = user.adminRole === "super" || user.userNumber === 1;
+    if (room.isLocked && !isOwner && !isSuper) {
+      throw new ConvexError({ code: "LOCKED", message: "الغرفة مقفلة — تحتاج كلمة مرور" });
+    }
+
     await ctx.db.insert("roomMembers", { roomId: args.roomId, userId: user._id, role: "listener" });
     await ctx.db.patch("rooms", args.roomId, { memberCount: room.memberCount + 1 });
     return null;
