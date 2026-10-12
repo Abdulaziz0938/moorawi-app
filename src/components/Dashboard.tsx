@@ -4,6 +4,7 @@ import { useBackButton } from "../lib/hooks/useBackButton";
 import MessagesTab from "./MessagesTab";
 import MomentsTab from "./MomentsTab";
 import DiscoverTab from "./DiscoverTab";
+import PullToRefresh from "./PullToRefresh";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { Home, Compass, Image as ImageIcon, MessageCircle, User as UserIcon } from "lucide-react";
@@ -20,6 +21,7 @@ interface Props {
 
 export default function Dashboard({ onEnterRoom }: Props) {
   const [tab, setTab] = useState<Tab>("rooms");
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // Back button → return to rooms tab
   useBackButton(tab !== "rooms", () => setTab("rooms"));
@@ -38,7 +40,8 @@ export default function Dashboard({ onEnterRoom }: Props) {
   return (
     <div className="h-[100dvh] w-full flex flex-col app-bg overflow-hidden" dir="rtl">
       {/* ============ Content ============ */}
-      <div className="flex-1 overflow-y-auto pb-20">
+      <PullToRefresh onRefresh={() => setRefreshKey((k) => k + 1)} className="flex-1 pb-20">
+        <div key={refreshKey}>
         {tab === "rooms" && <RoomsTab onEnter={onEnterRoom} />}
 
         {tab === "discover" && <DiscoverTab onEnterRoom={onEnterRoom} />}
@@ -55,7 +58,8 @@ export default function Dashboard({ onEnterRoom }: Props) {
             <p className="text-lg font-bold">جاري التحميل...</p>
           </div>
         )}
-      </div>
+        </div>
+      </PullToRefresh>
 
       {/* ============ TabBar ============ */}
       <nav
