@@ -3,7 +3,7 @@ import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useAssets, resolveAsset } from "../lib/assets";
 import type { Id } from "../../convex/_generated/dataModel";
-import { X, HelpCircle, Loader2, Home } from "lucide-react";
+import { X, HelpCircle, Loader2, Home, Trophy, Flame, Gem, Gift, Construction } from "lucide-react";
 import { UserName } from "./UserBadges";
 import LevelBadge from "./LevelBadge";
 import { levelFromValue } from "../lib/levels";
@@ -229,7 +229,7 @@ function UserRow({
 function Empty() {
   return (
     <div className="flex flex-col items-center justify-center py-16 px-4">
-      <div className="text-6xl mb-4">🏆</div>
+      <Trophy size={64} className="text-amber-900 mb-4" strokeWidth={1.5} />
       <p className="text-amber-900 font-black">لا يوجد متصدرون بعد</p>
       <p className="text-amber-900/60 text-sm mt-1">كن أول من يرسل هدية!</p>
     </div>
@@ -239,6 +239,7 @@ function Empty() {
 // ============ Main ============
 export default function LeaderboardSheet({ roomId, onClose, onUserClick }: Props) {
   const [mainTab, setMainTab] = useState<MainTab>("room");
+  const [showHelp, setShowHelp] = useState(false);
   const [typeTab, setTypeTab] = useState<TypeTab>("wealth");
   const [period, setPeriod] = useState<PeriodTab>("daily");
 
@@ -270,7 +271,7 @@ export default function LeaderboardSheet({ roomId, onClose, onUserClick }: Props
               <X size={18} />
             </button>
             <h2 className="text-base font-black text-amber-900">التصنيفات</h2>
-            <button className="w-9 h-9 rounded-full bg-white/50 flex items-center justify-center text-amber-900 hover:bg-white/70">
+            <button onClick={() => setShowHelp(true)} className="w-9 h-9 rounded-full bg-white/50 flex items-center justify-center text-amber-900 hover:bg-white/70">
               <HelpCircle size={18} />
             </button>
           </div>
@@ -285,7 +286,7 @@ export default function LeaderboardSheet({ roomId, onClose, onUserClick }: Props
                   : "text-amber-900/50"
               }`}
             >
-              🔥 تصنيف الساعات
+              <span className="inline-flex items-center gap-1"><Flame size={14} /> تصنيف الساعات</span>
             </button>
             <button
               onClick={() => setMainTab("new")}
@@ -383,7 +384,7 @@ export default function LeaderboardSheet({ roomId, onClose, onUserClick }: Props
         {/* Placeholder tabs */}
         {(mainTab === "hours" || mainTab === "new") && (
           <div className="flex-1 flex flex-col items-center justify-center p-8">
-            <div className="text-7xl mb-4">🚧</div>
+            <Construction size={64} className="text-amber-900 mb-4" strokeWidth={1.5} />
             <p className="text-amber-900 font-black text-lg">قريباً</p>
             <p className="text-amber-900/60 text-sm mt-2 text-center">
               {mainTab === "hours"
@@ -394,6 +395,21 @@ export default function LeaderboardSheet({ roomId, onClose, onUserClick }: Props
           </div>
         )}
       </div>
+      {showHelp && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/70 p-6" onClick={() => setShowHelp(false)}>
+          <div className="bg-gradient-to-b from-[#f7ecd1] to-[#e8d3a0] rounded-3xl p-6 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-black text-amber-900 mb-4 text-center">كيف يعمل التصنيف؟</h3>
+            <div className="space-y-3 text-amber-900/90 text-sm">
+              <p className="flex items-center gap-2"><Flame size={14} className="flex-shrink-0" /> <span><b>تصنيف الساعات:</b> حسب عدد ساعات البث هذا الأسبوع</span></p>
+              <p className="flex items-center gap-2"><Gem size={14} className="flex-shrink-0" /> <span><b>تصنيف الهدايا:</b> حسب قيمة الهدايا المُستلمة</span></p>
+              <p className="flex items-center gap-2"><Gift size={14} className="flex-shrink-0" /> <span><b>تصنيف الإرسال:</b> حسب قيمة الهدايا المُرسلة</span></p>
+              <p className="flex items-center gap-2"><Home size={14} className="flex-shrink-0" /> <span><b>تصنيف الغرف:</b> حسب نشاط الغرفة</span></p>
+              <p className="text-xs text-amber-900/60 pt-2">يتم التحديث كل أسبوع. الفائزون الثلاثة الأوائل يحصلون على كأس ومكافآت.</p>
+            </div>
+            <button onClick={() => setShowHelp(false)} className="mt-5 w-full py-3 rounded-2xl bg-amber-900 text-white font-black active:scale-95">فهمت</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -209,6 +209,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
 
   const [showBackMenu, setShowBackMenu] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
+  const [shareToast, setShareToast] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [activeSubSheet, setActiveSubSheet] = useState<string | null>(null);
@@ -741,7 +742,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
             <div className="absolute top-20 right-2 z-30 bg-gray-900/95 backdrop-blur rounded-xl shadow-2xl border border-white/10 py-1 w-40">
               <button onClick={handleLeave} className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs"><LogOut size={14} /> مغادرة</button>
               <button onClick={() => { setShowBackMenu(false); setIsMinimized(true); }} className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs"><Minimize2 size={14} /> تصغير</button>
-              <button onClick={() => { navigator.clipboard.writeText(`https://moorawi-app.vercel.app/room/${roomId}`); setShowBackMenu(false); }} className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs"><Share2 size={14} /> مشاركة</button>
+              <button onClick={() => { navigator.clipboard.writeText(`https://moorawi-app.vercel.app/room/${roomId}`); setShowBackMenu(false); setShareToast(true); setTimeout(() => setShareToast(false), 1800); }} className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs"><Share2 size={14} /> مشاركة</button>
             </div>
           </>
         )}
@@ -1504,6 +1505,11 @@ export default function RoomView({ roomId, onLeave }: Props) {
             onClose={() => setActiveSubSheet(null)}
           />
         )}
+      {shareToast && (
+        <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[400] bg-black/85 backdrop-blur-xl rounded-2xl px-6 py-4 shadow-2xl border border-white/20">
+          <p className="text-white text-sm font-black">✓ تم نسخ رابط الغرفة</p>
+        </div>
+      )}
     </div>
   );
 }
