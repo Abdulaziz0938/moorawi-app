@@ -41,6 +41,7 @@ export default function AuthScreen({ onSuccess }: Props) {
 
   const signin = useMutation(api.auth.signin);
   const signup = useMutation(api.auth.signup);
+  const guestSignIn = useMutation(api.auth.guestSignIn);
 
   const deviceId =
     typeof localStorage !== "undefined"
@@ -54,6 +55,25 @@ export default function AuthScreen({ onSuccess }: Props) {
           return id;
         })()
       : "";
+
+  const handleGuest = async () => {
+    if (loading) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await guestSignIn({ deviceId });
+      if (res?.tokenIdentifier) {
+        onSuccess(res.tokenIdentifier);
+      } else {
+        setError("تعذر إنشاء حساب الزائر");
+      }
+    } catch (e: any) {
+      console.error("[guest] error:", e);
+      setError(e?.data?.message ?? e?.message ?? "حدث خطأ — حاول مجدداً");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const resetForm = () => {
     setUsername("");
@@ -140,11 +160,15 @@ export default function AuthScreen({ onSuccess }: Props) {
               إنشاء حساب جديد
             </button>
             <button
-              onClick={() => onSuccess("")}
-              className="w-full py-3 text-white/50 text-sm hover:text-white/80 transition mt-2"
+              onClick={handleGuest}
+              disabled={loading}
+              className="w-full py-3 text-white/50 text-sm hover:text-white/80 transition mt-2 disabled:opacity-50"
             >
-              متابعة كزائر
+              {loading ? "جاري الدخول..." : "متابعة كزائر"}
             </button>
+            {error && (
+              <p className="text-red-400 text-xs text-center mt-2">{error}</p>
+            )}
           </div>
         </div>
       </div>

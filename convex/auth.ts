@@ -273,3 +273,50 @@ export const signout = mutation({
     return { ok: true, newGuestToken: newGuest };
   },
 });
+
+// ============================================================
+// [ezo-auth] guestSignIn — دخول كزائر بـ deviceId
+// - لو المستخدم موجود → يرجع tokenIdentifier
+// - لو جديد → ينشئ مستخدم + يرجع deviceId
+// ============================================================
+export const guestSignIn = mutation({
+  args: { deviceId: v.string() },
+  handler: async (ctx, args) => {
+    if (!args.deviceId || args.deviceId.length < 4) {
+      throw new ConvexError({ code: "BAD_REQUEST", message: "معرّف الجهاز غير صالح" });
+    }
+
+    // ابحث عن المستخدم
+    let user = await ctx.db
+      .query("users")
+      .withIndex("by_token", (q) => q.eq("tokenIdentifier", args.deviceId))
+      .unique();
+
+    if (user) {
+      // موجود — تحقق من الحظر
+      if (user.banned) {
+        throw new ConvexError({ code: "FORBIDDEN", message: "هذا الجهاز محظور" });
+      }
+      // حدّث lastLoginAt
+      await ctx.db.patch("users", user._id, { lastLoginAt: Date.now() });
+      return { tokenIdentifier: args.deviceId, isNew: false, userId: user._id };
+    }
+
+    // جديد — أنشئ مستخدم زائر
+    const userNumber = await getNextUserNumber(ctx);
+    const id = await ctx.db.insert("users", {
+      tokenIdentifier: args.deviceId,
+      userNumber,
+      authProvider: "guest",
+      profileComplete: false,
+      lastLoginAt: Date.now(),
+      coins: 0,
+      diamonds: 0,
+      charms: 0,
+      totalSent: 0,
+      totalReceived: 0,
+    });
+
+    return { tokenIdentifier: args.deviceId, isNew: true, userId: id };
+  },
+});
