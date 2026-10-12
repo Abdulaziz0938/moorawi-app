@@ -105,6 +105,17 @@ export const signup = mutation({
         lastLoginAt: Date.now(),
       });
       user = await ctx.db.get(id);
+      // [ezo-notifications] إشعار ترحيب
+      if (user) {
+        await ctx.db.insert("systemNotifications", {
+          userId: user._id,
+          type: "welcome",
+          title: "أهلاً بك في Ezo Group",
+          body: "مرحباً! استكشف الغرف، اجمع الأصدقاء، واحصل على مكافآت يومية.",
+          actionType: "open_rooms",
+          createdAt: Date.now(),
+        });
+      }
     }
 
     return { sessionToken, userId: user!._id, username };
@@ -230,6 +241,17 @@ export const bootstrapOwner = mutation({
         lastLoginAt: Date.now(),
       });
       user = await ctx.db.get(id);
+      // [ezo-notifications] إشعار ترحيب
+      if (user) {
+        await ctx.db.insert("systemNotifications", {
+          userId: user._id,
+          type: "welcome",
+          title: "أهلاً بك في Ezo Group",
+          body: "مرحباً! استكشف الغرف، اجمع الأصدقاء، واحصل على مكافآت يومية.",
+          actionType: "open_rooms",
+          createdAt: Date.now(),
+        });
+      }
     }
 
     return { sessionToken, userId: user!._id, username };

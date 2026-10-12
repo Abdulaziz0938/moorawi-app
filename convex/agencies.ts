@@ -391,6 +391,17 @@ export const reviewRequest = mutation({
         status: "approved",
         reviewedAt: Date.now(),
       });
+
+      // [ezo-notifications] إشعار المضيف
+      await ctx.db.insert("systemNotifications", {
+        userId: req.userId,
+        type: "agency",
+        title: "تم قبول انضمامك للوكالة ✅",
+        body: `أهلاً بك في "${agency.name}"! يمكنك الآن البدء بالبث واستقبال الهدايا.`,
+        actionType: "open_agency",
+        createdAt: Date.now(),
+      });
+
       return { ok: true, approved: true };
     } else {
       await ctx.db.patch("agencyRequests", args.requestId, {
@@ -667,6 +678,16 @@ export const reviewCreateRequest = mutation({
         note: args.note,
       });
 
+      // [ezo-notifications] إشعار الموافقة
+      await ctx.db.insert("systemNotifications", {
+        userId: req.userId,
+        type: "agency",
+        title: "تمت الموافقة على وكالتك ✅",
+        body: `مبروك! وكالتك "${req.agencyName}" أصبحت نشطة. رقم الوكالة: ${agencyNumber}`,
+        actionType: "open_agency",
+        createdAt: Date.now(),
+      });
+
       return { ok: true, approved: true, agencyId, agencyNumber };
     } else {
       await ctx.db.patch("agencyCreateRequests", args.requestId, {
@@ -675,6 +696,16 @@ export const reviewCreateRequest = mutation({
         reviewedBy: me._id,
         note: args.note,
       });
+
+      await ctx.db.insert("systemNotifications", {
+        userId: req.userId,
+        type: "agency",
+        title: "تم رفض طلب إنشاء الوكالة",
+        body: args.note || "لم يستوفِ طلبك الشروط. يمكنك التواصل مع الإدارة.",
+        actionType: "open_agency",
+        createdAt: Date.now(),
+      });
+
       return { ok: true, approved: false };
     }
   },

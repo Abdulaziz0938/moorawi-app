@@ -30,7 +30,11 @@ export default function SystemNotifSheet({ onClose }: Props) {
           notifs.map((n: any) => (
             <button
               key={n._id}
-              onClick={() => !n.readAt && markRead({ notificationId: n._id, tokenOverride: deviceId })}
+              onClick={() => {
+                if (!n.readAt) markRead({ notificationId: n._id, tokenOverride: deviceId });
+                // Action handling
+                if (n.actionType === "open_rooms") window.location.hash = "#rooms";
+              }}
               className={`w-full rounded-2xl border p-4 text-right transition ${
                 n.readAt ? "bg-white/5 border-white/10" : "bg-blue-500/10 border-blue-400/40"
               }`}

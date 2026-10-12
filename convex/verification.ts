@@ -91,6 +91,18 @@ export const review = mutation({
       verificationStatus: args.approve ? "approved" : "rejected",
     });
 
+    // [ezo-notifications] إشعار
+    await ctx.db.insert("systemNotifications", {
+      userId: req.userId,
+      type: "verification",
+      title: args.approve ? "تم توثيق حسابك ✅" : "تم رفض طلب التوثيق",
+      body: args.approve
+        ? "مبروك! أصبح حسابك موثقاً — ستظهر علامة التوثيق بجانب اسمك."
+        : (args.reason || "لم يستوفِ طلبك الشروط. يمكنك إعادة التقديم بصورة أوضح."),
+      actionType: "open_profile",
+      createdAt: Date.now(),
+    });
+
     return { ok: true, approved: args.approve };
   },
 });
