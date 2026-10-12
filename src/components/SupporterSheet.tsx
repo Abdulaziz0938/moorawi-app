@@ -4,7 +4,7 @@ import { api } from "../../convex/_generated/api";
 import { useBackButton } from "../lib/hooks/useBackButton";
 import UserAvatar from "./UserAvatar";
 import { Header, Spinner, Empty } from "./VisitsSheet";
-import { Crown, Gem, TrendingUp, Award } from "lucide-react";
+import { Crown, Gem, TrendingUp, Award, Trophy } from "lucide-react";
 
 interface Props { onClose: () => void; onUserClick?: (id: any) => void; }
 
@@ -38,7 +38,7 @@ export default function SupporterSheet({ onClose, onUserClick }: Props) {
         <div className="grid grid-cols-2 gap-2">
           {Object.entries(TIER_NAMES).map(([k, t]) => (
             <div key={k} className="rounded-xl bg-white/5 border border-white/10 p-2 text-center">
-              <p className={`text-xs font-black ${t.color}`}>🏆 {t.name}</p>
+              <p className={`text-xs font-black ${t.color}`}><span className="inline-flex items-center gap-1"><Trophy size={11} className="text-yellow-400" /> {t.name}</span></p>
               <p className="text-white/40 text-[9px] mt-0.5">مستوى الثراء {t.from}-{t.to}</p>
             </div>
           ))}

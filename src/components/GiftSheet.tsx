@@ -3,7 +3,7 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { getDeviceId } from "../lib/device";
-import { X, Coins, Loader2, Music, Heart, Globe, Mic, Users, Check, ChevronUp } from "lucide-react";
+import { X, Coins, Loader2, Music, Heart, Globe, Mic, Users, Check, ChevronUp, Gift } from "lucide-react";
 import { dialog } from "../lib/dialog";
 
 interface Props {
@@ -324,7 +324,7 @@ export default function GiftSheet({ roomId, onClose, preSelectedUserId }: Props)
                             <img src={g.mediaUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
                           )
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center"><span className="text-base">🎁</span></div>
+                          <div className="w-full h-full flex items-center justify-center"><Gift size={20} className="text-pink-400" /></div>
                         )}
                         <div className="absolute top-0.5 right-0.5 flex flex-col gap-0.5 pointer-events-none">
                           {g.isRelationship && <div className="w-3 h-3 rounded-sm bg-pink-500/95 flex items-center justify-center"><Heart size={7} className="text-white fill-white" /></div>}

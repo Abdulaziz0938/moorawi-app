@@ -8,7 +8,7 @@ import { api } from "../../convex/_generated/api";
 import { getDeviceId } from "../lib/device";
 import { uploadToCloudinary } from "../lib/cloudinary";
 import { dialog } from "../lib/dialog";
-import { X, Loader2, Globe, Music, Heart } from "lucide-react";
+import { X, Loader2, Globe, Music, Heart, Video, Gift, Coins } from "lucide-react";
 
 export default function GiftsAdmin() {
   const deviceId = getDeviceId();
@@ -74,7 +74,7 @@ export default function GiftsAdmin() {
           <input ref={mediaRef} type="file" accept="image/*,video/webm,video/mp4"
             onChange={(e) => setMediaFile(e.target.files?.[0] ?? null)} className="hidden" />
           <div className="w-full p-2.5 bg-white/10 border-2 border-dashed border-white/30 rounded-xl text-center text-white text-xs hover:bg-white/15">
-            {mediaFile ? `🎬 ${mediaFile.name}` : "اختر صورة / فيديو الهدية"}
+            {mediaFile ? <span className="inline-flex items-center gap-1"><Video size={14} /> {mediaFile.name}</span> : "اختر صورة / فيديو الهدية"}
           </div>
         </label>
 
@@ -85,14 +85,14 @@ export default function GiftsAdmin() {
             onChange={(e) => setForceGlobal(e.target.checked)}
             className="w-4 h-4 accent-purple-600"
           />
-          <span className="text-white text-[11px]">🌍 فرض البانر العالمي (كل الغرف)</span>
+          <span className="text-white text-[11px] inline-flex items-center gap-1"><Globe size={12} /> فرض البانر العالمي (كل الغرف)</span>
         </label>
 
         <div className="text-white/50 text-[10px] bg-black/30 p-2 rounded-lg space-y-0.5">
           <p>تُضاف الرموز تلقائياً:</p>
-          <p>🎵 تلقائياً للفيديو</p>
-          <p>🌍 إذا السعر ≥ 30000 (أو بالخيار أعلاه)</p>
-          <p>💕 تلقائياً إذا التصنيف "العلاقة"</p>
+          <p className="inline-flex items-center gap-1"><Music size={11} /> تلقائياً للفيديو</p>
+          <p className="inline-flex items-center gap-1"><Globe size={11} /> إذا السعر ≥ 30000 (أو بالخيار أعلاه)</p>
+          <p className="inline-flex items-center gap-1"><Heart size={11} /> تلقائياً إذا التصنيف "العلاقة"</p>
         </div>
 
         <button onClick={handleUpload} disabled={uploading}
@@ -117,13 +117,13 @@ export default function GiftsAdmin() {
                 ) : g.mediaUrl ? (
                   <img src={g.mediaUrl ?? undefined} alt="" className="w-full h-full object-cover" />
                 ) : (
-                  <span>🎁</span>
+                  <Gift size={22} className="text-pink-400" />
                 )}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-white text-sm font-bold truncate">{g.name}</p>
                 <div className="flex items-center gap-1.5 mt-0.5">
-                  <p className="text-yellow-400 text-[10px]">{g.price} 💰</p>
+                  <p className="text-yellow-400 text-[10px]">{g.price} <Coins size={10} className="inline text-amber-400" /></p>
                   {g.isGlobal && <Globe size={10} className="text-blue-400" />}
                   {g.hasSound && <Music size={10} className="text-purple-400" />}
                   {g.isRelationship && <Heart size={10} className="text-pink-400 fill-pink-400" />}

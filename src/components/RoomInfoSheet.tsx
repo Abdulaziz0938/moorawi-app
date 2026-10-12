@@ -5,10 +5,7 @@ import type { Id } from "../../convex/_generated/dataModel";
 import { getActiveToken } from "../lib/session";
 import { dialog } from "../lib/dialog";
 import StaffSettingsSheet from "./StaffSettingsSheet";
-import {
-  X, ChevronLeft, Loader2, Home, Shield, User as UserIcon,
-  Bell, Eye, Heart, Gift, Award, Settings, Crown, Trophy,
-} from "lucide-react";
+import { X, ChevronLeft, Loader2, Home, Shield, User as UserIcon, Bell, Eye, Heart, Gift, Award, Settings, Crown, Trophy, Coins } from "lucide-react";
 
 interface Props {
   roomId: Id<"rooms">;
@@ -147,7 +144,7 @@ export default function RoomInfoSheet({ roomId, onClose, onUserClick, onOpenStaf
                     <p className="text-white text-xs font-black">مكافأة الأسبوع</p>
                   </div>
                   <span className="text-amber-200 text-[10px] font-black tabular-nums" dir="ltr">
-                    {formatNumber(rewardStatus.total)} 🪙
+                    {formatNumber(rewardStatus.total)} <Coins size={12} className="inline text-amber-400" />
                   </span>
                 </div>
 

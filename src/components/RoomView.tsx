@@ -367,7 +367,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
         setMyRequestToast("✅ تم قبول طلب المايك");
         cancelMyRequestMutation({ roomId, tokenOverride: deviceId }).catch(() => {});
       } else if (status === "rejected") {
-        setMyRequestToast("❌ تم رفض طلب المايك");
+        setMyRequestToast("تم رفض طلب المايك");
         cancelMyRequestMutation({ roomId, tokenOverride: deviceId }).catch(() => {});
       }
     }
@@ -792,7 +792,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
                               )}
                               <p className="text-[8px] text-white/90 truncate leading-tight">{seat.userName}</p>
                             </div>
-                            <p className="text-[8px] text-pink-300 leading-tight">{(seat.charms ?? 0)} ❤</p>
+                            <p className="text-[8px] text-pink-300 leading-tight">{(seat.charms ?? 0)} <Heart size={8} className="inline text-pink-400" fill="currentColor" /></p>
                           </>
                         )}
                       </div>
@@ -1149,7 +1149,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
                 >
                   <div className="bg-gradient-to-r from-pink-500/90 to-purple-600/90 rounded-full px-3 py-1 shadow-2xl border border-white/30">
                     <span className="text-white text-xs font-black">
-                      +{aggregateBadge.count} مستمع 🎁
+                      +{aggregateBadge.count} مستمع <Gift size={10} className="inline text-pink-400" />
                     </span>
                   </div>
                 </div>
@@ -1507,7 +1507,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
         )}
       {shareToast && (
         <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[400] bg-black/85 backdrop-blur-xl rounded-2xl px-6 py-4 shadow-2xl border border-white/20">
-          <p className="text-white text-sm font-black">✓ تم نسخ رابط الغرفة</p>
+          <p className="text-white text-sm font-black">تم نسخ رابط الغرفة</p>
         </div>
       )}
     </div>

@@ -277,7 +277,7 @@ export default function AdminPanelSheet({ onClose }: Props) {
               {/* Inputs */}
               <div className="space-y-3">
                 <div>
-                  <label className="text-white/70 text-xs font-bold mb-1.5 block">💰 العملات</label>
+                  <label className="text-white/70 text-xs font-bold mb-1.5 block"><span className="inline-flex items-center gap-1"><Coins size={12} /> العملات</span></label>
                   <input
                     type="number"
                     value={editField.coins}
@@ -287,7 +287,7 @@ export default function AdminPanelSheet({ onClose }: Props) {
                   />
                 </div>
                 <div>
-                  <label className="text-white/70 text-xs font-bold mb-1.5 block">💎 الماس</label>
+                  <label className="text-white/70 text-xs font-bold mb-1.5 block"><span className="inline-flex items-center gap-1"><Gem size={12} /> الماس</span></label>
                   <input
                     type="number"
                     value={editField.diamonds}
@@ -297,7 +297,7 @@ export default function AdminPanelSheet({ onClose }: Props) {
                   />
                 </div>
                 <div>
-                  <label className="text-white/70 text-xs font-bold mb-1.5 block">👑 VIP (0-7)</label>
+                  <label className="text-white/70 text-xs font-bold mb-1.5 block"><span className="inline-flex items-center gap-1"><Crown size={12} /> VIP (0-7)</span></label>
                   <input
                     type="number"
                     min="0"
@@ -414,8 +414,8 @@ export default function AdminPanelSheet({ onClose }: Props) {
                             </div>
                             <p className="text-white/50 text-[10px]" dir="ltr">@{u.username || "—"} · ID:{u.userNumber}</p>
                             <div className="flex items-center gap-2 mt-0.5">
-                              <span className="text-amber-200 text-[10px] font-bold tabular-nums" dir="ltr">{formatNum(u.coins)}💰</span>
-                              <span className="text-cyan-200 text-[10px] font-bold tabular-nums" dir="ltr">{formatNum(u.diamonds)}💎</span>
+                              <span className="text-amber-200 text-[10px] font-bold tabular-nums" dir="ltr">{formatNum(u.coins)} <Coins size={10} className="inline text-amber-400" /></span>
+                              <span className="text-cyan-200 text-[10px] font-bold tabular-nums" dir="ltr">{formatNum(u.diamonds)} <Gem size={10} className="inline text-cyan-400" /></span>
                             </div>
                           </div>
                         </button>

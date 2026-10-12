@@ -6,10 +6,7 @@ import { getDeviceId } from "../lib/device";
 import { dialog } from "../lib/dialog";
 import { useBackButton } from "../lib/hooks/useBackButton";
 import UserAvatar from "./UserAvatar";
-import {
-  ChevronRight, Loader2, Briefcase, Users, Award, Crown, Clock,
-  TrendingUp, Heart, DollarSign, LogOut, Copy, Check, Building2, User,
-} from "lucide-react";
+import { ChevronRight, Loader2, Briefcase, Users, Award, Crown, Clock, TrendingUp, Heart, DollarSign, LogOut, Copy, Check, Building2, User, Gem, Gift } from "lucide-react";
 
 interface Props {
   onClose: () => void;
@@ -270,10 +267,10 @@ function HostRow({ host, onUserClick }: any) {
           </span>
           <div className="flex items-center gap-3">
             <span className="text-cyan-300 text-[10px] font-bold">
-              💎 {formatNum(host.diamondsHeld ?? 0)}
+              <span className="inline-flex items-center gap-1"><Gem size={11} className="text-cyan-400" /> {formatNum(host.diamondsHeld ?? 0)}</span>
             </span>
             <span className="text-pink-300 text-[10px] font-bold">
-              🎁 {formatNum(host.incomeThisMonth ?? 0)}
+              <span className="inline-flex items-center gap-1"><Gift size={11} className="text-pink-400" /> {formatNum(host.incomeThisMonth ?? 0)}</span>
             </span>
           </div>
         </div>

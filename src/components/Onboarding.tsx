@@ -5,7 +5,7 @@ import { getDeviceId } from "../lib/device";
 import { getSessionUsername } from "../lib/session";
 import { uploadToCloudinary } from "../lib/cloudinary";
 import ImageCropper from "./ImageCropper";
-import { Camera, Check, Loader2, ChevronLeft } from "lucide-react";
+import { Camera, Check, Loader2, ChevronLeft, Mic } from "lucide-react";
 
 interface Props {
   onComplete: () => void;
@@ -132,7 +132,7 @@ export default function Onboarding({ onComplete, onBackToAuth }: Props) {
         {/* STEP 1: Welcome */}
         {step === 1 && (
           <div className="text-center space-y-6 pt-12">
-            <div className="text-6xl mb-4">🎙️</div>
+            <div className="flex justify-center mb-4"><Mic size={64} className="text-white" strokeWidth={1.5} /></div>
             <h1 className="text-4xl font-bold">أهلاً بك في</h1>
             <h2 className="text-3xl font-bold text-purple-200">الدولة المعراوية</h2>
             <p className="opacity-80 text-sm leading-relaxed px-4">

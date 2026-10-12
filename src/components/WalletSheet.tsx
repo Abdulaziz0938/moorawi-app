@@ -3,10 +3,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { getActiveToken } from "../lib/session";
 import { dialog } from "../lib/dialog";
-import {
-  X, ChevronRight, Loader2, Coins, Gem, History,
-  CreditCard, ArrowLeftRight, Send, Receipt, Sparkles,
-} from "lucide-react";
+import { X, ChevronRight, Loader2, Coins, Gem, History, CreditCard, ArrowLeftRight, Send, Receipt, Sparkles, Gift } from "lucide-react";
 
 interface Props {
   onClose: () => void;
@@ -239,7 +236,7 @@ export default function WalletSheet({ onClose }: Props) {
               </div>
               <div className="mt-4 p-3 rounded-2xl bg-emerald-500/10 border border-emerald-400/30">
                 <p className="text-emerald-200 text-[11px] text-center font-bold">
-                  🎁 اشحن 0.99$ واحصل على هدايا مجانية
+                  <span className="inline-flex items-center gap-1"><Gift size={14} /> اشحن 0.99$ واحصل على هدايا مجانية</span>
                 </p>
               </div>
             </div>
@@ -265,7 +262,7 @@ export default function WalletSheet({ onClose }: Props) {
               {/* Input */}
               <div>
                 <label className="text-white/70 text-xs font-bold mb-2 block">
-                  استبدل (1 💎 = 1 💰)
+                  استبدل (1 <Gem size={10} className="inline text-cyan-400" /> = 1 <Coins size={10} className="inline text-amber-400" />)
                 </label>
                 <div className="relative">
                   <input
