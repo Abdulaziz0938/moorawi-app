@@ -729,4 +729,72 @@ export default defineSchema({
     updatedAt: v.number(),
   }).index("by_key", ["key"]),
 
+
+  // ================================================================
+  // [ezo-messages] نظام الرسائل المباشرة
+  // ================================================================
+  conversations: defineTable({
+    user1Id: v.id("users"),
+    user2Id: v.id("users"),
+    lastMessageAt: v.number(),
+    lastMessageText: v.optional(v.string()),
+    lastMessageFrom: v.optional(v.id("users")),
+    unread1: v.number(),
+    unread2: v.number(),
+  })
+    .index("by_user1", ["user1Id", "lastMessageAt"])
+    .index("by_user2", ["user2Id", "lastMessageAt"])
+    .index("by_pair", ["user1Id", "user2Id"]),
+
+  directMessages: defineTable({
+    conversationId: v.id("conversations"),
+    fromUserId: v.id("users"),
+    toUserId: v.id("users"),
+    text: v.optional(v.string()),
+    imageUrl: v.optional(v.string()),
+    readAt: v.optional(v.number()),
+    createdAt: v.number(),
+  })
+    .index("by_conversation", ["conversationId", "createdAt"])
+    .index("by_to_unread", ["toUserId", "readAt"]),
+
+  // ================================================================
+  // [ezo-notifications] رسائل النظام (من Ezo)
+  // ================================================================
+  systemNotifications: defineTable({
+    userId: v.id("users"),           // المستهدف (أو userId = null للعام)
+    type: v.union(
+      v.literal("welcome"),
+      v.literal("announcement"),
+      v.literal("host_invite"),
+      v.literal("reward"),
+      v.literal("verification"),
+      v.literal("agency"),
+      v.literal("system"),
+    ),
+    title: v.string(),
+    body: v.string(),
+    iconUrl: v.optional(v.string()),
+    actionType: v.optional(v.string()),       // "open_agency" | "open_room" | ...
+    actionPayload: v.optional(v.string()),
+    readAt: v.optional(v.number()),
+    createdAt: v.number(),
+  })
+    .index("by_user", ["userId", "createdAt"])
+    .index("by_user_unread", ["userId", "readAt"]),
+
+  // ================================================================
+  // [ezo-friends] طلبات الصداقة
+  // ================================================================
+  friendRequests: defineTable({
+    fromUserId: v.id("users"),
+    toUserId: v.id("users"),
+    status: v.union(v.literal("pending"), v.literal("accepted"), v.literal("rejected")),
+    createdAt: v.number(),
+    reviewedAt: v.optional(v.number()),
+  })
+    .index("by_to", ["toUserId", "status"])
+    .index("by_from", ["fromUserId", "status"])
+    .index("by_pair", ["fromUserId", "toUserId"]),
+
 });

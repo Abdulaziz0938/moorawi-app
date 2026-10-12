@@ -15,6 +15,7 @@ import type * as auth from "../auth.js";
 import type * as banners from "../banners.js";
 import type * as bubbles from "../bubbles.js";
 import type * as config from "../config.js";
+import type * as directMessages from "../directMessages.js";
 import type * as follows from "../follows.js";
 import type * as gifts from "../gifts.js";
 import type * as lib_auth from "../lib/auth.js";
@@ -57,6 +58,7 @@ declare const fullApi: ApiFromModules<{
   banners: typeof banners;
   bubbles: typeof bubbles;
   config: typeof config;
+  directMessages: typeof directMessages;
   follows: typeof follows;
   gifts: typeof gifts;
   "lib/auth": typeof lib_auth;
