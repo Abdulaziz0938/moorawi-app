@@ -422,12 +422,17 @@ export const wealthRanking = query({
   args: {},
   handler: async (ctx) => {
     const since = Date.now() - 30 * 24 * 60 * 60 * 1000;
-    const txs = await ctx.db.query("giftTransactions").collect();
+    // Read at most 5000 recent transactions (bounded), then filter by 30 days.
+    // This avoids scanning the full table while remaining accurate for the recent window.
+    const txs = await ctx.db
+      .query("giftTransactions")
+      .order("desc")
+      .take(5000);
     const filtered = txs.filter((t) => t._creationTime >= since);
 
     const totals: Record<string, number> = {};
     for (const t of filtered) {
-      const k = t.fromUserId as string;
+      const k = t.fromUserId;
       totals[k] = (totals[k] ?? 0) + t.totalPrice;
     }
 
@@ -500,13 +505,13 @@ export const cpRanking = query({
 export const publicRoomsWithStats = query({
   args: {},
   handler: async (ctx) => {
-    const rooms = await ctx.db.query("rooms").collect();
-    const publicRooms = rooms.filter((r) => !r.isPrivate);
+    const sorted = await ctx.db
+      .query("rooms")
+      .withIndex("by_weeklyTotal")
+      .order("desc")
+      .filter((q) => q.eq(q.field("isPrivate"), false))
+      .take(40);
 
-    // Sort by weeklyTotal desc (best proxy for activity)
-    const sorted = publicRooms
-      .sort((a, b) => (b.weeklyTotal ?? 0) - (a.weeklyTotal ?? 0))
-      .slice(0, 40);
 
     const enriched = await Promise.all(
       sorted.slice(0, 30).map(async (r, idx) => {
@@ -545,7 +550,8 @@ export const search = query({
     const q = args.q.trim().toLowerCase();
     if (q.length < 1) return [];
 
-    const rooms = await ctx.db.query("rooms").collect();
+    // Bounded read: at most 500 rooms to search through
+    const rooms = await ctx.db.query("rooms").take(500);
     const isNum = /^\d+$/.test(q);
 
     const matched = rooms.filter((r) => {
@@ -585,31 +591,27 @@ export const search = query({
 export const legendTop = query({
   args: { category: v.union(v.literal("wealth"), v.literal("charm"), v.literal("gifters")) },
   handler: async (ctx, args) => {
-    const users = await ctx.db.query("users").collect();
-
-    let sorted = users;
+    // Use indexes to fetch only top 3 without scanning the whole users table.
+    let top: any[] = [];
+    let valueOf: (u: any) => number = () => 0;
     if (args.category === "wealth") {
-      sorted = users.sort((a, b) => (b.totalSent ?? 0) - (a.totalSent ?? 0));
+      top = await ctx.db.query("users").withIndex("by_totalSent").order("desc").take(3);
+      valueOf = (u) => u.totalSent ?? 0;
     } else if (args.category === "charm") {
-      sorted = users.sort((a, b) => (b.charms ?? 0) - (a.charms ?? 0));
+      top = await ctx.db.query("users").withIndex("by_charms").order("desc").take(3);
+      valueOf = (u) => u.charms ?? 0;
     } else {
-      // gifters = عدد الهدايا المرسلة (تقريب من totalSent)
-      sorted = users.sort((a, b) => (b.totalSent ?? 0) - (a.totalSent ?? 0));
+      top = await ctx.db.query("users").withIndex("by_totalReceived").order("desc").take(3);
+      valueOf = (u) => u.totalReceived ?? 0;
     }
-
-    const top = sorted.slice(0, 3);
     const enriched = await Promise.all(
       top.map(async (u) => {
-        let value = 0;
-        if (args.category === "wealth" || args.category === "gifters") value = u.totalSent ?? 0;
-        else value = u.charms ?? 0;
-
         return {
           userId: u._id,
           name: u.name ?? "—",
           userNumber: u.userNumber ?? null,
           avatarUrl: u.avatarUrl ?? (u.avatarId ? await ctx.storage.getUrl(u.avatarId) : null),
-          value,
+          value: valueOf(u),
         };
       })
     );

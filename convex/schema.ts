@@ -89,7 +89,9 @@ export default defineSchema({
     .index("by_token", ["tokenIdentifier"])
     .index("by_userNumber", ["userNumber"])
     .index("by_username", ["username"])
-    .index("by_totalReceived", ["totalReceived"]),
+    .index("by_totalReceived", ["totalReceived"])
+    .index("by_totalSent", ["totalSent"])
+    .index("by_charms", ["charms"]),
 
   // [moorawi-trophy] Weekly reward claims log
   roomWeeklyRewards: defineTable({
@@ -207,7 +209,8 @@ export default defineSchema({
   })
     .index("by_isPrivate", ["isPrivate"])
     .index("by_owner", ["ownerId"])
-    .index("by_roomNumber", ["roomNumber"]),
+    .index("by_roomNumber", ["roomNumber"])
+    .index("by_weeklyTotal", ["weeklyTotal"]),
 
   roomMembers: defineTable({
     roomId: v.id("rooms"),
