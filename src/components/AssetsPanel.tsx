@@ -80,6 +80,32 @@ const UI_SLOTS: { key: string; label: string }[] = [
   { key: "ui.service.support",   label: "خدمات — دعم" },
   { key: "ui.service.language",  label: "خدمات — لغة" },
   { key: "ui.service.settings",  label: "خدمات — إعدادات" },
+
+  // ===== Sheet headers =====
+  { key: "ui.sheet.visits",       label: "صفحة — الزيارات" },
+  { key: "ui.sheet.support",      label: "صفحة — خدمة عملاء" },
+  { key: "ui.sheet.verify",       label: "صفحة — المصادقة" },
+  { key: "ui.sheet.relation",     label: "صفحة — العلاقة" },
+  { key: "ui.sheet.level",        label: "صفحة — المستوى" },
+  { key: "ui.sheet.mission",      label: "صفحة — المهام" },
+  { key: "ui.sheet.legend",       label: "صفحة — الأسطورة" },
+  { key: "ui.sheet.supporter",    label: "صفحة — الداعم المحترم" },
+  { key: "ui.sheet.supporterVip", label: "صفحة — VIP الداعمين" },
+  { key: "ui.sheet.language",     label: "صفحة — اللغة" },
+  { key: "ui.sheet.dailyLogin",   label: "صفحة — الدخول اليومي" },
+  { key: "ui.sheet.agency",       label: "صفحة — الوكالة" },
+  { key: "ui.sheet.agencyCreate", label: "صفحة — إنشاء وكالة" },
+  { key: "ui.sheet.profile",      label: "صفحة — الملف الشخصي" },
+  { key: "ui.sheet.wallet",       label: "صفحة — المحفظة" },
+  { key: "ui.sheet.shop",         label: "صفحة — المتجر" },
+  { key: "ui.sheet.vip",          label: "صفحة — VIP Shop" },
+  { key: "ui.sheet.settings",     label: "صفحة — الإعدادات" },
+  { key: "ui.sheet.notif",        label: "صفحة — إشعارات النظام" },
+  { key: "ui.sheet.friends",      label: "صفحة — طلبات الصداقة" },
+  { key: "ui.sheet.dm",           label: "صفحة — محادثة مباشرة" },
+
+  // ===== Badges =====
+  { key: "ui.badge.verified",     label: "شارة — حساب موثق" },
 ];
 
 export default function AssetsPanel({ token }: Props) {
