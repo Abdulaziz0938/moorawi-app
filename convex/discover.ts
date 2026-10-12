@@ -7,11 +7,12 @@ export const overview = query({
   args: {},
   handler: async (ctx) => {
     // ===== top rooms =====
-    const rooms = await ctx.db.query("rooms").collect();
-    const topRooms = rooms
-      .filter((r) => !r.isPrivate)
-      .sort((a, b) => (b.weeklyTotal ?? 0) - (a.weeklyTotal ?? 0))
-      .slice(0, 10);
+    const topRooms = await ctx.db
+      .query("rooms")
+      .withIndex("by_weeklyTotal")
+      .order("desc")
+      .filter((q) => q.eq(q.field("isPrivate"), false))
+      .take(10);
 
     const enrichedRooms = await Promise.all(
       topRooms.map(async (r) => {
@@ -36,10 +37,11 @@ export const overview = query({
     );
 
     // ===== top users (wealth) =====
-    const users = await ctx.db.query("users").collect();
-    const topWealth = users
-      .sort((a, b) => (b.totalSent ?? 0) - (a.totalSent ?? 0))
-      .slice(0, 6)
+    const topWealth = (await ctx.db
+      .query("users")
+      .withIndex("by_totalSent")
+      .order("desc")
+      .take(6))
       .map((u) => ({
         userId: u._id,
         name: u.name ?? "—",
@@ -50,9 +52,11 @@ export const overview = query({
         value: u.totalSent ?? 0,
       }));
 
-    const topCharm = users
-      .sort((a, b) => (b.charms ?? 0) - (a.charms ?? 0))
-      .slice(0, 6)
+    const topCharm = (await ctx.db
+      .query("users")
+      .withIndex("by_charms")
+      .order("desc")
+      .take(6))
       .map((u) => ({
         userId: u._id,
         name: u.name ?? "—",
@@ -64,9 +68,10 @@ export const overview = query({
       }));
 
     // ===== new users =====
-    const newUsers = users
-      .sort((a, b) => (b._creationTime ?? 0) - (a._creationTime ?? 0))
-      .slice(0, 6)
+    const newUsers = (await ctx.db
+      .query("users")
+      .order("desc")
+      .take(6))
       .map((u) => ({
         userId: u._id,
         name: u.name ?? "—",

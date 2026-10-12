@@ -84,9 +84,9 @@ export const stats = query({
   args: { tokenOverride: v.optional(v.string()) },
   handler: async (ctx, args) => {
     await requireSuperAdmin(ctx, args.tokenOverride);
-    const users = await ctx.db.query("users").collect();
-    const rooms = await ctx.db.query("rooms").collect();
-    const shopItems = await ctx.db.query("shopItems").collect();
+    const users = await ctx.db.query("users").take(10000);
+    const rooms = await ctx.db.query("rooms").take(5000);
+    const shopItems = await ctx.db.query("shopItems").take(500);
     const tx = await ctx.db.query("walletTransactions").order("desc").take(200);
 
     let totalCoins = 0;
