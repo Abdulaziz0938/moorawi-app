@@ -101,6 +101,30 @@ export const getFull = query({
     // --- 9) Verification ---
     const verified = user.verificationStatus === "approved";
 
+    // --- 8) Current room (if user recently joined) ---
+    let currentRoom = null;
+    const memberships = await ctx.db
+      .query("roomMembers")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .collect();
+    if (memberships.length > 0) {
+      // آخر غرفة انضم لها
+      const sorted = memberships.sort((a, b) => b._creationTime - a._creationTime);
+      const latest = sorted[0];
+      // إذا خلال آخر ساعتين → نعتبره لا يزال فيها
+      if (Date.now() - latest._creationTime < 2 * 60 * 60 * 1000) {
+        const room = await ctx.db.get("rooms", latest.roomId);
+        if (room) {
+          currentRoom = {
+            _id: room._id,
+            name: room.name,
+            roomNumber: room.roomNumber ?? null,
+            coverUrl: room.coverUrl ?? null,
+          };
+        }
+      }
+    }
+
     return {
       _id: user._id,
       userNumber: user.userNumber ?? null,
@@ -148,6 +172,7 @@ export const getFull = query({
 
       // Verification
       verified,
+      currentRoom,
     };
   },
 });
