@@ -4,6 +4,7 @@
 
 import { Home, Shield, User as UserIcon, Crown, Award, Check } from "lucide-react";
 import LevelBadge from "./LevelBadge";
+import VipName from "./VipName";
 import { levelFromValue } from "../lib/levels";
 import { useAssets, resolveAsset } from "../lib/assets";
 
@@ -247,8 +248,10 @@ export function UserName({
         )
       )}
 
-      {/* 3. Name */}
-      <span className={`${s.name} font-bold ${nameClassName} truncate`}>{name}</span>
+      {/* 3. Name (with VIP gradient if active) */}
+      <VipName level={v} className={`${s.name} font-bold ${nameClassName} truncate`}>
+        {name}
+      </VipName>
 
       {/* 3.5 Verified badge (if user is verified) */}
       {verified && <VerifiedBadge size={size === "lg" ? 16 : size === "md" ? 14 : 12} />}
