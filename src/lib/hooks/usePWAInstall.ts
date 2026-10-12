@@ -1,4 +1,4 @@
-// [ezo-pwa] usePWAInstall — كشف قابلية التثبيت + prompt
+// [ezo-pwa] usePWAInstall — reads early-captured event from window
 import { useEffect, useState, useCallback } from "react";
 
 interface BeforeInstallPromptEvent extends Event {
@@ -11,55 +11,64 @@ const DISMISS_KEY = "ezo_pwa_dismissed_at";
 const DISMISS_TTL = 7 * 24 * 60 * 60 * 1000; // 7 أيام
 
 export function usePWAInstall() {
-  const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
+  const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(
+    typeof window !== "undefined" ? (window as any).__ezo_deferred_prompt : null
+  );
   const [isStandalone, setIsStandalone] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
-    // standalone؟ (مثبّت أصلاً)
     const standalone =
       window.matchMedia("(display-mode: standalone)").matches ||
       (window.navigator as any).standalone === true;
     setIsStandalone(standalone);
 
-    // iOS؟ (لا يدعم beforeinstallprompt)
     const ua = window.navigator.userAgent;
     setIsIOS(/iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream);
 
-    // dismissed سابقاً؟
     const ts = Number(localStorage.getItem(DISMISS_KEY) ?? 0);
     if (ts && Date.now() - ts < DISMISS_TTL) setDismissed(true);
 
-    // قبل التثبيت
-    const handler = (e: Event) => {
-      e.preventDefault();
-      setDeferred(e as BeforeInstallPromptEvent);
-    };
-    window.addEventListener("beforeinstallprompt", handler);
+    // Sync from global if not already set
+    if (!deferred && (window as any).__ezo_deferred_prompt) {
+      setDeferred((window as any).__ezo_deferred_prompt);
+    }
 
-    // بعد التثبيت
-    const installedHandler = () => {
+    // Listen for the custom event
+    const onReady = () => {
+      const p = (window as any).__ezo_deferred_prompt;
+      if (p) setDeferred(p);
+    };
+    const onInstalled = () => {
       setDeferred(null);
       setIsStandalone(true);
     };
-    window.addEventListener("appinstalled", installedHandler);
+    window.addEventListener("ezo:beforeinstallprompt", onReady);
+    window.addEventListener("ezo:appinstalled", onInstalled);
 
     return () => {
-      window.removeEventListener("beforeinstallprompt", handler);
-      window.removeEventListener("appinstalled", installedHandler);
+      window.removeEventListener("ezo:beforeinstallprompt", onReady);
+      window.removeEventListener("ezo:appinstalled", onInstalled);
     };
-  }, []);
+  }, [deferred]);
 
   const promptInstall = useCallback(async () => {
-    if (!deferred) return { outcome: "unavailable" as const };
-    await deferred.prompt();
-    const choice = await deferred.userChoice;
-    if (choice.outcome === "accepted") {
-      setDeferred(null);
-      setIsStandalone(true);
+    const p = deferred ?? (window as any).__ezo_deferred_prompt;
+    if (!p) return { outcome: "unavailable" as const };
+    try {
+      await p.prompt();
+      const choice = await p.userChoice;
+      if (choice.outcome === "accepted") {
+        setDeferred(null);
+        (window as any).__ezo_deferred_prompt = null;
+        setIsStandalone(true);
+      }
+      return choice;
+    } catch (err) {
+      console.error("[PWA] prompt error:", err);
+      return { outcome: "unavailable" as const };
     }
-    return choice;
   }, [deferred]);
 
   const dismiss = useCallback(() => {
@@ -67,7 +76,8 @@ export function usePWAInstall() {
     setDismissed(true);
   }, []);
 
-  const canInstall = !isStandalone && !dismissed && (!!deferred || isIOS);
+  const hasNativePrompt = !!(deferred || (typeof window !== "undefined" && (window as any).__ezo_deferred_prompt));
+  const canInstall = !isStandalone && !dismissed && (hasNativePrompt || isIOS);
 
-  return { canInstall, isStandalone, isIOS, hasNativePrompt: !!deferred, promptInstall, dismiss };
+  return { canInstall, isStandalone, isIOS, hasNativePrompt, promptInstall, dismiss };
 }

@@ -2,10 +2,22 @@
 import { useState } from "react";
 import { Download, X, Share, Plus } from "lucide-react";
 import { usePWAInstall } from "../lib/hooks/usePWAInstall";
+import { useEffect } from "react";
 
 export default function InstallBanner() {
-  const { canInstall, isIOS, hasNativePrompt, promptInstall, dismiss } = usePWAInstall();
+  const { canInstall, isStandalone, isIOS, hasNativePrompt, promptInstall, dismiss } = usePWAInstall();
   const [showIOSHint, setShowIOSHint] = useState(false);
+
+  // [PWA-DEBUG] سجل حالة PWA (احذفه لاحقاً)
+  useEffect(() => {
+    console.log("[PWA-DEBUG]", {
+      canInstall,
+      isStandalone,
+      isIOS,
+      hasNativePrompt,
+      globalPrompt: typeof window !== "undefined" ? !!(window as any).__ezo_deferred_prompt : false,
+    });
+  }, [canInstall, isStandalone, isIOS, hasNativePrompt]);
 
   if (!canInstall) return null;
 

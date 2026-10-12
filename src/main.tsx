@@ -9,6 +9,33 @@ import { DialogHost } from './lib/dialog'
 import { AssetsProvider } from './lib/assets'
 import AppErrorBoundary from './components/AppErrorBoundary'
 
+// [ezo-pwa] Capture beforeinstallprompt EARLY — before React mounts
+declare global {
+  interface Window {
+    __ezo_deferred_prompt: any;
+    __ezo_pwa_ready: boolean;
+  }
+}
+window.__ezo_deferred_prompt = null;
+window.__ezo_pwa_ready = false;
+
+if (typeof window !== "undefined") {
+  window.addEventListener("beforeinstallprompt", (e: Event) => {
+    e.preventDefault();
+    (window as any).__ezo_deferred_prompt = e;
+    window.__ezo_pwa_ready = true;
+    window.dispatchEvent(new CustomEvent("ezo:beforeinstallprompt"));
+    console.log("[PWA] beforeinstallprompt captured");
+  });
+  window.addEventListener("appinstalled", () => {
+    (window as any).__ezo_deferred_prompt = null;
+    window.__ezo_pwa_ready = false;
+    window.dispatchEvent(new CustomEvent("ezo:appinstalled"));
+    console.log("[PWA] app installed");
+  });
+  console.log("[PWA] listener registered — waiting for event");
+}
+
 const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string);
 
 createRoot(document.getElementById('root')!).render(
