@@ -19,12 +19,34 @@ export default function PullToRefresh({ children, onRefresh, className = "" }: P
   const startY = useRef<number | null>(null);
   const armed = useRef(false); // هل نحن في وضع "جاهز للسحب"؟
 
+  // [ezo-fix] فحص إذا اللمسة داخل overlay (fixed + z-index >= 100)
+  const isInsideOverlay = (node: Node | null): boolean => {
+    let cur: Node | null = node;
+    while (cur && cur !== document.body) {
+      if (cur instanceof HTMLElement) {
+        const style = window.getComputedStyle(cur);
+        if (style.position === "fixed") {
+          const z = parseInt(style.zIndex || "0", 10);
+          if (!isNaN(z) && z >= 100) return true;
+        }
+      }
+      cur = cur.parentNode;
+    }
+    return false;
+  };
+
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
 
     // ============ TOUCH START ============
     const onTouchStart = (e: TouchEvent) => {
+      // [ezo-fix] تجاهل إذا اللمسة داخل overlay (مثل ProfilePage)
+      if (isInsideOverlay(e.target as Node)) {
+        armed.current = false;
+        startY.current = null;
+        return;
+      }
       if (refreshing) {
         armed.current = false;
         startY.current = null;
