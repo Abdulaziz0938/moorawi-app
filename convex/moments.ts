@@ -200,6 +200,20 @@ export const toggleLike = mutation({
     await ctx.db.patch("moments", args.momentId, {
       likeCount: m.likeCount + 1,
     });
+
+    // [ezo-notifications] إشعار لصاحب المنشور (إن لم يكن نفسه)
+    if (m.userId !== me._id) {
+      await ctx.db.insert("systemNotifications", {
+        userId: m.userId,
+        type: "system",
+        title: "إعجاب جديد ❤️",
+        body: `${me.name ?? "مستخدم"} أعجب بمنشورك`,
+        actionType: "open_moment",
+        actionPayload: args.momentId as string,
+        createdAt: Date.now(),
+      });
+    }
+
     return { ok: true, liked: true };
   },
 });
@@ -231,6 +245,20 @@ export const addComment = mutation({
     await ctx.db.patch("moments", args.momentId, {
       commentCount: m.commentCount + 1,
     });
+
+    // [ezo-notifications] إشعار لصاحب المنشور
+    if (m.userId !== me._id) {
+      await ctx.db.insert("systemNotifications", {
+        userId: m.userId,
+        type: "system",
+        title: "تعليق جديد 💬",
+        body: `${me.name ?? "مستخدم"}: ${text.slice(0, 80)}`,
+        actionType: "open_moment",
+        actionPayload: args.momentId as string,
+        createdAt: Date.now(),
+      });
+    }
+
     return { ok: true };
   },
 });
