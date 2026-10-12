@@ -18,6 +18,11 @@ import {
   Trophy, Heart, Search, ChevronLeft, Hash, Settings, Users, Megaphone,
 } from "lucide-react";
 
+
+function detectResourceType(file: File): "image" | "video" {
+  return file.type.startsWith("video/") ? "video" : "image";
+}
+
 interface Props {
   token: string | null;
 }
@@ -167,7 +172,7 @@ function VipAssetsTab({ token }: any) {
   const handleFile = async (key: string, file: File) => {
     setBusyKey(key);
     try {
-      const res = await uploadToCloudinary(file, "image");
+      const res = await uploadToCloudinary(file, detectResourceType(file));
       await setAsset({ key, imageUrl: res.url, tokenOverride: token ?? undefined });
       dialog.alert("تم الرفع");
     } catch (e: any) { dialog.alert(e?.message || "فشل"); }
@@ -215,7 +220,7 @@ function SimpleSlotsTab({ token, slots }: any) {
   const handleFile = async (key: string, file: File) => {
     setBusyKey(key);
     try {
-      const res = await uploadToCloudinary(file, "image");
+      const res = await uploadToCloudinary(file, detectResourceType(file));
       await setAsset({ key, imageUrl: res.url, tokenOverride: token ?? undefined });
       dialog.alert("تم الرفع");
     } catch (e: any) { dialog.alert(e?.message || "فشل"); }
@@ -250,7 +255,7 @@ function MedalsTab({ token }: { token: string | null }) {
   const handleFile = async (medalId: Id<"medals">, file: File) => {
     setBusyId(medalId);
     try {
-      const res = await uploadToCloudinary(file, "image");
+      const res = await uploadToCloudinary(file, detectResourceType(file));
       await updateMedal({ medalId, imageUrl: res.url, tokenOverride: token ?? undefined });
       dialog.alert("تم الرفع");
     } catch (e: any) { dialog.alert(e?.message || "فشل"); }
@@ -309,7 +314,7 @@ function MedalsTab({ token }: { token: string | null }) {
                 )}
                 <label className="p-2 rounded-lg bg-blue-500/25 border border-blue-400/40 text-blue-200 cursor-pointer">
                   <Upload size={12} />
-                  <input type="file" accept="image/*" className="hidden"
+                  <input type="file" accept="image/*,video/*" className="hidden"
                     onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(m._id, f); e.target.value = ""; }} />
                 </label>
               </div>
@@ -333,7 +338,7 @@ function ShopTab({ token }: { token: string | null }) {
   const handleFile = async (itemId: Id<"shopItems">, file: File) => {
     setBusyId(itemId);
     try {
-      const res = await uploadToCloudinary(file, "image");
+      const res = await uploadToCloudinary(file, detectResourceType(file));
       await updateItem({ itemId, imageUrl: res.url, tokenOverride: token ?? undefined });
       dialog.alert("تم الرفع");
     } catch (e: any) { dialog.alert(e?.message || "فشل"); }
@@ -413,7 +418,7 @@ function ShopTab({ token }: { token: string | null }) {
                 )}
                 <label className="p-2 rounded-lg bg-blue-500/25 border border-blue-400/40 text-blue-200 cursor-pointer">
                   <Upload size={12} />
-                  <input type="file" accept="image/*" className="hidden"
+                  <input type="file" accept="image/*,video/*" className="hidden"
                     onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(it._id, f); e.target.value = ""; }} />
                 </label>
               </div>
@@ -441,7 +446,7 @@ function AssetCard({ slotKey, label, src, busy, onUpload, onClear }: any) {
       <div className="flex items-center gap-1.5">
         <label className={`px-2 py-1 rounded-lg text-white text-[10px] font-black cursor-pointer flex items-center gap-1 active:scale-95 transition ${busy ? "opacity-50 pointer-events-none" : ""} bg-blue-500/25 border border-blue-400/40`}>
           <Upload size={10} /> رفع
-          <input type="file" accept="image/*" className="hidden"
+          <input type="file" accept="image/*,video/*" className="hidden"
             onChange={(e) => { const f = e.target.files?.[0]; if (f) onUpload(slotKey, f); e.target.value = ""; }} />
         </label>
         {src && (

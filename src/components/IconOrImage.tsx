@@ -6,6 +6,16 @@
 
 import { useAssets } from "../lib/assets";
 
+
+function isVideoUrl(url: string): boolean {
+  if (!url) return false;
+  // Cloudinary video resource type
+  if (url.includes("/video/upload/")) return true;
+  // امتدادات فيديو شائعة
+  const lower = url.split("?")[0].toLowerCase();
+  return /\.(mp4|webm|mov|m4v|ogv)$/.test(lower);
+}
+
 interface Props {
   assetKey: string;
   Icon: any;
@@ -33,7 +43,28 @@ export default function IconOrImage({
   const assets = useAssets();
   const src = assets[assetKey];
   if (src) {
+    const isVideo = isVideoUrl(src);
+    const s = imgSize ?? Math.round(size * 1.6);
+
+    // Common attrs for video (autoplay + muted + loop for icon-style)
+    const videoAttrs = {
+      autoPlay: true,
+      muted: true,
+      loop: true,
+      playsInline: true,
+      preload: "metadata" as const,
+    };
+
     if (fillParent) {
+      if (isVideo) {
+        return (
+          <video
+            src={src}
+            {...videoAttrs}
+            className={`w-full h-full object-contain ${imgClassName}`}
+          />
+        );
+      }
       return (
         <img
           src={src}
@@ -43,7 +74,18 @@ export default function IconOrImage({
         />
       );
     }
-    const s = imgSize ?? Math.round(size * 1.6);
+
+    if (isVideo) {
+      return (
+        <video
+          src={src}
+          {...videoAttrs}
+          style={{ width: s, height: s }}
+          className={`object-contain ${imgClassName}`}
+        />
+      );
+    }
+
     return (
       <img
         src={src}
