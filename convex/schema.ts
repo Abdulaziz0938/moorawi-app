@@ -797,4 +797,36 @@ export default defineSchema({
     .index("by_from", ["fromUserId", "status"])
     .index("by_pair", ["fromUserId", "toUserId"]),
 
+
+  // ================================================================
+  // [ezo-moments] نظام اللحظات (منشورات)
+  // ================================================================
+  moments: defineTable({
+    userId: v.id("users"),
+    text: v.optional(v.string()),
+    imageUrls: v.array(v.string()),
+    likeCount: v.number(),
+    commentCount: v.number(),
+    visibility: v.union(v.literal("public"), v.literal("friends")),
+    createdAt: v.number(),
+  })
+    .index("by_user", ["userId", "createdAt"])
+    .index("by_created", ["createdAt"]),
+
+  momentLikes: defineTable({
+    momentId: v.id("moments"),
+    userId: v.id("users"),
+    createdAt: v.number(),
+  })
+    .index("by_moment", ["momentId"])
+    .index("by_user_and_moment", ["userId", "momentId"]),
+
+  momentComments: defineTable({
+    momentId: v.id("moments"),
+    userId: v.id("users"),
+    text: v.string(),
+    createdAt: v.number(),
+  })
+    .index("by_moment", ["momentId", "createdAt"]),
+
 });
