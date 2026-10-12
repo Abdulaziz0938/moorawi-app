@@ -2,7 +2,7 @@
 // Used in: RoomView (chat), Leaderboard, Members, MiniProfile, ProfilePage, MeTab
 // Rule: only render what the user actually owns (DB-driven)
 
-import { Home, Shield, User as UserIcon, Crown, Award } from "lucide-react";
+import { Home, Shield, User as UserIcon, Crown, Award, Check } from "lucide-react";
 import LevelBadge from "./LevelBadge";
 import { levelFromValue } from "../lib/levels";
 import { useAssets, resolveAsset } from "../lib/assets";
@@ -83,6 +83,38 @@ export function AdminBadge({ role, size = 18 }: { role: "super" | "moderator" | 
 // Inline badges (compact row)
 // ============================================================
 
+export function VerifiedBadge({ size = 14 }: { size?: number }) {
+  const assets = useAssets();
+  const custom = assets["ui.badge.verified"];
+  if (custom) {
+    return (
+      <img
+        src={custom}
+        alt="موثق"
+        title="حساب موثق"
+        className="object-contain drop-shadow flex-shrink-0"
+        style={{ width: size, height: size }}
+        draggable={false}
+      />
+    );
+  }
+  return (
+    <span
+      title="حساب موثق"
+      className="flex-shrink-0 inline-flex items-center justify-center"
+      style={{
+        width: size,
+        height: size,
+        background: "linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%)",
+        borderRadius: "50%",
+        boxShadow: "0 0 6px rgba(59,130,246,0.5)",
+      }}
+    >
+      <Check size={Math.max(8, size - 6)} className="text-white" strokeWidth={3.5} />
+    </span>
+  );
+}
+
 export function UserBadgesInline({
   vip,
   adminRole,
@@ -137,6 +169,7 @@ interface UserNameProps {
   charmValue?: number | null;                // raw charms (0+)
   wealthValue?: number | null;               // raw totalSent (0+)
   adminRole?: "super" | "moderator" | null;
+  verified?: boolean;
   roomRole?: "owner" | "moderator" | "speaker" | "listener" | null;
   medal?: { imageUrl?: string; name: string; tier: string } | null;
   titleText?: string | null;
@@ -156,6 +189,7 @@ export function UserName({
   charmValue,
   wealthValue,
   adminRole,
+  verified,
   roomRole,
   medal,
   titleText,
@@ -215,6 +249,9 @@ export function UserName({
 
       {/* 3. Name */}
       <span className={`${s.name} font-bold ${nameClassName} truncate`}>{name}</span>
+
+      {/* 3.5 Verified badge (if user is verified) */}
+      {verified && <VerifiedBadge size={size === "lg" ? 16 : size === "md" ? 14 : 12} />}
 
       {/* 4. Title (only if user has one) */}
       {showTitle && titleText && (

@@ -134,6 +134,7 @@ export const members = query({
         _id: m._id,
         userId: m.userId,
         role: m.role,
+          verified: user?.verificationStatus === "approved",
         name: user?.name ?? "ضيف",
         username: user?.username ?? null,
         userNumber: user?.userNumber ?? null,

@@ -47,6 +47,7 @@ export const list = query({
         senderCharmValue: sender?.charms ?? 0,
         senderWealthValue: sender?.totalSent ?? 0,
         senderAdminRole: sender?.adminRole ?? null,
+        senderVerified: sender?.verificationStatus === "approved",
         senderCharms: sender?.charms ?? 0,
         senderRoomRole: m.senderId === roomOwnerId ? "owner" : (roleByUser.get(m.senderId as string) ?? null),
         senderMuted: mutedByUser.get(m.senderId as string) ?? null,
