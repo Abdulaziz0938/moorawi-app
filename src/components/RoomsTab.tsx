@@ -8,6 +8,9 @@ import { dialog } from "../lib/dialog";
 import UserAvatar from "./UserAvatar";
 import RoomSearchScreen from "./RoomSearchScreen";
 import { UserName } from "./UserBadges";
+import Card from "./ui/Card";
+import RankBadge from "./ui/RankBadge";
+import SectionTitle from "./ui/SectionTitle";
 import {
   Home, Plus, X, Check, Loader2, Search, Lock,
   Users, Flame, Sparkles, Clock, Crown, Heart,
@@ -170,9 +173,11 @@ function MineTab({ mineSub, setMineSub, recent, following, myRoom, onEnter }: an
 // ============================================================
 function MyRoomCard({ room, onEnter }: any) {
   return (
-    <button
+<Card
+      interactive
       onClick={() => onEnter(room._id)}
-      className="w-full rounded-2xl overflow-hidden bg-gradient-to-br from-purple-900/40 to-indigo-900/40 border border-purple-400/30 p-3 flex items-center gap-3 active:scale-95 transition"
+      tone="purple"
+      padding="md"
     >
       {/* Cover */}
       <div className="w-16 h-16 rounded-2xl overflow-hidden bg-black/40 flex-shrink-0 flex items-center justify-center">
@@ -195,7 +200,7 @@ function MyRoomCard({ room, onEnter }: any) {
       </div>
 
       <ChevronLeft size={18} className="text-white/40 flex-shrink-0" />
-    </button>
+    </Card>
   );
 }
 
@@ -254,9 +259,11 @@ function BannerSlideshow() {
 
   if (!banners || banners.length === 0) {
     return (
-      <div className="aspect-video rounded-2xl bg-gradient-to-br from-purple-900/30 to-pink-900/30 border border-white/10 flex items-center justify-center">
-        <p className="text-white/40 text-xs">لا توجد إعلانات</p>
-      </div>
+<Card tone="purple" padding="lg">
+          <div className="aspect-video flex items-center justify-center">
+            <p className="text-white/40 text-xs">لا توجد إعلانات</p>
+          </div>
+        </Card>
     );
   }
 
@@ -309,7 +316,7 @@ function WealthRankingBox() {
   const positions = ["silver", "gold", "bronze"];
 
   return (
-    <div className="rounded-2xl bg-gradient-to-br from-amber-900/30 to-orange-900/30 border border-amber-400/30 p-3">
+<Card tone="gold" padding="md">
       <div className="flex items-center justify-center gap-1 mb-2">
         <Crown size={14} className="text-amber-300" />
         <p className="text-white text-xs font-black">ترتيب الثروة</p>
@@ -341,7 +348,7 @@ function WealthRankingBox() {
       {(!ranking || ranking.length === 0) && (
         <p className="text-white/40 text-[9px] text-center mt-1">لا توجد بيانات</p>
       )}
-    </div>
+    </Card>
   );
 }
 
@@ -353,7 +360,7 @@ function CpRankingBox() {
   const pair = ranking?.[0];
 
   return (
-    <div className="rounded-2xl bg-gradient-to-br from-pink-900/30 to-rose-900/30 border border-pink-400/30 p-3">
+<Card tone="pink" padding="md">
       <div className="flex items-center justify-center gap-1 mb-2">
         <Heart size={14} className="text-pink-300" fill="currentColor" />
         <p className="text-white text-xs font-black">كوبل</p>
@@ -387,7 +394,7 @@ function CpRankingBox() {
           <p className="text-white/40 text-[9px]">لا يوجد كوبل</p>
         )}
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -446,10 +453,10 @@ function RoomCardGrid({ room, onEnter }: { room: any; onEnter: (id: Id<"rooms">)
 
       {/* Rank badge (top-left) */}
       {showRank && (
-        <div className={`absolute top-1.5 left-1.5 w-7 h-7 rounded-full bg-gradient-to-br ${rankColors[room.rank - 1]} flex items-center justify-center text-[11px] font-black text-black shadow-lg border-2 border-white/40`}>
-          {room.rank}
-        </div>
-      )}
+          <div className="absolute top-1.5 left-1.5">
+            <RankBadge rank={room.rank} size="sm" />
+          </div>
+        )}
 
       {/* Bottom info */}
       <div className="absolute inset-x-0 bottom-0 p-2 text-right">
@@ -474,9 +481,11 @@ function RoomList({ rooms, onEnter, empty }: any) {
   }
   if (rooms.length === 0) {
     return (
-      <div className="text-center py-10 text-white/40">
-        <p className="text-xs">{empty}</p>
-      </div>
+<Card tone="default" padding="lg">
+          <div className="text-center py-6 text-white/40">
+            <p className="text-xs">{empty}</p>
+          </div>
+        </Card>
     );
   }
   return (
