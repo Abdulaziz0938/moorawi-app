@@ -234,7 +234,7 @@ export default function ProfilePage({
 
       <div className="relative z-10 flex flex-col h-full overflow-y-auto">
         {/* ============ 0. Cover + Header ============ */}
-        <div className="relative aspect-video flex-shrink-0">
+        <div className="relative h-40 flex-shrink-0">
           {profile.coverUrl ? (
             <img
               src={profile.coverUrl}
