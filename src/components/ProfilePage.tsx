@@ -11,6 +11,7 @@ import {
   Pencil, Camera, Eye, Trash2, ImageIcon, Copy, Check, Radio, Send, Inbox, Coins } from "lucide-react";
 import { UserName } from "./UserBadges";
 import LevelBadge from "./LevelBadge";
+import VipAvatar from "./ui/VipAvatar";
 import MedalsRow from "./MedalsRow";
 import ImageCropper from "./ImageCropper";
 import { levelFromValue } from "../lib/levels";
@@ -190,21 +191,20 @@ export default function ProfilePage({
           </div>
         </div>
 
-        {/* ============ 1. Avatar ============ */}
+        {/* ============ 1. Avatar (VIP Halo + Frame) ============ */}
         <div className="flex justify-center mt-4">
           <div className="relative">
-            <button
-              onClick={handleAvatarClick}
-              className="w-32 h-32 rounded-full overflow-hidden bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white text-4xl font-black ring-4 ring-white/30 shadow-2xl active:scale-95 transition-transform"
-            >
-              <img
-                src={profile?.avatarUrl || "/avatar.png"}
-                alt=""
-                className="w-full h-full object-cover"
+            <div onClick={handleAvatarClick} className="active:scale-95 transition-transform cursor-pointer">
+              <VipAvatar
+                src={profile?.avatarUrl}
+                name={profile?.name ?? "?"}
+                size={128}
+                vip={vipLevel}
+                ring={vipLevel === 0}
               />
-            </button>
+            </div>
             {isMe && (
-              <div className="absolute bottom-1 right-1 w-7 h-7 rounded-full bg-black/60 backdrop-blur-xl border border-white/30 flex items-center justify-center pointer-events-none">
+              <div className="absolute bottom-1 right-1 w-7 h-7 rounded-full bg-black/60 backdrop-blur-xl border border-white/30 flex items-center justify-center pointer-events-none z-20">
                 <Camera size={12} className="text-white/90" />
               </div>
             )}

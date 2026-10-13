@@ -483,3 +483,90 @@ html, body {
     animation: none !important;
   }
 }
+
+/* ============================================================
+   [ezo-vip] VIP Visual Identity — Halos + Frames + Animations
+   المطابق لـ Bigo/Yalla: كل مستوى له هالة وإطار متدرج
+   ============================================================ */
+
+/* ===== VIP Avatar Container ===== */
+.vip-avatar-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ===== VIP Frames (ring around avatar) ===== */
+.vip-frame-1 { background: conic-gradient(from 0deg, #10b981, #34d399, #6ee7b7, #34d399, #10b981); }
+.vip-frame-2 { background: conic-gradient(from 0deg, #3b82f6, #60a5fa, #93c5fd, #60a5fa, #3b82f6); }
+.vip-frame-3 { background: conic-gradient(from 0deg, #a855f7, #c084fc, #e9d5ff, #c084fc, #a855f7); }
+.vip-frame-4 { background: conic-gradient(from 0deg, #dc2626, #f87171, #fca5a5, #f87171, #dc2626); }
+.vip-frame-5 {
+  background: conic-gradient(from 0deg, #eab308, #facc15, #fde047, #facc15, #eab308);
+  animation: vip-frame-rotate 4s linear infinite;
+}
+.vip-frame-6 {
+  background: conic-gradient(from 0deg, #f97316, #fb923c, #fdba74, #fb923c, #f97316);
+  animation: vip-frame-rotate 3s linear infinite;
+}
+.vip-frame-7 {
+  background: conic-gradient(from 0deg, #fbbf24, #fde047, #fef08a, #fde047, #fbbf24);
+  animation: vip-frame-rotate 2.5s linear infinite;
+}
+
+@keyframes vip-frame-rotate {
+  to { transform: rotate(360deg); }
+}
+
+/* ===== VIP Halos (outer glow) ===== */
+.vip-halo-1 { box-shadow: 0 0 20px 4px rgba(16, 185, 129, 0.6), 0 0 40px 8px rgba(16, 185, 129, 0.25); }
+.vip-halo-2 { box-shadow: 0 0 20px 4px rgba(59, 130, 246, 0.6), 0 0 40px 8px rgba(59, 130, 246, 0.25); }
+.vip-halo-3 { box-shadow: 0 0 20px 4px rgba(168, 85, 247, 0.6), 0 0 40px 8px rgba(168, 85, 247, 0.25); }
+.vip-halo-4 { box-shadow: 0 0 22px 5px rgba(220, 38, 38, 0.65), 0 0 45px 10px rgba(220, 38, 38, 0.3); }
+.vip-halo-5 {
+  box-shadow: 0 0 25px 6px rgba(234, 179, 8, 0.7), 0 0 50px 12px rgba(234, 179, 8, 0.3);
+  animation: vip-halo-pulse 2.4s ease-in-out infinite;
+}
+.vip-halo-6 {
+  box-shadow: 0 0 28px 7px rgba(249, 115, 22, 0.75), 0 0 55px 14px rgba(249, 115, 22, 0.35);
+  animation: vip-halo-pulse 2s ease-in-out infinite;
+}
+.vip-halo-7 {
+  box-shadow: 0 0 32px 8px rgba(251, 191, 36, 0.8), 0 0 65px 16px rgba(251, 191, 36, 0.4);
+  animation: vip-halo-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes vip-halo-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.85; }
+}
+
+/* ===== VIP Sparkle overlay (for 5-7) ===== */
+.vip-sparkle::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.4) 0%, transparent 40%);
+  pointer-events: none;
+  animation: vip-sparkle-shift 3s ease-in-out infinite;
+}
+
+@keyframes vip-sparkle-shift {
+  0%, 100% { transform: rotate(0deg); opacity: 0.6; }
+  50% { transform: rotate(180deg); opacity: 1; }
+}
+
+/* ===== Entry animation (joining a room) ===== */
+.vip-entry-1, .vip-entry-2, .vip-entry-3, .vip-entry-4,
+.vip-entry-5, .vip-entry-6, .vip-entry-7 {
+  animation: vip-entry-slide 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes vip-entry-slide {
+  0% { transform: translateX(-120%); opacity: 0; }
+  60% { transform: translateX(8%); opacity: 1; }
+  100% { transform: translateX(0); opacity: 1; }
+}

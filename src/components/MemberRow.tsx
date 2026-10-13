@@ -2,6 +2,7 @@
 import { Mic } from "lucide-react";
 import { UserName } from "./UserBadges";
 import UserAvatar from "./UserAvatar";
+import VipAvatar from "./ui/VipAvatar";
 
 interface Props {
   userId: string;
@@ -47,15 +48,16 @@ export default function MemberRow({
         border: "1px solid rgba(255,255,255,0.1)",
       }}
     >
-      {/* Avatar */}
-      <div className="relative flex-shrink-0" style={{ width: `${avatarSize}px`, height: `${avatarSize}px` }}>
-        <div className="member-avatar-ring" style={{ width: `${avatarSize}px`, height: `${avatarSize}px` }}>
-          <div className="member-avatar-inner" style={{ fontSize: `${avatarFontSize}px` }}>
-            <img src={avatarUrl || "/avatar.png"} alt="" className="w-full h-full object-cover" draggable={false} />
-          </div>
-        </div>
+      {/* Avatar (with VIP halo) */}
+      <div className="relative flex-shrink-0">
+        <VipAvatar
+          src={avatarUrl}
+          name={name}
+          size={avatarSize}
+          vip={vip ?? 0}
+        />
         {onMic && (
-          <div className="absolute -bottom-0.5 -left-0.5 w-4 h-4 rounded-full bg-emerald-500 border-2 border-black flex items-center justify-center">
+          <div className="absolute -bottom-0.5 -left-0.5 w-4 h-4 rounded-full bg-emerald-500 border-2 border-black flex items-center justify-center z-20">
             <Mic size={8} className="text-white" />
           </div>
         )}
