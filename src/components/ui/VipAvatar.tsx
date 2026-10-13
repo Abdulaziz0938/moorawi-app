@@ -13,6 +13,7 @@ interface Props {
   onClick?: () => void;
   customFrameUrl?: string | null;  // إطار مخصص من المتجر
   customFrameInset?: number;       // هامش الإطار المخصص (px)
+  customFrameScale?: number;       // معامل تكبير الإطار (1.0 = افتراضي)
 }
 
 // الحجم النسبي لطبقة الإطار (نسبة إلى الأفاتار)
@@ -31,6 +32,7 @@ export default function VipAvatar({
   onClick,
   customFrameUrl,
   customFrameInset = 0,
+  customFrameScale = 1.0,
 }: Props) {
   const pad = FRAME_PADDING[vip] ?? 2;
   const innerSize = size - pad * 2;
@@ -76,6 +78,8 @@ export default function VipAvatar({
             height: size + customFrameInset * 2,
             objectFit: "contain",
             objectPosition: "center",
+            transform: `scale(${customFrameScale})`,
+            transformOrigin: "center center",
           }}
           draggable={false}
         />

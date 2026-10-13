@@ -9,6 +9,7 @@ import {
   AudioWaveform, IdCard, Check, Sparkles,
 } from "lucide-react";
 import Card from "./ui/Card";
+import ItemPreviewModal from "./ui/ItemPreviewModal";
 
 type Category = "frame" | "vehicle" | "entryEffect" | "chatBubble" | "soundWave" | "profileCard";
 
@@ -38,6 +39,8 @@ interface Props {
 export default function MyItemsSheet({ onClose, initialCategory = "frame", onOpenStore }: Props) {
   const token = getActiveToken();
   const [category, setCategory] = useState<Category>(initialCategory);
+  const me = useQuery(api.profiles.me, { tokenOverride: token });
+  const [previewItem, setPreviewItem] = useState<any>(null);
   const inventory = useQuery(api.shop.myInventory, { tokenOverride: token });
   const allItems = useQuery(api.shop.listByCategory, { category, limit: 100 });
   const equipItem = useMutation(api.shop.equipItem);
@@ -175,7 +178,8 @@ export default function MyItemsSheet({ onClose, initialCategory = "frame", onOpe
                         </span>
                       )}
                       <div
-                        className={`w-full aspect-square rounded-xl border ${r.border} ${r.bg} flex items-center justify-center overflow-hidden mb-2`}
+                        onClick={() => setPreviewItem(item)}
+                        className={`w-full aspect-square rounded-xl border ${r.border} ${r.bg} flex items-center justify-center overflow-hidden mb-2 cursor-pointer hover:opacity-90 transition`}
                       >
                         {item.imageUrl ? (
                           <img
@@ -216,6 +220,26 @@ export default function MyItemsSheet({ onClose, initialCategory = "frame", onOpe
           )}
         </div>
       </div>
+
+      {previewItem && (
+        <ItemPreviewModal
+          item={previewItem}
+          userAvatarUrl={(me as any)?.avatarUrl ?? null}
+          userName={(me as any)?.name ?? "أنت"}
+          vipLevel={(me as any)?.vip ?? 0}
+          equipped={!!invByItemId.get(previewItem._id)?.isEquipped}
+          onClose={() => setPreviewItem(null)}
+          onConfirm={async () => {
+            const inv = invByItemId.get(previewItem._id);
+            if (inv) {
+              await handleToggle(previewItem);
+              setPreviewItem(null);
+            }
+          }}
+          confirmLabel={invByItemId.get(previewItem._id)?.isEquipped ? "نزع" : "ارتداء"}
+          showPrice={false}
+        />
+      )}
     </div>
   );
 }
