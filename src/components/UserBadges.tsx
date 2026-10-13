@@ -4,6 +4,7 @@
 
 import { Home, Shield, User as UserIcon, Crown, Award, Check } from "lucide-react";
 import LevelBadge from "./LevelBadge";
+import MedalBadge from "./ui/MedalBadge";
 import VipName from "./VipName";
 import { levelFromValue } from "../lib/levels";
 import { useAssets, resolveAsset } from "../lib/assets";
@@ -215,20 +216,12 @@ export function UserName({
 
       {/* 2. Equipped medal (only if user owns it) */}
       {showMedal && medal && (
-        medal.imageUrl ? (
-          <img
-            src={medal.imageUrl}
-            alt={medal.name}
-            title={medal.name}
-            className="object-contain drop-shadow flex-shrink-0"
-            style={{ width: s.medal, height: s.medal }}
-            draggable={false}
-          />
-        ) : (
-          <span title={medal.name} className="flex-shrink-0">
-            <Award size={s.medal} className="text-amber-300" strokeWidth={1.8} />
-          </span>
-        )
+        <MedalBadge
+          name={medal.name}
+          tier={(medal as any).tier ?? "C"}
+          imageUrl={medal.imageUrl}
+          size="xs"
+        />
       )}
 
       {/* 3. Name (with VIP gradient if active) */}
