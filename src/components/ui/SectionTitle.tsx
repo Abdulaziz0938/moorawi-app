@@ -6,7 +6,7 @@ interface Props {
   icon?: LucideIcon;
   title: string;
   action?: { label: string; onClick: () => void };
-  tone?: "default" | "gold" | "purple";
+  tone?: "default" | "gold" | "purple" | "emerald" | "pink";
   className?: string;
 }
 
@@ -14,6 +14,8 @@ const TONES: Record<string, string> = {
   default: "text-white",
   gold: "text-amber-200",
   purple: "text-purple-200",
+  emerald: "text-emerald-200",
+  pink: "text-pink-200",
 };
 
 export default function SectionTitle({
