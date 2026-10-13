@@ -60,6 +60,7 @@ export default function ProfilePage({
   const profile = useQuery(api.profileFull.getFull, { userId: userId as Id<"users"> });
   const updateName = useMutation(api.users.updateName);
   const saveAvatar = useMutation(api.profiles.saveAvatar);
+  const saveCover = useMutation(api.profiles.saveCover);
   const removeAvatar = useMutation(api.profiles.removeAvatar);
 
   const [editingName, setEditingName] = useState(false);
@@ -72,6 +73,7 @@ export default function ProfilePage({
   const [copied, setCopied] = useState(false);
   const [tab, setTab] = useState<Tab>("info");
   const [showMyItems, setShowMyItems] = useState(false);
+  const [pendingCover, setPendingCover] = useState<File | null>(null);
   const [myItemsCategory, setMyItemsCategory] = useState<"frame" | "vehicle" | "entryEffect" | "chatBubble" | "soundWave" | "profileCard">("frame");
   const inventory = useQuery(api.shop.myInventory, { tokenOverride: deviceId });
   const equipped = useQuery(api.shop.getEquippedAssets, {
@@ -142,6 +144,20 @@ export default function ProfilePage({
     }
   };
 
+  const handleCoverCroppedConfirm = async (croppedFile: File) => {
+    setPendingCover(null);
+    setUploading(true);
+    try {
+      const result = await uploadToCloudinary(croppedFile, "image");
+      await saveCover({ coverUrl: result.url, tokenOverride: deviceId });
+      dialog.alert("تم تحديث الغلاف");
+    } catch (e: any) {
+      dialog.alert(e?.message || "فشل الرفع");
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleSaveName = async () => {
     const trimmed = newName.trim();
     if (!trimmed) return;
@@ -189,114 +205,144 @@ export default function ProfilePage({
       <div className="absolute inset-0 bg-black/40 backdrop-blur-2xl" />
 
       <div className="relative z-10 flex flex-col h-full overflow-y-auto">
-        {/* ============ Header buttons ============ */}
-        <div className="flex items-center justify-between px-4 pt-4 pb-2">
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); onClose(); }}
-            className="w-10 h-10 rounded-full bg-white/15 backdrop-blur-xl border border-white/25 flex items-center justify-center text-white hover:bg-white/25 transition active:scale-95 z-20"
-            aria-label="إغلاق"
-          >
-            <X size={20} />
-          </button>
+        {/* ============ 0. Cover + Header ============ */}
+        <div className="relative h-44 flex-shrink-0">
+          {profile.coverUrl ? (
+            <img
+              src={profile.coverUrl}
+              alt=""
+              className="w-full h-full object-cover"
+              draggable={false}
+            />
+          ) : (
+            <div className={`w-full h-full bg-gradient-to-b ${bgGradient}`} />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/80" />
 
-          <div className="flex items-center gap-2">
-            {isMe && isOwner && (
-              <button onClick={onOpenOwnerPanel} className="h-10 px-4 rounded-full bg-gradient-to-r from-yellow-400 to-amber-500 shadow-lg flex items-center gap-2 text-white hover:opacity-90 transition">
-                <Crown size={16} />
-                <span className="text-xs font-black">لوحة المالك</span>
-              </button>
-            )}
-            {isMe && isAdmin && !isOwner && (
-              <button onClick={onOpenAdminPanel} className="h-10 px-4 rounded-full bg-white/15 backdrop-blur border border-sky-300/40 flex items-center gap-2 text-white hover:bg-white/25 transition">
-                <Crown size={16} className="text-sky-300" />
-                <span className="text-xs font-black">لوحة الأدمن</span>
-              </button>
-            )}
+          <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 pt-4 pb-2 z-30">
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onClose(); }}
+              className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-xl border border-white/25 flex items-center justify-center text-white hover:bg-black/60 transition active:scale-95"
+              aria-label="إغلاق"
+            >
+              <X size={20} />
+            </button>
+            <div className="flex items-center gap-2">
+              {isMe && isOwner && (
+                <button onClick={onOpenOwnerPanel} className="h-9 px-3 rounded-full bg-gradient-to-r from-yellow-400 to-amber-500 shadow-lg flex items-center gap-2 text-white hover:opacity-90 transition">
+                  <Crown size={14} />
+                  <span className="text-[11px] font-black">المالك</span>
+                </button>
+              )}
+              {isMe && isAdmin && !isOwner && (
+                <button onClick={onOpenAdminPanel} className="h-9 px-3 rounded-full bg-black/40 backdrop-blur border border-sky-300/40 flex items-center gap-2 text-white hover:bg-black/60 transition">
+                  <Crown size={14} className="text-sky-300" />
+                  <span className="text-[11px] font-black">الأدمن</span>
+                </button>
+              )}
+            </div>
           </div>
+
+          {isMe && (
+            <label className="absolute bottom-3 left-3 z-20 cursor-pointer">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/50 backdrop-blur-xl border border-white/30 text-white text-[11px] font-black active:scale-95">
+                <ImageIcon size={12} />
+                <span>تغيير الغلاف</span>
+              </div>
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) setPendingCover(f);
+                  e.target.value = "";
+                }}
+              />
+            </label>
+          )}
         </div>
 
-        {/* ============ 1. Avatar (VIP Halo + Frame) ============ */}
-        <div className="flex justify-center mt-4">
-          <div className="relative">
+        {/* ============ 1+2+3. Avatar (left) + Name + ID (right) ============ */}
+        <div className="px-4 flex items-start gap-3 -mt-14 relative z-20">
+          <div className="flex-shrink-0 relative">
             <div onClick={handleAvatarClick} className="active:scale-95 transition-transform cursor-pointer">
               <VipAvatar
-                  src={profile?.avatarUrl}
-                  name={profile?.name ?? "?"}
-                  size={128}
-                  vip={vipLevel}
-                  ring={vipLevel === 0}
-                  customFrameUrl={finalFrameUrl}
-                  frameScale={finalFrameScale}
-                  frameOffsetX={finalFrameOffsetX}
-                  frameOffsetY={finalFrameOffsetY}
-                />
+                src={profile?.avatarUrl}
+                name={profile?.name ?? "?"}
+                size={100}
+                vip={vipLevel}
+                ring={vipLevel === 0}
+                customFrameUrl={finalFrameUrl}
+                frameScale={finalFrameScale}
+                frameOffsetX={finalFrameOffsetX}
+                frameOffsetY={finalFrameOffsetY}
+              />
             </div>
             {isMe && (
-              <div className="absolute bottom-1 right-1 w-7 h-7 rounded-full bg-black/60 backdrop-blur-xl border border-white/30 flex items-center justify-center pointer-events-none z-20">
+              <div className="absolute bottom-1 right-1 w-7 h-7 rounded-full bg-black/70 backdrop-blur-xl border border-white/30 flex items-center justify-center pointer-events-none z-20">
                 <Camera size={12} className="text-white/90" />
               </div>
             )}
           </div>
-        </div>
 
-        {/* ============ 2. Name ============ */}
-        <div className="flex flex-col items-center mt-3 px-4">
-          {editingName ? (
-            <div className="flex items-center gap-2 w-full max-w-xs">
-              <input
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                placeholder={profile.name ?? ""}
-                className="flex-1 bg-white/15 backdrop-blur border border-white/25 rounded-xl px-3 py-2 text-white text-sm text-center outline-none focus:border-purple-400"
-                autoFocus
-              />
-              <button onClick={handleSaveName} className="px-3 py-2 bg-purple-600 rounded-xl text-white text-xs font-black">حفظ</button>
-              <button onClick={() => setEditingName(false)} className="px-3 py-2 bg-white/15 rounded-xl text-white text-xs">إلغاء</button>
-            </div>
-          ) : (
-            <div className="flex items-center justify-center gap-2">
-              <UserName
-                name={profile.name ?? "ضيف"}
-                adminRole={profile.adminRole}
-                roomRole={isOwner ? "owner" : null}
-                size="lg"
-                nameClassName="text-white text-xl drop-shadow"
-                showCapsules={false}
-              />
-              {isMe && (
-                <button onClick={() => { setNewName(profile.name ?? ""); setEditingName(true); }} className="w-7 h-7 rounded-full bg-white/15 flex items-center justify-center text-white/80 hover:bg-white/25 flex-shrink-0">
-                  <Pencil size={12} />
+          <div className="flex-1 min-w-0 mt-14 flex flex-col items-end">
+            {editingName ? (
+              <div className="flex items-center gap-2 w-full">
+                <input
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  placeholder={profile.name ?? ""}
+                  className="flex-1 min-w-0 bg-white/15 backdrop-blur border border-white/25 rounded-xl px-3 py-2 text-white text-sm text-center outline-none focus:border-purple-400"
+                  autoFocus
+                />
+                <button onClick={handleSaveName} className="px-3 py-2 bg-purple-600 rounded-xl text-white text-xs font-black">حفظ</button>
+                <button onClick={() => setEditingName(false)} className="px-3 py-2 bg-white/15 rounded-xl text-white text-xs">إلغاء</button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 justify-end w-full">
+                <UserName
+                  name={profile.name ?? "ضيف"}
+                  adminRole={profile.adminRole}
+                  roomRole={isOwner ? "owner" : null}
+                  size="lg"
+                  nameClassName="text-white text-xl drop-shadow"
+                  showCapsules={false}
+                />
+                {isMe && (
+                  <button onClick={() => { setNewName(profile.name ?? ""); setEditingName(true); }} className="w-7 h-7 rounded-full bg-white/15 flex items-center justify-center text-white/80 hover:bg-white/25 flex-shrink-0">
+                    <Pencil size={12} />
+                  </button>
+                )}
+              </div>
+            )}
+
+            <div className="flex items-center justify-end gap-1.5 mt-2 flex-wrap">
+              {profile.userNumber !== null && (
+                <button
+                  onClick={handleCopy}
+                  className="flex items-center gap-1 bg-white/15 backdrop-blur border border-white/25 text-white text-[11px] px-2.5 py-1 rounded-full hover:bg-white/25 transition active:scale-95"
+                  dir="ltr"
+                  title="نسخ المعرف"
+                >
+                  <span>ID:{profile.userNumber}</span>
+                  {copied ? <Check size={11} className="text-green-300" /> : <Copy size={11} className="opacity-70" />}
                 </button>
               )}
+              {profile.age && (
+                <span className="text-[10px] bg-white/15 backdrop-blur border border-white/20 text-white px-2 py-0.5 rounded-full">{profile.age} سنة</span>
+              )}
+              {profile.gender && (
+                <span className="text-[10px] bg-white/15 backdrop-blur border border-white/20 text-white px-2 py-0.5 rounded-full">
+                  {profile.gender === "male" ? "♂ ذكر" : profile.gender === "female" ? "♀ أنثى" : "آخر"}
+                </span>
+              )}
+              {profile.country && (
+                <span className="text-[10px] bg-white/15 backdrop-blur border border-white/20 text-white px-2 py-0.5 rounded-full">{profile.country}</span>
+              )}
             </div>
-          )}
-        </div>
-
-        {/* ============ 3. ID + copy + chips ============ */}
-        <div className="flex items-center justify-center gap-1.5 mt-2 flex-wrap">
-          {profile.userNumber !== null && (
-            <button
-              onClick={handleCopy}
-              className="flex items-center gap-1 bg-white/15 backdrop-blur border border-white/25 text-white text-[11px] px-2.5 py-1 rounded-full hover:bg-white/25 transition active:scale-95"
-              dir="ltr"
-              title="نسخ المعرف"
-            >
-              <span>ID:{profile.userNumber}</span>
-              {copied ? <Check size={11} className="text-green-300" /> : <Copy size={11} className="opacity-70" />}
-            </button>
-          )}
-          {profile.age && (
-            <span className="text-[10px] bg-white/15 backdrop-blur border border-white/20 text-white px-2 py-0.5 rounded-full">{profile.age} سنة</span>
-          )}
-          {profile.gender && (
-            <span className="text-[10px] bg-white/15 backdrop-blur border border-white/20 text-white px-2 py-0.5 rounded-full">
-              {profile.gender === "male" ? "♂ ذكر" : profile.gender === "female" ? "♀ أنثى" : "آخر"}
-            </span>
-          )}
-          {profile.country && (
-            <span className="text-[10px] bg-white/15 backdrop-blur border border-white/20 text-white px-2 py-0.5 rounded-full">{profile.country}</span>
-          )}
+          </div>
         </div>
 
         {/* ============ 3.5 Room actions ============ */}
@@ -672,6 +718,16 @@ export default function ProfilePage({
           onConfirm={handleCroppedConfirm}
         />
       )}
+
+        {pendingCover && (
+          <ImageCropper
+            file={pendingCover}
+            aspect={16/9}
+            shape="rect"
+            onCancel={() => setPendingCover(null)}
+            onConfirm={handleCoverCroppedConfirm}
+          />
+        )}
     
         {showMyItems && (
           <MyItemsSheet

@@ -10,6 +10,7 @@ export default defineSchema({
     email: v.optional(v.string()),
     avatarId: v.optional(v.id("_storage")),  // legacy
     avatarUrl: v.optional(v.string()),       // Cloudinary
+    coverUrl: v.optional(v.string()),        // Cloudinary — profile cover/banner
     age: v.optional(v.number()),
     gender: v.optional(v.union(v.literal("male"), v.literal("female"), v.literal("other"))),
     country: v.optional(v.string()),

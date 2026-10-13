@@ -27,10 +27,17 @@ export const getFull = query({
     const vipActive = vip > 0 && (!user.vipExpiresAt || user.vipExpiresAt > Date.now());
 
     // --- 4) Equipped assets (only if owned) ---
-    let frame = null;
+    let frame: any = null;
     if (user.equippedFrameId) {
       const f = await ctx.db.get("shopItems", user.equippedFrameId);
-      if (f) frame = { _id: f._id, imageUrl: f.imageUrl, name: f.name };
+      if (f) frame = {
+        _id: f._id,
+        imageUrl: f.imageUrl,
+        name: f.name,
+        frameScale: (f as any).frameScale,
+        frameOffsetX: (f as any).frameOffsetX,
+        frameOffsetY: (f as any).frameOffsetY,
+      };
     }
 
     let vehicle = null;
@@ -177,6 +184,7 @@ export const getFull = query({
       name: user.name ?? null,
       bio: user.bio ?? null,
       avatarUrl,
+      coverUrl: user.coverUrl ?? null,
       age: user.age ?? null,
       gender: user.gender ?? null,
       country: user.country ?? null,

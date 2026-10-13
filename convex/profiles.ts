@@ -190,6 +190,27 @@ export const getOptions = query({
 });
 
 // [moorawi] حذف صورة الأفاتار
+export const saveCover = mutation({
+  args: {
+    coverUrl: v.string(),
+    tokenOverride: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
+    await ctx.db.patch("users", me._id, { coverUrl: args.coverUrl });
+    return { ok: true };
+  },
+});
+
+export const removeCover = mutation({
+  args: { tokenOverride: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
+    await ctx.db.patch("users", me._id, { coverUrl: undefined });
+    return { ok: true };
+  },
+});
+
 export const removeAvatar = mutation({
   args: { tokenOverride: v.optional(v.string()) },
   handler: async (ctx, args) => {
