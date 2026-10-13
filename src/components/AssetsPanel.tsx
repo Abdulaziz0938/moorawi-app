@@ -684,6 +684,13 @@ function FramesTunerTab({ token }: { token: string | null }) {
   const [offsetX, setOffsetX] = useState<number>(0);
   const [offsetY, setOffsetY] = useState<number>(0);
   const [saving, setSaving] = useState(false);
+  // Canvas Standard
+  const [canvasMode, setCanvasMode] = useState<"manual" | "canvas">("canvas");
+  const [canvasSize, setCanvasSize] = useState<number>(500);
+  const [holeSize, setHoleSize] = useState<number>(300);
+  const [canvasOffsetX, setCanvasOffsetX] = useState<number>(0);
+  const [canvasOffsetY, setCanvasOffsetY] = useState<number>(0);
+  const [assetType, setAssetType] = useState<"png" | "svga" | "lottie">("png");
 
   const setAsset = useMutation(api.assets.set);
   const allAssets = useQuery(api.assets.list);
@@ -718,27 +725,46 @@ function FramesTunerTab({ token }: { token: string | null }) {
     setScale(item.frameScale ?? 3.0);
     setOffsetX(item.frameOffsetX ?? 0);
     setOffsetY(item.frameOffsetY ?? 0);
+    // Canvas Standard
+    if (item.canvasSize && item.holeSize) {
+      setCanvasMode("canvas");
+      setCanvasSize(item.canvasSize);
+      setHoleSize(item.holeSize);
+      setCanvasOffsetX(item.offsetX ?? 0);
+      setCanvasOffsetY(item.offsetY ?? 0);
+      setAssetType(item.assetType ?? "png");
+    } else {
+      setCanvasMode("manual");
+    }
   };
 
   const handleSave = async () => {
     if (!selected) return;
     setSaving(true);
     try {
+      const useCanvas = canvasMode === "canvas";
+      const payload: any = useCanvas ? {
+        canvasSize,
+        holeSize,
+        offsetX: canvasOffsetX,
+        offsetY: canvasOffsetY,
+        assetType,
+      } : {
+        frameScale: scale,
+        frameOffsetX: offsetX,
+        frameOffsetY: offsetY,
+      };
       if (isVipCategory) {
         await setAsset({
           key: (selected as any).key,
           imageUrl: (selected as any).imageUrl ?? "",
-          frameScale: scale,
-          frameOffsetX: offsetX,
-          frameOffsetY: offsetY,
+          ...payload,
           tokenOverride: token ?? undefined,
         });
       } else {
         await updateItem({
           itemId: selectedId as Id<"shopItems">,
-          frameScale: scale,
-          frameOffsetX: offsetX,
-          frameOffsetY: offsetY,
+          ...payload,
           tokenOverride: token ?? undefined,
         });
       }
@@ -876,6 +902,69 @@ function FramesTunerTab({ token }: { token: string | null }) {
           </div>
 
           <div className="rounded-2xl bg-purple-500/10 border border-purple-400/30 p-3 space-y-3">
+            {/* Mode toggle */}
+            <div className="flex gap-1.5 mb-2">
+              <button
+                onClick={() => setCanvasMode("canvas")}
+                className={`flex-1 py-2 rounded-xl text-[11px] font-black transition ${canvasMode === "canvas" ? "bg-purple-500/30 border border-purple-400/60 text-white" : "bg-white/5 border border-white/10 text-white/60"}`}
+              >
+                🎨 Canvas Standard (Yalla)
+              </button>
+              <button
+                onClick={() => setCanvasMode("manual")}
+                className={`flex-1 py-2 rounded-xl text-[11px] font-black transition ${canvasMode === "manual" ? "bg-purple-500/30 border border-purple-400/60 text-white" : "bg-white/5 border border-white/10 text-white/60"}`}
+              >
+                ⚙️ يدوي (Scale)
+              </button>
+            </div>
+
+            {canvasMode === "canvas" ? (
+              <div className="space-y-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-white/60 text-[10px] font-bold mb-1 block">Canvas Size</label>
+                    <input type="number" value={canvasSize} onChange={(e) => setCanvasSize(parseInt(e.target.value) || 500)}
+                      className="w-full bg-white/10 border border-white/20 rounded-lg px-2 py-1.5 text-white text-xs tabular-nums"
+                      dir="ltr" />
+                  </div>
+                  <div>
+                    <label className="text-white/60 text-[10px] font-bold mb-1 block">Hole Size</label>
+                    <input type="number" value={holeSize} onChange={(e) => setHoleSize(parseInt(e.target.value) || 300)}
+                      className="w-full bg-white/10 border border-white/20 rounded-lg px-2 py-1.5 text-white text-xs tabular-nums"
+                      dir="ltr" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-white/60 text-[10px] font-bold mb-1 block">Offset X</label>
+                    <input type="number" value={canvasOffsetX} onChange={(e) => setCanvasOffsetX(parseInt(e.target.value) || 0)}
+                      className="w-full bg-white/10 border border-white/20 rounded-lg px-2 py-1.5 text-white text-xs tabular-nums"
+                      dir="ltr" />
+                  </div>
+                  <div>
+                    <label className="text-white/60 text-[10px] font-bold mb-1 block">Offset Y</label>
+                    <input type="number" value={canvasOffsetY} onChange={(e) => setCanvasOffsetY(parseInt(e.target.value) || 0)}
+                      className="w-full bg-white/10 border border-white/20 rounded-lg px-2 py-1.5 text-white text-xs tabular-nums"
+                      dir="ltr" />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-white/60 text-[10px] font-bold mb-1 block">Asset Type</label>
+                  <div className="flex gap-1">
+                    {(["png", "svga", "lottie"] as const).map((t) => (
+                      <button key={t} onClick={() => setAssetType(t)}
+                        className={`flex-1 py-1.5 rounded-lg text-[10px] font-black transition ${assetType === t ? "bg-emerald-500/30 border border-emerald-400/60 text-white" : "bg-white/5 border border-white/10 text-white/60"}`}>
+                        {t.toUpperCase()}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <p className="text-emerald-200 text-[10px] text-center font-black pt-1">
+                  Auto Scale = {(canvasSize / holeSize).toFixed(3)}
+                </p>
+              </div>
+            ) : (
+              <>
             {/* Scale */}
             <div>
               <div className="flex items-center justify-between mb-1">
@@ -935,6 +1024,8 @@ function FramesTunerTab({ token }: { token: string | null }) {
                 dir="ltr"
               />
             </div>
+              </>
+            )}
 
             <button
               onClick={handleApplyAll}
