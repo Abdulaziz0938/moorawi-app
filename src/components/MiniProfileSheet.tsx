@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { useAssets, resolveAsset, useAssetsFull } from "../lib/assets";
+import { useAssets, useAssetsFull } from "../lib/assets";
 import type { Id } from "../../convex/_generated/dataModel";
 import { dialog } from "../lib/dialog";
 import {
   X, Gift, MessageCircle, UserPlus, Mic, MicOff, ArrowDown,
-  Ban, Crown, Loader2, Shield, Copy, Check, Home, Radio } from "lucide-react";
+  Ban, Crown, Loader2, Shield, Copy, Check, Home, Radio,
+} from "lucide-react";
 import { UserName } from "./UserBadges";
 import LevelBadge from "./LevelBadge";
 import MedalsRow from "./MedalsRow";
@@ -45,23 +46,30 @@ function formatNumber(n: number): string {
 }
 
 const VIP_BG: Record<number, string> = {
-  0: "from-slate-700/70 via-slate-800/70 to-slate-900/70",
-  1: "from-sky-600/70 via-sky-700/70 to-sky-900/70",
-  2: "from-emerald-600/70 via-emerald-700/70 to-emerald-900/70",
-  3: "from-purple-600/70 via-purple-700/70 to-purple-900/70",
-  4: "from-pink-600/70 via-pink-700/70 to-pink-900/70",
-  5: "from-red-600/70 via-red-700/70 to-red-900/70",
-  6: "from-orange-500/70 via-orange-600/70 to-orange-800/70",
-  7: "from-yellow-500/70 via-amber-600/70 to-yellow-700/70",
+  0: "from-slate-700 via-slate-800 to-slate-900",
+  1: "from-sky-600 via-sky-700 to-sky-900",
+  2: "from-emerald-600 via-emerald-700 to-emerald-900",
+  3: "from-purple-600 via-purple-700 to-purple-900",
+  4: "from-pink-600 via-pink-700 to-pink-900",
+  5: "from-red-600 via-red-700 to-red-900",
+  6: "from-orange-500 via-orange-600 to-orange-800",
+  7: "from-yellow-500 via-amber-600 to-yellow-700",
 };
 
-function IconCircle({ icon, onClick, size = 52 }: { icon: React.ReactNode; onClick?: () => void; size?: number }) {
+function IconCircle({
+  icon, onClick, tone = "default", size = 52,
+}: {
+  icon: React.ReactNode;
+  onClick?: () => void;
+  tone?: "default" | "danger";
+  size?: number;
+}) {
+  const base = "rounded-full flex items-center justify-center transition-all active:scale-90 backdrop-blur-xl border shadow-lg";
+  const cls = tone === "danger"
+    ? "bg-red-500/20 hover:bg-red-500/30 border-red-400/40 text-red-200"
+    : "bg-white/10 hover:bg-white/20 border-white/25 text-white";
   return (
-    <button
-      onClick={onClick}
-      className="rounded-full flex items-center justify-center transition-all active:scale-90 backdrop-blur-xl border border-white/25 shadow-lg bg-white/10 hover:bg-white/20 text-white"
-      style={{ width: `${size}px`, height: `${size}px` }}
-    >
+    <button onClick={onClick} className={`${base} ${cls}`} style={{ width: `${size}px`, height: `${size}px` }}>
       {icon}
     </button>
   );
@@ -108,6 +116,9 @@ export default function MiniProfileSheet({
   const wealth = profile.totalSent ?? 0;
   const stats = profile.stats ?? { visitors: 0, fans: 0, followers: 0 };
   const medals = (profile as any).medals ?? [];
+  const equippedVipLvl = (profile as any).equippedVipFrameLevel ?? null;
+  const vipFrameData = equippedVipLvl ? assetsFull[`vip.frame.${equippedVipLvl}`] : null;
+
   const canKick = currentUserRole === "owner" || currentUserRole === "moderator";
   const canBan = currentUserRole === "owner";
   const canPromoteOrDemote = currentUserRole === "owner";
@@ -140,147 +151,134 @@ export default function MiniProfileSheet({
         <div className="absolute inset-x-0 top-0 h-px bg-white/40" />
 
         <div className="relative z-10 flex flex-col max-h-[92vh] overflow-y-auto">
-          {/* ============ Header ============ */}
-          <div className="flex items-center justify-between px-4 pt-3 pb-1">
-            <button onClick={onClose} className="w-9 h-9 rounded-full bg-white/15 backdrop-blur border border-white/20 flex items-center justify-center text-white hover:bg-white/25 transition">
+          {/* ============ Cover + Avatar + Info ============ */}
+          <div className="relative">
+            {/* Cover strip */}
+            <div className={`h-24 w-full bg-gradient-to-b ${bgGradient}`} />
+            <div className="absolute inset-0 h-24 bg-gradient-to-b from-black/20 to-black/60" />
+
+            {/* Close button */}
+            <button
+              onClick={onClose}
+              className="absolute top-3 left-3 w-9 h-9 rounded-full bg-black/40 backdrop-blur border border-white/20 flex items-center justify-center text-white hover:bg-black/60 transition z-20"
+            >
               <X size={18} />
             </button>
+
+            {/* VIP level badge (top-right) */}
             {vipLevel > 0 && (
-              <span className="text-[11px] font-black text-yellow-300 bg-black/30 backdrop-blur px-3 py-1 rounded-full border border-yellow-300/30">
+              <span className="absolute top-3 right-3 text-[11px] font-black text-yellow-300 bg-black/40 backdrop-blur px-3 py-1 rounded-full border border-yellow-300/30 z-20">
                 VIP {vipLevel}
               </span>
             )}
-          </div>
 
-          {/* ============ 1. Avatar ============ */}
-          <div className="flex justify-center px-4 pb-2 mt-1">
-            <button
-              onClick={onOpenFullProfile}
-              className="active:scale-95 transition-transform"
-            >
-              <VipAvatar
-                src={profile?.avatarUrl}
-                name={profile?.name ?? "?"}
-                size={96}
-                vip={profile?.vip ?? 0}
-                customFrameUrl={(() => {
-                  const lvl = (profile as any)?.equippedVipFrameLevel;
-                  if (!lvl) return null;
-                  return assetsFull[`vip.frame.${lvl}`]?.url ?? null;
-                })()}
-                canvasSize={(() => {
-                  const lvl = (profile as any)?.equippedVipFrameLevel;
-                  if (!lvl) return null;
-                  return assetsFull[`vip.frame.${lvl}`]?.canvasSize ?? null;
-                })()}
-                holeSize={(() => {
-                  const lvl = (profile as any)?.equippedVipFrameLevel;
-                  if (!lvl) return null;
-                  return assetsFull[`vip.frame.${lvl}`]?.holeSize ?? null;
-                })()}
-                offsetX={(() => {
-                  const lvl = (profile as any)?.equippedVipFrameLevel;
-                  if (!lvl) return 0;
-                  return assetsFull[`vip.frame.${lvl}`]?.offsetX ?? 0;
-                })()}
-                offsetY={(() => {
-                  const lvl = (profile as any)?.equippedVipFrameLevel;
-                  if (!lvl) return 0;
-                  return assetsFull[`vip.frame.${lvl}`]?.offsetY ?? 0;
-                })()}
-                assetType={(() => {
-                  const lvl = (profile as any)?.equippedVipFrameLevel;
-                  if (!lvl) return null;
-                  return assetsFull[`vip.frame.${lvl}`]?.assetType ?? null;
-                })()}
-              />
-            </button>
-          </div>
-
-          {/* ============ 2. Name (role only) ============ */}
-          <div className="flex justify-center mt-2">
-            <UserName
-              name={profile.name ?? "ضيف"}
-              adminRole={profile.adminRole}
-              roomRole={profile.userNumber === 1 ? "owner" : null}
-              size="md"
-              nameClassName="text-white"
-              showCapsules={false}
-            />
-          </div>
-
-          {/* ============ 3. ID + Copy + chips ============ */}
-          <div className="flex items-center justify-center gap-1.5 mt-2 flex-wrap">
-            {profile.userNumber !== null && (
+            {/* Avatar + Name block — right-aligned */}
+            <div className="px-4 -mt-14 flex flex-col items-start relative z-10">
               <button
-                onClick={handleCopy}
-                className="flex items-center gap-1 bg-white/15 backdrop-blur border border-white/25 text-white text-[11px] px-2.5 py-1 rounded-full hover:bg-white/25 transition active:scale-95"
-                dir="ltr"
-                title="نسخ المعرف"
+                onClick={onOpenFullProfile}
+                className="active:scale-95 transition-transform"
               >
-                <span>ID:{profile.userNumber}</span>
-                {copied ? <Check size={11} className="text-green-300" /> : <Copy size={11} className="opacity-70" />}
+                <VipAvatar
+                  src={profile?.avatarUrl}
+                  name={profile?.name ?? "?"}
+                  size={84}
+                  vip={vipLevel}
+                  ring={vipLevel === 0}
+                  customFrameUrl={vipFrameData?.url ?? null}
+                  canvasSize={vipFrameData?.canvasSize ?? null}
+                  holeSize={vipFrameData?.holeSize ?? null}
+                  offsetX={vipFrameData?.offsetX ?? 0}
+                  offsetY={vipFrameData?.offsetY ?? 0}
+                  assetType={vipFrameData?.assetType ?? null}
+                />
               </button>
-            )}
-            {profile.age && (
-              <span className="text-[10px] bg-white/15 backdrop-blur border border-white/20 text-white px-2 py-0.5 rounded-full">
-                {profile.age} سنة
-              </span>
-            )}
-            {profile.gender && (
-              <span className="text-[10px] bg-white/15 backdrop-blur border border-white/20 text-white px-2 py-0.5 rounded-full">
-                {profile.gender === "male" ? "♂ ذكر" : profile.gender === "female" ? "♀ أنثى" : "آخر"}
-              </span>
-            )}
-            {profile.country && (
-              <span className="text-[10px] bg-white/15 backdrop-blur border border-white/20 text-white px-2 py-0.5 rounded-full">
-                {profile.country}
-              </span>
-            )}
+
+              {/* Name */}
+              <div className="mt-2 flex items-center gap-2">
+                <UserName
+                  name={profile.name ?? "ضيف"}
+                  adminRole={profile.adminRole}
+                  roomRole={profile.userNumber === 1 ? "owner" : null}
+                  size="md"
+                  nameClassName="text-white text-lg"
+                  showCapsules={false}
+                />
+              </div>
+
+              {/* ID + chips */}
+              <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                {profile.userNumber !== null && (
+                  <button
+                    onClick={handleCopy}
+                    className="flex items-center gap-1 bg-white/15 backdrop-blur border border-white/25 text-white text-[11px] px-2.5 py-1 rounded-full hover:bg-white/25 transition active:scale-95"
+                    dir="ltr"
+                    title="نسخ المعرف"
+                  >
+                    <span>ID:{profile.userNumber}</span>
+                    {copied ? <Check size={11} className="text-green-300" /> : <Copy size={11} className="opacity-70" />}
+                  </button>
+                )}
+                {profile.age && (
+                  <span className="text-[10px] bg-white/15 backdrop-blur border border-white/20 text-white px-2 py-0.5 rounded-full">
+                    {profile.age} سنة
+                  </span>
+                )}
+                {profile.gender && (
+                  <span className="text-[10px] bg-white/15 backdrop-blur border border-white/20 text-white px-2 py-0.5 rounded-full">
+                    {profile.gender === "male" ? "♂ ذكر" : profile.gender === "female" ? "♀ أنثى" : "آخر"}
+                  </span>
+                )}
+                {profile.country && (
+                  <span className="text-[10px] bg-white/15 backdrop-blur border border-white/20 text-white px-2 py-0.5 rounded-full">
+                    {profile.country}
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
 
-          {/* ============ 4. Charm + Wealth + VIP banner ============ */}
-          <div className="flex items-center justify-center gap-2 mt-3 flex-wrap">
+          {/* ============ Charm + Wealth + VIP banner ============ */}
+          <div className="flex items-center justify-end gap-2 px-4 mt-3 flex-wrap">
+            {vipLevel > 0 && (
+              <div className="badge-glow">
+                <img src={assets[`vip.logo.${vipLevel}`] ?? ""} alt={`VIP ${vipLevel}`} className="h-6 w-auto object-contain" draggable={false} />
+              </div>
+            )}
             {charm > 0 && (
               <LevelBadge kind="charm" level={levelFromValue(charm)} size="sm" />
             )}
             {wealth > 0 && (
               <LevelBadge kind="wealth" level={levelFromValue(wealth)} size="sm" />
             )}
-            {vipLevel > 0 && (
-              <div className="badge-glow">
-                <img src={assets[`vip.logo.${vipLevel}`] ?? ""} alt={`VIP ${vipLevel}`} className="h-6 w-auto object-contain" draggable={false} />
-              </div>
-            )}
           </div>
 
-          {/* ============ 5. Bio ============ */}
+          {/* ============ Bio ============ */}
           {profile.bio && (
             <p className="text-white/85 text-xs text-center px-6 mt-3 leading-relaxed">{profile.bio}</p>
           )}
 
-          {/* ============ 6. Stats (3) ============ */}
+          {/* ============ Stats (3) ============ */}
           <div className="mx-4 mt-4 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl grid grid-cols-3">
             <StatBox label="المتابعين" value={stats.followers} />
             <StatBox label="المعجبين" value={stats.fans} />
             <StatBox label="الزوار" value={stats.visitors} />
           </div>
 
-          {/* ============ 7. Medals ============ */}
+          {/* ============ Medals ============ */}
           {medals.length > 0 && (
             <div className="mx-4 mt-3 flex justify-center">
               <MedalsRow medals={medals} max={10} size="xs" />
             </div>
           )}
 
-          {/* ============ 8. 3 property cards ============ */}
+          {/* ============ Property cards ============ */}
           <div className="mx-4 mt-3 grid grid-cols-3 gap-2.5">
             <PropertyCard label="هدية" value={0} tone="purple" />
             <PropertyCard label="إطار" value={0} tone="emerald" />
             <PropertyCard label="مركبة" value={0} tone="blue" />
           </div>
 
-          {/* ============ 9. Actions ============ */}
+          {/* ============ Actions ============ */}
           {isMySeat ? (
             <div className="mx-4 mt-4 mb-4">
               <div className="grid grid-cols-3 gap-2.5">
@@ -326,10 +324,10 @@ export default function MiniProfileSheet({
                   {!isTargetOnMic && <IconCircle icon={<Mic size={20} />} size={50} onClick={onInviteToMic} />}
                   {canKick && isTargetOnMic && <IconCircle icon={<MicOff size={20} />} size={50} onClick={onMute} />}
                   {canKick && isTargetOnMic && <IconCircle icon={<ArrowDown size={20} />} size={50} onClick={onRemoveFromSeat} />}
-                  {canKick && <IconCircle icon={<Ban size={20} />} size={50} onClick={onKick} />}
+                  {canKick && <IconCircle icon={<Ban size={20} />} size={50} onClick={onKick} tone="danger" />}
                   {canPromoteOrDemote && !targetIsMod && <IconCircle icon={<Crown size={20} />} size={50} onClick={onPromote} />}
                   {canPromoteOrDemote && targetIsMod && <IconCircle icon={<Shield size={20} />} size={50} onClick={onDemote} />}
-                  {canBan && <IconCircle icon={<Ban size={20} />} size={50} onClick={onBan} />}
+                  {canBan && <IconCircle icon={<Ban size={20} />} size={50} onClick={onBan} tone="danger" />}
                 </div>
               )}
             </>
@@ -342,7 +340,6 @@ export default function MiniProfileSheet({
   );
 }
 
-// ============ Stat Box ============
 function StatBox({ label, value }: { label: string; value: number }) {
   return (
     <div className="flex flex-col items-center gap-0.5 py-3">
@@ -352,7 +349,6 @@ function StatBox({ label, value }: { label: string; value: number }) {
   );
 }
 
-// ============ Property Card ============
 function PropertyCard({ label, value, tone }: { label: string; value: number; tone: "blue" | "emerald" | "purple" }) {
   const toneMap = {
     blue:    { bg: "from-blue-900/40 to-blue-950/60",       border: "border-blue-500/30",    text: "text-blue-200" },
