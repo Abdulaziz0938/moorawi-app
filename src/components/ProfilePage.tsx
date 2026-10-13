@@ -264,9 +264,10 @@ export default function ProfilePage({
           )}
         </div>
 
-        {/* ============ 1+2+3. Avatar (left) + Name + ID (right) ============ */}
-        <div className="px-4 flex items-start gap-3 -mt-14 relative z-20">
-          <div className="flex-shrink-0 relative">
+        {/* ============ 1+2+3. Avatar (right) + Name + ID (below, right-aligned) ============ */}
+        <div className="px-4 flex flex-col items-start -mt-14 relative z-20">
+          {/* Avatar - right */}
+          <div className="relative">
             <div onClick={handleAvatarClick} className="active:scale-95 transition-transform cursor-pointer">
               <VipAvatar
                 src={profile?.avatarUrl}
@@ -287,9 +288,10 @@ export default function ProfilePage({
             )}
           </div>
 
-          <div className="flex-1 min-w-0 mt-14 flex flex-col items-end">
+          {/* Name - below avatar, right-aligned */}
+          <div className="mt-2 flex items-center gap-2 justify-start w-full">
             {editingName ? (
-              <div className="flex items-center gap-2 w-full">
+              <>
                 <input
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
@@ -299,9 +301,9 @@ export default function ProfilePage({
                 />
                 <button onClick={handleSaveName} className="px-3 py-2 bg-purple-600 rounded-xl text-white text-xs font-black">حفظ</button>
                 <button onClick={() => setEditingName(false)} className="px-3 py-2 bg-white/15 rounded-xl text-white text-xs">إلغاء</button>
-              </div>
+              </>
             ) : (
-              <div className="flex items-center gap-2 justify-end w-full">
+              <>
                 <UserName
                   name={profile.name ?? "ضيف"}
                   adminRole={profile.adminRole}
@@ -315,33 +317,34 @@ export default function ProfilePage({
                     <Pencil size={12} />
                   </button>
                 )}
-              </div>
+              </>
             )}
+          </div>
 
-            <div className="flex items-center justify-end gap-1.5 mt-2 flex-wrap">
-              {profile.userNumber !== null && (
-                <button
-                  onClick={handleCopy}
-                  className="flex items-center gap-1 bg-white/15 backdrop-blur border border-white/25 text-white text-[11px] px-2.5 py-1 rounded-full hover:bg-white/25 transition active:scale-95"
-                  dir="ltr"
-                  title="نسخ المعرف"
-                >
-                  <span>ID:{profile.userNumber}</span>
-                  {copied ? <Check size={11} className="text-green-300" /> : <Copy size={11} className="opacity-70" />}
-                </button>
-              )}
-              {profile.age && (
-                <span className="text-[10px] bg-white/15 backdrop-blur border border-white/20 text-white px-2 py-0.5 rounded-full">{profile.age} سنة</span>
-              )}
-              {profile.gender && (
-                <span className="text-[10px] bg-white/15 backdrop-blur border border-white/20 text-white px-2 py-0.5 rounded-full">
-                  {profile.gender === "male" ? "♂ ذكر" : profile.gender === "female" ? "♀ أنثى" : "آخر"}
-                </span>
-              )}
-              {profile.country && (
-                <span className="text-[10px] bg-white/15 backdrop-blur border border-white/20 text-white px-2 py-0.5 rounded-full">{profile.country}</span>
-              )}
-            </div>
+          {/* ID + chips - below name, right-aligned */}
+          <div className="flex items-center justify-start gap-1.5 mt-2 flex-wrap w-full">
+            {profile.userNumber !== null && (
+              <button
+                onClick={handleCopy}
+                className="flex items-center gap-1 bg-white/15 backdrop-blur border border-white/25 text-white text-[11px] px-2.5 py-1 rounded-full hover:bg-white/25 transition active:scale-95"
+                dir="ltr"
+                title="نسخ المعرف"
+              >
+                <span>ID:{profile.userNumber}</span>
+                {copied ? <Check size={11} className="text-green-300" /> : <Copy size={11} className="opacity-70" />}
+              </button>
+            )}
+            {profile.age && (
+              <span className="text-[10px] bg-white/15 backdrop-blur border border-white/20 text-white px-2 py-0.5 rounded-full">{profile.age} سنة</span>
+            )}
+            {profile.gender && (
+              <span className="text-[10px] bg-white/15 backdrop-blur border border-white/20 text-white px-2 py-0.5 rounded-full">
+                {profile.gender === "male" ? "♂ ذكر" : profile.gender === "female" ? "♀ أنثى" : "آخر"}
+              </span>
+            )}
+            {profile.country && (
+              <span className="text-[10px] bg-white/15 backdrop-blur border border-white/20 text-white px-2 py-0.5 rounded-full">{profile.country}</span>
+            )}
           </div>
         </div>
 
