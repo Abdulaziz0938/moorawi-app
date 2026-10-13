@@ -14,6 +14,8 @@ import {
   ChevronRight, Search, Loader2, Briefcase, Mic, Users,
   Clock, Check, X, Plus, Award, Shield, Gift,
 } from "lucide-react";
+import Card from "./ui/Card";
+import SectionTitle from "./ui/SectionTitle";
 
 type Tab = "host" | "agent";
 type View = "landing" | "joinSearch" | "myRequests" | "createRequest" | "createRequests" | "myAgency";
@@ -131,10 +133,10 @@ function HostLanding({ onSearch }: { onSearch: () => void }) {
 
       {/* Features grid */}
       <div className="px-4 grid grid-cols-2 gap-3 mt-4">
-        <FeatureCard icon={Award}       title="دعم وتدريب من الجهات الرسمية" color="from-purple-700/40 to-purple-900/40" border="border-purple-500/30" />
-        <FeatureCard icon={Gift}        title="مكافآت ومزايا كبيرة"          color="from-amber-700/40 to-amber-900/40" border="border-amber-500/30" />
-        <FeatureCard icon={Briefcase}   title="جوائز وفيرة للفعاليات"        color="from-teal-700/40 to-teal-900/40" border="border-teal-500/30" />
-        <FeatureCard icon={Shield}      title="بيئة آمنة"                    color="from-emerald-700/40 to-emerald-900/40" border="border-emerald-500/30" />
+        <FeatureCard icon={Award} title="دعم وتدريب من الجهات الرسمية" tone="purple" />
+        <FeatureCard icon={Gift} title="مكافآت ومزايا كبيرة" tone="gold" />
+        <FeatureCard icon={Briefcase} title="جوائز وفيرة للفعاليات" tone="emerald" />
+        <FeatureCard icon={Shield} title="بيئة آمنة" tone="emerald" />
       </div>
 
       {/* Rules */}
@@ -181,10 +183,10 @@ function AgentLanding({ onCreate, onMyRequests }: { onCreate: () => void; onMyRe
 
       {/* Features grid */}
       <div className="px-4 grid grid-cols-2 gap-3 mt-4">
-        <FeatureCard icon={Award}       title="عمولات ومكافآت عالية"        color="from-purple-700/40 to-purple-900/40" border="border-purple-500/30" />
-        <FeatureCard icon={Briefcase}   title="دعم وفعاليات كثيرة"          color="from-amber-700/40 to-amber-900/40" border="border-amber-500/30" />
-        <FeatureCard icon={Gift}        title="حاضنة الأحلام"               color="from-teal-700/40 to-teal-900/40" border="border-teal-500/30" />
-        <FeatureCard icon={Shield}      title="بيئة آمنة"                    color="from-emerald-700/40 to-emerald-900/40" border="border-emerald-500/30" />
+        <FeatureCard icon={Award} title="عمولات ومكافآت عالية" tone="purple" />
+        <FeatureCard icon={Briefcase} title="دعم وفعاليات كثيرة" tone="gold" />
+        <FeatureCard icon={Gift} title="حاضنة الأحلام" tone="emerald" />
+        <FeatureCard icon={Shield} title="بيئة آمنة" tone="emerald" />
       </div>
 
       {/* Rules */}
@@ -218,12 +220,15 @@ function AgentLanding({ onCreate, onMyRequests }: { onCreate: () => void; onMyRe
   );
 }
 
-function FeatureCard({ icon: Icon, title, color, border }: any) {
+function FeatureCard({ icon: Icon, title, tone }: any) {
   return (
-    <div className={`rounded-2xl border ${border} bg-gradient-to-br ${color} p-4 flex flex-col items-center justify-center gap-2 min-h-[110px]`}>
-      <Icon size={28} className="text-white/90" />
+<Card tone={tone} padding="lg">
+      <div className="flex flex-col items-center justify-center gap-2 min-h-[110px]">
+        <Icon size={28} className="text-white/90" />
       <p className="text-white text-[11px] font-black text-center leading-tight">{title}</p>
-    </div>
+    
+      </div>
+    </Card>
   );
 }
 
@@ -305,7 +310,7 @@ function JoinSearch({ onClose }: { onClose: () => void }) {
         )}
 
         {result && (
-          <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-teal-900/30 to-purple-900/30 p-4">
+<Card tone="purple" padding="lg">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-16 h-16 rounded-2xl bg-black/40 flex items-center justify-center overflow-hidden flex-shrink-0">
                 {result.logoUrl ? (
@@ -335,7 +340,7 @@ function JoinSearch({ onClose }: { onClose: () => void }) {
             >
               إرسال طلب انضمام
             </button>
-          </div>
+          </Card>
         )}
       </div>
     </div>
@@ -369,7 +374,7 @@ function CreateRequestsView({ onClose, onBack }: { onClose: () => void; onBack: 
           </div>
         ) : (
           reqs.map((r: any) => (
-            <div key={r._id} className="rounded-2xl border border-white/10 bg-white/5 p-4">
+<Card key={r._id} tone="default" padding="lg">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-white font-black text-sm">{r.agencyName}</p>
                 {r.status === "pending" && <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-black">قيد المراجعة</span>}
@@ -380,7 +385,7 @@ function CreateRequestsView({ onClose, onBack }: { onClose: () => void; onBack: 
                 {new Date(r.createdAt).toLocaleString("ar-EG")}
               </p>
               {r.note && <p className="text-white/60 text-xs mt-2">{r.note}</p>}
-            </div>
+            </Card>
           ))
         )}
       </div>
@@ -450,14 +455,15 @@ function PendingModal({ onClose }: { onClose: () => void }) {
         )}
 
         {agencyReqs?.map((r: any) => (
-          <div key={r._id} className="rounded-xl bg-white/5 border border-white/10 p-3 mb-2">
-            <p className="text-white text-xs font-black">انضمام لـ {r.agencyName}</p>
+<Card key={r._id} tone="default" padding="md" className="mb-2">
+              <p className="text-white text-xs font-black">انضمام لـ {r.agencyName}</p>
             <p className="text-white/40 text-[10px] mt-1" dir="ltr">{new Date(r.createdAt).toLocaleString("ar-EG")}</p>
-          </div>
+          
+            </Card>
         ))}
 
         {createReqs?.map((r: any) => (
-          <div key={r._id} className="rounded-xl bg-white/5 border border-white/10 p-3 mb-2">
+<Card key={r._id} tone="default" padding="md" className="mb-2">
             <div className="flex items-center justify-between">
               <p className="text-white text-xs font-black">إنشاء وكالة: {r.agencyName}</p>
               <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
@@ -469,7 +475,7 @@ function PendingModal({ onClose }: { onClose: () => void }) {
               </span>
             </div>
             <p className="text-white/40 text-[10px] mt-1" dir="ltr">{new Date(r.createdAt).toLocaleString("ar-EG")}</p>
-          </div>
+          </Card>
         ))}
       </div>
     </div>
