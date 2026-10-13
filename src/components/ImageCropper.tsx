@@ -18,7 +18,8 @@ interface Props {
 async function getCroppedImg(
   imageSrc: string,
   pixelCrop: { x: number; y: number; width: number; height: number },
-  outputSize = 512
+  outputWidth = 512,
+  outputHeight = 512
 ): Promise<Blob> {
   const image = await new Promise<HTMLImageElement>((resolve, reject) => {
     const img = new Image();
@@ -29,8 +30,8 @@ async function getCroppedImg(
   });
 
   const canvas = document.createElement("canvas");
-  canvas.width = outputSize;
-  canvas.height = outputSize;
+  canvas.width = outputWidth;
+  canvas.height = outputHeight;
   const ctx = canvas.getContext("2d")!;
 
   ctx.drawImage(
@@ -82,7 +83,11 @@ export default function ImageCropper({
     if (!croppedAreaPixels) return;
     setBusy(true);
     try {
-      const blob = await getCroppedImg(imageSrc, croppedAreaPixels, 512);
+      // [ezo-crop] Compute output dimensions from aspect ratio
+      const baseW = 1024;
+      const outW = Math.round(baseW);
+      const outH = Math.round(baseW / (aspect || 1));
+      const blob = await getCroppedImg(imageSrc, croppedAreaPixels, outW, outH);
       const croppedFile = new File([blob], "cropped.jpg", { type: "image/jpeg" });
       await onConfirm(croppedFile);
     } finally {

@@ -820,7 +820,7 @@ export default function ProfilePage({
         {pendingCover && (
           <ImageCropper
             file={pendingCover}
-            aspect={16/9}{19/6}
+            aspect={19/7}
             shape="rect"
             onCancel={() => setPendingCover(null)}
             onConfirm={handleCoverCroppedConfirm}
