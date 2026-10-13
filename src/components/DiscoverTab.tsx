@@ -4,6 +4,8 @@ import { api } from "../../convex/_generated/api";
 import { getDeviceId } from "../lib/device";
 import UserAvatar from "./UserAvatar";
 import type { Id } from "../../convex/_generated/dataModel";
+import RankBadge from "./ui/RankBadge";
+import SectionTitle from "./ui/SectionTitle";
 import {
   Loader2, Home, Users, TrendingUp, Heart, Crown, Sparkles,
   Check, Flame, Eye,
@@ -36,7 +38,7 @@ export default function DiscoverTab({ onEnterRoom, onUserClick }: Props) {
       {/* ===== Top Rooms ===== */}
       <Section
         icon={Flame}
-        color="text-orange-400"
+        tone="gold"
         title="الغرف الرائجة"
         count={data.rooms.length}
       >
@@ -56,13 +58,7 @@ export default function DiscoverTab({ onEnterRoom, onUserClick }: Props) {
               )}
               <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/95 via-black/60 to-transparent" />
               {i < 3 && (
-                <div className={`absolute top-1.5 left-1.5 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black text-black shadow-lg border-2 border-white/40 ${
-                  i === 0 ? "bg-gradient-to-br from-amber-400 to-yellow-500" :
-                  i === 1 ? "bg-gradient-to-br from-slate-200 to-slate-400" :
-                  "bg-gradient-to-br from-orange-500 to-amber-700"
-                }`}>
-                  {i + 1}
-                </div>
+                <div className="absolute top-1.5 left-1.5"><RankBadge rank={i + 1} size="sm" /></div>
               )}
               <div className="absolute inset-x-0 bottom-0 p-2 text-right">
                 <p className="text-white text-[11px] font-black truncate">{r.name}</p>
@@ -79,7 +75,7 @@ export default function DiscoverTab({ onEnterRoom, onUserClick }: Props) {
       </Section>
 
       {/* ===== Top Wealth ===== */}
-      <Section icon={TrendingUp} color="text-amber-300" title="أعلى ثراء" count={data.topWealth.length}>
+      <Section icon={TrendingUp} tone="gold" title="أعلى ثراء" count={data.topWealth.length}>
         <div className="grid grid-cols-3 gap-2">
           {data.topWealth.map((u: any, i: number) => (
             <UserCard key={u.userId} user={u} rank={i + 1} onClick={() => onUserClick?.(u.userId)} color="text-amber-300" />
@@ -88,7 +84,7 @@ export default function DiscoverTab({ onEnterRoom, onUserClick }: Props) {
       </Section>
 
       {/* ===== Top Charm ===== */}
-      <Section icon={Heart} color="text-pink-300" title="أعلى جاذبية" count={data.topCharm.length}>
+      <Section icon={Heart} tone="pink" title="أعلى جاذبية" count={data.topCharm.length}>
         <div className="grid grid-cols-3 gap-2">
           {data.topCharm.map((u: any, i: number) => (
             <UserCard key={u.userId} user={u} rank={i + 1} onClick={() => onUserClick?.(u.userId)} color="text-pink-300" />
@@ -97,7 +93,7 @@ export default function DiscoverTab({ onEnterRoom, onUserClick }: Props) {
       </Section>
 
       {/* ===== New Users ===== */}
-      <Section icon={Sparkles} color="text-emerald-300" title="أعضاء جدد" count={data.newUsers.length}>
+      <Section icon={Sparkles} tone="emerald" title="أعضاء جدد" count={data.newUsers.length}>
         <div className="grid grid-cols-3 gap-2">
           {data.newUsers.map((u: any) => (
             <UserCard key={u.userId} user={u} onClick={() => onUserClick?.(u.userId)} color="text-emerald-300" />
@@ -109,16 +105,15 @@ export default function DiscoverTab({ onEnterRoom, onUserClick }: Props) {
 }
 
 // ============================================================
-function Section({ icon: Icon, color, title, count, children }: any) {
+function Section({ icon: Icon, tone = "default", title, count, children }: any) {
   return (
     <div className="px-4 py-3">
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-white/40 text-xs">{count}</span>
-        <div className="flex items-center gap-2">
-          <h2 className="text-white text-sm font-black">{title}</h2>
-          <Icon size={16} className={color} />
-        </div>
-      </div>
+      <SectionTitle
+        icon={Icon}
+        title={title}
+        action={{ label: String(count), onClick: () => {} }}
+        tone={tone}
+      />
       {children}
     </div>
   );
@@ -137,13 +132,7 @@ function UserCard({ user, rank, onClick, color }: any) {
           <UserAvatar avatarUrl={user.avatarUrl} name={user.name} className="w-full h-full" />
         </div>
         {rank && rank <= 3 && (
-          <div className={`absolute -top-1 -left-1 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black text-black border-2 border-slate-900 ${
-            rank === 1 ? "bg-gradient-to-br from-amber-400 to-yellow-500" :
-            rank === 2 ? "bg-gradient-to-br from-slate-200 to-slate-400" :
-            "bg-gradient-to-br from-orange-500 to-amber-700"
-          }`}>
-            {rank}
-          </div>
+          <div className="absolute -top-1 -left-1"><RankBadge rank={rank} size="sm" /></div>
         )}
         {user.verified && (
           <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center border-2 border-slate-900">
