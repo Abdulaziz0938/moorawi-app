@@ -4,6 +4,8 @@ import { api } from "../../convex/_generated/api";
 import { getActiveToken } from "../lib/session";
 import { dialog } from "../lib/dialog";
 import { X, Loader2, Award, Check, ChevronLeft, Lock } from "lucide-react";
+import MedalBadge from "./ui/MedalBadge";
+import { tierDesign, MEDAL_TIERS } from "../lib/medalDesign";
 
 interface Props {
   onClose: () => void;
@@ -21,14 +23,7 @@ const CATEGORIES: { key: Category; label: string }[] = [
   { key: "weekly",   label: "أسبوعي" },
 ];
 
-const TIER_STYLE: Record<string, { bg: string; border: string; text: string; label: string }> = {
-  C:   { bg: "bg-slate-700/40",     border: "border-slate-500/50",   text: "text-slate-300",   label: "C" },
-  B:   { bg: "bg-emerald-700/40",   border: "border-emerald-500/50", text: "text-emerald-300", label: "B" },
-  A:   { bg: "bg-blue-700/40",      border: "border-blue-500/50",    text: "text-blue-300",    label: "A" },
-  S:   { bg: "bg-red-700/40",       border: "border-red-500/50",     text: "text-red-300",     label: "S" },
-  SS:  { bg: "bg-amber-700/40",     border: "border-amber-500/50",   text: "text-amber-300",   label: "SS" },
-  SSS: { bg: "bg-purple-700/40",    border: "border-purple-500/50",  text: "text-purple-300",  label: "SSS" },
-};
+// يستخدم MEDAL_TIERS من medalDesign.ts (موحد في كل التطبيق)
 
 type View = "list" | "mine";
 
@@ -132,29 +127,55 @@ export default function MedalsSheet({ onClose }: Props) {
               ) : allMedals.length === 0 ? (
                 <Empty text="لا أوسمة في هذا التصنيف" />
               ) : (
-                <div className="grid grid-cols-3 gap-2.5">
+                <div className="grid grid-cols-2 gap-3">
                   {allMedals.map((m: any) => {
-                    const t = TIER_STYLE[m.tier] ?? TIER_STYLE.C;
+                    const t = tierDesign(m.tier);
                     const owned = myMedalIds.has(m._id);
                     return (
                       <div
                         key={m._id}
-                        className={`relative rounded-2xl border ${t.border} ${t.bg} p-2.5 flex flex-col items-center gap-1.5 aspect-square justify-center`}
+                        className={`relative rounded-2xl border-2 ${t.border} bg-gradient-to-br ${t.bg} p-3 flex flex-col items-center gap-2 aspect-[4/5] justify-center overflow-hidden ${t.glow}`}
                       >
+                        {/* Subtle inner glow */}
+                        <div className={`absolute inset-0 pointer-events-none ${t.bg} opacity-40`} />
+
                         {/* Tier badge */}
-                        <span className={`absolute top-1 right-1 px-1.5 py-0.5 rounded-full text-[8px] font-black bg-black/40 ${t.text}`}>
-                          {t.label}
+                        <span className={`absolute top-2 right-2 px-2 py-0.5 rounded-full text-[9px] font-black bg-black/60 backdrop-blur ${t.text} border ${t.border}`}>
+                          {m.tier}
                         </span>
+
                         {/* Lock if not owned */}
                         {!owned && (
-                          <Lock size={14} className="absolute top-2 left-2 text-white/30" />
+                          <div className="absolute top-2 left-2 w-6 h-6 rounded-full bg-black/60 backdrop-blur flex items-center justify-center">
+                            <Lock size={12} className="text-white/60" />
+                          </div>
                         )}
-                        {/* Icon */}
-                        <Award size={32} className={`${t.text} opacity-90`} strokeWidth={1.8} />
+
+                        {/* Owned checkmark */}
+                        {owned && (
+                          <div className="absolute top-2 left-2 w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/40">
+                            <Check size={12} className="text-white" strokeWidth={3} />
+                          </div>
+                        )}
+
+                        {/* Medal badge */}
+                        <MedalBadge
+                          name={m.name}
+                          tier={m.tier}
+                          imageUrl={m.imageUrl}
+                          size="lg"
+                          showTooltip={false}
+                        />
+
                         {/* Name */}
-                        <p className="text-white text-[10px] font-bold text-center leading-tight line-clamp-2">
+                        <p className="text-white text-[11px] font-black text-center leading-tight line-clamp-2 relative z-10 mt-1">
                           {m.name}
                         </p>
+
+                        {/* Tier label */}
+                        <span className={`text-[9px] font-bold ${t.text} opacity-80 relative z-10`}>
+                          {t.name}
+                        </span>
                       </div>
                     );
                   })}
@@ -171,33 +192,46 @@ export default function MedalsSheet({ onClose }: Props) {
                 <div className="grid grid-cols-3 gap-2.5">
                   {myMedals.map((um: any) => {
                     const m = um.medal;
-                    const t = TIER_STYLE[m.tier] ?? TIER_STYLE.C;
+                    const t = tierDesign(m.tier);
                     const isBusy = busy === um._id;
                     return (
                       <button
                         key={um._id}
                         disabled={isBusy}
                         onClick={() => handleEquipToggle(um)}
-                        className={`relative rounded-2xl border p-2.5 flex flex-col items-center gap-1.5 aspect-square justify-center transition ${
+                        className={`relative rounded-2xl border-2 p-3 flex flex-col items-center gap-2 aspect-[4/5] justify-center transition overflow-hidden ${
                           um.equipped
-                            ? "border-emerald-400/70 bg-emerald-500/20 shadow-[0_0_12px_rgba(16,185,129,0.4)]"
-                            : `${t.border} ${t.bg} hover:opacity-90`
+                            ? "border-emerald-400/80 bg-gradient-to-br from-emerald-500/30 to-emerald-700/20 shadow-lg shadow-emerald-500/40"
+                            : `${t.border} bg-gradient-to-br ${t.bg} ${t.glow}`
                         }`}
                       >
                         {/* Tier badge */}
-                        <span className={`absolute top-1 right-1 px-1.5 py-0.5 rounded-full text-[8px] font-black bg-black/40 ${t.text}`}>
-                          {t.label}
+                        <span className={`absolute top-2 right-2 px-2 py-0.5 rounded-full text-[9px] font-black bg-black/60 backdrop-blur ${t.text} border ${t.border}`}>
+                          {m.tier}
                         </span>
+
                         {/* Equipped check */}
                         {um.equipped && (
-                          <span className="absolute top-1 left-1 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center">
-                            <Check size={11} className="text-white" strokeWidth={3} />
+                          <span className="absolute top-2 left-2 w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/40 z-10">
+                            {isBusy ? (
+                              <Loader2 size={12} className="text-white animate-spin" />
+                            ) : (
+                              <Check size={12} className="text-white" strokeWidth={3} />
+                            )}
                           </span>
                         )}
-                        {/* Icon */}
-                        <Award size={32} className={um.equipped ? "text-emerald-300" : t.text} strokeWidth={1.8} />
+
+                        {/* Medal */}
+                        <MedalBadge
+                          name={m.name}
+                          tier={m.tier}
+                          imageUrl={m.imageUrl}
+                          size="lg"
+                          showTooltip={false}
+                        />
+
                         {/* Name */}
-                        <p className="text-white text-[10px] font-bold text-center leading-tight line-clamp-2">
+                        <p className="text-white text-[11px] font-black text-center leading-tight line-clamp-2 relative z-10 mt-1">
                           {m.name}
                         </p>
                         {/* Busy */}
