@@ -120,7 +120,7 @@ export default function ItemPreviewModal({
                 vip={vipLevel}
                 ring={vipLevel === 0}
                 customFrameUrl={item.imageUrl}
-                frameScale={item.frameScale ?? 2.2}
+                frameScale={item.frameScale ?? 3.0}
                 frameOffsetX={item.frameOffsetX ?? 0}
                 frameOffsetY={item.frameOffsetY ?? 0}
               />

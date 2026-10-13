@@ -32,7 +32,7 @@ export default function VipAvatar({
   className = "",
   onClick,
   customFrameUrl,
-  frameScale = 2.2,
+  frameScale = 3.0,
   frameOffsetX = 0,
   frameOffsetY = 0,
 }: Props) {
