@@ -332,6 +332,17 @@ export default defineSchema({
   // ================================================================
   // [moorawi-economy] ECONOMY — wallet transactions
   // ================================================================
+  // [ezo-vip] VIP Entry animations — يظهر عند دخول VIP 3+ للغرفة
+  roomEntries: defineTable({
+    roomId: v.id("rooms"),
+    userId: v.id("users"),
+    level: v.number(),         // VIP level عند الدخول (0-7)
+    name: v.string(),
+    avatarUrl: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_room_and_createdAt", ["roomId", "createdAt"]),
+
   walletTransactions: defineTable({
     userId: v.id("users"),
     type: v.union(

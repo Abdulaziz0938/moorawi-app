@@ -72,3 +72,16 @@ if (typeof window !== "undefined") {
   const saved = localStorage.getItem("ezo_sound");
   enabled = saved !== "off";
 }
+
+// [ezo-vip] صوت دخول VIP — نغمة صاعدة حسب المستوى
+export function playVipEntry(level: number): void {
+  if (level < 3) return;
+  // نغمة صاعدة: كل مستوى أعلى
+  const baseFreq = [0, 0, 0, 440, 523, 659, 784, 880][Math.min(level, 7)];
+  const notes = [baseFreq, baseFreq * 1.25, baseFreq * 1.5];
+  notes.forEach((freq, i) => {
+    setTimeout(() => {
+      play({ freq, duration: 0.18, type: "sine", gain: 0.08 });
+    }, i * 120);
+  });
+}

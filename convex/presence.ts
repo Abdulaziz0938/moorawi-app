@@ -43,12 +43,31 @@ export const heartbeat = mutation({
       return { ok: false, reason: "not_member" };
     }
 
+    const now = Date.now();
+    const wasStale = !member.lastSeenAt || (now - member.lastSeenAt) > STALE_THRESHOLD_MS;
+
     await ctx.db.patch("roomMembers", member._id, {
-      lastSeenAt: Date.now(),
+      lastSeenAt: now,
       // لو الجلسة انتهت (sweep أو غياب طويل)، نبدأ جلسة جديدة
-      sessionId: member.sessionId ?? `${me._id}_${Date.now()}`,
-      sessionStartedAt: member.sessionStartedAt ?? Date.now(),
+      sessionId: wasStale ? `${me._id}_${now}` : (member.sessionId ?? `${me._id}_${now}`),
+      sessionStartedAt: wasStale ? now : (member.sessionStartedAt ?? now),
     });
+
+    // [ezo-vip] تسجيل entry عند أول heartbeat (أو بعد انقطاع طويل) لمستخدم VIP 3+
+    if (wasStale) {
+      const { activeVipLevel } = await import("./lib/vip");
+      const vip = activeVipLevel(me);
+      if (vip >= 3) {
+        await ctx.db.insert("roomEntries", {
+          roomId: args.roomId,
+          userId: me._id,
+          level: vip,
+          name: me.name ?? "ضيف",
+          avatarUrl: me.avatarUrl,
+          createdAt: now,
+        });
+      }
+    }
 
     return { ok: true };
   },
@@ -238,7 +257,14 @@ export const sweepInactive = internalMutation({
       }
     }
 
-    return { ok: true, removed, clearedSeats };
+    // 3) نظّف roomEntries الأقدم من ساعة
+    const oldEntries = await ctx.db
+      .query("roomEntries")
+      .filter((q) => q.lt(q.field("createdAt"), Date.now() - 60 * 60 * 1000))
+      .take(500);
+    for (const e of oldEntries) await ctx.db.delete("roomEntries", e._id);
+
+    return { ok: true, removed, clearedSeats, entriesCleaned: oldEntries.length };
   },
 });
 
@@ -259,5 +285,26 @@ export const roomCharmTotals = query({
       totals[s.seatIndex] = s.sessionCharms ?? 0;
     }
     return totals;
+  },
+});
+
+// ============================================================
+// recentEntries — أحداث دخول VIP حديثة (خلال آخر 10 ثوانٍ)
+// ============================================================
+export const recentEntries = query({
+  args: {
+    roomId: v.id("rooms"),
+    since: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const since = args.since ?? (Date.now() - 10_000);
+    const rows = await ctx.db
+      .query("roomEntries")
+      .withIndex("by_room_and_createdAt", (q) =>
+        q.eq("roomId", args.roomId).gt("createdAt", since)
+      )
+      .order("desc")
+      .take(5);
+    return rows;
   },
 });
