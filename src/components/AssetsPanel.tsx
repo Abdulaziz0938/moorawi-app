@@ -721,6 +721,38 @@ function FramesTunerTab({ token }: { token: string | null }) {
     setOffsetY(0);
   };
 
+  const handleApplyAll = async () => {
+    const list = (items ?? []).filter((it: any) => it.imageUrl);
+    if (list.length === 0) {
+      dialog.alert("لا توجد إطارات في هذه الفئة");
+      return;
+    }
+    dialog.confirm(
+      `تطبيق الإعدادات الحالية (Scale ${scale.toFixed(2)}) على ${list.length} إطار؟`,
+      async () => {
+        setSaving(true);
+        try {
+          for (const it of list) {
+            await updateItem({
+              itemId: it._id,
+              frameScale: scale,
+              frameOffsetX: offsetX,
+              frameOffsetY: offsetY,
+              tokenOverride: token ?? undefined,
+            });
+          }
+          dialog.alert(`✓ تم تطبيق الإعدادات على ${list.length} إطار`);
+        } catch (e: any) {
+          dialog.alert(e?.message || "فشل التطبيق");
+        } finally {
+          setSaving(false);
+        }
+      },
+      "تطبيق على الكل",
+      "تطبيق"
+    );
+  };
+
   return (
     <div className="space-y-3">
       <div className="rounded-2xl bg-gradient-to-br from-purple-500/15 to-pink-500/15 border border-purple-400/30 p-3">
@@ -858,13 +890,21 @@ function FramesTunerTab({ token }: { token: string | null }) {
               />
             </div>
 
+            <button
+              onClick={handleApplyAll}
+              disabled={saving}
+              className="w-full py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 text-white text-sm font-black flex items-center justify-center gap-2 disabled:opacity-50 active:scale-95"
+            >
+              {saving ? <Loader2 size={16} className="animate-spin" /> : <><Sparkles size={14} /> تطبيق على كل إطارات "{category}"</>}
+            </button>
+
             <div className="flex gap-2 pt-1">
               <button
                 onClick={handleSave}
                 disabled={saving}
                 className="flex-1 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-sm font-black flex items-center justify-center gap-2 disabled:opacity-50 active:scale-95"
               >
-                {saving ? <Loader2 size={16} className="animate-spin" /> : <><Save size={14} /> حفظ</>}
+                {saving ? <Loader2 size={16} className="animate-spin" /> : <><Save size={14} /> حفظ (فقط المحدد)</>}
               </button>
               <button
                 onClick={handleReset}
