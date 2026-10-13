@@ -407,6 +407,16 @@ export default defineSchema({
     frameScale: v.optional(v.number()),       // 1.0 = same as avatar, default 1.4
     frameOffsetX: v.optional(v.number()),     // px offset from center, default 0
     frameOffsetY: v.optional(v.number()),     // px offset from center, default 0
+    // [ezo-canvas] Canvas Standard (500x500, hole 300x300)
+    canvasSize: v.optional(v.number()),
+    holeSize: v.optional(v.number()),
+    offsetX: v.optional(v.number()),
+    offsetY: v.optional(v.number()),
+    assetType: v.optional(v.union(
+      v.literal("png"),
+      v.literal("svga"),
+      v.literal("lottie"),
+    )),
   })
     .index("by_category_active", ["category", "active"])
     .index("by_active", ["active"]),
@@ -642,6 +652,16 @@ export default defineSchema({
     frameScale: v.optional(v.number()),
     frameOffsetX: v.optional(v.number()),
     frameOffsetY: v.optional(v.number()),
+    // [ezo-frame] Canvas Standard for VIP frames
+    canvasSize: v.optional(v.number()),
+    holeSize: v.optional(v.number()),
+    offsetX: v.optional(v.number()),
+    offsetY: v.optional(v.number()),
+    assetType: v.optional(v.union(
+      v.literal("png"),
+      v.literal("svga"),
+      v.literal("lottie"),
+    )),
     updatedAt: v.number(),
     updatedBy: v.optional(v.id("users")),
   }).index("by_key", ["key"]),

@@ -409,6 +409,11 @@ export const createItem = mutation({
     frameScale: v.optional(v.number()),
     frameOffsetX: v.optional(v.number()),
     frameOffsetY: v.optional(v.number()),
+    canvasSize: v.optional(v.number()),
+    holeSize: v.optional(v.number()),
+    offsetX: v.optional(v.number()),
+    offsetY: v.optional(v.number()),
+    assetType: v.optional(v.string()),
     tokenOverride: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
@@ -433,6 +438,11 @@ export const createItem = mutation({
       frameScale: args.frameScale,
       frameOffsetX: args.frameOffsetX,
       frameOffsetY: args.frameOffsetY,
+      canvasSize: args.canvasSize,
+      holeSize: args.holeSize,
+      offsetX: args.offsetX,
+      offsetY: args.offsetY,
+      assetType: args.assetType as any,
     });
     return { ok: true, itemId };
   },
@@ -489,6 +499,11 @@ export const updateItemAssets = mutation({
     frameScale: v.optional(v.number()),
     frameOffsetX: v.optional(v.number()),
     frameOffsetY: v.optional(v.number()),
+    canvasSize: v.optional(v.number()),
+    holeSize: v.optional(v.number()),
+    offsetX: v.optional(v.number()),
+    offsetY: v.optional(v.number()),
+    assetType: v.optional(v.string()),
     tokenOverride: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
@@ -511,6 +526,11 @@ export const updateItemAssets = mutation({
     if (args.frameScale !== undefined) patch.frameScale = args.frameScale;
     if (args.frameOffsetX !== undefined) patch.frameOffsetX = args.frameOffsetX;
     if (args.frameOffsetY !== undefined) patch.frameOffsetY = args.frameOffsetY;
+    if (args.canvasSize !== undefined) patch.canvasSize = args.canvasSize;
+    if (args.holeSize !== undefined) patch.holeSize = args.holeSize;
+    if (args.offsetX !== undefined) patch.offsetX = args.offsetX;
+    if (args.offsetY !== undefined) patch.offsetY = args.offsetY;
+    if (args.assetType !== undefined) patch.assetType = args.assetType;
 
     if (Object.keys(patch).length > 0) {
       await ctx.db.patch("shopItems", args.itemId, patch);
