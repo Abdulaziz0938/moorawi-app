@@ -53,7 +53,25 @@ export const recent = query({
     const enriched = await Promise.all(
       rows.map(async (r) => {
         const visitor = await ctx.db.get("users", r.visitorId);
-        return visitor ? { ...r, visitor } : null;
+        if (!visitor) return null;
+        const avatarUrl = visitor.avatarUrl ??
+          (visitor.avatarId ? await ctx.storage.getUrl(visitor.avatarId) : null);
+        const vip = (visitor.vipLevel ?? 0) > 0 &&
+          (!visitor.vipExpiresAt || visitor.vipExpiresAt > Date.now())
+          ? (visitor.vipLevel ?? 0)
+          : 0;
+        return {
+          _id: r._id,
+          visitorId: r.visitorId,
+          visitedUserId: r.visitedUserId,
+          source: r.source,
+          visitedAt: r.visitedAt,
+          // [ezo-visits] Flat visitor fields for frontend
+          name: visitor.name ?? "—",
+          userNumber: visitor.userNumber ?? null,
+          avatarUrl,
+          vip,
+        };
       }),
     );
     return enriched.filter(Boolean);
