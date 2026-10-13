@@ -561,7 +561,10 @@ export default defineSchema({
 
   visits: defineTable({
     visitorId: v.id("users"),
-    visitedUserId: v.id("users"),
+    visitedUserId: v.optional(v.id("users")),
+    roomId: v.optional(v.id("rooms")),
+    roomName: v.optional(v.string()),
+    roomCoverUrl: v.optional(v.string()),
     source: v.union(v.literal("profile"), v.literal("room")),
     visitedAt: v.number(),
   })

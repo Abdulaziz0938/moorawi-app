@@ -8,14 +8,14 @@ import VipAvatar from "./ui/VipAvatar";
 import { useAssets } from "../lib/assets";
 import { ChevronRight, Loader2, Clock, Eye, User, Crown, Lock, Sparkles } from "lucide-react";
 
-interface Props { onClose: () => void; onUserClick?: (id: any) => void; }
+interface Props { onClose: () => void; onUserClick?: (id: any) => void; mode?: "incoming" | "outgoing"; }
 
-export default function VisitsSheet({ onClose, onUserClick }: Props) {
+export default function VisitsSheet({ onClose, onUserClick, mode = "incoming" }: Props) {
   // Back handled by parent (MeTab)
   const deviceId = getDeviceId();
   const me = useQuery(api.profiles.me, { tokenOverride: deviceId });
   const visits = useQuery(
-    api.visits.recent,
+    mode === "incoming" ? api.visits.recent : api.visits.myRecent,
     me ? { userId: me._id } : ("skip" as any)
   );
   const countThisMonth = useQuery(
@@ -30,7 +30,7 @@ export default function VisitsSheet({ onClose, onUserClick }: Props) {
 
   return (
     <div className="fixed inset-0 z-[300] bg-gradient-to-b from-slate-900 to-black flex flex-col" dir="rtl">
-      <Header onClose={onClose} title="الزوار" icon={Eye} assetKey="ui.sheet.visits" />
+      <Header onClose={onClose} title={mode === "outgoing" ? "الزيارات الأخيرة" : "الزوار"} icon={Eye} assetKey="ui.sheet.visits" />
 
       <div className="flex-1 overflow-y-auto">
         {isVip ? (
@@ -39,7 +39,7 @@ export default function VisitsSheet({ onClose, onUserClick }: Props) {
             {visits === undefined ? (
               <Spinner />
             ) : visits.length === 0 ? (
-              <Empty icon={Eye} text="لا توجد زيارات بعد" />
+              <Empty icon={Eye} text={mode === "outgoing" ? "لم تقم بزيارات بعد" : "لا توجد زيارات بعد"} />
             ) : (
               <div className="space-y-2">
                 {visits.map((v: any) => (

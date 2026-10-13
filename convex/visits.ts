@@ -52,6 +52,77 @@ export const countThisMonth = query({
   },
 });
 
+// [ezo-visits] My own visits (profiles I visited + rooms I entered)
+// [ezo-visits] Record room entry (called from RoomView)
+export const recordRoomEntry = mutation({
+  args: {
+    roomId: v.id("rooms"),
+    tokenOverride: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
+    const room = await ctx.db.get("rooms", args.roomId);
+    if (!room) return { ok: true, skipped: true };
+    await ctx.db.insert("visits", {
+      visitorId: me._id,
+      roomId: args.roomId,
+      roomName: room.name,
+      roomCoverUrl: room.coverUrl ?? undefined,
+      source: "room",
+      visitedAt: Date.now(),
+    });
+    return { ok: true };
+  },
+});
+
+export const myRecent = query({
+  args: { userId: v.id("users"), limit: v.optional(v.number()) },
+  handler: async (ctx, args) => {
+    const limit = Math.min(args.limit ?? 50, 100);
+
+    // Profiles I visited
+    const profileRows = await ctx.db
+      .query("visits")
+      .withIndex("by_visitor", (q: any) => q.eq("visitorId", args.userId))
+      .order("desc")
+      .take(limit);
+
+    const profiles = await Promise.all(profileRows.map(async (r) => {
+      if (r.source === "room" && r.roomId) {
+        return {
+          kind: "room" as const,
+          _id: r._id,
+          targetId: r.roomId,
+          name: r.roomName ?? "غرفة",
+          userNumber: null,
+          avatarUrl: r.roomCoverUrl ?? null,
+          vip: 0,
+          visitedAt: r.visitedAt,
+        };
+      }
+      if (!r.visitedUserId) return null;
+      const u = await ctx.db.get("users", r.visitedUserId);
+      if (!u) return null;
+      const avatarUrl = u.avatarUrl ?? (u.avatarId ? await ctx.storage.getUrl(u.avatarId) : null);
+      const vip = (u.vipLevel ?? 0) > 0 && (!u.vipExpiresAt || u.vipExpiresAt > Date.now()) ? (u.vipLevel ?? 0) : 0;
+      return {
+        kind: "profile" as const,
+        _id: r._id,
+        targetId: u._id,
+        name: u.name ?? "—",
+        userNumber: u.userNumber ?? null,
+        avatarUrl,
+        vip,
+        visitedAt: r.visitedAt,
+      };
+    }));
+
+    const filtered = profiles.filter(Boolean);
+    filtered.sort((a: any, b: any) => (b.visitedAt ?? 0) - (a.visitedAt ?? 0));
+    return filtered.slice(0, limit);
+  },
+});
+
 export const recent = query({
   args: {
     userId: v.id("users"),

@@ -114,7 +114,7 @@ export default function MeTab({ onEnterRoom }: Props) {
           }}
           onOpenVisits={() => setShowVisits(true)}
         />
-        {showVisits && <VisitsSheet onClose={() => setShowVisits(false)} />}
+        {showVisits && <VisitsSheet mode="outgoing" onClose={() => setShowVisits(false)} />}
       </>
     );
   }
@@ -200,7 +200,7 @@ export default function MeTab({ onEnterRoom }: Props) {
       {showMedals && <MedalsSheet onClose={() => setShowMedals(false)} />}
       {showVip && <VipShopSheet onClose={() => setShowVip(false)} />}
       {showAgency && <AgencyEntryScreen initialTab={showAgency} onClose={() => setShowAgency(null)} />}
-      {showVisits && <VisitsSheet onClose={() => setShowVisits(false)} />}
+      {showVisits && <VisitsSheet mode="outgoing" onClose={() => setShowVisits(false)} />}
       {showSupport && <SupportSheet onClose={() => setShowSupport(false)} />}
       {showVerify && <VerificationSheet onClose={() => setShowVerify(false)} />}
       {showRelations && <RelationsSheet onClose={() => setShowRelations(false)} />}
