@@ -353,7 +353,7 @@ export default function SettingsSheet({
       {pendingCover && (
         <ImageCropper
           file={pendingCover}
-          aspect={1} {9/16}
+          aspect={9/16}
           shape="rect"
           onCancel={() => setPendingCover(null)}
           onConfirm={handleCroppedCoverConfirm}
