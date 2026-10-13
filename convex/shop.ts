@@ -109,6 +109,25 @@ export const getEquippedAssets = query({
 });
 
 // Check if user owns item
+// [ezo-profile] Count user's owned items by category
+export const countUserItems = query({
+  args: { userId: v.id("users") },
+  handler: async (ctx, args) => {
+    const inv = await ctx.db
+      .query("userInventory")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .collect();
+    const counts: Record<string, number> = {
+      frame: 0, vehicle: 0, entryEffect: 0,
+      chatBubble: 0, soundWave: 0, profileCard: 0,
+    };
+    for (const i of inv) {
+      if (counts[i.category] !== undefined) counts[i.category] += 1;
+    }
+    return counts;
+  },
+});
+
 export const ownsItem = query({
   args: {
     tokenOverride: v.optional(v.string()),

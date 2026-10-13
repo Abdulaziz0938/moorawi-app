@@ -6,7 +6,7 @@ import type { Id } from "../../convex/_generated/dataModel";
 import { dialog } from "../lib/dialog";
 import {
   X, Gift, MessageCircle, UserPlus, Mic, MicOff, ArrowDown,
-  Ban, Crown, Loader2, Shield, Copy, Check,
+  Ban, Crown, Loader2, Shield, Copy, Check, Car, Frame, Coins,
 } from "lucide-react";
 import { UserName } from "./UserBadges";
 import LevelBadge from "./LevelBadge";
@@ -88,6 +88,7 @@ export default function MiniProfileSheet({
   targetIsMod = false,
 }: Props) {
   const profile = useQuery(api.profileFull.getFull, { userId: userId as Id<"users"> });
+  const itemCounts = useQuery(api.shop.countUserItems, { userId: userId as Id<"users"> });
   const [copied, setCopied] = useState(false);
   const assets = useAssets();
   const assetsFull = useAssetsFull();
@@ -228,8 +229,10 @@ export default function MiniProfileSheet({
               </div>
             </div>
 
-            {/* Charm + Wealth + VIP logo */}
-            <div className="flex items-center justify-end gap-2 px-4 mt-3 flex-wrap">
+            {/* Badges row: LV + charm + wealth + VIP */}
+            <div className="flex items-center justify-end gap-1.5 px-4 mt-3 flex-wrap">
+              {charm > 0 && <LevelBadge kind="charm" level={levelFromValue(charm)} size="sm" />}
+              {wealth > 0 && <LevelBadge kind="wealth" level={levelFromValue(wealth)} size="sm" />}
               {vipLevel > 0 && (
                 <div className="badge-glow">
                   <img
@@ -240,8 +243,6 @@ export default function MiniProfileSheet({
                   />
                 </div>
               )}
-              {charm > 0 && <LevelBadge kind="charm" level={levelFromValue(charm)} size="sm" />}
-              {wealth > 0 && <LevelBadge kind="wealth" level={levelFromValue(wealth)} size="sm" />}
             </div>
 
             {/* Bio */}
@@ -249,25 +250,43 @@ export default function MiniProfileSheet({
               <p className="text-white/85 text-xs text-center px-6 mt-3 leading-relaxed">{profile.bio}</p>
             )}
 
-            {/* Stats (3) */}
-            <div className="mx-4 mt-4 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl grid grid-cols-3">
-              <StatBox label="المتابعين" value={stats.followers} />
-              <StatBox label="المعجبين" value={stats.fans} />
-              <StatBox label="الزوار" value={stats.visitors} />
+            {/* Medals row + counter */}
+            <div className="mx-4 mt-4 flex items-center justify-between gap-2 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl px-3 py-2.5">
+              <span className="text-white/70 text-xs font-black shrink-0">
+                +{(profile as any).stats?.medals ?? medals.length} وسام
+              </span>
+              <div className="flex-1 flex justify-end">
+                {medals.length > 0 ? (
+                  <MedalsRow medals={medals} max={6} size="xs" />
+                ) : (
+                  <span className="text-white/40 text-[10px]">لا توجد أوسمة</span>
+                )}
+              </div>
             </div>
 
-            {/* Medals */}
-            {medals.length > 0 && (
-              <div className="mx-4 mt-3 flex justify-center">
-                <MedalsRow medals={medals} max={10} size="xs" />
-              </div>
-            )}
-
-            {/* Property cards */}
+            {/* Property cards (icons + numbers) */}
             <div className="mx-4 mt-3 grid grid-cols-3 gap-2.5">
-              <PropertyCard label="هدية" value={0} tone="purple" />
-              <PropertyCard label="إطار" value={0} tone="emerald" />
-              <PropertyCard label="مركبة" value={0} tone="blue" />
+              <PropertyCard
+                label="مركبة"
+                value={itemCounts?.vehicle ?? 0}
+                tone="blue"
+                icon={<Car size={18} />}
+              />
+              <PropertyCard
+                label="إطار"
+                value={itemCounts?.frame ?? 0}
+                tone="emerald"
+                icon={<Frame size={18} />}
+              />
+              <PropertyCard
+                label="هدية"
+                value={
+                  ((profile as any).giftStats?.sent?.count ?? 0) +
+                  ((profile as any).giftStats?.received?.count ?? 0)
+                }
+                tone="purple"
+                icon={<Gift size={18} />}
+              />
             </div>
 
             {/* Actions */}
@@ -354,11 +373,12 @@ function StatBox({ label, value }: { label: string; value: number }) {
 }
 
 function PropertyCard({
-  label, value, tone,
+  label, value, tone, icon,
 }: {
   label: string;
   value: number;
   tone: "blue" | "emerald" | "purple";
+  icon?: React.ReactNode;
 }) {
   const t = {
     blue: { bg: "from-blue-900/40 to-blue-950/60", border: "border-blue-500/30", text: "text-blue-200" },
@@ -366,9 +386,12 @@ function PropertyCard({
     purple: { bg: "from-purple-900/40 to-purple-950/60", border: "border-purple-500/30", text: "text-purple-200" },
   }[tone];
   return (
-    <div className={`rounded-2xl border ${t.border} bg-gradient-to-br ${t.bg} backdrop-blur-xl p-2 flex flex-col items-center justify-center gap-0.5 aspect-[5/4]`}>
-      <p className={`${t.text} text-base font-black leading-none tabular-nums`}>{formatNumber(value)}</p>
-      <p className="text-white/60 text-[10px] leading-none mt-1">{label}</p>
+    <div className={`rounded-2xl border ${t.border} bg-gradient-to-br ${t.bg} backdrop-blur-xl p-2.5 flex flex-col items-center justify-center gap-1 aspect-[5/4]`}>
+      {icon && <div className={t.text}>{icon}</div>}
+      <p className={`${t.text} text-sm font-black leading-none tabular-nums`}>
+        {formatNumber(value)}
+      </p>
+      <p className="text-white/60 text-[10px] leading-none">{label}</p>
     </div>
   );
 }
