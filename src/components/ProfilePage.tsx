@@ -30,6 +30,7 @@ interface Props {
   onOpenOwnerPanel?: () => void;
   onEnterRoom?: (roomId: Id<"rooms">) => void;
   onOpenWallet?: () => void;
+  onOpenVisits?: () => void;
 }
 
 function formatNumber(n: number): string {
@@ -54,7 +55,7 @@ type Tab = "info" | "assets" | "relation" | "moments";
 
 export default function ProfilePage({
   userId, isMe, onClose, onOpenGift,
-  onOpenAdminPanel, onOpenOwnerPanel, onEnterRoom, onOpenWallet,
+  onOpenAdminPanel, onOpenOwnerPanel, onEnterRoom, onOpenWallet, onOpenVisits,
 }: Props) {
   const deviceId = getDeviceId();
   const profile = useQuery(api.profileFull.getFull, { userId: userId as Id<"users"> });
@@ -252,7 +253,7 @@ export default function ProfilePage({
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setShowMoreMenu(false)} />
                   <div
-                    className="absolute top-12 right-0 z-50 w-48 rounded-2xl overflow-hidden border border-white/20 shadow-2xl backdrop-blur-2xl"
+                    className="absolute top-12 left-0 z-[300] w-52 rounded-2xl overflow-hidden border border-white/20 shadow-2xl backdrop-blur-2xl"
                     style={{ background: "linear-gradient(145deg, rgba(30,27,75,0.95), rgba(15,12,40,0.98))" }}
                     onClick={(e) => e.stopPropagation()}
                   >
@@ -434,7 +435,7 @@ export default function ProfilePage({
         </div>
 
         {/* ============ VIP + Wealth + Charm (RTL: VIP first from right) ============ */}
-        <div className="flex items-center justify-end gap-2 px-6 mt-3 flex-wrap">
+        <div className="flex items-center justify-start gap-2 px-6 mt-3 flex-wrap">
           {vipLevel > 0 && (
             <div className="badge-glow">
               <img
@@ -451,7 +452,7 @@ export default function ProfilePage({
 
         {/* Bio */}
         {profile.bio && (
-          <p className="text-white/85 text-xs text-center px-8 mt-3 leading-relaxed">{profile.bio}</p>
+          <p className="text-white/85 text-xs text-right px-6 mt-3 leading-relaxed">{profile.bio}</p>
         )}
 
         {/* ============ Stats inline (no card, tappable for isMe) ============ */}
@@ -459,19 +460,17 @@ export default function ProfilePage({
           <InlineStat
             label="متابعين"
             value={stats.followers}
-            onClick={isMe ? () => dialog.alert("قائمة المتابعين — قريباً") : undefined}
           />
           <span className="w-px h-8 bg-white/15" />
           <InlineStat
             label="معجبين"
             value={stats.fans}
-            onClick={isMe ? () => dialog.alert("قائمة المعجبين — قريباً") : undefined}
           />
           <span className="w-px h-8 bg-white/15" />
           <InlineStat
             label="زوار"
             value={stats.visitors}
-            onClick={isMe ? () => dialog.alert("قائمة الزوار — قريباً") : undefined}
+            onClick={isMe && onOpenVisits ? onOpenVisits : undefined}
           />
         </div>
 
@@ -500,7 +499,24 @@ export default function ProfilePage({
         {room && (
           <div className="mx-4 mt-4">
             <button
-              onClick={() => { if (onEnterRoom && room._id) { onClose(); onEnterRoom(room._id); } }}
+              onClick={() => {
+                if (!room?._id) {
+                  dialog.alert("معرف الغرفة غير متوفر");
+                  return;
+                }
+                dialog.confirm(
+                  `هل تريد الذهاب إلى غرفة "${room.name}"؟`,
+                  () => {
+                    if (onEnterRoom) {
+                      onClose();
+                      onEnterRoom(room._id);
+                    }
+                  },
+                  "الذهاب إلى الغرفة",
+                  "اذهب",
+                  "إلغاء"
+                );
+              }}
               className="w-full rounded-2xl overflow-hidden relative active:scale-[0.99] transition"
             >
               <div className="absolute inset-0 bg-gradient-to-br from-purple-600/30 via-pink-600/20 to-indigo-600/30" />
@@ -694,7 +710,7 @@ export default function ProfilePage({
                 <p className="text-sm font-black text-white/70">إنها فارغة هنا</p>
                 <p className="text-xs mt-1">نؤمن بأن الحب سيأتي في النهاية</p>
                 <button
-                  onClick={() => dialog.alert("قريباً")}
+                  onClick={() => dialog.alert("فتح الدردشة مع المستخدم وطلب علاقة — قريباً")}
                   className="mt-4 px-6 py-2.5 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-xs font-black active:scale-95"
                 >
                   كيف تحصل عليها؟
@@ -886,17 +902,39 @@ function AnimatedSignal({ className = "" }: { className?: string }) {
 }
 
 // ============ Country Flag ============
+const COUNTRY_MAP: Record<string, string> = {
+  syria: "SY", sy: "SY", "سوريا": "SY", "سورية": "SY",
+  saudi: "SA", "السعودية": "SA", "المملكة العربية السعودية": "SA",
+  egypt: "EG", "مصر": "EG", eg: "EG",
+  iraq: "IQ", "العراق": "IQ", iq: "IQ",
+  jordan: "JO", "الأردن": "JO",
+  lebanon: "LB", "لبنان": "LB",
+  uae: "AE", "الإمارات": "AE", "الامارات": "AE",
+  kuwait: "KW", "الكويت": "KW",
+  qatar: "QA", "قطر": "QA",
+  bahrain: "BH", "البحرين": "BH",
+  oman: "OM", "عمان": "OM",
+  yemen: "YE", "اليمن": "YE",
+  palestine: "PS", "فلسطين": "PS",
+  turkey: "TR", "تركيا": "TR",
+  usa: "US", "أمريكا": "US", "امريكا": "US",
+  uk: "GB", "بريطانيا": "GB",
+  germany: "DE", "ألمانيا": "DE", "المانيا": "DE",
+  france: "FR", "فرنسا": "FR",
+};
+
 function CountryFlag({ code }: { code: string }) {
   if (!code) return null;
-  const c = code.toUpperCase().slice(0, 2);
+  const normalized = code.trim();
+  const iso = COUNTRY_MAP[normalized.toLowerCase()] || normalized.toUpperCase().slice(0, 2);
   let emoji = "";
   try {
-    emoji = c.replace(/./g, (ch) => String.fromCodePoint(0x1F1E6 + ch.charCodeAt(0) - 65));
+    emoji = iso.replace(/./g, (ch) => String.fromCodePoint(0x1F1E6 + ch.charCodeAt(0) - 65));
   } catch { emoji = ""; }
   return (
     <span className="text-[10px] bg-white/15 backdrop-blur border border-white/20 text-white px-2 py-0.5 rounded-full flex items-center gap-1" dir="ltr">
-      <span className="font-black">{c}</span>
-      <span>{emoji}</span>
+      <span className="font-black">{iso}</span>
+      <span className="text-xs">{emoji}</span>
     </span>
   );
 }
