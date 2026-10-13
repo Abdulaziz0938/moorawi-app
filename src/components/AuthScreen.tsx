@@ -3,6 +3,7 @@ import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Loader2, User, Lock, ArrowLeft } from "lucide-react";
 import { setSession } from "../lib/session";
+import Card from "./ui/Card";
 
 interface Props {
   onSuccess: (sessionToken: string) => void;
@@ -147,18 +148,24 @@ export default function AuthScreen({ onSuccess }: Props) {
           </div>
 
           <div className="w-full flex flex-col gap-3 mt-4">
-            <button
-              onClick={() => { resetForm(); setMode("signin"); }}
-              className="w-full py-4 rounded-2xl bg-gradient-to-r from-pink-500 to-purple-600 text-white font-black text-lg shadow-lg active:scale-95 transition"
-            >
-              تسجيل الدخول
-            </button>
-            <button
-              onClick={() => { resetForm(); setMode("signup"); }}
-              className="w-full py-4 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 text-white font-bold text-lg active:scale-95 transition hover:bg-white/15"
-            >
-              إنشاء حساب جديد
-            </button>
+<Card
+                interactive
+                onClick={() => { resetForm(); setMode("signin"); }}
+                padding="lg"
+              >
+                <div className="py-2 text-center bg-gradient-to-r from-pink-500 to-purple-600 text-white font-black text-lg rounded-xl">
+                  تسجيل الدخول
+                </div>
+              </Card>
+<Card
+                interactive
+                onClick={() => { resetForm(); setMode("signup"); }}
+                padding="lg"
+              >
+                <div className="py-2 text-center text-white font-bold text-lg">
+                  إنشاء حساب جديد
+                </div>
+              </Card>
             <button
               onClick={handleGuest}
               disabled={loading}
@@ -238,9 +245,9 @@ export default function AuthScreen({ onSuccess }: Props) {
         </div>
 
         {error && (
-          <div className="bg-red-500/20 border border-red-500/40 rounded-xl p-3 text-red-200 text-sm text-center">
-            {error}
-          </div>
+<Card tone="danger" padding="md">
+            <p className="text-red-200 text-sm text-center">{error}</p>
+          </Card>
         )}
 
         <button
