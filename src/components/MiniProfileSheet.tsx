@@ -5,8 +5,9 @@ import { useAssets, useAssetsFull } from "../lib/assets";
 import type { Id } from "../../convex/_generated/dataModel";
 import { dialog } from "../lib/dialog";
 import {
-  X, Gift, MessageCircle, UserPlus, Mic, MicOff, ArrowDown,
-  Ban, Crown, Loader2, Shield, Copy, Check, Car, Frame, Coins,
+  Gift, MessageCircle, UserPlus, Mic, MicOff, ArrowDown,
+  Ban, Crown, Loader2, Shield, Copy, Check, Car, Frame,
+  ChevronLeft, MoreVertical,
 } from "lucide-react";
 import { UserName } from "./UserBadges";
 import LevelBadge from "./LevelBadge";
@@ -56,29 +57,6 @@ const VIP_BG: Record<number, string> = {
   7: "from-yellow-500 via-amber-600 to-yellow-700",
 };
 
-function IconCircle({
-  icon, onClick, tone = "default", size = 52,
-}: {
-  icon: React.ReactNode;
-  onClick?: () => void;
-  tone?: "default" | "danger";
-  size?: number;
-}) {
-  const cls =
-    tone === "danger"
-      ? "bg-red-500/20 hover:bg-red-500/30 border-red-400/40 text-red-200"
-      : "bg-white/10 hover:bg-white/20 border-white/25 text-white";
-  return (
-    <button
-      onClick={onClick}
-      className={`rounded-full flex items-center justify-center transition-all active:scale-90 backdrop-blur-xl border shadow-lg ${cls}`}
-      style={{ width: size, height: size }}
-    >
-      {icon}
-    </button>
-  );
-}
-
 export default function MiniProfileSheet({
   userId, roomId, currentUserRole,
   isMySeat, isMySeatMuted, isTargetOnMic,
@@ -90,6 +68,8 @@ export default function MiniProfileSheet({
   const profile = useQuery(api.profileFull.getFull, { userId: userId as Id<"users"> });
   const itemCounts = useQuery(api.shop.countUserItems, { userId: userId as Id<"users"> });
   const [copied, setCopied] = useState(false);
+  const [showAllMedals, setShowAllMedals] = useState(false);
+  const [showMore, setShowMore] = useState(false);
   const assets = useAssets();
   const assetsFull = useAssetsFull();
 
@@ -109,7 +89,6 @@ export default function MiniProfileSheet({
         <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
         <div className="relative w-full max-w-md mx-auto bg-white/10 backdrop-blur-2xl rounded-t-3xl p-8 text-center border-t border-white/20">
           <p className="text-white">المستخدم غير موجود</p>
-          <button onClick={onClose} className="mt-4 text-white/60">إغلاق</button>
         </div>
       </div>
     );
@@ -119,14 +98,18 @@ export default function MiniProfileSheet({
   const bgGradient = VIP_BG[vipLevel] || VIP_BG[0];
   const charm = profile.totalReceived ?? 0;
   const wealth = profile.totalSent ?? 0;
-  const stats = profile.stats ?? { visitors: 0, fans: 0, followers: 0 };
   const medals = (profile as any).medals ?? [];
+  const medalCount = (profile as any).stats?.medals ?? medals.length;
   const equippedVipLvl = (profile as any).equippedVipFrameLevel ?? null;
   const vipFrameData = equippedVipLvl ? assetsFull[`vip.frame.${equippedVipLvl}`] : null;
 
   const canKick = currentUserRole === "owner" || currentUserRole === "moderator";
   const canBan = currentUserRole === "owner";
   const canPromoteOrDemote = currentUserRole === "owner";
+
+  const giftTotal =
+    ((profile as any).giftStats?.sent?.count ?? 0) +
+    ((profile as any).giftStats?.received?.count ?? 0);
 
   const handleCopy = async () => {
     if (!profile.userNumber) return;
@@ -179,16 +162,8 @@ export default function MiniProfileSheet({
           <div className="absolute inset-0 bg-black/30 backdrop-blur-2xl" />
           <div className="absolute inset-x-0 top-0 h-px bg-white/40" />
 
-          {/* Close button (top-left) */}
-          <button
-            onClick={onClose}
-            className="absolute top-3 left-3 w-9 h-9 rounded-full bg-black/40 backdrop-blur border border-white/20 flex items-center justify-center text-white hover:bg-black/60 transition z-40"
-          >
-            <X size={18} />
-          </button>
-
           <div className="relative z-10 flex flex-col max-h-[92vh] overflow-y-auto">
-            {/* Name + ID (below avatar) */}
+            {/* Name + ID — right-aligned */}
             <div className="px-4 pt-12 pb-2 flex flex-col items-start">
               <UserName
                 name={profile.name ?? "ضيف"}
@@ -205,7 +180,6 @@ export default function MiniProfileSheet({
                     onClick={handleCopy}
                     className="flex items-center gap-1 bg-white/15 backdrop-blur border border-white/25 text-white text-[11px] px-2.5 py-1 rounded-full hover:bg-white/25 transition active:scale-95"
                     dir="ltr"
-                    title="نسخ المعرف"
                   >
                     <span>ID:{profile.userNumber}</span>
                     {copied ? <Check size={11} className="text-green-300" /> : <Copy size={11} className="opacity-70" />}
@@ -229,8 +203,8 @@ export default function MiniProfileSheet({
               </div>
             </div>
 
-            {/* Badges row: LV + charm + wealth + VIP */}
-            <div className="flex items-center justify-end gap-1.5 px-4 mt-3 flex-wrap">
+            {/* Badges row — LEFT aligned */}
+            <div className="flex items-center justify-start gap-1.5 px-4 mt-3 flex-wrap">
               {charm > 0 && <LevelBadge kind="charm" level={levelFromValue(charm)} size="sm" />}
               {wealth > 0 && <LevelBadge kind="wealth" level={levelFromValue(wealth)} size="sm" />}
               {vipLevel > 0 && (
@@ -245,112 +219,111 @@ export default function MiniProfileSheet({
               )}
             </div>
 
-            {/* Bio */}
-            {profile.bio && (
-              <p className="text-white/85 text-xs text-center px-6 mt-3 leading-relaxed">{profile.bio}</p>
-            )}
-
-            {/* Medals row + counter */}
-            <div className="mx-4 mt-4 flex items-center justify-between gap-2 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl px-3 py-2.5">
-              <span className="text-white/70 text-xs font-black shrink-0">
-                +{(profile as any).stats?.medals ?? medals.length} وسام
-              </span>
-              <div className="flex-1 flex justify-end">
+            {/* Medals bar — clickable to expand */}
+            <button
+              onClick={() => setShowAllMedals((v) => !v)}
+              className="mx-4 mt-3 flex items-center justify-between gap-2 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl px-3 py-2.5 hover:bg-white/15 transition active:scale-[0.99]"
+            >
+              <div className="flex items-center gap-1 shrink-0">
+                <span className="text-white/70 text-xs font-black">
+                  +{medalCount} وسام
+                </span>
+                <ChevronLeft
+                  size={14}
+                  className={`text-white/50 transition-transform ${showAllMedals ? "rotate-90" : ""}`}
+                />
+              </div>
+              <div className="flex-1 flex justify-end overflow-hidden">
                 {medals.length > 0 ? (
-                  <MedalsRow medals={medals} max={6} size="xs" />
+                  <MedalsRow
+                    medals={showAllMedals ? medals : medals.slice(0, 6)}
+                    max={showAllMedals ? 30 : 6}
+                    size="xs"
+                  />
                 ) : (
                   <span className="text-white/40 text-[10px]">لا توجد أوسمة</span>
                 )}
               </div>
-            </div>
+            </button>
 
-            {/* Property cards (icons + numbers) */}
-            <div className="mx-4 mt-3 grid grid-cols-3 gap-2.5">
-              <PropertyCard
-                label="مركبة"
-                value={itemCounts?.vehicle ?? 0}
-                tone="blue"
-                icon={<Car size={18} />}
+            {/* Property cards — horizontal rectangles */}
+            <div className="mx-4 mt-3 grid grid-cols-3 gap-2">
+              <PropertyBar
+                label="هدية"
+                value={giftTotal}
+                tone="purple"
+                icon={<Gift size={16} />}
               />
-              <PropertyCard
+              <PropertyBar
                 label="إطار"
                 value={itemCounts?.frame ?? 0}
                 tone="emerald"
-                icon={<Frame size={18} />}
+                icon={<Frame size={16} />}
               />
-              <PropertyCard
-                label="هدية"
-                value={
-                  ((profile as any).giftStats?.sent?.count ?? 0) +
-                  ((profile as any).giftStats?.received?.count ?? 0)
-                }
-                tone="purple"
-                icon={<Gift size={18} />}
+              <PropertyBar
+                label="مركبة"
+                value={itemCounts?.vehicle ?? 0}
+                tone="blue"
+                icon={<Car size={16} />}
               />
             </div>
 
-            {/* Actions */}
+            {/* Bottom actions — one full bar */}
             {isMySeat ? (
-              <div className="mx-4 mt-4 mb-4">
-                <div className="grid grid-cols-3 gap-2.5">
-                  <button
-                    onClick={onOpenGift}
-                    className="rounded-2xl bg-white/10 hover:bg-white/20 backdrop-blur-xl border border-white/25 flex flex-col items-center justify-center gap-2 py-4 active:scale-95 transition"
-                  >
-                    <Gift size={22} className="text-white" />
-                    <span className="text-[11px] font-black text-white">هدية</span>
-                  </button>
-                  <button
-                    disabled={isMySeatMuted}
-                    onClick={onMute}
-                    className={`rounded-2xl backdrop-blur-xl border flex flex-col items-center justify-center gap-2 py-4 active:scale-95 transition ${
-                      isMySeatMuted
-                        ? "bg-red-500/20 border-red-400/40 cursor-not-allowed"
-                        : "bg-white/10 hover:bg-white/20 border-white/25"
-                    }`}
-                  >
-                    <MicOff size={22} className={isMySeatMuted ? "text-red-300" : "text-white"} />
-                    <span className={`text-[11px] font-black ${isMySeatMuted ? "text-red-300" : "text-white"}`}>
-                      {isMySeatMuted ? "مكتوم إدارياً" : "كتم"}
-                    </span>
-                  </button>
-                  <button
-                    onClick={onRemoveFromSeat}
-                    className="rounded-2xl bg-white/10 hover:bg-white/20 backdrop-blur-xl border border-white/25 flex flex-col items-center justify-center gap-2 py-4 active:scale-95 transition"
-                  >
-                    <ArrowDown size={22} className="text-white" />
-                    <span className="text-[11px] font-black text-white">نزول</span>
-                  </button>
-                </div>
+              <div className="mx-4 mt-4 mb-4 h-14 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 flex items-stretch divide-x divide-white/10 rtl:divide-x-reverse overflow-hidden">
+                <ActionBtn icon={<Gift size={22} />} onClick={onOpenGift} />
+                <ActionBtn
+                  icon={isMySeatMuted ? <MicOff size={22} className="text-red-300" /> : <MicOff size={22} />}
+                  onClick={onMute}
+                  disabled={isMySeatMuted}
+                />
+                <ActionBtn icon={<ArrowDown size={22} />} onClick={onRemoveFromSeat} />
               </div>
             ) : (
-              <>
-                <div className="mx-4 mt-4 mb-3 flex items-center justify-center gap-4">
-                  <IconCircle icon={<Gift size={22} />} size={54} onClick={onOpenGift} />
-                  <IconCircle
-                    icon={<MessageCircle size={22} />}
-                    size={54}
-                    onClick={onOpenChat ?? (() => dialog.alert("قريباً"))}
-                  />
-                  <IconCircle
-                    icon={<UserPlus size={22} />}
-                    size={54}
-                    onClick={onFollowToggle ?? (() => dialog.alert("قريباً"))}
-                  />
-                </div>
-
-                {roomId && (
-                  <div className="mx-4 mb-4 flex items-center justify-center gap-3 flex-wrap">
-                    {!isTargetOnMic && <IconCircle icon={<Mic size={20} />} size={50} onClick={onInviteToMic} />}
-                    {canKick && isTargetOnMic && <IconCircle icon={<MicOff size={20} />} size={50} onClick={onMute} />}
-                    {canKick && isTargetOnMic && <IconCircle icon={<ArrowDown size={20} />} size={50} onClick={onRemoveFromSeat} />}
-                    {canKick && <IconCircle icon={<Ban size={20} />} size={50} onClick={onKick} tone="danger" />}
-                    {canPromoteOrDemote && !targetIsMod && <IconCircle icon={<Crown size={20} />} size={50} onClick={onPromote} />}
-                    {canPromoteOrDemote && targetIsMod && <IconCircle icon={<Shield size={20} />} size={50} onClick={onDemote} />}
-                    {canBan && <IconCircle icon={<Ban size={20} />} size={50} onClick={onBan} tone="danger" />}
-                  </div>
+              <div className="mx-4 mt-4 mb-4 h-14 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 flex items-stretch divide-x divide-white/10 rtl:divide-x-reverse overflow-hidden">
+                <ActionBtn icon={<Gift size={22} />} onClick={onOpenGift} />
+                <ActionBtn
+                  icon={<MessageCircle size={22} />}
+                  onClick={onOpenChat ?? (() => dialog.alert("قريباً"))}
+                />
+                <ActionBtn
+                  icon={<UserPlus size={22} />}
+                  onClick={onFollowToggle ?? (() => dialog.alert("قريباً"))}
+                />
+                {roomId && !isTargetOnMic && (
+                  <ActionBtn icon={<Mic size={22} />} onClick={onInviteToMic} />
                 )}
-              </>
+                {(canKick || canBan || canPromoteOrDemote) && (
+                  <ActionBtn
+                    icon={<MoreVertical size={22} />}
+                    onClick={() => setShowMore((v) => !v)}
+                  />
+                )}
+              </div>
+            )}
+
+            {/* More actions drawer (kicks, bans, promotions) */}
+            {showMore && roomId && (
+              <div className="mx-4 mb-4 p-2 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center gap-2 flex-wrap">
+                {canKick && isTargetOnMic && (
+                  <SmallAction icon={<MicOff size={18} />} label="كتم" onClick={onMute} />
+                )}
+                {canKick && isTargetOnMic && (
+                  <SmallAction icon={<ArrowDown size={18} />} label="نزول" onClick={onRemoveFromSeat} />
+                )}
+                {canKick && (
+                  <SmallAction icon={<Ban size={18} />} label="طرد" onClick={onKick} tone="danger" />
+                )}
+                {canPromoteOrDemote && !targetIsMod && (
+                  <SmallAction icon={<Crown size={18} />} label="ترقية" onClick={onPromote} />
+                )}
+                {canPromoteOrDemote && targetIsMod && (
+                  <SmallAction icon={<Shield size={18} />} label="تخفيض" onClick={onDemote} />
+                )}
+                {canBan && (
+                  <SmallAction icon={<Ban size={18} />} label="حظر" onClick={onBan} tone="danger" />
+                )}
+              </div>
             )}
 
             <div className="h-6" />
@@ -361,18 +334,49 @@ export default function MiniProfileSheet({
   );
 }
 
-function StatBox({ label, value }: { label: string; value: number }) {
+function ActionBtn({
+  icon, onClick, disabled,
+}: {
+  icon: React.ReactNode;
+  onClick?: () => void;
+  disabled?: boolean;
+}) {
   return (
-    <div className="flex flex-col items-center gap-0.5 py-3">
-      <p className="text-white text-base font-black tabular-nums" dir="ltr">
-        {formatNumber(value)}
-      </p>
-      <p className="text-white/60 text-[10px]">{label}</p>
-    </div>
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`flex-1 flex items-center justify-center text-white transition active:bg-white/10 disabled:opacity-40 ${
+        disabled ? "cursor-not-allowed" : "hover:bg-white/5"
+      }`}
+    >
+      {icon}
+    </button>
   );
 }
 
-function PropertyCard({
+function SmallAction({
+  icon, label, onClick, tone = "default",
+}: {
+  icon: React.ReactNode;
+  label: string;
+  onClick?: () => void;
+  tone?: "default" | "danger";
+}) {
+  const cls = tone === "danger"
+    ? "bg-red-500/20 border-red-400/40 text-red-200 hover:bg-red-500/30"
+    : "bg-white/10 border-white/20 text-white hover:bg-white/20";
+  return (
+    <button
+      onClick={onClick}
+      className={`px-3 py-2 rounded-xl border backdrop-blur-xl text-[11px] font-black flex items-center gap-1.5 active:scale-95 transition ${cls}`}
+    >
+      {icon}
+      <span>{label}</span>
+    </button>
+  );
+}
+
+function PropertyBar({
   label, value, tone, icon,
 }: {
   label: string;
@@ -386,12 +390,14 @@ function PropertyCard({
     purple: { bg: "from-purple-900/40 to-purple-950/60", border: "border-purple-500/30", text: "text-purple-200" },
   }[tone];
   return (
-    <div className={`rounded-2xl border ${t.border} bg-gradient-to-br ${t.bg} backdrop-blur-xl p-2.5 flex flex-col items-center justify-center gap-1 aspect-[5/4]`}>
-      {icon && <div className={t.text}>{icon}</div>}
-      <p className={`${t.text} text-sm font-black leading-none tabular-nums`}>
-        {formatNumber(value)}
-      </p>
-      <p className="text-white/60 text-[10px] leading-none">{label}</p>
+    <div className={`h-14 rounded-2xl border ${t.border} bg-gradient-to-br ${t.bg} backdrop-blur-xl px-2.5 flex items-center justify-between gap-1`}>
+      <div className={`${t.text} shrink-0`}>{icon}</div>
+      <div className="flex flex-col items-end justify-center min-w-0">
+        <span className={`${t.text} text-sm font-black leading-none tabular-nums`}>
+          {formatNumber(value)}
+        </span>
+        <span className="text-white/60 text-[9px] leading-none mt-0.5">{label}</span>
+      </div>
     </div>
   );
 }
