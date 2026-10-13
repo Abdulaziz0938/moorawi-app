@@ -8,8 +8,7 @@ import { uploadToCloudinary } from "../lib/cloudinary";
 import { dialog } from "../lib/dialog";
 import {
   X, Home, Gift, MessageCircle, UserPlus, Crown, Loader2,
-  Pencil, Camera, Eye, Trash2, ImageIcon, Copy, Check, Radio,
-} from "lucide-react";
+  Pencil, Camera, Eye, Trash2, ImageIcon, Copy, Check, Radio, Send, Inbox, Coins } from "lucide-react";
 import { UserName } from "./UserBadges";
 import LevelBadge from "./LevelBadge";
 import MedalsRow from "./MedalsRow";
@@ -89,6 +88,10 @@ export default function ProfilePage({
   const charm = profile.totalReceived ?? 0;
   const wealth = profile.totalSent ?? 0;
   const stats = profile.stats ?? { visitors: 0, fans: 0, followers: 0, following: 0, medals: 0 };
+  const giftStats = (profile as any).giftStats ?? {
+    sent: { count: 0, total: 0, transactions: 0 },
+    received: { count: 0, total: 0, transactions: 0 },
+  };
   const medals = (profile as any).medals ?? [];
   const room = (profile as any).room;
 
@@ -319,6 +322,39 @@ export default function ProfilePage({
           <StatBox label="المتابعين" value={stats.followers} />
           <StatBox label="المعجبين" value={stats.fans} />
           <StatBox label="الزوار" value={stats.visitors} />
+        </div>
+
+        {/* ============ 6.1. Gift Stats ============ */}
+        <div className="mx-4 mt-3 grid grid-cols-2 gap-3">
+          {/* أرسل */}
+          <div className="rounded-2xl bg-gradient-to-br from-pink-500/15 via-pink-600/10 to-transparent border border-pink-400/30 backdrop-blur-xl p-3">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-pink-200 text-[10px] font-black">أرسل</span>
+              <Send size={14} className="text-pink-300" />
+            </div>
+            <p className="text-white text-lg font-black tabular-nums leading-tight" dir="ltr">
+              {formatNumber(giftStats.sent.count)}
+            </p>
+            <p className="text-pink-300 text-[10px] font-bold tabular-nums flex items-center gap-1 mt-0.5">
+              <Coins size={10} />
+              {formatNumber(giftStats.sent.total)}
+            </p>
+          </div>
+
+          {/* استلم */}
+          <div className="rounded-2xl bg-gradient-to-br from-emerald-500/15 via-emerald-600/10 to-transparent border border-emerald-400/30 backdrop-blur-xl p-3">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-emerald-200 text-[10px] font-black">استلم</span>
+              <Inbox size={14} className="text-emerald-300" />
+            </div>
+            <p className="text-white text-lg font-black tabular-nums leading-tight" dir="ltr">
+              {formatNumber(giftStats.received.count)}
+            </p>
+            <p className="text-emerald-300 text-[10px] font-bold tabular-nums flex items-center gap-1 mt-0.5">
+              <Coins size={10} />
+              {formatNumber(giftStats.received.total)}
+            </p>
+          </div>
         </div>
 
         {/* ============ 7. Medals ============ */}

@@ -54,6 +54,36 @@ export const getFull = query({
       medals: user.medalCount ?? 0,
     };
 
+    // --- 5.1) Gift stats (sent + received counts and totals) ---
+    const sentTxs = await ctx.db
+      .query("giftTransactions")
+      .withIndex("by_from", (q) => q.eq("fromUserId", args.userId))
+      .take(1000);
+
+    const receivedTxs = await ctx.db
+      .query("giftTransactions")
+      .withIndex("by_to", (q) => q.eq("toUserId", args.userId))
+      .take(1000);
+
+    let giftSentCount = 0;
+    let giftSentTotal = 0;
+    for (const t of sentTxs) {
+      giftSentCount += t.quantity;
+      giftSentTotal += t.totalPrice;
+    }
+
+    let giftReceivedCount = 0;
+    let giftReceivedTotal = 0;
+    for (const t of receivedTxs) {
+      giftReceivedCount += t.quantity;
+      giftReceivedTotal += t.totalPrice;
+    }
+
+    const giftStats = {
+      sent: { count: giftSentCount, total: giftSentTotal, transactions: sentTxs.length },
+      received: { count: giftReceivedCount, total: giftReceivedTotal, transactions: receivedTxs.length },
+    };
+
     // --- 6) My Room (if owner) ---
     const room = await ctx.db
       .query("rooms")
@@ -175,6 +205,7 @@ export const getFull = query({
 
       // Stats (from DB)
       stats,
+      giftStats,
 
       // Room (null if no room)
       room: roomInfo,
