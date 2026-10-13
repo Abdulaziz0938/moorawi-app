@@ -42,8 +42,8 @@ async function getCroppedImg(
     pixelCrop.height,
     0,
     0,
-    outputSize,
-    outputSize
+    outputWidth,
+    outputHeight
   );
 
   return new Promise((resolve, reject) => {
