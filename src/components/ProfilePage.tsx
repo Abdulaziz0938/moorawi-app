@@ -4,6 +4,7 @@ import { api } from "../../convex/_generated/api";
 import { useAssets, useAssetsFull } from "../lib/assets";
 import type { Id } from "../../convex/_generated/dataModel";
 import { getDeviceId } from "../lib/device";
+import { getActiveToken } from "../lib/session";
 import { uploadToCloudinary } from "../lib/cloudinary";
 import { dialog } from "../lib/dialog";
 import {
@@ -103,7 +104,7 @@ export default function ProfilePage({
 
   useEffect(() => {
     if (!isMe && userId) {
-      recordVisit({ visitedUserId: userId as Id<"users">, source: "profile", tokenOverride: deviceId }).catch(() => {});
+      recordVisit({ visitedUserId: userId as Id<"users">, source: "profile", tokenOverride: getActiveToken() ?? deviceId }).catch(() => {});
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, isMe]);

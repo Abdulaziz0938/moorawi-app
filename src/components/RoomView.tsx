@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { agoraManager } from "../lib/agora";
 import { getDeviceId } from "../lib/device";
+import { getActiveToken } from "../lib/session";
 import { useAssets, useAssetsFull } from "../lib/assets";
 import { uploadToCloudinary } from "../lib/cloudinary";
 import SettingsSheet from "./SettingsSheet";
@@ -168,6 +169,15 @@ function bubbleClass(vip: number): string {
 }
 
 export default function RoomView({ roomId, onLeave }: Props) {
+  const recordRoomEntry = useMutation(api.visits.recordRoomEntry);
+  useEffect(() => {
+    if (roomId) {
+      recordRoomEntry({ roomId, tokenOverride: getActiveToken() ?? getDeviceId() })
+        .then(() => console.log("[visit] room recorded"))
+        .catch((err) => console.error("[visit] error:", err));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roomId]);
   const deviceId = getDeviceId();
   const assets = useAssets();
   const assetsFull = useAssetsFull();

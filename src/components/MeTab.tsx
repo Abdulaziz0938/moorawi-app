@@ -50,6 +50,7 @@ export default function MeTab({ onEnterRoom }: Props) {
   const [showVip, setShowVip] = useState(false);
   const [showAgency, setShowAgency] = useState<null | "host" | "agent">(null);
   const [showVisits, setShowVisits] = useState(false);
+  const [visitsMode, setVisitsMode] = useState<"incoming" | "outgoing">("outgoing");
   const [showSupport, setShowSupport] = useState(false);
   const [showVerify, setShowVerify] = useState(false);
   const [showRelations, setShowRelations] = useState(false);
@@ -112,9 +113,9 @@ export default function MeTab({ onEnterRoom }: Props) {
             setShowFullProfile(false);
             setShowAdmin(true);
           }}
-          onOpenVisits={() => setShowVisits(true)}
+          onOpenVisits={() => { setVisitsMode("incoming"); setShowVisits(true); }}
         />
-        {showVisits && <VisitsSheet mode="outgoing" onClose={() => setShowVisits(false)} />}
+        {showVisits && <VisitsSheet mode={visitsMode} onClose={() => setShowVisits(false)} />}
       </>
     );
   }
@@ -164,7 +165,7 @@ export default function MeTab({ onEnterRoom }: Props) {
           onOpenVip={() => setShowVip(true)}
           onOpenHost={() => setShowAgency("host")}
           onOpenAgency={() => setShowAgency("agent")}
-          onOpenVisits={() => setShowVisits(true)}
+          onOpenVisits={() => { setVisitsMode("outgoing"); setShowVisits(true); }}
           onOpenSupport={() => setShowSupport(true)}
           onOpenVerify={() => setShowVerify(true)}
           onOpenRelations={() => setShowRelations(true)}
@@ -200,7 +201,7 @@ export default function MeTab({ onEnterRoom }: Props) {
       {showMedals && <MedalsSheet onClose={() => setShowMedals(false)} />}
       {showVip && <VipShopSheet onClose={() => setShowVip(false)} />}
       {showAgency && <AgencyEntryScreen initialTab={showAgency} onClose={() => setShowAgency(null)} />}
-      {showVisits && <VisitsSheet mode="outgoing" onClose={() => setShowVisits(false)} />}
+      {showVisits && <VisitsSheet mode={visitsMode} onClose={() => setShowVisits(false)} />}
       {showSupport && <SupportSheet onClose={() => setShowSupport(false)} />}
       {showVerify && <VerificationSheet onClose={() => setShowVerify(false)} />}
       {showRelations && <RelationsSheet onClose={() => setShowRelations(false)} />}

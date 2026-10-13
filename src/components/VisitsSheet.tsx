@@ -45,7 +45,7 @@ export default function VisitsSheet({ onClose, onUserClick, mode = "incoming" }:
                 {visits.map((v: any) => (
                   <button
                     key={v._id}
-                    onClick={() => onUserClick?.(v.visitorId)}
+                    onClick={() => onUserClick?.(mode === "outgoing" ? (v.targetId ?? v.visitorId) : v.visitorId)}
                     className="w-full rounded-2xl bg-white/5 border border-white/10 p-3 flex items-center gap-3 active:bg-white/10"
                   >
                     <div className="w-12 h-12 rounded-full overflow-hidden bg-purple-700 flex items-center justify-center flex-shrink-0">
