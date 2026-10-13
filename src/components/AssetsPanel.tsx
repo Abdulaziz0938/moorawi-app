@@ -16,6 +16,7 @@ import {
   Upload, RotateCcw, Loader2, Pencil, Save, X, Home, MessageCircle,
   Image as ImageIcon, Compass, User, Mic, Grid2x2, Send, Bell,
   Trophy, Heart, Search, ChevronLeft, Hash, Settings, Users, Megaphone,
+  Plus, Trash2,
 } from "lucide-react";
 
 
@@ -330,10 +331,13 @@ function MedalsTab({ token }: { token: string | null }) {
 function ShopTab({ token }: { token: string | null }) {
   const items = useQuery(api.shop.listAllAdmin, { tokenOverride: token ?? undefined });
   const updateItem = useMutation(api.shop.updateItemAssets);
+  const createItem = useMutation(api.shop.createItem);
+  const deleteItem = useMutation(api.shop.deleteItem);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [editId, setEditId] = useState<Id<"shopItems"> | null>(null);
   const [editName, setEditName] = useState("");
   const [filter, setFilter] = useState<string>("all");
+  const [showCreate, setShowCreate] = useState(false);
 
   const handleFile = async (itemId: Id<"shopItems">, file: File) => {
     setBusyId(itemId);
@@ -355,6 +359,17 @@ function ShopTab({ token }: { token: string | null }) {
     finally { setBusyId(null); }
   };
 
+  const handleDelete = async (itemId: any) => {
+    dialog.confirm("حذف هذا العنصر؟", async () => {
+      setBusyId(itemId);
+      try {
+        await deleteItem({ itemId, tokenOverride: token ?? undefined });
+        dialog.alert("تم الحذف");
+      } catch (e: any) { dialog.alert(e?.message || "فشل"); }
+      finally { setBusyId(null); }
+    }, "حذف", "حذف");
+  };
+
   const CATS = ["all", "frame", "vehicle", "entryEffect", "chatBubble", "soundWave", "profileCard", "decoration", "vipId", "skin"];
   const CAT_LABEL: Record<string, string> = {
     all: "الكل", frame: "إطار", vehicle: "مركبة", entryEffect: "دخول",
@@ -366,6 +381,18 @@ function ShopTab({ token }: { token: string | null }) {
 
   return (
     <div className="space-y-2">
+      <button
+
+        onClick={() => setShowCreate(true)}
+
+        className="w-full py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-sm font-black flex items-center justify-center gap-2 active:scale-95"
+
+      >
+
+        <Plus size={16} /> إضافة عنصر جديد
+
+      </button>
+
       <div className="flex gap-1 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
         {CATS.map((c) => (
           <button key={c} onClick={() => setFilter(c)}
@@ -421,11 +448,24 @@ function ShopTab({ token }: { token: string | null }) {
                   <input type="file" accept="image/*,video/*" className="hidden"
                     onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(it._id, f); e.target.value = ""; }} />
                 </label>
+                <button onClick={() => handleDelete(it._id)} disabled={isBusy}
+                  className="p-2 rounded-lg bg-red-500/25 border border-red-400/40 text-red-200 disabled:opacity-50">
+                  <Trash2 size={12} />
+                </button>
               </div>
             </div>
           );
         })
       )}
+    {showCreate && (
+      <CreateItemModal
+        token={token}
+        onClose={() => setShowCreate(false)}
+        onCreate={async (data: any) => {
+          await createItem({ ...data, tokenOverride: token ?? undefined });
+        }}
+      />
+    )}
     </div>
   );
 }
@@ -455,6 +495,129 @@ function AssetCard({ slotKey, label, src, busy, onUpload, onClear }: any) {
             <RotateCcw size={10} /> إعادة
           </button>
         )}
+      </div>
+    </div>
+  );
+}
+
+// ============================ CreateItemModal
+function CreateItemModal({ token, onClose, onCreate }: any) {
+  const [category, setCategory] = useState("frame");
+  const [name, setName] = useState("");
+  const [price, setPrice] = useState("1000");
+  const [rarity, setRarity] = useState("common");
+  const [durationDays, setDurationDays] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  const CATS = ["frame", "vehicle", "entryEffect", "chatBubble", "soundWave", "profileCard", "decoration", "vipId", "skin"];
+  const RARITIES = ["common", "rare", "epic", "legendary", "mythic"];
+
+  const handleImage = async (file: File) => {
+    setUploading(true);
+    try {
+      const res = await uploadToCloudinary(file, detectResourceType(file));
+      setImageUrl(res.url);
+    } catch (e: any) { dialog.alert(e?.message || "فشل الرفع"); }
+    finally { setUploading(false); }
+  };
+
+  const handleSubmit = async () => {
+    if (!name.trim()) { dialog.alert("أدخل اسم العنصر"); return; }
+    const p = parseInt(price, 10);
+    if (isNaN(p) || p < 0) { dialog.alert("سعر غير صالح"); return; }
+    setBusy(true);
+    try {
+      await onCreate({
+        category,
+        name: name.trim(),
+        price: p,
+        rarity,
+        imageUrl: imageUrl || undefined,
+        durationDays: durationDays ? parseInt(durationDays, 10) : undefined,
+      });
+      dialog.alert("تم إنشاء العنصر");
+      onClose();
+    } catch (e: any) { dialog.alert(e?.message || "فشل"); }
+    finally { setBusy(false); }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm flex items-end justify-center" dir="rtl" onClick={onClose}>
+      <div className="w-full max-w-md bg-gradient-to-b from-slate-900 to-black rounded-t-3xl p-5 max-h-[90dvh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-white text-lg font-black">إضافة عنصر جديد</h2>
+          <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white">
+            <X size={16} />
+          </button>
+        </div>
+
+        <div className="space-y-3">
+          <div>
+            <label className="text-white/70 text-xs font-bold mb-1 block">الصورة</label>
+            <label className="block cursor-pointer">
+              <div className="w-full h-32 rounded-2xl bg-white/10 border-2 border-dashed border-white/30 flex items-center justify-center overflow-hidden">
+                {uploading ? <Loader2 size={24} className="animate-spin text-white/60" /> :
+                 imageUrl ? <img src={imageUrl} alt="" className="w-full h-full object-contain p-2" /> :
+                 <span className="text-white/40 text-xs">اضغط لرفع صورة</span>}
+              </div>
+              <input type="file" accept="image/*" className="hidden"
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImage(f); e.target.value = ""; }} />
+            </label>
+          </div>
+
+          <div>
+            <label className="text-white/70 text-xs font-bold mb-1 block">الاسم</label>
+            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="مثال: إطار ذهبي"
+              className="w-full bg-white/10 border border-white/20 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-purple-400" />
+          </div>
+
+          <div>
+            <label className="text-white/70 text-xs font-bold mb-1 block">الفئة</label>
+            <div className="flex gap-1 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
+              {CATS.map((c) => (
+                <button key={c} onClick={() => setCategory(c)}
+                  className={"flex-shrink-0 px-3 py-1.5 rounded-full border text-[10px] font-black " + (category === c ? "bg-purple-500/30 border-purple-400/60 text-white" : "bg-white/5 border-white/10 text-white/60")}>
+                  {c}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="text-white/70 text-xs font-bold mb-1 block">الندرة</label>
+            <div className="flex gap-1">
+              {RARITIES.map((r) => (
+                <button key={r} onClick={() => setRarity(r)}
+                  className={"flex-1 py-1.5 rounded-lg border text-[10px] font-black " + (rarity === r ? "bg-amber-500/30 border-amber-400/60 text-white" : "bg-white/5 border-white/10 text-white/60")}>
+                  {r}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-white/70 text-xs font-bold mb-1 block">السعر</label>
+              <input type="number" value={price} onChange={(e) => setPrice(e.target.value)}
+                className="w-full bg-white/10 border border-white/20 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-purple-400 tabular-nums"
+                dir="ltr" />
+            </div>
+            <div>
+              <label className="text-white/70 text-xs font-bold mb-1 block">مدة (أيام)</label>
+              <input type="number" value={durationDays} onChange={(e) => setDurationDays(e.target.value)} placeholder="—"
+                className="w-full bg-white/10 border border-white/20 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-purple-400 tabular-nums"
+                dir="ltr" />
+            </div>
+          </div>
+
+          <button onClick={handleSubmit} disabled={busy || uploading}
+            className="w-full py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black text-sm disabled:opacity-50 flex items-center justify-center gap-2">
+            {busy ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
+            إنشاء العنصر
+          </button>
+        </div>
       </div>
     </div>
   );

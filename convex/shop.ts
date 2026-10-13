@@ -387,6 +387,70 @@ export const updateItem = mutation({
   },
 });
 
+// ============================================================
+// [moorawi-shop] createItem — asset manager can add new item
+// ============================================================
+export const createItem = mutation({
+  args: {
+    category: v.string(),
+    name: v.string(),
+    nameEn: v.optional(v.string()),
+    price: v.number(),
+    rarity: v.string(),
+    imageUrl: v.optional(v.string()),
+    durationDays: v.optional(v.number()),
+    active: v.optional(v.boolean()),
+    tokenOverride: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
+    if (!isAssetManager(me)) {
+      throw new ConvexError({ code: "FORBIDDEN", message: "صلاحيات مطلوبة" });
+    }
+    const name = args.name.trim();
+    if (name.length < 2) throw new ConvexError({ code: "BAD_NAME", message: "الاسم قصير جداً" });
+    if (args.price < 0) throw new ConvexError({ code: "BAD_PRICE", message: "السعر غير صالح" });
+
+    const itemId = await ctx.db.insert("shopItems", {
+      category: args.category as any,
+      name,
+      nameEn: args.nameEn,
+      imageUrl: args.imageUrl ?? "",
+      price: args.price,
+      rarity: args.rarity as any,
+      durationDays: args.durationDays,
+      active: args.active ?? true,
+      sortOrder: Date.now(),
+    });
+    return { ok: true, itemId };
+  },
+});
+
+// ============================================================
+// [moorawi-shop] deleteItem — only if not owned
+// ============================================================
+export const deleteItem = mutation({
+  args: {
+    itemId: v.id("shopItems"),
+    tokenOverride: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
+    if (!isAssetManager(me)) {
+      throw new ConvexError({ code: "FORBIDDEN", message: "صلاحيات مطلوبة" });
+    }
+    const owned = await ctx.db
+      .query("userInventory")
+      .filter((q) => q.eq(q.field("itemId"), args.itemId))
+      .first();
+    if (owned) {
+      throw new ConvexError({ code: "HAS_OWNERS", message: "المنتج مملوك — عطّله بدل الحذف" });
+    }
+    await ctx.db.delete("shopItems", args.itemId);
+    return { ok: true };
+  },
+});
+
 // All items for admin panel
 export const listAllAdmin = query({
   args: { tokenOverride: v.optional(v.string()) },
