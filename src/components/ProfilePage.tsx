@@ -61,6 +61,7 @@ export default function ProfilePage({
   const updateName = useMutation(api.users.updateName);
   const saveAvatar = useMutation(api.profiles.saveAvatar);
   const saveCover = useMutation(api.profiles.saveCover);
+  const removeCover = useMutation(api.profiles.removeCover);
   const removeAvatar = useMutation(api.profiles.removeAvatar);
 
   const [editingName, setEditingName] = useState(false);
@@ -74,6 +75,8 @@ export default function ProfilePage({
   const [tab, setTab] = useState<Tab>("info");
   const [showMyItems, setShowMyItems] = useState(false);
   const [pendingCover, setPendingCover] = useState<File | null>(null);
+  const [showCoverMenu, setShowCoverMenu] = useState(false);
+  const [showCoverPreview, setShowCoverPreview] = useState(false);
   const [myItemsCategory, setMyItemsCategory] = useState<"frame" | "vehicle" | "entryEffect" | "chatBubble" | "soundWave" | "profileCard">("frame");
   const inventory = useQuery(api.shop.myInventory, { tokenOverride: deviceId });
   const equipped = useQuery(api.shop.getEquippedAssets, {
@@ -226,6 +229,15 @@ export default function ProfilePage({
           )}
           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/80" />
 
+          {isMe && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); setShowCoverMenu((v) => !v); }}
+              className="absolute inset-0 z-10"
+              aria-label="خيارات الغلاف"
+            />
+          )}
+
           <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 pt-4 pb-2 z-30">
             <button
               type="button"
@@ -251,23 +263,54 @@ export default function ProfilePage({
             </div>
           </div>
 
-          {isMe && (
-            <label className="absolute bottom-3 left-3 z-20 cursor-pointer">
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/50 backdrop-blur-xl border border-white/30 text-white text-[11px] font-black active:scale-95">
-                <ImageIcon size={12} />
-                <span>تغيير الغلاف</span>
+          {isMe && showCoverMenu && (
+            <>
+              <div className="absolute inset-0 z-40" onClick={() => setShowCoverMenu(false)} />
+              <div
+                className="absolute bottom-3 left-3 z-50 w-48 rounded-2xl overflow-hidden border border-white/20 shadow-2xl backdrop-blur-2xl"
+                style={{ background: "linear-gradient(145deg, rgba(30,27,75,0.95), rgba(15,12,40,0.98))" }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button
+                  onClick={() => { setShowCoverMenu(false); setShowCoverPreview(true); }}
+                  disabled={!profile.coverUrl}
+                  className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-bold ${profile.coverUrl ? "text-white hover:bg-white/10" : "text-white/30 cursor-not-allowed"}`}
+                >
+                  <Eye size={16} />
+                  عرض الصورة
+                </button>
+                <label className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-white hover:bg-white/10 cursor-pointer border-t border-white/10">
+                  <ImageIcon size={16} />
+                  تغيير الصورة
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) { setShowCoverMenu(false); setPendingCover(f); }
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
+                <button
+                  onClick={() => {
+                    setShowCoverMenu(false);
+                    dialog.confirm("حذف صورة الغلاف؟", async () => {
+                      try {
+                        await removeCover({ tokenOverride: deviceId });
+                        dialog.alert("تم الحذف");
+                      } catch (e: any) { dialog.alert(e?.message || "فشل"); }
+                    }, "حذف", "حذف");
+                  }}
+                  disabled={!profile.coverUrl}
+                  className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-bold border-t border-white/10 ${profile.coverUrl ? "text-red-400 hover:bg-red-500/10" : "text-white/30 cursor-not-allowed"}`}
+                >
+                  <Trash2 size={16} />
+                  حذف الصورة
+                </button>
               </div>
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) setPendingCover(f);
-                  e.target.value = "";
-                }}
-              />
-            </label>
+            </>
           )}
         </div>
 
@@ -733,6 +776,26 @@ export default function ProfilePage({
           onConfirm={handleCroppedConfirm}
         />
       )}
+
+        {showCoverPreview && profile.coverUrl && (
+          <div
+            className="fixed inset-0 z-[260] flex items-center justify-center bg-black/95 backdrop-blur-md"
+            onClick={() => setShowCoverPreview(false)}
+          >
+            <button
+              onClick={() => setShowCoverPreview(false)}
+              className="absolute top-4 right-4 w-11 h-11 rounded-full bg-white/15 backdrop-blur-xl border border-white/25 flex items-center justify-center text-white hover:bg-white/25 transition"
+            >
+              <X size={22} />
+            </button>
+            <img
+              src={profile.coverUrl}
+              alt=""
+              className="max-w-[95vw] max-h-[85vh] object-contain rounded-2xl shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+        )}
 
         {pendingCover && (
           <ImageCropper
