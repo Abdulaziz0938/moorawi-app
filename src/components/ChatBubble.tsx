@@ -12,13 +12,13 @@ interface Props {
 function fallbackClass(vip: number): string {
   if (vip <= 0) return "bg-white/5 border border-white/10";
   const g = [
-    "bg-gradient-to-br from-sky-500/25 to-sky-700/25 border border-sky-400/40",
-    "bg-gradient-to-br from-emerald-500/25 to-emerald-700/25 border border-emerald-400/40",
-    "bg-gradient-to-br from-purple-500/25 to-purple-700/25 border border-purple-400/40",
-    "bg-gradient-to-br from-pink-500/25 to-pink-700/25 border border-pink-400/40",
-    "bg-gradient-to-br from-red-500/25 to-red-700/25 border border-red-400/40",
-    "bg-gradient-to-br from-orange-500/25 to-orange-700/25 border border-orange-400/40",
-    "bg-gradient-to-br from-yellow-500/30 to-yellow-700/30 border border-yellow-400/50",
+    "bg-gradient-to-br from-emerald-500/30 to-emerald-700/30 border border-emerald-400/50",
+    "bg-gradient-to-br from-blue-500/30 to-blue-700/30 border border-blue-400/50",
+    "bg-gradient-to-br from-purple-500/30 to-purple-700/30 border border-purple-400/50",
+    "bg-gradient-to-br from-red-500/30 to-red-700/30 border border-red-400/50",
+    "bg-gradient-to-br from-yellow-500/35 to-amber-700/35 border border-yellow-400/60 shadow-lg shadow-yellow-500/20",
+    "bg-gradient-to-br from-orange-500/35 to-orange-700/35 border border-orange-400/60 shadow-lg shadow-orange-500/20",
+    "bg-gradient-to-br from-amber-400/40 via-yellow-500/30 to-pink-500/30 border border-amber-300/70 shadow-lg shadow-amber-500/30",
   ];
   return g[Math.min(vip - 1, g.length - 1)];
 }

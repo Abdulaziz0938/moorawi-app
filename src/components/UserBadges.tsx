@@ -45,23 +45,6 @@ export function PvipBadge({ level, size = 20 }: { level: number; size?: number }
   );
 }
 
-export function VipBanner({ level, width = 60 }: { level: number; width?: number }) {
-  const assets = useAssets();
-  if (!level || level < 1 || level > 7) return null;
-  const src = assets[`vip.logo.${level}`];
-  if (!src) return null;
-  return (
-    <img
-      src={src}
-      alt={`VIP ${level}`}
-      title={`VIP ${level}`}
-      className="object-contain drop-shadow"
-      style={{ width, height: "auto" }}
-      draggable={false}
-    />
-  );
-}
-
 export function AdminBadge({ role, size = 18 }: { role: "super" | "moderator" | null; size?: number }) {
   const assets = useAssets();
   if (!role) return null;
@@ -273,21 +256,14 @@ export function UserName({
         <LevelBadge kind="wealth" level={levelFromValue(we)} size="sm" />
       )}
 
-      {/* 7. VIP banner (only if VIP active) */}
-      {v > 0 && (
-        <div className="badge-glow flex-shrink-0">
-          <VipBanner level={v} width={s.vipW} />
-        </div>
-      )}
-
-      {/* 8. Admin badge (only if admin) */}
+      {/* 7. Admin badge (only if admin) */}
       {adminRole && (
         <div className="badge-glow flex-shrink-0">
           <AdminBadge role={adminRole} size={s.admin} />
         </div>
       )}
 
-      {/* 9. pvip mini badge */}
+      {/* 8. VIP badge (small medal icon — the ONE representation) */}
       {v > 0 && (
         <div className="badge-glow flex-shrink-0">
           <PvipBadge level={v} size={s.pvip} />
