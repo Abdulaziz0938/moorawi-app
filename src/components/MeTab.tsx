@@ -110,7 +110,8 @@ export default function MeTab({ onEnterRoom }: Props) {
           setShowFullProfile(false);
           setShowAdmin(true);
         }}
-      />
+        onOpenVisits={() => setShowVisits(true)}
+        />
     );
   }
 
