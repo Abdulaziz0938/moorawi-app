@@ -248,24 +248,9 @@ export default function MiniProfileSheet({
 
             {/* Property cards — horizontal rectangles */}
             <div className="mx-4 mt-3 grid grid-cols-3 gap-2">
-              <PropertyBar
-                label="هدية"
-                value={giftTotal}
-                tone="purple"
-                icon={<Gift size={16} />}
-              />
-              <PropertyBar
-                label="إطار"
-                value={itemCounts?.frame ?? 0}
-                tone="emerald"
-                icon={<Frame size={16} />}
-              />
-              <PropertyBar
-                label="مركبة"
-                value={itemCounts?.vehicle ?? 0}
-                tone="blue"
-                icon={<Car size={16} />}
-              />
+              <PropertyBar label="هدية" value={giftTotal} tone="purple" />
+              <PropertyBar label="إطار" value={itemCounts?.frame ?? 0} tone="emerald" />
+              <PropertyBar label="مركبة" value={itemCounts?.vehicle ?? 0} tone="blue" />
             </div>
 
             {/* Bottom actions — one full bar */}
@@ -377,12 +362,11 @@ function SmallAction({
 }
 
 function PropertyBar({
-  label, value, tone, icon,
+  label, value, tone,
 }: {
   label: string;
   value: number;
   tone: "blue" | "emerald" | "purple";
-  icon?: React.ReactNode;
 }) {
   const t = {
     blue: { bg: "from-blue-900/40 to-blue-950/60", border: "border-blue-500/30", text: "text-blue-200" },
@@ -390,14 +374,11 @@ function PropertyBar({
     purple: { bg: "from-purple-900/40 to-purple-950/60", border: "border-purple-500/30", text: "text-purple-200" },
   }[tone];
   return (
-    <div className={`h-14 rounded-2xl border ${t.border} bg-gradient-to-br ${t.bg} backdrop-blur-xl px-2.5 flex items-center justify-between gap-1`}>
-      <div className={`${t.text} shrink-0`}>{icon}</div>
-      <div className="flex flex-col items-end justify-center min-w-0">
-        <span className={`${t.text} text-sm font-black leading-none tabular-nums`}>
-          {formatNumber(value)}
-        </span>
-        <span className="text-white/60 text-[9px] leading-none mt-0.5">{label}</span>
-      </div>
+    <div className={`h-14 rounded-2xl border ${t.border} bg-gradient-to-br ${t.bg} backdrop-blur-xl px-3 flex items-center justify-between gap-1`}>
+      <span className={`${t.text} text-xs font-black shrink-0`}>{label}</span>
+      <span className={`${t.text} text-base font-black tabular-nums shrink-0`}>
+        {formatNumber(value)}
+      </span>
     </div>
   );
 }
