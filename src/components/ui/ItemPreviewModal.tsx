@@ -120,7 +120,9 @@ export default function ItemPreviewModal({
                 vip={vipLevel}
                 ring={vipLevel === 0}
                 customFrameUrl={item.imageUrl}
-                customFrameInset={14}
+                frameScale={item.frameScale ?? 1.4}
+                frameOffsetX={item.frameOffsetX ?? 0}
+                frameOffsetY={item.frameOffsetY ?? 0}
               />
             </div>
           </Card>

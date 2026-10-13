@@ -400,6 +400,9 @@ export const createItem = mutation({
     imageUrl: v.optional(v.string()),
     durationDays: v.optional(v.number()),
     active: v.optional(v.boolean()),
+    frameScale: v.optional(v.number()),
+    frameOffsetX: v.optional(v.number()),
+    frameOffsetY: v.optional(v.number()),
     tokenOverride: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
@@ -421,6 +424,9 @@ export const createItem = mutation({
       durationDays: args.durationDays,
       active: args.active ?? true,
       sortOrder: Date.now(),
+      frameScale: args.frameScale,
+      frameOffsetX: args.frameOffsetX,
+      frameOffsetY: args.frameOffsetY,
     });
     return { ok: true, itemId };
   },

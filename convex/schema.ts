@@ -401,6 +401,10 @@ export default defineSchema({
     sliceRight: v.optional(v.number()),
     sliceBottom: v.optional(v.number()),
     sliceLeft: v.optional(v.number()),
+    // [ezo-frame] Frame placement (Yalla/SUGO standard)
+    frameScale: v.optional(v.number()),       // 1.0 = same as avatar, default 1.4
+    frameOffsetX: v.optional(v.number()),     // px offset from center, default 0
+    frameOffsetY: v.optional(v.number()),     // px offset from center, default 0
   })
     .index("by_category_active", ["category", "active"])
     .index("by_active", ["active"]),

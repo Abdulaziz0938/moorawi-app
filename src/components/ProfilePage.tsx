@@ -98,9 +98,13 @@ export default function ProfilePage({
   }
 
   const vipLevel = profile.vip ?? 0;
+  const equippedFrame = (equipped as any)?.frame;
   const vipFrameUrl = vipLevel > 0 ? (assets[`vip.frame.${vipLevel}`] ?? null) : null;
-  const equippedFrameUrl = (equipped as any)?.frame?.imageUrl ?? null;
-  const finalFrameUrl = equippedFrameUrl ?? vipFrameUrl;
+  const finalFrameUrl = equippedFrame?.imageUrl ?? vipFrameUrl;
+  // [ezo-frame] Yalla/SUGO standard: scale + offset from DB
+  const finalFrameScale = equippedFrame?.frameScale ?? 1.4;
+  const finalFrameOffsetX = equippedFrame?.frameOffsetX ?? 0;
+  const finalFrameOffsetY = equippedFrame?.frameOffsetY ?? 0;
   const bgGradient = VIP_BG[vipLevel] || VIP_BG[0];
   const isOwner = profile.userNumber === 1;
   const isAdmin = profile.adminRole === "super" || profile.adminRole === "moderator";
@@ -220,8 +224,9 @@ export default function ProfilePage({
                   vip={vipLevel}
                   ring={vipLevel === 0}
                   customFrameUrl={finalFrameUrl}
-                  customFrameInset={10}
-                  customFrameScale={1.85}
+                  frameScale={finalFrameScale}
+                  frameOffsetX={finalFrameOffsetX}
+                  frameOffsetY={finalFrameOffsetY}
                 />
             </div>
             {isMe && (
