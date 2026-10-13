@@ -510,7 +510,7 @@ function CreateItemModal({ token, onClose, onCreate }: any) {
   const [imageUrl, setImageUrl] = useState("");
   const [uploading, setUploading] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [frameScale, setFrameScale] = useState("1.8");
+  const [frameScale, setFrameScale] = useState("2.2");
   const [frameOffsetX, setFrameOffsetX] = useState("0");
   const [frameOffsetY, setFrameOffsetY] = useState("0");
 
@@ -629,7 +629,7 @@ function CreateItemModal({ token, onClose, onCreate }: any) {
                 <div>
                   <label className="text-white/60 text-[10px] font-bold mb-1 block">Scale</label>
                   <input type="number" step="0.05" value={frameScale} onChange={(e) => setFrameScale(e.target.value)}
-                    placeholder="1.8"
+                    placeholder="2.2"
                     className="w-full bg-white/10 border border-white/20 rounded-lg px-2 py-2 text-white text-xs focus:outline-none focus:border-purple-400 tabular-nums"
                     dir="ltr" />
                 </div>
@@ -649,7 +649,7 @@ function CreateItemModal({ token, onClose, onCreate }: any) {
                 </div>
               </div>
               <p className="text-white/40 text-[9px] text-center leading-tight">
-                Scale 1.0 = نفس حجم الأفاتار · 1.4-2.0 للمعظم
+                Scale 1.0 = نفس حجم الأفاتار · 1.8-2.5 للمعظم
               </p>
             </div>
           )}
