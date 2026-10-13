@@ -3,6 +3,19 @@ import { v } from "convex/values";
 import { mutation, query, internalMutation } from "./_generated/server";
 import { requireUser, isFullAdmin } from "./lib/auth";
 
+
+// [ezo-types] Notification type union (matches schema)
+const notifTypeValidator = v.union(
+  v.literal("welcome"),
+  v.literal("announcement"),
+  v.literal("host_invite"),
+  v.literal("reward"),
+  v.literal("verification"),
+  v.literal("agency"),
+  v.literal("system"),
+);
+
+
 // Public — قائمة إشعاراتي
 export const listMine = query({
   args: { tokenOverride: v.optional(v.string()) },
@@ -88,7 +101,7 @@ export async function pushNotification(
 export const sendTo = mutation({
   args: {
     userId: v.id("users"),
-    type: v.optional(v.string()),
+    type: v.optional(notifTypeValidator),
     title: v.string(),
     body: v.string(),
     actionType: v.optional(v.string()),
@@ -102,7 +115,7 @@ export const sendTo = mutation({
 
     const id = await ctx.db.insert("systemNotifications", {
       userId: args.userId,
-      type: (args.type ?? "system") as any,
+      type: args.type ?? "system",
       title: args.title,
       body: args.body,
       actionType: args.actionType,
@@ -117,7 +130,7 @@ export const sendTo = mutation({
 // Admin — إرسال إشعار جماعي
 export const sendToAll = mutation({
   args: {
-    type: v.optional(v.string()),
+    type: v.optional(notifTypeValidator),
     title: v.string(),
     body: v.string(),
     actionType: v.optional(v.string()),
@@ -135,7 +148,7 @@ export const sendToAll = mutation({
     for (const u of users) {
       await ctx.db.insert("systemNotifications", {
         userId: u._id,
-        type: (args.type ?? "announcement") as any,
+        type: args.type ?? "announcement",
         title: args.title,
         body: args.body,
         actionType: args.actionType,

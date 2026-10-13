@@ -45,7 +45,7 @@ export const seed = internalMutation({
         description: m.description,
         reward: m.reward,
         rewardType: "coins",
-        type: m.type as any,
+        type: m.type,
         target: m.target,
         sortOrder: m.sortOrder,
         active: true,
@@ -135,8 +135,8 @@ export const myProgress = query({
 
     // حالة الدخول اليومي
     const today = new Date();
-    const lastLoginClaim = (me as any).lastLoginRewardAt ?? 0;
-    const streak = (me as any).loginStreak ?? 0;
+    const lastLoginClaim = me.lastLoginRewardAt ?? 0;
+    const streak = me.loginStreak ?? 0;
     const lastClaimDay = lastLoginClaim ? new Date(lastLoginClaim).toISOString().slice(0, 10) : null;
     const canClaimDaily = lastClaimDay !== dayKey(today);
 
@@ -247,13 +247,13 @@ export const claimDailyLogin = mutation({
 
     const now = Date.now();
     const today = dayKey(new Date(now));
-    const lastClaim = (me as any).lastLoginRewardAt ?? 0;
+    const lastClaim = me.lastLoginRewardAt ?? 0;
     const lastDay = lastClaim ? new Date(lastClaim).toISOString().slice(0, 10) : null;
     if (lastDay === today) throw new Error("تم الاستلام اليوم");
 
     // فحص إذا فات أكثر من يوم (نُصفّر السلسلة)
     const oneDayMs = 24 * 60 * 60 * 1000;
-    let streak = (me as any).loginStreak ?? 0;
+    let streak = me.loginStreak ?? 0;
     if (lastClaim && now - lastClaim > 2 * oneDayMs) streak = 0;
 
     const dayIndex = streak % 7;
