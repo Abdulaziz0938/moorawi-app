@@ -4,7 +4,6 @@ import type { Id } from "../../convex/_generated/dataModel";
 import { useBackButton } from "../lib/hooks/useBackButton";
 import { ChevronRight, Loader2, Users } from "lucide-react";
 import VipAvatar from "./ui/VipAvatar";
-import { UserName } from "./UserBadges";
 
 interface Props {
   userId: string;
@@ -34,7 +33,7 @@ export default function UserListSheet({ userId, mode, onClose, onUserClick }: Pr
   const empties = { followers: "لا يوجد متابعون بعد", following: "لا يتابع أحداً بعد", fans: "لا يوجد معجبون بعد" };
 
   return (
-    <div className="fixed inset-0 z-[180] bg-gradient-to-b from-slate-900 to-black flex flex-col" dir="rtl">
+    <div className="fixed inset-0 z-[280] bg-gradient-to-b from-slate-900 to-black flex flex-col" dir="rtl">
       <div className="px-4 pt-4 pb-3 flex items-center gap-2 border-b border-white/10 flex-shrink-0">
         <button
           onClick={onClose}

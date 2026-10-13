@@ -55,10 +55,14 @@ const VIP_BG: Record<number, string> = {
 type Tab = "info" | "assets" | "relation" | "moments";
 
 export default function ProfilePage({
-  userId, isMe, onClose, onOpenGift,
+  userId: userIdProp, isMe: isMeOwn, onClose, onOpenGift,
   onOpenAdminPanel, onOpenOwnerPanel, onEnterRoom, onOpenWallet, onOpenVisits,
 }: Props) {
   const deviceId = getDeviceId();
+  const [viewUserId, setViewUserId] = useState<string>(userIdProp);
+  const userId = viewUserId;
+  const isMe = !!isMeOwn && viewUserId === userIdProp;
+  const [listMode, setListMode] = useState<"followers" | "following" | "fans" | null>(null);
   const profile = useQuery(api.profileFull.getFull, { userId: userId as Id<"users"> });
   const updateName = useMutation(api.users.updateName);
   const saveAvatar = useMutation(api.profiles.saveAvatar);
@@ -87,7 +91,6 @@ export default function ProfilePage({
   const [copied, setCopied] = useState(false);
   const [tab, setTab] = useState<Tab>("info");
   const [showMyItems, setShowMyItems] = useState(false);
-  const [listMode, setListMode] = useState<"followers" | "following" | "fans" | null>(null);
   const [myItemsCategory, setMyItemsCategory] = useState<"frame" | "vehicle" | "entryEffect" | "chatBubble" | "soundWave" | "profileCard">("frame");
 
   const inventory = useQuery(api.shop.myInventory, { tokenOverride: deviceId });
@@ -234,7 +237,14 @@ export default function ProfilePage({
           <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 pt-4 pb-2 z-30">
             <button
               type="button"
-              onClick={(e) => { e.stopPropagation(); onClose(); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (viewUserId !== userIdProp) {
+                  setViewUserId(userIdProp);
+                } else {
+                  onClose();
+                }
+              }}
               className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-xl border border-white/25 flex items-center justify-center text-white hover:bg-black/60 transition active:scale-95"
               aria-label="رجوع"
             >
@@ -474,7 +484,7 @@ export default function ProfilePage({
           <InlineStat
             label="زوار"
             value={stats.visitors}
-            onClick={isMe && onOpenVisits ? onOpenVisits : () => dialog.alert("الزيارات — متاح للمالك فقط")}
+            onClick={isMe && onOpenVisits ? onOpenVisits : undefined}
           />
         </div>
 
