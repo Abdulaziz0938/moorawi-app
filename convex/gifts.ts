@@ -7,6 +7,30 @@ import { weekKey } from "./lib/week";
 import { checkAndGrantMedals } from "./medals";
 
 
+// [ezo-charms] يزيد sessionCharms على مايك المستلم (إن كان على مايك)
+async function bumpSeatCharms(
+  ctx: any,
+  roomId: any,
+  userId: any,
+  amount: number,
+) {
+  const seats = await ctx.db
+    .query("micSeats")
+    .withIndex("by_room_and_seatIndex", (q: any) => q.eq("roomId", roomId))
+    .take(24);
+  for (const s of seats) {
+    if (s.userId === userId) {
+      await ctx.db.patch("micSeats", s._id, {
+        sessionCharms: (s.sessionCharms ?? 0) + amount,
+        sessionStartedAt: s.sessionStartedAt ?? Date.now(),
+      });
+      break;
+    }
+  }
+}
+
+
+
 // [moorawi-agency] حساب مستوى المضيف من دخله الشهري
 function levelFromAchieved(achieved: number): number {
   const T = [0, 20_000, 40_000, 80_000, 126_000, 220_000, 320_000,
@@ -169,6 +193,8 @@ export const send = mutation({
       charms: (target.charms ?? 0) + totalPrice,
       totalReceived: (target.totalReceived ?? 0) + totalPrice,
     });
+    // [ezo-charms] زيادة عدّاد الجلسة على المايك
+    await bumpSeatCharms(ctx, args.roomId, args.toUserId, totalPrice);
 
     // افحص آخر transaction — هل هي combo continuation؟
     const lastTx = await ctx.db
@@ -282,6 +308,8 @@ export const sendBatch = mutation({
           diamonds: (target.diamonds ?? 0) + Math.floor(perTarget * 0.7),
         }),
       });
+      // [ezo-charms] زيادة عدّاد الجلسة على المايك
+      await bumpSeatCharms(ctx, args.roomId, target._id, perTarget);
       await ctx.db.insert("giftTransactions", {
         roomId: args.roomId,
         fromUserId: user._id,

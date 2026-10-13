@@ -217,10 +217,16 @@ export default defineSchema({
     userId: v.id("users"),
     role: v.union(v.literal("owner"), v.literal("moderator"), v.literal("speaker"), v.literal("listener")),
     banned: v.optional(v.boolean()),
+    // [ezo-presence] تتبع الحضور — heartbeat كل 25s + تنظيف دوري
+    lastSeenAt: v.optional(v.number()),
+    sessionId: v.optional(v.string()),
+    sessionStartedAt: v.optional(v.number()),
   })
     .index("by_room_and_user", ["roomId", "userId"])
     .index("by_user", ["userId"])
-    .index("by_room", ["roomId"]),
+    .index("by_room", ["roomId"])
+    .index("by_room_lastSeen", ["roomId", "lastSeenAt"])
+    .index("by_lastSeen", ["lastSeenAt"]),
 
   micSeats: defineTable({
     roomId: v.id("rooms"),
@@ -229,6 +235,9 @@ export default defineSchema({
     locked: v.boolean(),
     muted: v.boolean(),
     adminMuted: v.optional(v.boolean()),
+    // [ezo-charms] عداد الجاذبية لكل جلسة على المايك
+    sessionCharms: v.optional(v.number()),
+    sessionStartedAt: v.optional(v.number()),
   }).index("by_room_and_seatIndex", ["roomId", "seatIndex"]),
 
   messages: defineTable({

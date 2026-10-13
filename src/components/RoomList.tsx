@@ -7,6 +7,7 @@ import { getDeviceId } from "../lib/device";
 import { clearSession, hasSession } from "../lib/session";
 import { LogOut } from "lucide-react";
 import { dialog } from "../lib/dialog";
+import { Spinner, Empty } from "./VisitsSheet";
 
 interface Props {
   onEnter: (roomId: Id<"rooms">) => void;
