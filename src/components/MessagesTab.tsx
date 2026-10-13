@@ -7,6 +7,8 @@ import UserAvatar from "./UserAvatar";
 import ChatThreadSheet from "./ChatThreadSheet";
 import SystemNotifSheet from "./SystemNotifSheet";
 import FriendRequestsSheet from "./FriendRequestsSheet";
+import Card from "./ui/Card";
+import SectionTitle from "./ui/SectionTitle";
 import {
   Search, Loader2, MessageCircle, Bell, Heart, UserPlus,
   Check, ChevronLeft,
@@ -85,15 +87,15 @@ export default function MessagesTab({ onUserClick }: Props) {
         </div>
 
         {/* ===== Search ===== */}
-        <div className="flex items-center gap-2 bg-white/10 border border-white/15 rounded-2xl px-3 py-2.5">
-          <Search size={16} className="text-white/40" />
+<Card className="flex items-center gap-2" padding="md">
+            <Search size={16} className="text-white/40" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={tab === "messages" ? "بحث ID، الاسم" : "بحث في الأصدقاء"}
             className="flex-1 bg-transparent text-white text-sm outline-none placeholder:text-white/40"
           />
-        </div>
+          </Card>
       </div>
 
       {/* ===== Content ===== */}
@@ -102,10 +104,7 @@ export default function MessagesTab({ onUserClick }: Props) {
           <div className="space-y-2 mt-3">
 
             {/* System notification */}
-            <button
-              onClick={() => setShowNotifs(true)}
-              className="w-full rounded-2xl bg-white/5 border border-white/10 p-3 flex items-center gap-3 active:bg-white/10"
-            >
+<Card interactive onClick={() => setShowNotifs(true)} className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center flex-shrink-0">
                 <Bell size={22} className="text-white" />
               </div>
@@ -121,13 +120,10 @@ export default function MessagesTab({ onUserClick }: Props) {
                 </span>
               )}
               <ChevronLeft size={16} className="text-white/30" />
-            </button>
+            </Card>
 
             {/* Friend requests */}
-            <button
-              onClick={() => setShowFriendReqs(true)}
-              className="w-full rounded-2xl bg-white/5 border border-white/10 p-3 flex items-center gap-3 active:bg-white/10"
-            >
+<Card interactive onClick={() => setShowFriendReqs(true)} className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
                 <UserPlus size={22} className="text-white" />
               </div>
@@ -143,13 +139,11 @@ export default function MessagesTab({ onUserClick }: Props) {
                 </span>
               )}
               <ChevronLeft size={16} className="text-white/30" />
-            </button>
+            </Card>
 
             {/* CP/relationship requests */}
             {relReqCount > 0 && (
-              <button
-                className="w-full rounded-2xl bg-white/5 border border-white/10 p-3 flex items-center gap-3 active:bg-white/10"
-              >
+<Card tone="pink" padding="md" className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-500 to-red-500 flex items-center justify-center flex-shrink-0">
                   <Heart size={22} className="text-white" fill="currentColor" />
                 </div>
@@ -161,19 +155,21 @@ export default function MessagesTab({ onUserClick }: Props) {
                   {relReqCount}
                 </span>
                 <ChevronLeft size={16} className="text-white/30" />
-              </button>
+              </Card>
             )}
 
             {/* DM conversations */}
             <div className="pt-3">
-              <p className="text-white/50 text-xs font-black mb-2">المحادثات</p>
+              <SectionTitle icon={MessageCircle} title="المحادثات" tone="default" />
               {conversations === undefined ? (
                 <div className="flex justify-center py-8"><Loader2 size={22} className="animate-spin text-white/40" /></div>
               ) : filteredConvs.length === 0 ? (
-                <div className="text-center py-12 text-white/40">
-                  <MessageCircle size={40} className="mx-auto mb-2 opacity-30" />
-                  <p className="text-xs">لا توجد محادثات بعد</p>
-                </div>
+<Card tone="default" padding="lg">
+                    <div className="text-center py-8 text-white/40">
+                      <MessageCircle size={40} className="mx-auto mb-2 opacity-30" />
+                      <p className="text-xs">لا توجد محادثات بعد</p>
+                    </div>
+                  </Card>
               ) : (
                 <div className="space-y-1.5">
                   {filteredConvs.map((c: any) => (
@@ -218,11 +214,13 @@ export default function MessagesTab({ onUserClick }: Props) {
             {friends === undefined ? (
               <div className="flex justify-center py-8"><Loader2 size={22} className="animate-spin text-white/40" /></div>
             ) : filteredFriends.length === 0 ? (
-              <div className="text-center py-16 text-white/40">
-                <UserPlus size={48} className="mx-auto mb-3 opacity-30" />
-                <p className="text-sm">لا يوجد أصدقاء بعد</p>
-                <p className="text-xs mt-1">أضف أصدقاء للتواصل معهم</p>
-              </div>
+<Card tone="default" padding="lg">
+                  <div className="text-center py-10 text-white/40">
+                    <UserPlus size={48} className="mx-auto mb-3 opacity-30" />
+                    <p className="text-sm">لا يوجد أصدقاء بعد</p>
+                    <p className="text-xs mt-1">أضف أصدقاء للتواصل معهم</p>
+                  </div>
+                </Card>
             ) : (
               <div className="space-y-1.5">
                 {filteredFriends.map((f: any) => (
