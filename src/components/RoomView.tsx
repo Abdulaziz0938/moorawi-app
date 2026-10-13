@@ -19,6 +19,7 @@ import CompactChatInput from "./CompactChatInput";
 import ChatBubble from "./ChatBubble";
 import IconOrImage from "./IconOrImage";
 import VipAvatar from "./ui/VipAvatar";
+import VipEntryOverlay from "./VipEntryOverlay";
 import LeaderboardSheet from "./LeaderboardSheet";
 import MiniProfileSheet from "./MiniProfileSheet";
 import ChatThreadSheet from "./ChatThreadSheet";
@@ -298,6 +299,23 @@ export default function RoomView({ roomId, onLeave }: Props) {
 
   const giftSinceRef = useRef(Date.now());
   const latestGift = useQuery(api.gifts.latestGiftFull, { roomId, since: giftSinceRef.current });
+
+  // [ezo-vip] entry animation — فقط للأحداث بعد دخولي للغرفة
+  const mountTimeRef = useRef<number>(Date.now());
+  const entrySinceRef = useRef<number>(Date.now());
+  const recentEntries = useQuery(
+    api.presence.recentEntries,
+    { roomId, since: entrySinceRef.current }
+  );
+  const [currentEntry, setCurrentEntry] = useState<any>(null);
+
+  useEffect(() => {
+    if (!recentEntries || recentEntries.length === 0) return;
+    // أحدث حدث لم يُعرض بعد
+    const latest = recentEntries[0];
+    if (latest._id === currentEntry?._id) return;
+    setCurrentEntry(latest);
+  }, [recentEntries]);
   const globalBroadcast = useQuery(api.gifts.latestGlobalBroadcast, { since: giftSinceRef.current });
   const [activeGlobalBanner, setActiveGlobalBanner] = useState<any>(null);
 
@@ -1519,6 +1537,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
           <p className="text-white text-sm font-black">تم نسخ رابط الغرفة</p>
         </div>
       )}
+      <VipEntryOverlay entry={currentEntry} />
     </div>
   );
 }
