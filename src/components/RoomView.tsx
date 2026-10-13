@@ -793,6 +793,8 @@ export default function RoomView({ roomId, onLeave }: Props) {
                               size={56}
                               vip={seat?.userVip ?? 0}
                               ring={false}
+                                                customFrameUrl={seat?.userFrameUrl ?? null}
+                                                customFrameInset={6}
                             />
                           ) : (
                             <div className={`w-full h-full rounded-full flex items-center justify-center text-white overflow-hidden transition ${seat.locked ? "bg-gray-700 ring-2 ring-gray-500" : "bg-white/5 ring-1 ring-white/20 hover:bg-white/15"}`}>
@@ -946,7 +948,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
                       <span className="text-[8px] text-white/40 mr-auto">{formatTime(m.createdAt)}</span>
                     </div>
                     {(m.text || m.imageUrl) && (
-                      <ChatBubble vip={m.senderVip ?? 0}>
+                      <ChatBubble vip={m.senderVip ?? 0} customBubbleUrl={m.senderBubbleUrl ?? null}>
                         {m.text && <p className="text-white text-xs break-words whitespace-pre-wrap">{m.text}</p>}
                         {m.imageUrl && <img src={m.imageUrl} alt="" className="mt-1 rounded-lg max-w-[140px] max-h-[140px] object-cover" />}
                       </ChatBubble>

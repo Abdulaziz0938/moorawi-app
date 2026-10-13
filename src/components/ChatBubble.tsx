@@ -7,6 +7,7 @@ interface Props {
   vip: number;
   children: ReactNode;
   isOwn?: boolean;
+  customBubbleUrl?: string | null;
 }
 
 function fallbackClass(vip: number): string {
@@ -23,7 +24,7 @@ function fallbackClass(vip: number): string {
   return g[Math.min(vip - 1, g.length - 1)];
 }
 
-export default function ChatBubble({ vip, children, isOwn }: Props) {
+export default function ChatBubble({ vip, children, isOwn, customBubbleUrl }: Props) {
   const allBubbles = useQuery(api.bubbles.list, { onlyActive: true });
 
   const bubble =
@@ -123,8 +124,17 @@ export default function ChatBubble({ vip, children, isOwn }: Props) {
   }
 
   return (
+    customBubbleUrl ? (
+    <div className="relative w-fit max-w-[85%] mt-1">
+      <img src={customBubbleUrl} alt="" className="absolute inset-0 w-full h-full object-fill pointer-events-none" draggable={false} />
+      <div className="relative px-3 py-2 text-white text-sm">
+        {children}
+      </div>
+    </div>
+  ) : (
     <div className={`w-fit max-w-[85%] mt-1 px-2.5 py-1.5 rounded-2xl rounded-tr-sm ${fallbackClass(vip)}`}>
       {children}
     </div>
+    )
   );
 }

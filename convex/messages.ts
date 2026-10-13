@@ -37,12 +37,18 @@ export const list = query({
       const avatarUrl = sender?.avatarUrl ?? (sender?.avatarId ? await ctx.storage.getUrl(sender.avatarId) : null);
       const imageUrl = m.imageUrl ?? (m.imageId ? await ctx.storage.getUrl(m.imageId) : null);
       const vip = activeVipLevel(sender);
+        let senderBubbleUrl: string | null = null;
+        if (sender?.equippedChatBubbleId) {
+          const bub = await ctx.db.get("shopItems", sender.equippedChatBubbleId);
+          senderBubbleUrl = bub?.imageUrl ?? null;
+        }
       return {
         _id: m._id,
         senderId: m.senderId,
         senderName: m.senderName,
         senderNumber: sender?.userNumber ?? null,
         senderVip: vip,
+        senderBubbleUrl,
         senderCharmLevel: levelFromValue(sender?.totalReceived ?? 0),
         senderCharmValue: sender?.charms ?? 0,
         senderWealthValue: sender?.totalSent ?? 0,

@@ -15,9 +15,14 @@ export const state = query({
       .take(MAX_SEATS);
     const enriched = await Promise.all(
       seats.map(async (s) => {
-        if (!s.userId) return { ...s, userName: null, avatarUrl: null, charms: 0, sessionCharms: 0, frame: null, userVip: 0, adminRole: null };
+        if (!s.userId) return { ...s, userName: null, avatarUrl: null, charms: 0, sessionCharms: 0, frame: null, userVip: 0, adminRole: null, userFrameUrl: null };
         const user = await ctx.db.get("users", s.userId);
         const avatarUrl = user?.avatarUrl ?? (user?.avatarId ? await ctx.storage.getUrl(user.avatarId) : null);
+        let userFrameUrl: string | null = null;
+        if (user?.equippedFrameId) {
+          const fr = await ctx.db.get("shopItems", user.equippedFrameId);
+          userFrameUrl = fr?.imageUrl ?? null;
+        }
         return {
           ...s,
           userName: user?.name ?? "ضيف",
@@ -29,6 +34,7 @@ export const state = query({
           userVip: activeVipLevel(user),
           userCharmLevel: levelFromValue(user?.totalReceived ?? 0),
           adminRole: user?.adminRole ?? null,
+          userFrameUrl,
         };
       }),
     );
