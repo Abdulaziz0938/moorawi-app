@@ -1,108 +1,277 @@
-// [moorawi-services] الداعم المحترم — ترتيب أعلى المنفقين
+// [ezo-rankings] الداعم المحترم — ترتيب حقيقي (week/month/all)
+//
+// - Podium لأعلى 3 (منصة)
+// - قائمة كاملة (4-100)
+// - شريط "ترتيبي" ثابت أسفل
+// - 3 فترات زمنية
+// - مستوى حقيقي 0-100 (levelFromValue)
+
+import { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import { getDeviceId } from "../lib/device";
 import { useBackButton } from "../lib/hooks/useBackButton";
 import UserAvatar from "./UserAvatar";
 import { Header, Spinner, Empty } from "./VisitsSheet";
-import { Crown, Gem, TrendingUp, Award, Trophy } from "lucide-react";
+import { levelFromValue } from "../lib/levels";
+import {
+  Crown, TrendingUp, Coins, Flame, Star, Trophy, User as UserIcon,
+} from "lucide-react";
 
-interface Props { onClose: () => void; onUserClick?: (id: any) => void; }
-
-const TIER_NAMES: Record<number, { name: string; color: string; from: number; to: number }> = {
-  5:  { name: "S5 - S10",   color: "text-amber-300",  from: 5,  to: 10 },
-  11: { name: "S11 - S20",  color: "text-yellow-300", from: 11, to: 20 },
-  21: { name: "S21 - S50",  color: "text-orange-300", from: 21, to: 50 },
-  51: { name: "S51 - S100", color: "text-pink-300",   from: 51, to: 100 },
-};
-
-export default function SupporterSheet({ onClose, onUserClick }: Props) {
-  useBackButton(true, onClose);
-  const top = useQuery(api.rooms.wealthRanking);
-
-  return (
-    <div className="fixed inset-0 z-[160] bg-gradient-to-b from-slate-900 to-black flex flex-col" dir="rtl">
-      <Header onClose={onClose} title="الداعم المحترم" assetKey="ui.sheet.supporter" />
-
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-
-        {/* Hero */}
-        <div className="text-center mb-2">
-          <div className="w-24 h-24 rounded-full bg-gradient-to-br from-amber-500 to-yellow-600 mx-auto flex items-center justify-center mb-3">
-            <Crown size={48} className="text-white" fill="currentColor" />
-          </div>
-          <p className="text-white text-lg font-black">الداعمون المحترمون</p>
-          <p className="text-white/50 text-xs mt-1">أعلى المنفقين على التطبيق</p>
-        </div>
-
-        {/* Tiers legend */}
-        <div className="grid grid-cols-2 gap-2">
-          {Object.entries(TIER_NAMES).map(([k, t]) => (
-            <div key={k} className="rounded-xl bg-white/5 border border-white/10 p-2 text-center">
-              <p className={`text-xs font-black ${t.color}`}><span className="inline-flex items-center gap-1"><Trophy size={11} className="text-yellow-400" /> {t.name}</span></p>
-              <p className="text-white/40 text-[9px] mt-0.5">مستوى الثراء {t.from}-{t.to}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Top 3 */}
-        {top === undefined ? (
-          <Spinner />
-        ) : top.length === 0 ? (
-          <Empty icon={Gem} text="لا يوجد داعمون بعد" />
-        ) : (
-          <div className="space-y-2">
-            <p className="text-white/50 text-xs font-black">أعلى 3 هذا الشهر</p>
-            {top.map((u: any, i: number) => {
-              const rankColor =
-                i === 0 ? "from-amber-500 to-yellow-600" :
-                i === 1 ? "from-slate-300 to-slate-500" :
-                "from-orange-600 to-amber-800";
-              return (
-                <button
-                  key={u.userId}
-                  onClick={() => onUserClick?.(u.userId)}
-                  className="w-full rounded-2xl bg-white/5 border border-white/10 p-3 flex items-center gap-3 active:bg-white/10"
-                >
-                  <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${rankColor} flex items-center justify-center text-white text-xs font-black flex-shrink-0`}>
-                    #{i + 1}
-                  </div>
-                  <div className="w-12 h-12 rounded-full overflow-hidden bg-purple-700 flex items-center justify-center flex-shrink-0">
-                    <UserAvatar avatarUrl={u.avatarUrl} name={u.name} className="w-full h-full" />
-                  </div>
-                  <div className="flex-1 min-w-0 text-right">
-                    <p className="text-white text-sm font-black truncate">{u.name}</p>
-                    <p className="text-white/40 text-[10px]" dir="ltr">ID:{u.userNumber ?? "—"}</p>
-                  </div>
-                  <div className="flex flex-col items-end gap-0.5">
-                    <div className="flex items-center gap-1">
-                      <TrendingUp size={12} className="text-emerald-400" />
-                      <span className="text-emerald-300 text-xs font-black" dir="ltr">
-                        {formatNum(u.total)}
-                      </span>
-                    </div>
-                    <span className="text-white/40 text-[9px]">آخر 30 يوم</span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Info */}
-        <div className="rounded-2xl bg-amber-500/10 border border-amber-400/30 p-4 flex gap-2">
-          <Award size={16} className="text-amber-300 flex-shrink-0 mt-0.5" />
-          <p className="text-amber-100/80 text-[11px] leading-relaxed">
-            احصل على مكان في القائمة من خلال إنفاق العملات على الهدايا. يتم التحديث شهرياً.
-          </p>
-        </div>
-      </div>
-    </div>
-  );
+interface Props {
+  onClose: () => void;
+  onUserClick?: (id: string) => void;
 }
 
-function formatNum(n: number): string {
+type Period = "week" | "month" | "all";
+
+const PERIODS: { key: Period; label: string }[] = [
+  { key: "week", label: "هذا الأسبوع" },
+  { key: "month", label: "هذا الشهر" },
+  { key: "all", label: "كل الأوقات" },
+];
+
+function fmtNum(n: number): string {
   if (n >= 1_000_000_000) return (n / 1_000_000_000).toFixed(2) + "B";
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
   if (n >= 1_000) return (n / 1_000).toFixed(1) + "K";
   return String(n);
+}
+
+// ألوان المنصة — ذهبي/فضي/برونزي
+const PODIUM_STYLES = [
+  { ring: "ring-amber-300", bg: "from-amber-400 to-yellow-600", height: "h-28", size: 72, badge: "from-amber-400 to-yellow-500" },
+  { ring: "ring-slate-200", bg: "from-slate-300 to-slate-500", height: "h-20", size: 60, badge: "from-slate-300 to-slate-500" },
+  { ring: "ring-orange-400", bg: "from-orange-500 to-amber-700", height: "h-16", size: 54, badge: "from-orange-500 to-amber-700" },
+];
+
+export default function SupporterSheet({ onClose, onUserClick }: Props) {
+  useBackButton(true, onClose);
+  const deviceId = getDeviceId();
+  const [period, setPeriod] = useState<Period>("month");
+
+  const top = useQuery(api.rooms.wealthRanking, { period, limit: 100 });
+  const myRank = useQuery(api.rooms.mySupporterRank, { tokenOverride: deviceId, period });
+
+  const top3 = (top ?? []).slice(0, 3);
+  const rest = (top ?? []).slice(3);
+
+  return (
+    <div className="fixed inset-0 z-[160] bg-gradient-to-b from-slate-900 to-black flex flex-col" dir="rtl">
+      <Header onClose={onClose} title="الداعم المحترم" icon={Crown} assetKey="ui.sheet.supporter" />
+
+      {/* ===== Period Tabs ===== */}
+      <div className="px-4 pt-3">
+        <div className="grid grid-cols-3 gap-1.5 rounded-2xl bg-white/5 border border-white/10 p-1">
+          {PERIODS.map((p) => (
+            <button
+              key={p.key}
+              onClick={() => setPeriod(p.key)}
+              className={`py-2 rounded-xl text-[11px] font-black transition ${
+                period === p.key
+                  ? "bg-amber-500/25 text-amber-100 border border-amber-400/50"
+                  : "text-white/60 hover:text-white/90"
+              }`}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-4 pb-32">
+        {top === undefined ? (
+          <Spinner />
+        ) : top.length === 0 ? (
+          <Empty icon={TrendingUp} text="لا يوجد داعمون في هذه الفترة" />
+        ) : (
+          <>
+            {/* ===== Podium (Top 3) ===== */}
+            {top3.length >= 1 && (
+              <div className="mb-6">
+                <div className="flex items-end justify-center gap-2 mb-4" style={{ minHeight: 170 }}>
+                  {/* 2nd */}
+                  {top3[1] && (
+                    <PodiumCard
+                      rank={2}
+                      user={top3[1]}
+                      style={PODIUM_STYLES[1]}
+                      onClick={() => onUserClick?.(top3[1].userId)}
+                    />
+                  )}
+                  {/* 1st */}
+                  <PodiumCard
+                    rank={1}
+                    user={top3[0]}
+                    style={PODIUM_STYLES[0]}
+                    onClick={() => onUserClick?.(top3[0].userId)}
+                  />
+                  {/* 3rd */}
+                  {top3[2] && (
+                    <PodiumCard
+                      rank={3}
+                      user={top3[2]}
+                      style={PODIUM_STYLES[2]}
+                      onClick={() => onUserClick?.(top3[2].userId)}
+                    />
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* ===== List (4-100) ===== */}
+            {rest.length > 0 && (
+              <div className="space-y-2">
+                {rest.map((u: any) => (
+                  <RankRow
+                    key={u.userId}
+                    user={u}
+                    onClick={() => onUserClick?.(u.userId)}
+                  />
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* ===== Sticky "My Rank" Bar ===== */}
+      {myRank && (
+        <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black via-black/95 to-transparent">
+          <div className="rounded-2xl bg-amber-500/15 border border-amber-400/40 backdrop-blur-xl p-3 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-amber-500/30 flex items-center justify-center flex-shrink-0">
+              <UserIcon size={18} className="text-amber-200" />
+            </div>
+            <div className="flex-1 min-w-0 text-right">
+              <p className="text-amber-100 text-xs font-black">ترتيبك</p>
+              <p className="text-white/50 text-[10px]">
+                {myRank.isTop100 ? "ضمن أفضل 100" : "استمر بالإنفاق لتحسين ترتيبك"}
+              </p>
+            </div>
+            <div className="flex flex-col items-end flex-shrink-0">
+              <div className="flex items-center gap-1">
+                <span className="text-amber-200 text-lg font-black tabular-nums" dir="ltr">
+                  #{myRank.rank}
+                </span>
+              </div>
+              <div className="flex items-center gap-1 text-[10px]">
+                <Coins size={9} className="text-amber-300" />
+                <span className="text-amber-300 font-black tabular-nums" dir="ltr">
+                  {fmtNum(myRank.total)}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================
+// PodiumCard — بطاقة على المنصة
+// ============================================================
+function PodiumCard({
+  rank,
+  user,
+  style,
+  onClick,
+}: {
+  rank: number;
+  user: any;
+  style: typeof PODIUM_STYLES[number];
+  onClick: () => void;
+}) {
+  const level = user.level ?? levelFromValue(user.total ?? 0);
+  return (
+    <button
+      onClick={onClick}
+      className="flex flex-col items-center active:scale-95 transition"
+    >
+      {/* Crown for #1 */}
+      {rank === 1 && (
+        <Crown size={20} className="text-amber-300 mb-1" fill="currentColor" />
+      )}
+      {/* Avatar with ring */}
+      <div
+        className={`rounded-full overflow-hidden bg-purple-700 ring-2 ${style.ring} mb-1 relative flex-shrink-0`}
+        style={{ width: style.size, height: style.size }}
+      >
+        <UserAvatar avatarUrl={user.avatarUrl} name={user.name} className="w-full h-full" />
+      </div>
+      {/* Rank badge */}
+      <div
+        className={`absolute -mt-8 w-6 h-6 rounded-full bg-gradient-to-br ${style.badge} flex items-center justify-center text-white text-[10px] font-black ring-2 ring-black/40`}
+      >
+        {rank}
+      </div>
+      {/* Name */}
+      <p className="text-white text-[10px] font-black truncate max-w-[80px] mt-0.5">
+        {user.name}
+      </p>
+      {/* Level */}
+      <span className="text-amber-300 text-[9px] font-black tabular-nums">
+        Lv.{level}
+      </span>
+      {/* Total */}
+      <div className="flex items-center gap-0.5 mt-0.5">
+        <Coins size={8} className="text-amber-400" />
+        <span className="text-amber-200 text-[9px] font-black tabular-nums" dir="ltr">
+          {fmtNum(user.total)}
+        </span>
+      </div>
+      {/* Podium base */}
+      <div className={`w-16 ${style.height} mt-1.5 rounded-t-xl bg-gradient-to-b ${style.bg} opacity-80`} />
+    </button>
+  );
+}
+
+// ============================================================
+// RankRow — صف عادي (4-100)
+// ============================================================
+function RankRow({ user, onClick }: { user: any; onClick: () => void }) {
+  const level = user.level ?? levelFromValue(user.total ?? 0);
+  const isTop100 = user.isTop100;
+  return (
+    <button
+      onClick={onClick}
+      className={`w-full rounded-2xl border p-3 flex items-center gap-3 active:bg-white/10 transition ${
+        isTop100
+          ? "bg-gradient-to-l from-amber-500/10 to-transparent border-amber-400/20"
+          : "bg-white/5 border-white/10"
+      }`}
+    >
+      {/* Rank number */}
+      <div className="w-8 h-8 rounded-full bg-white/10 border border-white/20 flex items-center justify-center flex-shrink-0">
+        <span className="text-white text-[11px] font-black tabular-nums">
+          {user.rank}
+        </span>
+      </div>
+      {/* Avatar */}
+      <div className="w-12 h-12 rounded-full overflow-hidden bg-purple-700 flex items-center justify-center flex-shrink-0">
+        <UserAvatar avatarUrl={user.avatarUrl} name={user.name} className="w-full h-full" />
+      </div>
+      {/* Info */}
+      <div className="flex-1 min-w-0 text-right">
+        <p className="text-white text-sm font-black truncate">{user.name}</p>
+        <div className="flex items-center gap-2 justify-end">
+          <span className="text-amber-300 text-[10px] font-black tabular-nums">
+            Lv.{level}
+          </span>
+          {user.userNumber != null && (
+            <span className="text-white/40 text-[10px] tabular-nums" dir="ltr">
+              ID:{user.userNumber}
+            </span>
+          )}
+        </div>
+      </div>
+      {/* Total */}
+      <div className="flex items-center gap-1 flex-shrink-0">
+        <Coins size={11} className="text-amber-400" />
+        <span className="text-amber-200 text-xs font-black tabular-nums" dir="ltr">
+          {fmtNum(user.total)}
+        </span>
+      </div>
+    </button>
+  );
 }

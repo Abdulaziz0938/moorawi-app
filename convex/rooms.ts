@@ -417,45 +417,140 @@ export const listNew = query({
 });
 
 // ============================================================
-// [moorawi-rankings] wealthRanking — top 3 spenders (last 30 days)
+// ============================================================
+// [ezo-rankings] wealthRanking — ترتيب المنفقين (حقيقي، بفترات زمنية)
 // ============================================================
 export const wealthRanking = query({
-  args: {},
-  handler: async (ctx) => {
-    const since = Date.now() - 30 * 24 * 60 * 60 * 1000;
-    // Read at most 5000 recent transactions (bounded), then filter by 30 days.
-    // This avoids scanning the full table while remaining accurate for the recent window.
-    const txs = await ctx.db
-      .query("giftTransactions")
-      .order("desc")
-      .take(5000);
-    const filtered = txs.filter((t) => t._creationTime >= since);
+  args: {
+    period: v.optional(v.union(v.literal("week"), v.literal("month"), v.literal("all"))),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const period = args.period ?? "month";
+    const limit = Math.min(args.limit ?? 100, 200);
+    const now = Date.now();
+
+    let since = 0;
+    if (period === "week") since = now - 7 * 24 * 60 * 60 * 1000;
+    else if (period === "month") since = now - 30 * 24 * 60 * 60 * 1000;
+    // "all" → since = 0
 
     const totals: Record<string, number> = {};
-    for (const t of filtered) {
-      const k = t.fromUserId;
-      totals[k] = (totals[k] ?? 0) + t.totalPrice;
+
+    if (period === "all") {
+      // استخدم users.totalSent مباشرة (أسرع + دقيق)
+      const users = await ctx.db
+        .query("users")
+        .withIndex("by_totalSent")
+        .order("desc")
+        .take(limit);
+      for (const u of users) {
+        const t = u.totalSent ?? 0;
+        if (t > 0) totals[u._id as string] = t;
+      }
+    } else {
+      // اقرأ آخر 5000 معاملة وفلتر زمنياً (bounded)
+      const txs = await ctx.db
+        .query("giftTransactions")
+        .order("desc")
+        .take(5000);
+      for (const t of txs) {
+        if (t._creationTime < since) continue;
+        const k = t.fromUserId as string;
+        totals[k] = (totals[k] ?? 0) + t.totalPrice;
+      }
     }
 
     const sorted = Object.entries(totals)
       .sort(([, a], [, b]) => b - a)
-      .slice(0, 3);
+      .slice(0, limit);
 
     const enriched = await Promise.all(
       sorted.map(async ([userId, total], idx) => {
         const u = await ctx.db.get("users", userId as Id<"users">);
+        if (!u) return null;
+        const avatarUrl =
+          u.avatarUrl ?? (u.avatarId ? await ctx.storage.getUrl(u.avatarId) : null);
         return {
           rank: idx + 1,
           userId,
-          name: u?.name ?? "ضيف",
-          userNumber: u?.userNumber ?? null,
-          avatarUrl: u?.avatarUrl ?? (u?.avatarId ? await ctx.storage.getUrl(u.avatarId) : null),
+          name: u.name ?? "ضيف",
+          userNumber: u.userNumber ?? null,
+          avatarUrl,
           total,
+          level: levelFromValue(total),
           vip: activeVipLevel(u),
+          isTop3: idx < 3,
+          isTop100: idx < 100,
         };
       })
     );
-    return enriched;
+
+    return enriched.filter((x): x is NonNullable<typeof x> => x !== null);
+  },
+});
+
+// ============================================================
+// [ezo-rankings] mySupporterRank — ترتيب المستخدم الحالي
+// ============================================================
+export const mySupporterRank = query({
+  args: {
+    tokenOverride: v.optional(v.string()),
+    period: v.optional(v.union(v.literal("week"), v.literal("month"), v.literal("all"))),
+  },
+  handler: async (ctx, args) => {
+    if (!args.tokenOverride) return null;
+    const me = await ctx.db
+      .query("users")
+      .withIndex("by_token", (q) => q.eq("tokenIdentifier", args.tokenOverride!))
+      .unique();
+    if (!me) return null;
+
+    const period = args.period ?? "month";
+    const now = Date.now();
+
+    let since = 0;
+    if (period === "week") since = now - 7 * 24 * 60 * 60 * 1000;
+    else if (period === "month") since = now - 30 * 24 * 60 * 60 * 1000;
+
+    const totals: Record<string, number> = {};
+
+    if (period === "all") {
+      const users = await ctx.db
+        .query("users")
+        .withIndex("by_totalSent")
+        .order("desc")
+        .take(500);
+      for (const u of users) {
+        const t = u.totalSent ?? 0;
+        if (t > 0) totals[u._id as string] = t;
+      }
+    } else {
+      const txs = await ctx.db
+        .query("giftTransactions")
+        .order("desc")
+        .take(5000);
+      for (const t of txs) {
+        if (t._creationTime < since) continue;
+        const k = t.fromUserId as string;
+        totals[k] = (totals[k] ?? 0) + t.totalPrice;
+      }
+    }
+
+    const sorted = Object.entries(totals)
+      .sort(([, a], [, b]) => b - a);
+
+    const myIdx = sorted.findIndex(([uid]) => uid === me._id);
+    if (myIdx < 0) return null;
+
+    const myTotal = sorted[myIdx][1];
+    return {
+      rank: myIdx + 1,
+      total: myTotal,
+      level: levelFromValue(myTotal),
+      isTop3: myIdx < 3,
+      isTop100: myIdx < 100,
+    };
   },
 });
 

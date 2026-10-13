@@ -303,7 +303,7 @@ function BannerSlideshow() {
 // WEALTH RANKING BOX
 // ============================================================
 function WealthRankingBox() {
-  const ranking = useQuery(api.rooms.wealthRanking);
+  const ranking = useQuery(api.rooms.wealthRanking, { period: "month", limit: 3 });
 
   const order = [1, 0, 2]; // silver, gold, bronze (left to right)
   const positions = ["silver", "gold", "bronze"];
