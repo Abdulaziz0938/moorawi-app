@@ -13,6 +13,8 @@ import {
   Briefcase, Activity, Music, Coins, MessageCircle,
   Wand2, Gift, Volume2, Mic2, ImageIcon, Monitor, VolumeX, Check, Loader2, Globe, Heart, Hand,
 } from "lucide-react";
+import Card from "./ui/Card";
+import SectionTitle from "./ui/SectionTitle";
 
 export const LAYOUT_ROWS: Record<string, number[]> = { "m1": [1], "m2": [2], "m3": [3], "m5": [2,3], "m7": [1,6], "m18": [6,6,6], "m24": [6,6,6,6], "m12b": [6,6] };
 
@@ -212,7 +214,7 @@ export default function SettingsSheet({
         {tab === "main" && (
           <div className="flex-1 overflow-y-auto p-4">
             {/* [moorawi] طلب المايك Toggle */}
-            <div className="mb-4 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-400/30 rounded-2xl p-3 flex items-center justify-between">
+            <div className="mb-4 bg-gradient-to-br from-purple-500/15 via-purple-600/10 to-transparent border border-purple-400/30 backdrop-blur-xl rounded-2xl p-3 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-purple-500/30 flex items-center justify-center">
                   <Hand size={20} className="text-white" />
@@ -240,8 +242,9 @@ export default function SettingsSheet({
             </div>
 
             {/* [moorawi-security] Items grid — Owner/Mod فقط */}
-            {isOwnerOrMod && (
-              <div className="grid grid-cols-3 gap-3 mb-6">
+              {isOwnerOrMod && <SectionTitle icon={LayoutGrid} title="أدوات الغرفة" tone="purple" />}
+              {isOwnerOrMod && (
+                <div className="grid grid-cols-3 gap-3 mb-6">
                 {items.map((it) => (
                   <button key={it.key} onClick={() => handleItemClick(it.key)} className="flex flex-col items-center gap-2 p-3 bg-white/5 hover:bg-white/10 rounded-2xl transition">
                     <it.icon size={26} className="text-white" />
@@ -252,7 +255,7 @@ export default function SettingsSheet({
             )}
 
             {/* [moorawi-security] Quick Tools — مصفّاة حسب الدور */}
-            <h3 className="text-white/60 text-xs mb-3 text-center">أدوات سريعة</h3>
+            <SectionTitle icon={Wand2} title="أدوات سريعة" tone="gold" />
             <div className="grid grid-cols-4 gap-3">
               {quickTools
                 .filter((it) => isOwnerOrMod || personalKeys.includes(it.key))
@@ -270,7 +273,7 @@ export default function SettingsSheet({
 
         {tab === "layout" && (
           <div className="flex-1 overflow-y-auto p-4">
-            <p className="text-white/70 text-sm mb-4 text-center">اختر تخطيط المايكات</p>
+            <SectionTitle icon={LayoutGrid} title="اختر تخطيط المايكات" tone="purple" />
             {!isOwnerOrMod && <p className="text-yellow-300 text-xs text-center mb-4 bg-yellow-500/10 p-2 rounded-lg">للمالك/المشرف فقط</p>}
             <div className="grid grid-cols-2 gap-3">
               {LAYOUT_OPTIONS.map((opt) => (
