@@ -220,7 +220,7 @@ export default function ProfilePage({
                   vip={vipLevel}
                   ring={vipLevel === 0}
                   customFrameUrl={finalFrameUrl}
-                  customFrameInset={14}
+                  customFrameInset={22}
                 />
             </div>
             {isMe && (

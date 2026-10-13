@@ -74,6 +74,8 @@ export default function VipAvatar({
             left: -customFrameInset,
             width: size + customFrameInset * 2,
             height: size + customFrameInset * 2,
+            objectFit: "contain",
+            objectPosition: "center",
           }}
           draggable={false}
         />
