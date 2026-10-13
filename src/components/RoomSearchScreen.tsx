@@ -6,6 +6,8 @@ import type { Id } from "../../convex/_generated/dataModel";
 import { getDeviceId } from "../lib/device";
 import { dialog } from "../lib/dialog";
 import { ChevronRight, Search, Loader2, Users, X, Home } from "lucide-react";
+import Card from "./ui/Card";
+import SectionTitle from "./ui/SectionTitle";
 
 interface Props {
   onClose: () => void;
@@ -47,7 +49,7 @@ export default function RoomSearchScreen({ onClose, onEnter }: Props) {
         >
           <ChevronRight size={20} />
         </button>
-        <div className="flex-1 flex items-center gap-2 bg-white/10 border border-white/15 rounded-2xl px-3 py-2">
+<Card tone="default" padding="md" className="flex-1 flex items-center gap-2">
           <Search size={16} className="text-white/50" />
           <input
             autoFocus
@@ -62,7 +64,7 @@ export default function RoomSearchScreen({ onClose, onEnter }: Props) {
               <X size={14} />
             </button>
           )}
-        </div>
+        </Card>
         <button
           onClick={handleSubmit}
           disabled={!q.trim()}
@@ -75,10 +77,12 @@ export default function RoomSearchScreen({ onClose, onEnter }: Props) {
       {/* ===== Results ===== */}
       <div className="flex-1 overflow-y-auto px-4 py-3">
         {submitted.length === 0 && (
-          <div className="text-center py-16 text-white/40">
-            <Search size={48} className="mx-auto mb-3 opacity-30" />
-            <p className="text-sm">ابحث عن غرفة بالاسم أو رقم الغرفة</p>
-          </div>
+<Card tone="default" padding="lg">
+            <div className="text-center py-12 text-white/40">
+              <Search size={48} className="mx-auto mb-3 opacity-30" />
+              <p className="text-sm">ابحث عن غرفة بالاسم أو رقم الغرفة</p>
+            </div>
+          </Card>
         )}
 
         {submitted.length > 0 && results === undefined && (
@@ -88,18 +92,21 @@ export default function RoomSearchScreen({ onClose, onEnter }: Props) {
         )}
 
         {submitted.length > 0 && results && results.length === 0 && (
-          <div className="text-center py-16 text-white/40">
-            <p className="text-sm">لا توجد نتائج</p>
-          </div>
+<Card tone="default" padding="lg">
+            <div className="text-center py-12 text-white/40">
+              <p className="text-sm">لا توجد نتائج</p>
+            </div>
+          </Card>
         )}
 
         {results && results.length > 0 && (
           <div className="space-y-2">
             {results.map((r: any) => (
-              <button
+<Card
                 key={r._id}
+                interactive
                 onClick={() => handleEnter(r._id)}
-                className="w-full rounded-2xl bg-white/5 border border-white/10 p-3 flex items-center gap-3 active:scale-95 transition"
+                className="flex items-center gap-3"
               >
                 <div className="w-14 h-14 rounded-xl overflow-hidden bg-black/40 flex-shrink-0 flex items-center justify-center">
                   {r.coverUrl ? (
@@ -119,7 +126,7 @@ export default function RoomSearchScreen({ onClose, onEnter }: Props) {
                   </div>
                 </div>
                 <ChevronRight size={16} className="text-white/30" />
-              </button>
+              </Card>
             ))}
           </div>
         )}
