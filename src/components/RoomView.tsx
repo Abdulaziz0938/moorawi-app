@@ -797,7 +797,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
                               vip={seat?.userVip ?? 0}
                               ring={false}
                                                 customFrameUrl={seat?.userFrameUrl ?? (seat?.userVip ? assets[`vip.frame.${seat.userVip}`] : null) ?? null}
-                                                frameScale={seat?.userVip ? (assetsFull[`vip.frame.${seat.userVip}`]?.frameScale ?? 3.0) : 3.0}
+                                                frameScale={seat?.userVip ? (assetsFull[`vip.frame.${seat.userVip}`]?.frameScale ?? 1.4) : 1.4}
                                                 frameOffsetX={seat?.userVip ? (assetsFull[`vip.frame.${seat.userVip}`]?.frameOffsetX ?? 0) : 0}
                                                 frameOffsetY={seat?.userVip ? (assetsFull[`vip.frame.${seat.userVip}`]?.frameOffsetY ?? 0) : 0}
                             />

@@ -105,7 +105,7 @@ export default function ProfilePage({
   const vipFrameUrl = vipFrameData?.url ?? null;
   const finalFrameUrl = equippedFrame?.imageUrl ?? vipFrameUrl;
   // [ezo-frame] Yalla/SUGO standard: scale + offset from DB
-  const finalFrameScale = equippedFrame?.frameScale ?? vipFrameData?.frameScale ?? 3.0;
+  const finalFrameScale = equippedFrame?.frameScale ?? vipFrameData?.frameScale ?? 1.4;
   const finalFrameOffsetX = equippedFrame?.frameOffsetX ?? vipFrameData?.frameOffsetX ?? 0;
   const finalFrameOffsetY = equippedFrame?.frameOffsetY ?? vipFrameData?.frameOffsetY ?? 0;
   const bgGradient = VIP_BG[vipLevel] || VIP_BG[0];

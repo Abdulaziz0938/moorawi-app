@@ -513,7 +513,7 @@ function CreateItemModal({ token, onClose, onCreate }: any) {
   const [imageUrl, setImageUrl] = useState("");
   const [uploading, setUploading] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [frameScale, setFrameScale] = useState("3.0");
+  const [frameScale, setFrameScale] = useState("1.4");
   const [frameOffsetX, setFrameOffsetX] = useState("0");
   const [frameOffsetY, setFrameOffsetY] = useState("0");
 
@@ -680,7 +680,7 @@ function FramesTunerTab({ token }: { token: string | null }) {
   ];
   const [category, setCategory] = useState<string>("frame");
   const [selectedId, setSelectedId] = useState<Id<"shopItems"> | null>(null);
-  const [scale, setScale] = useState<number>(3.0);
+  const [scale, setScale] = useState<number>(1.4);
   const [offsetX, setOffsetX] = useState<number>(0);
   const [offsetY, setOffsetY] = useState<number>(0);
   const [saving, setSaving] = useState(false);
