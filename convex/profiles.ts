@@ -190,6 +190,36 @@ export const getOptions = query({
 });
 
 // [moorawi] حذف صورة الأفاتار
+export const equipVipFrame = mutation({
+  args: {
+    level: v.number(),
+    tokenOverride: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
+    const userVip = me.vipLevel ?? 0;
+    if (args.level < 1 || args.level > userVip) {
+      throw new Error("مستوى VIP غير مملوك");
+    }
+    await ctx.db.patch("users", me._id, {
+      equippedVipFrameLevel: args.level,
+      equippedFrameId: undefined,
+    });
+    return { ok: true };
+  },
+});
+
+export const unequipVipFrame = mutation({
+  args: { tokenOverride: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
+    await ctx.db.patch("users", me._id, {
+      equippedVipFrameLevel: undefined,
+    });
+    return { ok: true };
+  },
+});
+
 export const saveCover = mutation({
   args: {
     coverUrl: v.string(),

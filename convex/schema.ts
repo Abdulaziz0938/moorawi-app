@@ -54,6 +54,7 @@ export default defineSchema({
     titleId: v.optional(v.string()),                      // معرّف اللقب (نص)
     titleText: v.optional(v.string()),                    // النص المعروض
     equippedFrameId: v.optional(v.id("shopItems")),
+    equippedVipFrameLevel: v.optional(v.number()),  // 0-7 = VIP frame level, 0 = none
     equippedVehicleId: v.optional(v.id("shopItems")),
     equippedEntryEffectId: v.optional(v.id("shopItems")),
     equippedChatBubbleId: v.optional(v.id("shopItems")),

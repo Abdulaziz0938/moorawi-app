@@ -103,13 +103,14 @@ export default function ProfilePage({
   const equippedFrame = (equipped as any)?.frame;
   const assetsFull = useAssetsFull();
   const vipFrameKey = vipLevel > 0 ? `vip.frame.${vipLevel}` : null;
-  const vipFrameData = vipFrameKey ? assetsFull[vipFrameKey] : null;
-  const vipFrameUrl = vipFrameData?.url ?? null;
-  const finalFrameUrl = equippedFrame?.imageUrl ?? vipFrameUrl;
+  const equippedVipLevel = (profile as any).equippedVipFrameLevel ?? null;
+  const equippedVipKey = equippedVipLevel ? `vip.frame.${equippedVipLevel}` : null;
+  const equippedVipData = equippedVipKey ? assetsFull[equippedVipKey] : null;
+  const finalFrameUrl = equippedFrame?.imageUrl ?? equippedVipData?.url ?? null;
   // [ezo-frame] Yalla/SUGO standard: scale + offset from DB
-  const finalFrameScale = equippedFrame?.frameScale ?? vipFrameData?.frameScale ?? 1.4;
-  const finalFrameOffsetX = equippedFrame?.frameOffsetX ?? vipFrameData?.frameOffsetX ?? 0;
-  const finalFrameOffsetY = equippedFrame?.frameOffsetY ?? vipFrameData?.frameOffsetY ?? 0;
+  const finalFrameScale = equippedFrame?.frameScale ?? equippedVipData?.frameScale ?? 1.4;
+  const finalFrameOffsetX = equippedFrame?.frameOffsetX ?? equippedVipData?.frameOffsetX ?? 0;
+  const finalFrameOffsetY = equippedFrame?.frameOffsetY ?? equippedVipData?.frameOffsetY ?? 0;
   const bgGradient = VIP_BG[vipLevel] || VIP_BG[0];
   const isOwner = profile.userNumber === 1;
   const isAdmin = profile.adminRole === "super" || profile.adminRole === "moderator";
@@ -265,7 +266,7 @@ export default function ProfilePage({
         </div>
 
         {/* ============ 1+2+3. Avatar (right) + Name + ID (below, right-aligned) ============ */}
-        <div className="px-4 flex flex-col items-start -mt-12 relative z-20">
+        <div className="px-6 flex flex-col items-start -mt-12 relative z-20">
           {/* Avatar - right */}
           <div className="relative">
             <div onClick={handleAvatarClick} className="active:scale-95 transition-transform cursor-pointer">

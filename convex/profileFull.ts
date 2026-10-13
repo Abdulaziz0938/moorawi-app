@@ -207,6 +207,7 @@ export const getFull = query({
 
       // Equipped (null if none)
       frame,
+      equippedVipFrameLevel: user.equippedVipFrameLevel ?? null,
       vehicle,
       equippedMedal,
       titleText: user.titleText ?? null,
