@@ -331,152 +331,153 @@ export default function ProfilePage({
             </div>
           </div>
 
-        {/* ============ 6.1. Gift Stats ============ */}
-        <div className="mx-4 mt-3 grid grid-cols-2 gap-3">
-          {/* أرسل */}
-          <div className="rounded-2xl bg-gradient-to-br from-pink-500/15 via-pink-600/10 to-transparent border border-pink-400/30 backdrop-blur-xl p-3">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-pink-200 text-[10px] font-black">أرسل</span>
-              <Send size={14} className="text-pink-300" />
+          {/* ============ 6.1. Gift Stats ============ */}
+          <div className="mx-4 mt-5">
+            <SectionTitle icon={Gift} title="الهدايا" tone="gold" />
+            <div className="grid grid-cols-2 gap-3">
+              <Card tone="pink" padding="md">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-pink-200 text-[10px] font-black">أرسل</span>
+                  <Send size={14} className="text-pink-300" />
+                </div>
+                <p className="text-white text-lg font-black tabular-nums leading-tight" dir="ltr">
+                  {formatNumber(giftStats.sent.count)}
+                </p>
+                <p className="text-pink-300 text-[10px] font-bold tabular-nums flex items-center gap-1 mt-0.5">
+                  <Coins size={10} />
+                  {formatNumber(giftStats.sent.total)}
+                </p>
+              </Card>
+              <Card tone="emerald" padding="md">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-emerald-200 text-[10px] font-black">استلم</span>
+                  <Inbox size={14} className="text-emerald-300" />
+                </div>
+                <p className="text-white text-lg font-black tabular-nums leading-tight" dir="ltr">
+                  {formatNumber(giftStats.received.count)}
+                </p>
+                <p className="text-emerald-300 text-[10px] font-bold tabular-nums flex items-center gap-1 mt-0.5">
+                  <Coins size={10} />
+                  {formatNumber(giftStats.received.total)}
+                </p>
+              </Card>
             </div>
-            <p className="text-white text-lg font-black tabular-nums leading-tight" dir="ltr">
-              {formatNumber(giftStats.sent.count)}
-            </p>
-            <p className="text-pink-300 text-[10px] font-bold tabular-nums flex items-center gap-1 mt-0.5">
-              <Coins size={10} />
-              {formatNumber(giftStats.sent.total)}
-            </p>
           </div>
 
-          {/* استلم */}
-          <div className="rounded-2xl bg-gradient-to-br from-emerald-500/15 via-emerald-600/10 to-transparent border border-emerald-400/30 backdrop-blur-xl p-3">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-emerald-200 text-[10px] font-black">استلم</span>
-              <Inbox size={14} className="text-emerald-300" />
+          {/* ============ 7. Medals ============ */}
+          {medals.length > 0 && (
+            <div className="mx-4 mt-5">
+              <SectionTitle icon={Award} title="الأوسمة" tone="gold" />
+              <Card padding="md">
+                <div className="flex justify-center">
+                  <MedalsRow medals={medals} max={10} size="sm" />
+                </div>
+              </Card>
             </div>
-            <p className="text-white text-lg font-black tabular-nums leading-tight" dir="ltr">
-              {formatNumber(giftStats.received.count)}
-            </p>
-            <p className="text-emerald-300 text-[10px] font-bold tabular-nums flex items-center gap-1 mt-0.5">
-              <Coins size={10} />
-              {formatNumber(giftStats.received.total)}
-            </p>
-          </div>
-        </div>
+          )}
 
-        {/* ============ 7. Medals ============ */}
-        {medals.length > 0 && (
-          <div className="mx-4 mt-3 flex justify-center">
-            <MedalsRow medals={medals} max={10} size="sm" />
-          </div>
-        )}
+          {/* ============ 8. My Room ============ */}
+          {room && (
+            <div className="mx-4 mt-5">
+              <SectionTitle icon={Home} title="غرفتي" tone="purple" />
+              <Card
+                interactive
+                onClick={() => { if (onEnterRoom && room._id) { onClose(); onEnterRoom(room._id); } }}
+                padding="md"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-14 h-14 rounded-2xl overflow-hidden bg-black/30 flex items-center justify-center flex-shrink-0">
+                    {room.coverUrl ? (
+                      <img src={room.coverUrl} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <Home size={24} className="text-white/70" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0 text-right">
+                    <p className="text-white text-sm font-black truncate">{room.name}</p>
+                    <p className="text-white/50 text-[10px]" dir="ltr">ID:{room.roomNumber ?? "—"} • {room.memberCount} عضو</p>
+                  </div>
+                  <div className="px-2 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30">
+                    <span className="text-[10px] font-black text-emerald-200">Lv.0</span>
+                  </div>
+                </div>
+              </Card>
+            </div>
+          )}
 
-        {/* ============ 8. My Room ============ */}
-        {room && (
-          <div className="mx-4 mt-4">
-            <p className="text-white/60 text-xs font-black mb-2 text-right">غرفتي</p>
-            <button
-              onClick={() => { if (onEnterRoom && room._id) { onClose(); onEnterRoom(room._id); } }}
-              className="w-full rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 p-3 flex items-center gap-3 hover:bg-white/15 transition active:scale-[0.98]"
-            >
-              <div className="w-14 h-14 rounded-2xl overflow-hidden bg-black/30 flex items-center justify-center flex-shrink-0">
-                {room.coverUrl ? (
-                  <img src={room.coverUrl} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  <Home size={24} className="text-white/70" />
-                )}
-              </div>
-              <div className="flex-1 min-w-0 text-right">
-                <p className="text-white text-sm font-black truncate">{room.name}</p>
-                <p className="text-white/50 text-[10px]" dir="ltr">ID:{room.roomNumber ?? "—"} • {room.memberCount} عضو</p>
-              </div>
-              <div className="px-2 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30">
-                <span className="text-[10px] font-black text-emerald-200">Lv.0</span>
-              </div>
-            </button>
+          {/* ============ 9. Tabs ============ */}
+          <div className="mx-4 mt-5 flex items-center gap-1 p-1 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xl">
+            {[
+              { key: "info" as Tab, label: "معلومات" },
+              { key: "assets" as Tab, label: "الأصول" },
+              { key: "relation" as Tab, label: "العلاقة" },
+              { key: "moments" as Tab, label: "لحظات" },
+            ].map((t) => (
+              <button
+                key={t.key}
+                onClick={() => setTab(t.key)}
+                className={`flex-1 py-2 px-2 rounded-xl text-xs font-black transition ${
+                  tab === t.key
+                    ? "bg-gradient-to-br from-purple-600 to-purple-700 text-white shadow-lg shadow-purple-500/30"
+                    : "text-white/50 hover:text-white/80 hover:bg-white/5"
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
           </div>
-        )}
-
-        {/* ============ 9. Tabs ============ */}
-        <div className="mx-4 mt-4 flex items-center justify-around border-b border-white/10">
-          {[
-            { key: "info" as Tab, label: "معلومات" },
-            { key: "assets" as Tab, label: "الأصول" },
-            { key: "relation" as Tab, label: "العلاقة" },
-            { key: "moments" as Tab, label: "لحظات 0" },
-          ].map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setTab(t.key)}
-              className={`relative py-2 px-1 text-xs font-black transition ${
-                tab === t.key ? "text-white" : "text-white/50 hover:text-white/75"
-              }`}
-            >
-              {t.label}
-              {tab === t.key && (
-                <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-white" />
-              )}
-            </button>
-          ))}
-        </div>
 
         {/* ============ Tab content ============ */}
         <div className="px-4 py-4 min-h-[200px]">
-          {tab === "info" && (
-            <div className="space-y-3">
-              {/* صور الحياة */}
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-3">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-white/60 text-xs font-black">صور الحياة</p>
-                  <span className="text-white/40 text-[10px]" dir="ltr">0/9</span>
-                </div>
-                <div className="flex gap-2 overflow-x-auto">
-                  {isMe ? (
-                    <div className="w-20 h-20 rounded-xl bg-white/5 border border-dashed border-white/20 flex items-center justify-center flex-shrink-0">
-                      <UserPlus size={20} className="text-white/40" />
-                    </div>
-                  ) : (
-                    <p className="text-white/40 text-xs py-4">لا توجد صور</p>
-                  )}
-                </div>
-              </div>
-
-              {/* أفضل داعم */}
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-3">
-                <p className="text-white/60 text-xs font-black mb-2">أفضل داعم</p>
-                <div className="grid grid-cols-3 gap-2">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="aspect-[5/4] rounded-xl bg-gradient-to-br from-amber-900/30 to-black/40 border border-amber-500/20 flex flex-col items-center justify-center gap-1">
-                      <div className="w-8 h-8 rounded-full bg-white/10 border border-white/20" />
-                      <p className="text-white/50 text-[9px]">انتظر...</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* شرف */}
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-3">
-                <p className="text-white/60 text-xs font-black mb-2">شرف</p>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="rounded-xl bg-gradient-to-br from-purple-700/40 to-purple-900/40 border border-purple-500/30 p-3 flex flex-col items-center">
-                    <p className="text-white font-black text-lg" dir="ltr">Lv.{levelFromValue(charm)}</p>
-                    <p className="text-white/60 text-[10px]">جاذبية</p>
+            {tab === "info" && (
+              <div className="space-y-3">
+                <Card padding="md">
+                  <SectionTitle icon={ImageIcon} title="صور الحياة" action={{ label: "0/9", onClick: () => {} }} />
+                  <div className="flex gap-2 overflow-x-auto">
+                    {isMe ? (
+                      <div className="w-20 h-20 rounded-xl bg-white/5 border border-dashed border-white/20 flex items-center justify-center flex-shrink-0">
+                        <UserPlus size={20} className="text-white/40" />
+                      </div>
+                    ) : (
+                      <p className="text-white/40 text-xs py-4">لا توجد صور</p>
+                    )}
                   </div>
-                  <div className="rounded-xl bg-gradient-to-br from-amber-700/40 to-amber-900/40 border border-amber-500/30 p-3 flex flex-col items-center">
-                    <p className="text-white font-black text-lg" dir="ltr">Lv.{levelFromValue(wealth)}</p>
-                    <p className="text-white/60 text-[10px]">ثروة</p>
+                </Card>
+
+                <Card padding="md">
+                  <SectionTitle icon={Heart} title="أفضل داعم" tone="gold" />
+                  <div className="grid grid-cols-3 gap-2">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="aspect-[5/4] rounded-xl bg-gradient-to-br from-amber-900/30 to-black/40 border border-amber-500/20 flex flex-col items-center justify-center gap-1">
+                        <div className="w-8 h-8 rounded-full bg-white/10 border border-white/20" />
+                        <p className="text-white/50 text-[9px]">انتظر...</p>
+                      </div>
+                    ))}
                   </div>
-                </div>
+                </Card>
+
+                <Card padding="md">
+                  <SectionTitle icon={Star} title="شرف" tone="purple" />
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="rounded-xl bg-gradient-to-br from-purple-700/40 to-purple-900/40 border border-purple-500/30 p-3 flex flex-col items-center">
+                      <p className="text-white font-black text-lg" dir="ltr">Lv.{levelFromValue(charm)}</p>
+                      <p className="text-white/60 text-[10px]">جاذبية</p>
+                    </div>
+                    <div className="rounded-xl bg-gradient-to-br from-amber-700/40 to-amber-900/40 border border-amber-500/30 p-3 flex flex-col items-center">
+                      <p className="text-white font-black text-lg" dir="ltr">Lv.{levelFromValue(wealth)}</p>
+                      <p className="text-white/60 text-[10px]">ثروة</p>
+                    </div>
+                  </div>
+                </Card>
               </div>
-            </div>
-          )}
+            )}
 
           {tab === "assets" && (
             <div className="space-y-3">
               <AssetCategory label="هدية" count={0} tone="purple" />
-              <AssetCategory label="أوسمة" count={medals.length} tone="amber" />
+              <AssetCategory label="أوسمة" count={medals.length} tone="gold" />
               <AssetCategory label="إطار" count={0} tone="emerald" />
-              <AssetCategory label="مركبة" count={0} tone="blue" />
+              <AssetCategory label="مركبة" count={0} tone="default" />
             </div>
           )}
 
@@ -592,34 +593,19 @@ export default function ProfilePage({
   );
 }
 
-// ============ StatBox ============
-function StatBox({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="flex flex-col items-center gap-0.5 py-3">
-      <p className="text-white text-base font-black tabular-nums" dir="ltr">{formatNumber(value)}</p>
-      <p className="text-white/60 text-[10px]">{label}</p>
-    </div>
-  );
-}
-
 // ============ AssetCategory ============
-function AssetCategory({ label, count, tone }: { label: string; count: number; tone: "purple" | "amber" | "emerald" | "blue" }) {
-  const toneMap = {
-    purple:  { bg: "from-purple-900/30 to-purple-950/50",   border: "border-purple-500/30",  text: "text-purple-200" },
-    amber:   { bg: "from-amber-900/30 to-amber-950/50",     border: "border-amber-500/30",   text: "text-amber-200" },
-    emerald: { bg: "from-emerald-900/30 to-emerald-950/50", border: "border-emerald-500/30", text: "text-emerald-200" },
-    blue:    { bg: "from-blue-900/30 to-blue-950/50",       border: "border-blue-500/30",    text: "text-blue-200" },
-  }[tone];
+function AssetCategory({ label, count, tone }: { label: string; count: number; tone: "purple" | "gold" | "emerald" | "default" }) {
   return (
-    <div className={`rounded-2xl border ${toneMap.border} bg-gradient-to-br ${toneMap.bg} p-3 flex items-center justify-between`}>
-      <div className="flex items-center gap-2">
-        <div className={`w-9 h-9 rounded-xl bg-black/30 flex items-center justify-center`}>
-          <span className={`${toneMap.text} text-sm font-black`}>0</span>
+    <Card tone={tone} padding="md">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="w-9 h-9 rounded-xl bg-black/30 flex items-center justify-center">
+            <span className="text-white text-sm font-black">{count}</span>
+          </div>
+          <p className="text-white text-sm font-bold">{label}</p>
         </div>
-        <p className="text-white text-sm font-bold">{label}</p>
+        <p className="text-white/70 text-xs font-black">{count}</p>
       </div>
-      <p className={`text-xs font-black ${toneMap.text}`}>0</p>
-    </div>
-
+    </Card>
   );
 }
