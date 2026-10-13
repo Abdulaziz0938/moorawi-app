@@ -11,10 +11,9 @@ import {
 } from "lucide-react";
 import Card from "./ui/Card";
 
-type Category = "vipframe" | "frame" | "vehicle" | "entryEffect" | "chatBubble" | "soundWave" | "profileCard";
+type Category = "frame" | "vehicle" | "entryEffect" | "chatBubble" | "soundWave" | "profileCard";
 
 const CATEGORIES: { key: Category; label: string; icon: any; color: string }[] = [
-  { key: "vipframe",    label: "إطارات VIP", icon: Crown,          color: "text-amber-300" },
   { key: "frame",       label: "الإطارات",   icon: Frame,          color: "text-purple-300" },
   { key: "vehicle",     label: "المركبات",   icon: Car,            color: "text-blue-300" },
   { key: "entryEffect", label: "الدخولية",   icon: Wand2,          color: "text-pink-300" },
@@ -37,7 +36,7 @@ interface Props {
   onOpenStore?: () => void;
 }
 
-export default function MyItemsSheet({ onClose, initialCategory = "vipframe", onOpenStore }: Props) {
+export default function MyItemsSheet({ onClose, initialCategory = "frame", onOpenStore }: Props) {
   const token = getActiveToken();
   const [category, setCategory] = useState<Category>(initialCategory);
   const [busy, setBusy] = useState<string | null>(null);
@@ -54,12 +53,9 @@ export default function MyItemsSheet({ onClose, initialCategory = "vipframe", on
   const myVipLevel = (me as any)?.vipLevel ?? 0;
   const equippedVipLevel = (me as any)?.equippedVipFrameLevel ?? null;
 
-  const isVipCat = category === "vipframe";
+  // (vipframe merged into frame)
 
-  const allItems = useQuery(
-    api.shop.listByCategory,
-    isVipCat ? ("skip" as any) : { category, limit: 100 }
-  );
+  const allItems = useQuery(api.shop.listByCategory, { category, limit: 100 });
 
   // VIP frames items (1..7)
   const vipItems = Array.from({ length: 7 }, (_, i) => i + 1).map((n) => {
@@ -75,13 +71,14 @@ export default function MyItemsSheet({ onClose, initialCategory = "vipframe", on
     };
   });
 
-  const catInv = isVipCat
-    ? []
-    : (inventory ?? []).filter((i: any) => i.category === category);
+  const catInv = (inventory ?? []).filter((i: any) => i.category === category);
   const ownedIds = new Set(catInv.map((i: any) => i.itemId));
-  const ownedItems = isVipCat
+  const shopOwned = (allItems ?? []).filter((item: any) => ownedIds.has(item._id));
+  // إطارات VIP مملوكة (ضمن تبويب الإطارات)
+  const vipOwned = category === "frame"
     ? vipItems.filter((v: any) => v.level <= myVipLevel)
-    : (allItems ?? []).filter((item: any) => ownedIds.has(item._id));
+    : [];
+  const ownedItems = [...vipOwned, ...shopOwned];
   const equippedItemId = catInv.find((i: any) => i.isEquipped)?.itemId;
   const invByItemId = new Map(catInv.map((i: any) => [i.itemId, i]));
 
@@ -121,7 +118,7 @@ export default function MyItemsSheet({ onClose, initialCategory = "vipframe", on
   const CatIcon = currentCat.icon;
   const totalOwned = (inventory ?? []).length;
 
-  const loading = inventory === undefined || (!isVipCat && allItems === undefined);
+  const loading = inventory === undefined || allItems === undefined;
 
   return (
     <div
@@ -157,9 +154,10 @@ export default function MyItemsSheet({ onClose, initialCategory = "vipframe", on
           {CATEGORIES.map((cat) => {
             const Icon = cat.icon;
             const active = category === cat.key;
-            const count = cat.key === "vipframe"
-              ? myVipLevel
-              : (inventory ?? []).filter((i: any) => i.category === cat.key).length;
+            const count =
+              cat.key === "frame"
+                ? (inventory ?? []).filter((i: any) => i.category === "frame").length + myVipLevel
+                : (inventory ?? []).filter((i: any) => i.category === cat.key).length;
             return (
               <button
                 key={cat.key}
@@ -197,12 +195,12 @@ export default function MyItemsSheet({ onClose, initialCategory = "vipframe", on
               <div className="text-center py-12 text-white/40">
                 <ShoppingBag size={56} className="mx-auto mb-3 opacity-30" />
                 <p className="text-sm font-black text-white/70">
-                  {isVipCat && myVipLevel === 0
+                  {false && myVipLevel === 0
                     ? "لست مشتركاً في VIP"
                     : `لا تملك أي ${currentCat.label}`}
                 </p>
                 <p className="text-xs mt-1">
-                  {isVipCat ? "اشترك في VIP للحصول على الإطارات" : "اشترِ من المتجر لعرضها هنا"}
+                  {false ? "اشترك في VIP للحصول على الإطارات" : "اشترِ من المتجر لعرضها هنا"}
                 </p>
                 {onOpenStore && (
                   <button

@@ -546,8 +546,8 @@ export default function RoomView({ roomId, onLeave }: Props) {
   };
   const layoutRows = LAYOUT_ROWS[layout] ?? LAYOUT_ROWS["m18"];
   const maxRowCount = Math.max(...layoutRows);
-  const cellWidth = `min(calc((100% - ${(maxRowCount - 1) * 6}px) / ${maxRowCount}), 62px)`;
-  const gridHeight = layoutRows.length * 80 + 12;
+  const cellWidth = `min(calc((100% - ${(maxRowCount - 1) * 14}px) / ${maxRowCount}), 58px)`;
+  const gridHeight = layoutRows.length * 92 + 20;
 
   const handleSeatClick = (seatIndex: number, userId: string | undefined) => {
     const seat = seats?.find((s) => s.seatIndex === seatIndex);
@@ -774,12 +774,12 @@ export default function RoomView({ roomId, onLeave }: Props) {
           {error && <p className="text-[8px] text-red-300">{error}</p>}
         </div>
 
-        <div className="mx-2 flex-shrink-0 relative" style={{ height: `${gridHeight}px` }}>
+        <div className="mx-2 flex-shrink-0 relative" style={{ height: `${gridHeight}px`, overflow: "visible" }}>
           <div className="flex flex-col gap-1.5 h-full">
             {layoutRows.map((count, rowIdx) => {
               const rowStart = layoutRows.slice(0, rowIdx).reduce((a, b) => a + b, 0);
               return (
-                <div key={rowIdx} className="flex justify-center gap-1.5 flex-1">
+                <div key={rowIdx} className="flex justify-center gap-3 flex-1">
                   {Array.from({ length: count }).map((_, i) => {
                     const seat = seats[rowStart + i];
                     if (!seat) return null;
