@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { query } from "./_generated/server";
 import { requireUser } from "./lib/auth";
+import { activeVipLevel } from "./lib/vip";
 
 // ============================================================
 // [moorawi-relations] myRelations — علاقاتي النشطة
@@ -38,6 +39,7 @@ export const myRelations = query({
             name: partner?.name ?? "—",
             userNumber: partner?.userNumber ?? null,
             avatarUrl: partner?.avatarUrl ?? (partner?.avatarId ? await ctx.storage.getUrl(partner.avatarId) : null),
+            vip: activeVipLevel(partner),
           },
         };
       })

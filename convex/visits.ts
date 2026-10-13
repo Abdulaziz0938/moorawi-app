@@ -1,6 +1,7 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { requireUser } from "./lib/auth";
+import { activeVipLevel } from "./lib/vip";
 
 // [moorawi-visits] Profile/room visits
 export const record = mutation({
