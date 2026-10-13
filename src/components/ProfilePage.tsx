@@ -9,13 +9,14 @@ import { dialog } from "../lib/dialog";
 import {
   X, Home, Gift, MessageCircle, UserPlus, Crown, Loader2,
   Pencil, Camera, Eye, Trash2, ImageIcon, Copy, Check, Radio, Send, Inbox, Coins,
-    Users, Heart, Award, Star } from "lucide-react";
+    Users, Heart, Award, Star, ChevronRight } from "lucide-react";
 import { UserName } from "./UserBadges";
 import LevelBadge from "./LevelBadge";
 import VipAvatar from "./ui/VipAvatar";
 import MedalsRow from "./MedalsRow";
 import ImageCropper from "./ImageCropper";
 import Card from "./ui/Card";
+import MyItemsSheet from "./MyItemsSheet";
 import StatBadge from "./ui/StatBadge";
 import SectionTitle from "./ui/SectionTitle";
 import { levelFromValue } from "../lib/levels";
@@ -70,6 +71,13 @@ export default function ProfilePage({
   const [showImagePreview, setShowImagePreview] = useState(false);
   const [copied, setCopied] = useState(false);
   const [tab, setTab] = useState<Tab>("info");
+  const [showMyItems, setShowMyItems] = useState(false);
+  const [myItemsCategory, setMyItemsCategory] = useState<"frame" | "vehicle" | "entryEffect" | "chatBubble" | "soundWave" | "profileCard">("frame");
+  const inventory = useQuery(api.shop.myInventory, { tokenOverride: deviceId });
+  const invCounts: Record<string, number> = {};
+  for (const inv of inventory ?? []) {
+    invCounts[inv.category] = (invCounts[inv.category] ?? 0) + 1;
+  }
 
   if (profile === undefined) {
     return (
@@ -473,13 +481,47 @@ export default function ProfilePage({
             )}
 
           {tab === "assets" && (
-            <div className="space-y-3">
-              <AssetCategory label="هدية" count={0} tone="purple" />
-              <AssetCategory label="أوسمة" count={medals.length} tone="gold" />
-              <AssetCategory label="إطار" count={0} tone="emerald" />
-              <AssetCategory label="مركبة" count={0} tone="default" />
-            </div>
-          )}
+              <div className="space-y-3">
+                <AssetCategory label="هدية" count={0} tone="purple" />
+                <AssetCategory label="أوسمة" count={medals.length} tone="gold" />
+                <AssetCategory
+                  label="إطار"
+                  count={invCounts.frame ?? 0}
+                  tone="emerald"
+                  onClick={() => { setMyItemsCategory("frame"); setShowMyItems(true); }}
+                />
+                <AssetCategory
+                  label="مركبة"
+                  count={invCounts.vehicle ?? 0}
+                  tone="default"
+                  onClick={() => { setMyItemsCategory("vehicle"); setShowMyItems(true); }}
+                />
+                <AssetCategory
+                  label="فقاعة دردشة"
+                  count={invCounts.chatBubble ?? 0}
+                  tone="pink"
+                  onClick={() => { setMyItemsCategory("chatBubble"); setShowMyItems(true); }}
+                />
+                <AssetCategory
+                  label="دخولية"
+                  count={invCounts.entryEffect ?? 0}
+                  tone="purple"
+                  onClick={() => { setMyItemsCategory("entryEffect"); setShowMyItems(true); }}
+                />
+                <AssetCategory
+                  label="موجات صوتية"
+                  count={invCounts.soundWave ?? 0}
+                  tone="default"
+                  onClick={() => { setMyItemsCategory("soundWave"); setShowMyItems(true); }}
+                />
+                <AssetCategory
+                  label="بطاقة الملف"
+                  count={invCounts.profileCard ?? 0}
+                  tone="gold"
+                  onClick={() => { setMyItemsCategory("profileCard"); setShowMyItems(true); }}
+                />
+              </div>
+            )}
 
           {tab === "relation" && (
             <div className="flex flex-col items-center justify-center py-12 text-white/40">
@@ -589,23 +631,50 @@ export default function ProfilePage({
           onConfirm={handleCroppedConfirm}
         />
       )}
-    </div>
+    
+        {showMyItems && (
+          <MyItemsSheet
+            onClose={() => setShowMyItems(false)}
+            initialCategory={myItemsCategory}
+          />
+        )}
+      </div>
   );
 }
 
 // ============ AssetCategory ============
-function AssetCategory({ label, count, tone }: { label: string; count: number; tone: "purple" | "gold" | "emerald" | "default" }) {
-  return (
-    <Card tone={tone} padding="md">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-9 h-9 rounded-xl bg-black/30 flex items-center justify-center">
-            <span className="text-white text-sm font-black">{count}</span>
-          </div>
-          <p className="text-white text-sm font-bold">{label}</p>
+function AssetCategory({
+  label,
+  count,
+  tone,
+  onClick,
+}: {
+  label: string;
+  count: number;
+  tone: "purple" | "gold" | "emerald" | "default" | "pink";
+  onClick?: () => void;
+}) {
+  const inner = (
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-2">
+        <div className="w-9 h-9 rounded-xl bg-black/30 flex items-center justify-center">
+          <span className="text-white text-sm font-black">{count}</span>
         </div>
-        <p className="text-white/70 text-xs font-black">{count}</p>
+        <p className="text-white text-sm font-bold">{label}</p>
       </div>
-    </Card>
+      {onClick ? (
+        <ChevronRight size={18} className="text-white/40 rotate-180" />
+      ) : (
+        <p className="text-white/70 text-xs font-black">{count}</p>
+      )}
+    </div>
   );
+  if (onClick) {
+    return (
+      <Card interactive tone={tone} onClick={onClick} padding="md">
+        {inner}
+      </Card>
+    );
+  }
+  return <Card tone={tone} padding="md">{inner}</Card>;
 }
