@@ -11,12 +11,13 @@ import { useAssets } from "../lib/assets";
 import GiftAdminPanel from "./GiftAdminPanel";
 import BannersPanel from "./BannersPanel";
 import BubbleSlicer from "./BubbleSlicer";
+import VipAvatar from "./ui/VipAvatar";
 import {
   Crown, Gift, Award, Shield, ShoppingBag, LayoutGrid,
   Upload, RotateCcw, Loader2, Pencil, Save, X, Home, MessageCircle,
   Image as ImageIcon, Compass, User, Mic, Grid2x2, Send, Bell,
   Trophy, Heart, Search, ChevronLeft, Hash, Settings, Users, Megaphone,
-  Plus, Trash2,
+  Plus, Trash2, Move, Sparkles,
 } from "lucide-react";
 
 
@@ -28,7 +29,7 @@ interface Props {
   token: string | null;
 }
 
-type MainTab = "vip" | "medals" | "gifts" | "bubbles" | "shop" | "banners" | "admin" | "ui";
+type MainTab = "vip" | "medals" | "gifts" | "bubbles" | "shop" | "banners" | "frames" | "admin" | "ui";
 
 const VIP_SLOTS = [
   { key: "background", label: "الخلفية" },
@@ -127,6 +128,7 @@ export default function AssetsPanel({ token }: Props) {
         <TabBtn active={tab === "gifts"}   onClick={() => setTab("gifts")}   icon={Gift}         label="الهدايا" />
         <TabBtn active={tab === "bubbles"} onClick={() => setTab("bubbles")} icon={MessageCircle} label="الفقاعات" />
         <TabBtn active={tab === "shop"}    onClick={() => setTab("shop")}    icon={ShoppingBag}  label="المتجر" />
+        <TabBtn active={tab === "frames"}  onClick={() => setTab("frames")}  icon={Move}         label="ضبط الإطارات" />
         <TabBtn active={tab === "admin"}   onClick={() => setTab("admin")}   icon={Shield}       label="الأدمن" />
         <TabBtn active={tab === "ui"}      onClick={() => setTab("ui")}      icon={LayoutGrid}   label="الواجهة" />
       </div>
@@ -139,6 +141,7 @@ export default function AssetsPanel({ token }: Props) {
 
       {tab === "bubbles" && <BubbleSlicer token={token} />}
       {tab === "shop" && <ShopTab token={token} />}
+      {tab === "frames" && <FramesTunerTab token={token} />}
       {tab === "admin" && <SimpleSlotsTab token={token} slots={ADMIN_SLOTS} />}
       {tab === "ui" && <SimpleSlotsTab token={token} slots={UI_SLOTS} />}
     </div>
@@ -661,6 +664,219 @@ function CreateItemModal({ token, onClose, onCreate }: any) {
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+
+// ============================ FramesTunerTab
+function FramesTunerTab({ token }: { token: string | null }) {
+  const CATEGORIES = [
+    { key: "frame",       label: "الإطارات" },
+    { key: "halo",        label: "الهالات" },
+    { key: "vehicle",     label: "المركبات" },
+    { key: "profileCard", label: "البطاقات" },
+  ];
+  const [category, setCategory] = useState<string>("frame");
+  const [selectedId, setSelectedId] = useState<Id<"shopItems"> | null>(null);
+  const [scale, setScale] = useState<number>(3.0);
+  const [offsetX, setOffsetX] = useState<number>(0);
+  const [offsetY, setOffsetY] = useState<number>(0);
+  const [saving, setSaving] = useState(false);
+
+  const items = useQuery(api.shop.listByCategory, { category, limit: 100 });
+  const updateItem = useMutation(api.shop.updateItemAssets);
+
+  const selected = (items ?? []).find((i: any) => i._id === selectedId);
+
+  const handleSelect = (item: any) => {
+    setSelectedId(item._id);
+    setScale(item.frameScale ?? 3.0);
+    setOffsetX(item.frameOffsetX ?? 0);
+    setOffsetY(item.frameOffsetY ?? 0);
+  };
+
+  const handleSave = async () => {
+    if (!selectedId) return;
+    setSaving(true);
+    try {
+      await updateItem({
+        itemId: selectedId as Id<"shopItems">,
+        frameScale: scale,
+        frameOffsetX: offsetX,
+        frameOffsetY: offsetY,
+        tokenOverride: token ?? undefined,
+      });
+      dialog.alert("✓ تم حفظ الإعدادات");
+    } catch (e: any) {
+      dialog.alert(e?.message || "فشل الحفظ");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleReset = () => {
+    setScale(3.0);
+    setOffsetX(0);
+    setOffsetY(0);
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="rounded-2xl bg-gradient-to-br from-purple-500/15 to-pink-500/15 border border-purple-400/30 p-3">
+        <p className="text-white text-xs font-black text-center">🎛️ ضبط الإطارات (Yalla/SUGO Standard)</p>
+        <p className="text-white/50 text-[10px] text-center mt-1">
+          اختر إطاراً → اضبطه بمعاينة مباشرة → احفظ
+        </p>
+      </div>
+
+      {/* Category tabs */}
+      <div className="flex gap-1.5 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
+        {CATEGORIES.map((c) => (
+          <button
+            key={c.key}
+            onClick={() => { setCategory(c.key); setSelectedId(null); }}
+            className={`flex-shrink-0 px-3 py-2 rounded-full border text-[11px] font-black transition ${
+              category === c.key
+                ? "bg-purple-500/30 border-purple-400/60 text-white"
+                : "bg-white/5 border-white/10 text-white/60"
+            }`}
+          >
+            {c.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Items grid */}
+      {items === undefined ? (
+        <div className="flex justify-center py-8">
+          <Loader2 size={22} className="animate-spin text-white/40" />
+        </div>
+      ) : items.length === 0 ? (
+        <p className="text-white/40 text-xs text-center py-6">لا توجد عناصر في هذه الفئة</p>
+      ) : (
+        <div className="grid grid-cols-4 gap-2 max-h-40 overflow-y-auto p-1">
+          {items.map((it: any) => (
+            <button
+              key={it._id}
+              onClick={() => handleSelect(it)}
+              className={`aspect-square rounded-xl border overflow-hidden transition ${
+                selectedId === it._id
+                  ? "border-purple-400 ring-2 ring-purple-400/60"
+                  : "border-white/10 hover:border-white/30"
+              }`}
+            >
+              {it.imageUrl ? (
+                <img src={it.imageUrl} alt={it.name} className="w-full h-full object-contain p-1" />
+              ) : (
+                <span className="text-white/30 text-[9px]">—</span>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Tuner — يظهر عندما يُختار إطار */}
+      {selected && (
+        <>
+          <div className="rounded-2xl bg-black/40 border border-white/10 p-4 flex flex-col items-center gap-3">
+            <p className="text-white/60 text-[10px] font-bold">معاينة حية</p>
+            <div className="flex items-center justify-center" style={{ minHeight: 220 }}>
+              <VipAvatar
+                src={null}
+                name="E"
+                size={100}
+                vip={0}
+                ring={false}
+                customFrameUrl={selected.imageUrl}
+                frameScale={scale}
+                frameOffsetX={offsetX}
+                frameOffsetY={offsetY}
+              />
+            </div>
+            <p className="text-white/40 text-[10px]">{selected.name}</p>
+          </div>
+
+          <div className="rounded-2xl bg-purple-500/10 border border-purple-400/30 p-3 space-y-3">
+            {/* Scale */}
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-white/70 text-xs font-bold">Scale (تكبير)</label>
+                <span className="text-purple-200 text-xs font-black tabular-nums" dir="ltr">
+                  {scale.toFixed(2)}
+                </span>
+              </div>
+              <input
+                type="range"
+                min="1"
+                max="5"
+                step="0.05"
+                value={scale}
+                onChange={(e) => setScale(parseFloat(e.target.value))}
+                className="w-full"
+                dir="ltr"
+              />
+            </div>
+
+            {/* Offset X */}
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-white/70 text-xs font-bold">Offset X (إزاحة أفقية)</label>
+                <span className="text-purple-200 text-xs font-black tabular-nums" dir="ltr">
+                  {offsetX}
+                </span>
+              </div>
+              <input
+                type="range"
+                min="-50"
+                max="50"
+                step="1"
+                value={offsetX}
+                onChange={(e) => setOffsetX(parseInt(e.target.value))}
+                className="w-full"
+                dir="ltr"
+              />
+            </div>
+
+            {/* Offset Y */}
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-white/70 text-xs font-bold">Offset Y (إزاحة عمودية)</label>
+                <span className="text-purple-200 text-xs font-black tabular-nums" dir="ltr">
+                  {offsetY}
+                </span>
+              </div>
+              <input
+                type="range"
+                min="-50"
+                max="50"
+                step="1"
+                value={offsetY}
+                onChange={(e) => setOffsetY(parseInt(e.target.value))}
+                className="w-full"
+                dir="ltr"
+              />
+            </div>
+
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="flex-1 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-sm font-black flex items-center justify-center gap-2 disabled:opacity-50 active:scale-95"
+              >
+                {saving ? <Loader2 size={16} className="animate-spin" /> : <><Save size={14} /> حفظ</>}
+              </button>
+              <button
+                onClick={handleReset}
+                disabled={saving}
+                className="px-4 py-3 rounded-2xl bg-white/10 border border-white/20 text-white/70 text-sm font-black disabled:opacity-50 active:scale-95"
+              >
+                <RotateCcw size={16} />
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

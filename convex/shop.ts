@@ -354,6 +354,9 @@ export const updateItem = mutation({
     itemId: v.id("shopItems"),
     name: v.optional(v.string()),
     nameEn: v.optional(v.string()),
+    frameScale: v.optional(v.number()),
+    frameOffsetX: v.optional(v.number()),
+    frameOffsetY: v.optional(v.number()),
     imageUrl: v.optional(v.string()),
     previewUrl: v.optional(v.string()),
     price: v.optional(v.number()),
@@ -377,6 +380,9 @@ export const updateItem = mutation({
     if (args.nameEn !== undefined) patch.nameEn = args.nameEn;
     if (args.imageUrl !== undefined) patch.imageUrl = args.imageUrl;
     if (args.previewUrl !== undefined) patch.previewUrl = args.previewUrl;
+    if (args.frameScale !== undefined) patch.frameScale = args.frameScale;
+    if (args.frameOffsetX !== undefined) patch.frameOffsetX = args.frameOffsetX;
+    if (args.frameOffsetY !== undefined) patch.frameOffsetY = args.frameOffsetY;
     if (args.price !== undefined) patch.price = args.price;
     if (args.active !== undefined) patch.active = args.active;
 
@@ -480,6 +486,9 @@ export const updateItemAssets = mutation({
     nameEn: v.optional(v.string()),
     imageUrl: v.optional(v.string()),
     previewUrl: v.optional(v.string()),
+    frameScale: v.optional(v.number()),
+    frameOffsetX: v.optional(v.number()),
+    frameOffsetY: v.optional(v.number()),
     tokenOverride: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
@@ -499,6 +508,9 @@ export const updateItemAssets = mutation({
     if (args.nameEn !== undefined) patch.nameEn = args.nameEn;
     if (args.imageUrl !== undefined) patch.imageUrl = args.imageUrl;
     if (args.previewUrl !== undefined) patch.previewUrl = args.previewUrl;
+    if (args.frameScale !== undefined) patch.frameScale = args.frameScale;
+    if (args.frameOffsetX !== undefined) patch.frameOffsetX = args.frameOffsetX;
+    if (args.frameOffsetY !== undefined) patch.frameOffsetY = args.frameOffsetY;
 
     if (Object.keys(patch).length > 0) {
       await ctx.db.patch("shopItems", args.itemId, patch);
