@@ -3,10 +3,6 @@ import { ConvexError, v } from "convex/values";
 import { requireUser, isFullAdmin, isAssetManager } from "./lib/auth";
 
 
-// [ezo-types] Shop categories union
-const SHOP_CATEGORIES = ["frame", "vehicle", "entryEffect", "chatBubble", "soundWave", "profileCard", "decoration", "vipId", "skin"] as const;
-
-
 // ============================================================
 // [moorawi-shop] Shop queries + mutations
 // ============================================================
@@ -25,7 +21,7 @@ type Category = typeof CATEGORIES[number];
 // List items by category (only active)
 export const listByCategory = query({
   args: {
-    category: v.union(...SHOP_CATEGORIES.map((c) => v.literal(c))),
+    category: v.string(),
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
@@ -33,7 +29,7 @@ export const listByCategory = query({
     return await ctx.db
       .query("shopItems")
       .withIndex("by_category_active", (q) =>
-        q.eq("category", args.category).eq("active", true),
+        q.eq("category", args.category as any).eq("active", true),
       )
       .order("asc")
       .take(limit);
