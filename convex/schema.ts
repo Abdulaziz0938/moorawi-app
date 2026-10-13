@@ -637,6 +637,9 @@ export default defineSchema({
   assets: defineTable({
     key: v.string(),
     imageUrl: v.optional(v.string()),
+    frameScale: v.optional(v.number()),
+    frameOffsetX: v.optional(v.number()),
+    frameOffsetY: v.optional(v.number()),
     updatedAt: v.number(),
     updatedBy: v.optional(v.id("users")),
   }).index("by_key", ["key"]),
