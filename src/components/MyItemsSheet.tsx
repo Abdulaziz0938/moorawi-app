@@ -3,17 +3,18 @@ import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { getActiveToken } from "../lib/session";
+import { useAssetsFull } from "../lib/assets";
 import { dialog } from "../lib/dialog";
 import {
   X, Loader2, ShoppingBag, Frame, Car, Wand2, MessageSquare,
-  AudioWaveform, IdCard, Check, Sparkles,
+  AudioWaveform, IdCard, Check, Sparkles, Crown,
 } from "lucide-react";
 import Card from "./ui/Card";
-import ItemPreviewModal from "./ui/ItemPreviewModal";
 
-type Category = "frame" | "vehicle" | "entryEffect" | "chatBubble" | "soundWave" | "profileCard";
+type Category = "vipframe" | "frame" | "vehicle" | "entryEffect" | "chatBubble" | "soundWave" | "profileCard";
 
 const CATEGORIES: { key: Category; label: string; icon: any; color: string }[] = [
+  { key: "vipframe",    label: "إطارات VIP", icon: Crown,          color: "text-amber-300" },
   { key: "frame",       label: "الإطارات",   icon: Frame,          color: "text-purple-300" },
   { key: "vehicle",     label: "المركبات",   icon: Car,            color: "text-blue-300" },
   { key: "entryEffect", label: "الدخولية",   icon: Wand2,          color: "text-pink-300" },
@@ -36,24 +37,70 @@ interface Props {
   onOpenStore?: () => void;
 }
 
-export default function MyItemsSheet({ onClose, initialCategory = "frame", onOpenStore }: Props) {
+export default function MyItemsSheet({ onClose, initialCategory = "vipframe", onOpenStore }: Props) {
   const token = getActiveToken();
   const [category, setCategory] = useState<Category>(initialCategory);
-  const me = useQuery(api.profiles.me, { tokenOverride: token });
-  const [previewItem, setPreviewItem] = useState<any>(null);
-  const inventory = useQuery(api.shop.myInventory, { tokenOverride: token });
-  const allItems = useQuery(api.shop.listByCategory, { category, limit: 100 });
-  const equipItem = useMutation(api.shop.equipItem);
-  const unequipItem = useMutation(api.shop.unequipItem);
   const [busy, setBusy] = useState<string | null>(null);
 
-  const catInv = (inventory ?? []).filter((i: any) => i.category === category);
+  const inventory = useQuery(api.shop.myInventory, { tokenOverride: token });
+  const me = useQuery(api.profiles.me, { tokenOverride: token });
+  const assetsFull = useAssetsFull();
+
+  const equipItem = useMutation(api.shop.equipItem);
+  const unequipItem = useMutation(api.shop.unequipItem);
+  const equipVipFrame = useMutation(api.profiles.equipVipFrame);
+  const unequipVipFrame = useMutation(api.profiles.unequipVipFrame);
+
+  const myVipLevel = (me as any)?.vipLevel ?? 0;
+  const equippedVipLevel = (me as any)?.equippedVipFrameLevel ?? null;
+
+  const isVipCat = category === "vipframe";
+
+  const allItems = useQuery(
+    api.shop.listByCategory,
+    isVipCat ? ("skip" as any) : { category, limit: 100 }
+  );
+
+  // VIP frames items (1..7)
+  const vipItems = Array.from({ length: 7 }, (_, i) => i + 1).map((n) => {
+    const key = `vip.frame.${n}`;
+    const data = (assetsFull as any)[key];
+    return {
+      _id: `vip-${n}`,
+      key,
+      name: `VIP ${n}`,
+      imageUrl: data?.url ?? null,
+      level: n,
+      isVipFrame: true,
+    };
+  });
+
+  const catInv = isVipCat
+    ? []
+    : (inventory ?? []).filter((i: any) => i.category === category);
   const ownedIds = new Set(catInv.map((i: any) => i.itemId));
-  const ownedItems = (allItems ?? []).filter((item: any) => ownedIds.has(item._id));
+  const ownedItems = isVipCat
+    ? vipItems.filter((v: any) => v.level <= myVipLevel)
+    : (allItems ?? []).filter((item: any) => ownedIds.has(item._id));
   const equippedItemId = catInv.find((i: any) => i.isEquipped)?.itemId;
   const invByItemId = new Map(catInv.map((i: any) => [i.itemId, i]));
 
   const handleToggle = async (item: any) => {
+    if (item.isVipFrame) {
+      setBusy(item._id);
+      try {
+        if (equippedVipLevel === item.level) {
+          await unequipVipFrame({ tokenOverride: token });
+        } else {
+          await equipVipFrame({ level: item.level, tokenOverride: token });
+        }
+      } catch (e: any) {
+        dialog.alert(e?.message || "فشل التفعيل");
+      } finally {
+        setBusy(null);
+      }
+      return;
+    }
     const inv = invByItemId.get(item._id);
     if (!inv) return;
     setBusy(inv._id);
@@ -73,6 +120,8 @@ export default function MyItemsSheet({ onClose, initialCategory = "frame", onOpe
   const currentCat = CATEGORIES.find((c) => c.key === category) ?? CATEGORIES[0];
   const CatIcon = currentCat.icon;
   const totalOwned = (inventory ?? []).length;
+
+  const loading = inventory === undefined || (!isVipCat && allItems === undefined);
 
   return (
     <div
@@ -108,7 +157,9 @@ export default function MyItemsSheet({ onClose, initialCategory = "frame", onOpe
           {CATEGORIES.map((cat) => {
             const Icon = cat.icon;
             const active = category === cat.key;
-            const count = (inventory ?? []).filter((i: any) => i.category === cat.key).length;
+            const count = cat.key === "vipframe"
+              ? myVipLevel
+              : (inventory ?? []).filter((i: any) => i.category === cat.key).length;
             return (
               <button
                 key={cat.key}
@@ -137,7 +188,7 @@ export default function MyItemsSheet({ onClose, initialCategory = "frame", onOpe
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-4">
-          {inventory === undefined || allItems === undefined ? (
+          {loading ? (
             <div className="flex justify-center py-12">
               <Loader2 size={28} className="animate-spin text-white/40" />
             </div>
@@ -145,8 +196,14 @@ export default function MyItemsSheet({ onClose, initialCategory = "frame", onOpe
             <Card tone="default" padding="lg">
               <div className="text-center py-12 text-white/40">
                 <ShoppingBag size={56} className="mx-auto mb-3 opacity-30" />
-                <p className="text-sm font-black text-white/70">لا تملك أي {currentCat?.label}</p>
-                <p className="text-xs mt-1">اشترِ من المتجر لعرضها هنا</p>
+                <p className="text-sm font-black text-white/70">
+                  {isVipCat && myVipLevel === 0
+                    ? "لست مشتركاً في VIP"
+                    : `لا تملك أي ${currentCat.label}`}
+                </p>
+                <p className="text-xs mt-1">
+                  {isVipCat ? "اشترك في VIP للحصول على الإطارات" : "اشترِ من المتجر لعرضها هنا"}
+                </p>
                 {onOpenStore && (
                   <button
                     onClick={onOpenStore}
@@ -161,8 +218,10 @@ export default function MyItemsSheet({ onClose, initialCategory = "frame", onOpe
             <div className="grid grid-cols-2 gap-3">
               {ownedItems.map((item: any) => {
                 const inv = invByItemId.get(item._id);
-                const isEquipped = item._id === equippedItemId;
-                const isBusy = busy === inv?._id;
+                const isEquipped = item.isVipFrame
+                  ? equippedVipLevel === item.level
+                  : item._id === equippedItemId;
+                const isBusy = busy === (item.isVipFrame ? item._id : inv?._id);
                 const r = RARITY_STYLE[item.rarity] ?? RARITY_STYLE.common;
                 return (
                   <Card
@@ -178,8 +237,7 @@ export default function MyItemsSheet({ onClose, initialCategory = "frame", onOpe
                         </span>
                       )}
                       <div
-                        onClick={() => setPreviewItem(item)}
-                        className={`w-full aspect-square rounded-xl border ${r.border} ${r.bg} flex items-center justify-center overflow-hidden mb-2 cursor-pointer hover:opacity-90 transition`}
+                        className={`w-full aspect-square rounded-xl border ${r.border} ${r.bg} flex items-center justify-center overflow-hidden mb-2`}
                       >
                         {item.imageUrl ? (
                           <img
@@ -220,26 +278,6 @@ export default function MyItemsSheet({ onClose, initialCategory = "frame", onOpe
           )}
         </div>
       </div>
-
-      {previewItem && (
-        <ItemPreviewModal
-          item={previewItem}
-          userAvatarUrl={(me as any)?.avatarUrl ?? null}
-          userName={(me as any)?.name ?? "أنت"}
-          vipLevel={(me as any)?.vip ?? 0}
-          equipped={!!invByItemId.get(previewItem._id)?.isEquipped}
-          onClose={() => setPreviewItem(null)}
-          onConfirm={async () => {
-            const inv = invByItemId.get(previewItem._id);
-            if (inv) {
-              await handleToggle(previewItem);
-              setPreviewItem(null);
-            }
-          }}
-          confirmLabel={invByItemId.get(previewItem._id)?.isEquipped ? "نزع" : "ارتداء"}
-          showPrice={false}
-        />
-      )}
     </div>
   );
 }
