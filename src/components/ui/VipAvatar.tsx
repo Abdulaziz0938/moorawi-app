@@ -79,6 +79,8 @@ export default function VipAvatar({
             left: "50%",
             width: size * frameScale,
             height: size * frameScale,
+            maxWidth: "none",
+            maxHeight: "none",
             transform: `translate(calc(-50% + ${frameOffsetX}px), calc(-50% + ${frameOffsetY}px))`,
             objectFit: "contain",
             objectPosition: "center",
