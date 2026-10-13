@@ -98,21 +98,24 @@ export default function MeTab({ onEnterRoom }: Props) {
   // Full Profile overlay (الصورة 2)
   if (showFullProfile) {
     return (
-      <ProfilePage
-        userId={me._id}
-        isMe={true}
-        onClose={() => setShowFullProfile(false)}
-        onEnterRoom={onEnterRoom}
-        onOpenOwnerPanel={() => {
-          setShowFullProfile(false);
-          setShowAdmin(true);
-        }}
-        onOpenAdminPanel={() => {
-          setShowFullProfile(false);
-          setShowAdmin(true);
-        }}
-        onOpenVisits={() => setShowVisits(true)}
+      <>
+        <ProfilePage
+          userId={me._id}
+          isMe={true}
+          onClose={() => setShowFullProfile(false)}
+          onEnterRoom={onEnterRoom}
+          onOpenOwnerPanel={() => {
+            setShowFullProfile(false);
+            setShowAdmin(true);
+          }}
+          onOpenAdminPanel={() => {
+            setShowFullProfile(false);
+            setShowAdmin(true);
+          }}
+          onOpenVisits={() => setShowVisits(true)}
         />
+        {showVisits && <VisitsSheet onClose={() => setShowVisits(false)} />}
+      </>
     );
   }
 

@@ -50,7 +50,7 @@ export default function Dashboard({ onEnterRoom }: Props) {
 
         {tab === "messages" && <MessagesTab />}
 
-        {tab === "me" && <MeTab />}
+        {tab === "me" && <MeTab onEnterRoom={onEnterRoom} />}
 
         {tab === "me" && !me && (
           <div className="h-full flex flex-col items-center justify-center text-white/60 p-8">
