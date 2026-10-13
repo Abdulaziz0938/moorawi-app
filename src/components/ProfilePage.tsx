@@ -8,12 +8,16 @@ import { uploadToCloudinary } from "../lib/cloudinary";
 import { dialog } from "../lib/dialog";
 import {
   X, Home, Gift, MessageCircle, UserPlus, Crown, Loader2,
-  Pencil, Camera, Eye, Trash2, ImageIcon, Copy, Check, Radio, Send, Inbox, Coins } from "lucide-react";
+  Pencil, Camera, Eye, Trash2, ImageIcon, Copy, Check, Radio, Send, Inbox, Coins,
+    Users, Heart, Award, Star } from "lucide-react";
 import { UserName } from "./UserBadges";
 import LevelBadge from "./LevelBadge";
 import VipAvatar from "./ui/VipAvatar";
 import MedalsRow from "./MedalsRow";
 import ImageCropper from "./ImageCropper";
+import Card from "./ui/Card";
+import StatBadge from "./ui/StatBadge";
+import SectionTitle from "./ui/SectionTitle";
 import { levelFromValue } from "../lib/levels";
 
 interface Props {
@@ -317,12 +321,15 @@ export default function ProfilePage({
           <p className="text-white/85 text-xs text-center px-8 mt-3 leading-relaxed">{profile.bio}</p>
         )}
 
-        {/* ============ 6. Stats (3) ============ */}
-        <div className="mx-4 mt-4 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl grid grid-cols-3">
-          <StatBox label="المتابعين" value={stats.followers} />
-          <StatBox label="المعجبين" value={stats.fans} />
-          <StatBox label="الزوار" value={stats.visitors} />
-        </div>
+          {/* ============ 6. Stats ============ */}
+          <div className="mx-4 mt-5">
+            <SectionTitle icon={Users} title="الإحصائيات" tone="purple" />
+            <div className="grid grid-cols-3 gap-2">
+              <StatBadge icon={Users} label="متابعين" value={formatNumber(stats.followers)} tone="purple" size="sm" />
+              <StatBadge icon={Heart} label="معجبين" value={formatNumber(stats.fans)} tone="pink" size="sm" />
+              <StatBadge icon={Eye} label="زوار" value={formatNumber(stats.visitors)} tone="default" size="sm" />
+            </div>
+          </div>
 
         {/* ============ 6.1. Gift Stats ============ */}
         <div className="mx-4 mt-3 grid grid-cols-2 gap-3">
