@@ -25,6 +25,9 @@ import UserSettingsSheet from "./UserSettingsSheet";
 import ProfilePage from "./ProfilePage";
 import AdminPanelSheet from "./AdminPanelSheet";
 import MedalsSheet from "./MedalsSheet";
+import Card from "./ui/Card";
+import StatBadge from "./ui/StatBadge";
+import VipAvatar from "./ui/VipAvatar";
 
 interface Props {
   onEnterRoom?: (roomId: any) => void;
@@ -119,9 +122,13 @@ export default function MeTab({ onEnterRoom }: Props) {
           onClick={() => setShowFullProfile(true)}
           className="w-full px-4 pt-4 pb-3 flex items-center gap-3 hover:bg-white/5 transition active:bg-white/10"
         >
-          <div className="w-14 h-14 rounded-full bg-white/10 border border-white/20 overflow-hidden flex items-center justify-center flex-shrink-0">
-            <img src={profile?.avatarUrl || "/avatar.png"} alt="" className="w-full h-full object-cover" />
-          </div>
+<VipAvatar
+              src={profile?.avatarUrl}
+              name={me.name || "?"}
+              size={56}
+              vip={(profile as any)?.vip ?? 0}
+              ring={true}
+            />
           <div className="flex-1 min-w-0 text-right">
             <p className="text-white font-black text-base truncate">{me.name || "—"}</p>
             <p className="text-white/60 text-xs" dir="ltr">ID:{me.userNumber}</p>
@@ -130,26 +137,17 @@ export default function MeTab({ onEnterRoom }: Props) {
         </button>
 
         {/* ===== Stats (visitors / fans / following) ===== */}
-        <div className="mx-4 mt-2 bg-white/5 border border-white/10 rounded-2xl grid grid-cols-3">
-          <StatBox
-            icon={Eye}
-            label="الزوار"
-            value={(profile as any)?.visitorCount ?? 0}
-            onClick={() => setShowFullProfile(true)}
-          />
-          <StatBox
-            icon={Heart}
-            label="المعجبين"
-            value={(profile as any)?.fanCount ?? 0}
-            onClick={() => setShowFullProfile(true)}
-          />
-          <StatBox
-            icon={Users}
-            label="المتابعين"
-            value={(profile as any)?.followerCount ?? 0}
-            onClick={() => setShowFullProfile(true)}
-          />
-        </div>
+          <div className="mx-4 mt-2 grid grid-cols-3 gap-2">
+            <button onClick={() => setShowFullProfile(true)} className="w-full text-right active:scale-95 transition">
+              <StatBadge icon={Eye} label="الزوار" value={(profile as any)?.visitorCount ?? 0} tone="default" size="sm" />
+            </button>
+            <button onClick={() => setShowFullProfile(true)} className="w-full text-right active:scale-95 transition">
+              <StatBadge icon={Heart} label="المعجبين" value={(profile as any)?.fanCount ?? 0} tone="pink" size="sm" />
+            </button>
+            <button onClick={() => setShowFullProfile(true)} className="w-full text-right active:scale-95 transition">
+              <StatBadge icon={Users} label="المتابعين" value={(profile as any)?.followerCount ?? 0} tone="purple" size="sm" />
+            </button>
+          </div>
 
         {/* ===== Services section (8 grid + list) ===== */}
         <ServicesSection
@@ -223,25 +221,3 @@ export default function MeTab({ onEnterRoom }: Props) {
   );
 }
 
-function StatBox({
-  icon: Icon,
-  label,
-  value,
-  onClick,
-}: {
-  icon: any;
-  label: string;
-  value: number;
-  onClick?: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className="flex flex-col items-center gap-1 py-3 active:bg-white/5 transition rounded-2xl"
-    >
-      <Icon size={18} className="text-white/60" />
-      <p className="text-white text-base font-black tabular-nums" dir="ltr">{value}</p>
-      <p className="text-white/50 text-[10px]">{label}</p>
-    </button>
-  );
-}
