@@ -206,7 +206,7 @@ export default function ProfilePage({
 
       <div className="relative z-10 flex flex-col h-full overflow-y-auto">
         {/* ============ 0. Cover + Header ============ */}
-        <div className="relative h-44 flex-shrink-0">
+        <div className="relative h-56 flex-shrink-0">
           {profile.coverUrl ? (
             <img
               src={profile.coverUrl}
@@ -265,14 +265,14 @@ export default function ProfilePage({
         </div>
 
         {/* ============ 1+2+3. Avatar (right) + Name + ID (below, right-aligned) ============ */}
-        <div className="px-4 flex flex-col items-start -mt-14 relative z-20">
+        <div className="px-4 flex flex-col items-start -mt-12 relative z-20">
           {/* Avatar - right */}
           <div className="relative">
             <div onClick={handleAvatarClick} className="active:scale-95 transition-transform cursor-pointer">
               <VipAvatar
                 src={profile?.avatarUrl}
                 name={profile?.name ?? "?"}
-                size={100}
+                size={76}
                 vip={vipLevel}
                 ring={vipLevel === 0}
                 customFrameUrl={finalFrameUrl}
@@ -289,7 +289,7 @@ export default function ProfilePage({
           </div>
 
           {/* Name - below avatar, right-aligned */}
-          <div className="mt-2 flex items-center gap-2 justify-start w-full">
+          <div className="mt-3 flex items-center gap-2 justify-start w-full">
             {editingName ? (
               <>
                 <input
