@@ -1,6 +1,7 @@
-import { useState } from "react";
-import { useQuery } from "convex/react";
+import { useState, useEffect } from "react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import { getActiveToken } from "../lib/session";
 import { useAssets, useAssetsFull } from "../lib/assets";
 import type { Id } from "../../convex/_generated/dataModel";
 import { dialog } from "../lib/dialog";
@@ -67,6 +68,17 @@ export default function MiniProfileSheet({
 }: Props) {
   const profile = useQuery(api.profileFull.getFull, { userId: userId as Id<"users"> });
   const itemCounts = useQuery(api.shop.countUserItems, { userId: userId as Id<"users"> });
+  const recordVisit = useMutation(api.visits.record);
+  useEffect(() => {
+    if (userId) {
+      recordVisit({
+        visitedUserId: userId as Id<"users">,
+        source: "profile",
+        tokenOverride: getActiveToken() ?? undefined,
+      }).catch(() => {});
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
   const [copied, setCopied] = useState(false);
   const [showAllMedals, setShowAllMedals] = useState(false);
   const [showMore, setShowMore] = useState(false);

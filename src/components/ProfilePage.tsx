@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useAssets, resolveAsset, useAssetsFull } from "../lib/assets";
@@ -62,6 +62,12 @@ export default function ProfilePage({
   const saveAvatar = useMutation(api.profiles.saveAvatar);
   const saveCover = useMutation(api.profiles.saveCover);
   const removeCover = useMutation(api.profiles.removeCover);
+  const recordVisit = useMutation(api.visits.record);
+  const toggleFollow = useMutation(api.follows.toggle);
+  const isFollowing = useQuery(
+    api.follows.isFollowing,
+    !isMe && userId ? { tokenOverride: deviceId, targetUserId: userId as Id<"users"> } : ("skip" as any)
+  );
   const removeAvatar = useMutation(api.profiles.removeAvatar);
 
   const [editingName, setEditingName] = useState(false);
@@ -75,6 +81,18 @@ export default function ProfilePage({
   const [tab, setTab] = useState<Tab>("info");
   const [showMyItems, setShowMyItems] = useState(false);
   const [pendingCover, setPendingCover] = useState<File | null>(null);
+
+  // [ezo-visits] Record profile visit (non-self, once per open)
+  useEffect(() => {
+    if (!isMe && userId) {
+      recordVisit({
+        visitedUserId: userId as Id<"users">,
+        source: "profile",
+        tokenOverride: deviceId,
+      }).catch(() => {});
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, isMe]);
   const [showCoverMenu, setShowCoverMenu] = useState(false);
   const [showCoverPreview, setShowCoverPreview] = useState(false);
   const [myItemsCategory, setMyItemsCategory] = useState<"frame" | "vehicle" | "entryEffect" | "chatBubble" | "soundWave" | "profileCard">("frame");
@@ -692,9 +710,11 @@ export default function ProfilePage({
             <button className="w-14 h-14 rounded-full bg-white/15 backdrop-blur border border-white/25 flex items-center justify-center text-white hover:bg-white/25 transition active:scale-90">
               <MessageCircle size={22} />
             </button>
-            <button className="w-14 h-14 rounded-full bg-white/15 backdrop-blur border border-white/25 flex items-center justify-center text-white hover:bg-white/25 transition active:scale-90">
-              <UserPlus size={22} />
-            </button>
+            <button
+                onClick={async () => { try { await toggleFollow({ targetUserId: userId as Id<"users">, tokenOverride: deviceId }); } catch (e: any) { dialog.alert(e?.message || "فشل"); } }}
+                 className="w-14 h-14 rounded-full bg-white/15 backdrop-blur border border-white/25 flex items-center justify-center text-white hover:bg-white/25 transition active:scale-90">
+                {isFollowing ? <Check size={22} className="text-emerald-300" /> : <UserPlus size={22} />}
+              </button>
           </div>
         )}
 
