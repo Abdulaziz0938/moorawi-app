@@ -510,6 +510,9 @@ function CreateItemModal({ token, onClose, onCreate }: any) {
   const [imageUrl, setImageUrl] = useState("");
   const [uploading, setUploading] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [frameScale, setFrameScale] = useState("1.8");
+  const [frameOffsetX, setFrameOffsetX] = useState("0");
+  const [frameOffsetY, setFrameOffsetY] = useState("0");
 
   const CATS = ["frame", "vehicle", "entryEffect", "chatBubble", "soundWave", "profileCard", "decoration", "vipId", "skin"];
   const RARITIES = ["common", "rare", "epic", "legendary", "mythic"];
@@ -529,6 +532,7 @@ function CreateItemModal({ token, onClose, onCreate }: any) {
     if (isNaN(p) || p < 0) { dialog.alert("سعر غير صالح"); return; }
     setBusy(true);
     try {
+      const isFrameLike = ["frame", "halo", "profileCard", "vehicle"].includes(category);
       await onCreate({
         category,
         name: name.trim(),
@@ -536,6 +540,9 @@ function CreateItemModal({ token, onClose, onCreate }: any) {
         rarity,
         imageUrl: imageUrl || undefined,
         durationDays: durationDays ? parseInt(durationDays, 10) : undefined,
+        frameScale: isFrameLike ? parseFloat(frameScale) || 1.8 : undefined,
+        frameOffsetX: isFrameLike ? parseInt(frameOffsetX, 10) || 0 : undefined,
+        frameOffsetY: isFrameLike ? parseInt(frameOffsetY, 10) || 0 : undefined,
       });
       dialog.alert("تم إنشاء العنصر");
       onClose();
@@ -611,6 +618,41 @@ function CreateItemModal({ token, onClose, onCreate }: any) {
                 dir="ltr" />
             </div>
           </div>
+
+          {/* Frame placement — only for frame-like categories */}
+          {["frame", "halo", "profileCard", "vehicle"].includes(category) && (
+            <div className="rounded-2xl bg-purple-500/10 border border-purple-400/30 p-3 space-y-2">
+              <p className="text-purple-200 text-[10px] font-black text-center">
+                ضبط الإطار (Yalla/SUGO Standard)
+              </p>
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <label className="text-white/60 text-[10px] font-bold mb-1 block">Scale</label>
+                  <input type="number" step="0.05" value={frameScale} onChange={(e) => setFrameScale(e.target.value)}
+                    placeholder="1.8"
+                    className="w-full bg-white/10 border border-white/20 rounded-lg px-2 py-2 text-white text-xs focus:outline-none focus:border-purple-400 tabular-nums"
+                    dir="ltr" />
+                </div>
+                <div>
+                  <label className="text-white/60 text-[10px] font-bold mb-1 block">Offset X</label>
+                  <input type="number" value={frameOffsetX} onChange={(e) => setFrameOffsetX(e.target.value)}
+                    placeholder="0"
+                    className="w-full bg-white/10 border border-white/20 rounded-lg px-2 py-2 text-white text-xs focus:outline-none focus:border-purple-400 tabular-nums"
+                    dir="ltr" />
+                </div>
+                <div>
+                  <label className="text-white/60 text-[10px] font-bold mb-1 block">Offset Y</label>
+                  <input type="number" value={frameOffsetY} onChange={(e) => setFrameOffsetY(e.target.value)}
+                    placeholder="0"
+                    className="w-full bg-white/10 border border-white/20 rounded-lg px-2 py-2 text-white text-xs focus:outline-none focus:border-purple-400 tabular-nums"
+                    dir="ltr" />
+                </div>
+              </div>
+              <p className="text-white/40 text-[9px] text-center leading-tight">
+                Scale 1.0 = نفس حجم الأفاتار · 1.4-2.0 للمعظم
+              </p>
+            </div>
+          )}
 
           <button onClick={handleSubmit} disabled={busy || uploading}
             className="w-full py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black text-sm disabled:opacity-50 flex items-center justify-center gap-2">

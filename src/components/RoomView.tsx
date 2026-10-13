@@ -796,7 +796,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
                               vip={seat?.userVip ?? 0}
                               ring={false}
                                                 customFrameUrl={seat?.userFrameUrl ?? (seat?.userVip ? assets[`vip.frame.${seat.userVip}`] : null) ?? null}
-                                                frameScale={1.4}
+                                                frameScale={1.8}
                             />
                           ) : (
                             <div className={`w-full h-full rounded-full flex items-center justify-center text-white overflow-hidden transition ${seat.locked ? "bg-gray-700 ring-2 ring-gray-500" : "bg-white/5 ring-1 ring-white/20 hover:bg-white/15"}`}>
