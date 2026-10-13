@@ -7,6 +7,7 @@ import { dialog } from "../lib/dialog";
 import { ChevronLeft, Loader2, Users, Heart, Eye, Home } from "lucide-react";
 import ServicesSection from "./ServicesSection";
 import WalletSheet from "./WalletSheet";
+import GiftHistorySheet from "./GiftHistorySheet";
 import ShopSheet from "./ShopSheet";
 import VipShopSheet from "./VipShopSheet";
 import AgencyEntryScreen from "./AgencyEntryScreen";
@@ -39,6 +40,7 @@ export default function MeTab({ onEnterRoom }: Props) {
 
   const [showFullProfile, setShowFullProfile] = useState(false);
   const [showWallet, setShowWallet] = useState(false);
+  const [showGiftHistory, setShowGiftHistory] = useState(false);
   const [showShop, setShowShop] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
   const [showMedals, setShowMedals] = useState(false);
@@ -152,6 +154,7 @@ export default function MeTab({ onEnterRoom }: Props) {
         {/* ===== Services section (8 grid + list) ===== */}
         <ServicesSection
           onOpenWallet={() => setShowWallet(true)}
+          onOpenGiftHistory={() => setShowGiftHistory(true)}
           onOpenStore={() => setShowShop(true)}
           onOpenMedals={() => setShowMedals(true)}
           onOpenMissions={() => setShowMissions(true)}
@@ -188,6 +191,7 @@ export default function MeTab({ onEnterRoom }: Props) {
 
       {/* ===== Overlays ===== */}
       {showWallet && <WalletSheet onClose={() => setShowWallet(false)} />}
+      {showGiftHistory && <GiftHistorySheet onClose={() => setShowGiftHistory(false)} />}
       {showShop && <ShopSheet onClose={() => setShowShop(false)} />}
       {showAdmin && <AdminPanelSheet onClose={() => setShowAdmin(false)} />}
       {showMedals && <MedalsSheet onClose={() => setShowMedals(false)} />}

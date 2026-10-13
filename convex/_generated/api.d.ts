@@ -20,6 +20,7 @@ import type * as directMessages from "../directMessages.js";
 import type * as discover from "../discover.js";
 import type * as follows from "../follows.js";
 import type * as friends from "../friends.js";
+import type * as giftHistory from "../giftHistory.js";
 import type * as gifts from "../gifts.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_levels from "../lib/levels.js";
@@ -69,6 +70,7 @@ declare const fullApi: ApiFromModules<{
   discover: typeof discover;
   follows: typeof follows;
   friends: typeof friends;
+  giftHistory: typeof giftHistory;
   gifts: typeof gifts;
   "lib/auth": typeof lib_auth;
   "lib/levels": typeof lib_levels;
