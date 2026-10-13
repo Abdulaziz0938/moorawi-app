@@ -7,6 +7,9 @@ import {
   ChevronRight, Loader2, Clock, Users, TrendingUp, Award,
   Briefcase, Target, DollarSign, Heart, Calendar, Info, LogOut,
 } from "lucide-react";
+import Card from "./ui/Card";
+import StatBadge from "./ui/StatBadge";
+import SectionTitle from "./ui/SectionTitle";
 
 interface Props {
   onClose: () => void;
@@ -52,7 +55,7 @@ export default function MyHostView({ onClose, onShowRequests, isOwner = false }:
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
 
         {/* Agency card */}
-        <div className="rounded-2xl bg-gradient-to-br from-teal-900/40 to-purple-900/40 border border-teal-400/30 p-4">
+<Card tone="purple" padding="lg">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-2xl bg-black/40 flex items-center justify-center flex-shrink-0">
               <Briefcase size={22} className="text-teal-300" />
@@ -66,20 +69,20 @@ export default function MyHostView({ onClose, onShowRequests, isOwner = false }:
               <span className="text-amber-200 text-[10px] font-black">Lv.{status.hostLevel}</span>
             </div>
           </div>
-        </div>
+        </Card>
 
         {/* Today stats */}
         <Section title="بياناتي هذا الشهر">
           <div className="grid grid-cols-3 gap-2">
-            <Stat icon={Calendar} label="أيام" value={status.daysThisMonth} color="text-purple-300" />
-            <Stat icon={Clock}    label="ساعات" value={formatNum(status.hoursThisMonth)} color="text-blue-300" />
-            <Stat icon={TrendingUp} label="الماس" value={formatNum(status.diamondsHeld)} color="text-cyan-300" />
+            <StatBadge icon={Calendar} label="أيام" value={status.daysThisMonth} tone="purple" size="sm" />
+            <StatBadge icon={Clock} label="ساعات" value={formatNum(status.hoursThisMonth)} tone="blue" size="sm" />
+            <StatBadge icon={TrendingUp} label="الماس" value={formatNum(status.diamondsHeld)} tone="blue" size="sm" />
           </div>
         </Section>
 
         {/* Target progress */}
         <Section title="التارجت">
-          <div className="rounded-2xl bg-black/30 border border-white/10 p-4 space-y-3">
+<Card tone="default" padding="lg">
             <div className="flex items-center justify-between">
               <span className="text-white/60 text-xs">الدخل الحالي</span>
               <span className="text-white text-sm font-black" dir="ltr">{formatNum(status.incomeThisMonth)}</span>
@@ -112,7 +115,7 @@ export default function MyHostView({ onClose, onShowRequests, isOwner = false }:
                 <span className="text-purple-300 text-[11px] font-black" dir="ltr">{formatNum(status.halfSeasonTarget)}</span>
               </div>
             )}
-          </div>
+          </Card>
         </Section>
 
         {/* Salary */}
@@ -121,7 +124,7 @@ export default function MyHostView({ onClose, onShowRequests, isOwner = false }:
             <div className="space-y-2">
               <SalaryRow icon={DollarSign} label="راتب أساسي" value={`$${status.baseSalary}`} color="text-blue-300" />
               <SalaryRow icon={Heart}      label="راتب ماس"   value={`$${status.diamondSalary}`} color="text-pink-300" />
-              <div className="flex items-center justify-between rounded-2xl bg-gradient-to-r from-emerald-900/40 to-teal-900/40 border border-emerald-400/30 px-4 py-3">
+              <div className="flex items-center justify-between rounded-2xl bg-emerald-500/15 border border-emerald-400/30 backdrop-blur-xl px-4 py-3">
                 <span className="text-white font-black text-sm">الإجمالي</span>
                 <span className="text-emerald-300 font-black text-lg" dir="ltr">${status.totalSalary}</span>
               </div>
@@ -130,12 +133,12 @@ export default function MyHostView({ onClose, onShowRequests, isOwner = false }:
         )}
 
         {/* Info */}
-        <div className="rounded-2xl bg-blue-500/10 border border-blue-400/30 p-3 flex gap-2">
+<Card tone="default" padding="md" className="flex gap-2">
           <Info size={16} className="text-blue-300 flex-shrink-0 mt-0.5" />
           <p className="text-blue-100 text-[11px] leading-relaxed">
             الاحتفاظ بالماس في حسابك يزيد من راتبك. أي صرف سيخفض راتب الماس تلقائياً.
           </p>
-        </div>
+        </Card>
 
         {/* Leave Button (للمضيف غير المالك) */}
         {!isOwner && <LeaveButton />}
@@ -167,13 +170,12 @@ function LeaveButton() {
   };
 
   return (
-    <button
-      onClick={handleLeave}
-      className="w-full rounded-2xl bg-red-500/10 border border-red-400/30 py-3.5 text-red-300 text-sm font-black flex items-center justify-center gap-2 active:scale-95"
-    >
-      <LogOut size={16} />
-      مغادرة الوكالة
-    </button>
+<Card tone="danger" interactive onClick={handleLeave} padding="lg">
+        <div className="flex items-center justify-center gap-2 text-red-300 text-sm font-black">
+          <LogOut size={16} />
+          مغادرة الوكالة
+        </div>
+      </Card>
   );
 }
 
@@ -203,31 +205,22 @@ function Header({ onClose, title, onShowRequests }: { onClose: () => void; title
 function Section({ title, children }: any) {
   return (
     <div>
-      <h3 className="text-white/50 text-xs font-black mb-2">{title}</h3>
+      <SectionTitle title={title} tone="purple" />
       {children}
     </div>
   );
 }
 
-function Stat({ icon: Icon, label, value, color }: any) {
-  return (
-    <div className="rounded-2xl bg-white/5 border border-white/10 p-3 flex flex-col items-center gap-1">
-      <Icon size={16} className={color} />
-      <p className="text-white text-sm font-black tabular-nums">{value}</p>
-      <p className="text-white/40 text-[10px]">{label}</p>
-    </div>
-  );
-}
 
 function SalaryRow({ icon: Icon, label, value, color }: any) {
   return (
-    <div className="flex items-center justify-between rounded-2xl bg-white/5 border border-white/10 px-4 py-3">
+<Card tone="default" padding="md" className="flex items-center justify-between">
       <div className="flex items-center gap-2">
         <Icon size={14} className={color} />
         <span className="text-white/70 text-xs">{label}</span>
       </div>
       <span className={`font-black text-sm ${color}`} dir="ltr">{value}</span>
-    </div>
+    </Card>
   );
 }
 

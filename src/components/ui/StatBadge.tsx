@@ -6,7 +6,7 @@ interface Props {
   icon?: LucideIcon;
   label: string;
   value: string | number;
-  tone?: "default" | "gold" | "purple" | "emerald" | "pink";
+  tone?: "default" | "gold" | "purple" | "emerald" | "pink" | "blue";
   subValue?: string;
   size?: "sm" | "md";
 }
@@ -17,6 +17,9 @@ const TONES: Record<string, { text: string; icon: string; bg: string }> = {
   purple:  { text: "text-purple-200", icon: "text-purple-300", bg: "bg-purple-500/10" },
   emerald: { text: "text-emerald-200", icon: "text-emerald-300", bg: "bg-emerald-500/10" },
   pink:    { text: "text-pink-200", icon: "text-pink-300", bg: "bg-pink-500/10" },
+  blue:    { text: "text-blue-200", icon: "text-blue-300", bg: "bg-blue-500/10" },
+
+
 };
 
 export default function StatBadge({
