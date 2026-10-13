@@ -90,118 +90,58 @@ export default function MiniProfileSheet({
 
   if (profile === undefined) {
     return (
-      <div className="fixed inset-0 z-[110] flex items-end" dir="rtl">
-        <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-        <div className="relative w-full max-w-md mx-auto bg-white/10 backdrop-blur-2xl rounded-t-3xl p-8 flex items-center justify-center border-t border-white/20">
-          <Loader2 className="animate-spin text-white" size={32} />
-        </div>
-      </div>
-    );
-  }
-  if (profile === null) {
-    return (
-      <div className="fixed inset-0 z-[110] flex items-end" dir="rtl">
-        <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-        <div className="relative w-full max-w-md mx-auto bg-white/10 backdrop-blur-2xl rounded-t-3xl p-8 text-center border-t border-white/20">
-          <p className="text-white">المستخدم غير موجود</p>
-          <button onClick={onClose} className="mt-4 text-white/60">إغلاق</button>
-        </div>
-      </div>
-    );
-  }
-
-  const vipLevel = profile.vip ?? 0;
-  const bgGradient = VIP_BG[vipLevel] || VIP_BG[0];
-  const charm = profile.totalReceived ?? 0;
-  const wealth = profile.totalSent ?? 0;
-  const stats = profile.stats ?? { visitors: 0, fans: 0, followers: 0 };
-  const medals = (profile as any).medals ?? [];
-  const equippedVipLvl = (profile as any).equippedVipFrameLevel ?? null;
-  const vipFrameData = equippedVipLvl ? assetsFull[`vip.frame.${equippedVipLvl}`] : null;
-
-  const canKick = currentUserRole === "owner" || currentUserRole === "moderator";
-  const canBan = currentUserRole === "owner";
-  const canPromoteOrDemote = currentUserRole === "owner";
-
-  const handleCopy = async () => {
-    if (!profile.userNumber) return;
-    try {
-      await navigator.clipboard.writeText(String(profile.userNumber));
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    } catch {
-      const ta = document.createElement("textarea");
-      ta.value = String(profile.userNumber);
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand("copy");
-      document.body.removeChild(ta);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    }
-  };
-
-  return (
     <div className="fixed inset-0 z-[110] flex items-end" dir="rtl">
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
 
-      <div className="relative w-full max-w-md mx-auto rounded-t-3xl max-h-[92vh] overflow-hidden flex flex-col">
-        <div className={`absolute inset-0 bg-gradient-to-b ${bgGradient}`} />
-        <div className="absolute inset-0 bg-black/30 backdrop-blur-2xl" />
-        <div className="absolute inset-x-0 top-0 h-px bg-white/40" />
+      <div className="relative w-full max-w-md mx-auto">
+        {/* Avatar straddling top edge (outside sheet = not clipped) */}
+        <div className="absolute -top-11 right-4 z-30">
+          <button
+            onClick={onOpenFullProfile}
+            className="active:scale-95 transition-transform"
+          >
+            <VipAvatar
+              src={profile?.avatarUrl}
+              name={profile?.name ?? "?"}
+              size={88}
+              vip={vipLevel}
+              ring={vipLevel === 0}
+              customFrameUrl={vipFrameData?.url ?? null}
+              canvasSize={vipFrameData?.canvasSize ?? null}
+              holeSize={vipFrameData?.holeSize ?? null}
+              offsetX={vipFrameData?.offsetX ?? 0}
+              offsetY={vipFrameData?.offsetY ?? 0}
+              assetType={vipFrameData?.assetType ?? null}
+            />
+          </button>
+        </div>
 
-        <div className="relative z-10 flex flex-col max-h-[92vh] overflow-y-auto">
-          {/* ============ Header row (Close + VIP badge) ============ */}
-          <div className="flex items-center justify-between px-4 pt-3 pb-2">
-            <button
-              onClick={onClose}
-              className="w-9 h-9 rounded-full bg-white/15 backdrop-blur border border-white/20 flex items-center justify-center text-white hover:bg-white/25 transition"
-            >
-              <X size={18} />
-            </button>
-            {vipLevel > 0 && (
-              <span className="text-[11px] font-black text-yellow-300 bg-black/30 backdrop-blur px-3 py-1 rounded-full border border-yellow-300/30">
-                VIP {vipLevel}
-              </span>
-            )}
-          </div>
+        {/* Sheet */}
+        <div className="relative rounded-t-3xl max-h-[92vh] overflow-hidden flex flex-col">
+          <div className={`absolute inset-0 bg-gradient-to-b ${bgGradient}`} />
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-2xl" />
+          <div className="absolute inset-x-0 top-0 h-px bg-white/40" />
 
-          {/* ============ Avatar + Info ============ */}
-          <div className="relative">
-            {/* Avatar + Name block — right-aligned */}
-            <div className="px-4 pt-2 flex flex-col items-start relative z-10">
-              <button
-                onClick={onOpenFullProfile}
-                className="active:scale-95 transition-transform"
-              >
-                <VipAvatar
-                  src={profile?.avatarUrl}
-                  name={profile?.name ?? "?"}
-                  size={84}
-                  vip={vipLevel}
-                  ring={vipLevel === 0}
-                  customFrameUrl={vipFrameData?.url ?? null}
-                  canvasSize={vipFrameData?.canvasSize ?? null}
-                  holeSize={vipFrameData?.holeSize ?? null}
-                  offsetX={vipFrameData?.offsetX ?? 0}
-                  offsetY={vipFrameData?.offsetY ?? 0}
-                  assetType={vipFrameData?.assetType ?? null}
-                />
-              </button>
+          {/* Close (top-left, inside sheet) */}
+          <button
+            onClick={onClose}
+            className="absolute top-3 left-3 w-9 h-9 rounded-full bg-black/40 backdrop-blur border border-white/20 flex items-center justify-center text-white hover:bg-black/60 transition z-40"
+          >
+            <X size={18} />
+          </button>
 
-              {/* Name */}
-              <div className="mt-2 flex items-center gap-2">
-                <UserName
-                  name={profile.name ?? "ضيف"}
-                  adminRole={profile.adminRole}
-                  roomRole={profile.userNumber === 1 ? "owner" : null}
-                  size="md"
-                  nameClassName="text-white text-lg"
-                  showCapsules={false}
-                />
-              </div>
+          <div className="relative z-10 flex flex-col max-h-[92vh] overflow-y-auto">
+            {/* Name + Info (below avatar) */}
+            <div className="px-4 pt-12 pb-2 flex flex-col items-start">
+              <UserName
+                name={profile.name ?? "ضيف"}
+                adminRole={profile.adminRole}
+                roomRole={profile.userNumber === 1 ? "owner" : null}
+                size="md"
+                nameClassName="text-white text-lg"
+                showCapsules={false}
+              />
 
-              {/* ID + chips */}
               <div className="flex items-center gap-1.5 mt-2 flex-wrap">
                 {profile.userNumber !== null && (
                   <button
@@ -231,9 +171,8 @@ export default function MiniProfileSheet({
                 )}
               </div>
             </div>
-          </div>
 
-          {/* ============ Charm + Wealth + VIP banner ============ */}
+            {/* ============ Charm + Wealth + VIP banner ============ */}
           <div className="flex items-center justify-end gap-2 px-4 mt-3 flex-wrap">
             {vipLevel > 0 && (
               <div className="badge-glow">
