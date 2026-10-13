@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { useAssets, resolveAsset } from "../lib/assets";
+import { useAssets, resolveAsset, useAssetsFull } from "../lib/assets";
 import type { Id } from "../../convex/_generated/dataModel";
 import { dialog } from "../lib/dialog";
 import {
@@ -78,6 +78,7 @@ export default function MiniProfileSheet({
   const profile = useQuery(api.profileFull.getFull, { userId: userId as Id<"users"> });
   const [copied, setCopied] = useState(false);
   const assets = useAssets();
+  const assetsFull = useAssetsFull();
 
   if (profile === undefined) {
     return (
@@ -162,6 +163,36 @@ export default function MiniProfileSheet({
                 name={profile?.name ?? "?"}
                 size={96}
                 vip={profile?.vip ?? 0}
+                customFrameUrl={(() => {
+                  const lvl = (profile as any)?.equippedVipFrameLevel;
+                  if (!lvl) return null;
+                  return assetsFull[`vip.frame.${lvl}`]?.url ?? null;
+                })()}
+                canvasSize={(() => {
+                  const lvl = (profile as any)?.equippedVipFrameLevel;
+                  if (!lvl) return null;
+                  return assetsFull[`vip.frame.${lvl}`]?.canvasSize ?? null;
+                })()}
+                holeSize={(() => {
+                  const lvl = (profile as any)?.equippedVipFrameLevel;
+                  if (!lvl) return null;
+                  return assetsFull[`vip.frame.${lvl}`]?.holeSize ?? null;
+                })()}
+                offsetX={(() => {
+                  const lvl = (profile as any)?.equippedVipFrameLevel;
+                  if (!lvl) return 0;
+                  return assetsFull[`vip.frame.${lvl}`]?.offsetX ?? 0;
+                })()}
+                offsetY={(() => {
+                  const lvl = (profile as any)?.equippedVipFrameLevel;
+                  if (!lvl) return 0;
+                  return assetsFull[`vip.frame.${lvl}`]?.offsetY ?? 0;
+                })()}
+                assetType={(() => {
+                  const lvl = (profile as any)?.equippedVipFrameLevel;
+                  if (!lvl) return null;
+                  return assetsFull[`vip.frame.${lvl}`]?.assetType ?? null;
+                })()}
               />
             </button>
           </div>

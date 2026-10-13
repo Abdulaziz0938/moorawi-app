@@ -37,6 +37,11 @@ export const getFull = query({
         frameScale: (f as any).frameScale,
         frameOffsetX: (f as any).frameOffsetX,
         frameOffsetY: (f as any).frameOffsetY,
+        canvasSize: (f as any).canvasSize,
+        holeSize: (f as any).holeSize,
+        offsetX: (f as any).offsetX,
+        offsetY: (f as any).offsetY,
+        assetType: (f as any).assetType,
       };
     }
 

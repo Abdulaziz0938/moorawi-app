@@ -20,6 +20,11 @@ export type AssetFull = {
   frameScale?: number;
   frameOffsetX?: number;
   frameOffsetY?: number;
+  canvasSize?: number;
+  holeSize?: number;
+  offsetX?: number;
+  offsetY?: number;
+  assetType?: "png" | "svga" | "lottie";
 };
 const AssetsFullContext = createContext<Record<string, AssetFull>>({});
 
@@ -35,6 +40,11 @@ export function AssetsProvider({ children }: { children: ReactNode }) {
         frameScale: (r as any).frameScale,
         frameOffsetX: (r as any).frameOffsetX,
         frameOffsetY: (r as any).frameOffsetY,
+        canvasSize: (r as any).canvasSize,
+        holeSize: (r as any).holeSize,
+        offsetX: (r as any).offsetX,
+        offsetY: (r as any).offsetY,
+        assetType: (r as any).assetType,
       };
     }
   }

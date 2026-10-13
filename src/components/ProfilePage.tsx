@@ -111,6 +111,12 @@ export default function ProfilePage({
   const finalFrameScale = equippedFrame?.frameScale ?? equippedVipData?.frameScale ?? 1.4;
   const finalFrameOffsetX = equippedFrame?.frameOffsetX ?? equippedVipData?.frameOffsetX ?? 0;
   const finalFrameOffsetY = equippedFrame?.frameOffsetY ?? equippedVipData?.frameOffsetY ?? 0;
+  // [ezo-canvas] Canvas Standard (preferred over legacy)
+  const finalCanvasSize = equippedFrame?.canvasSize ?? equippedVipData?.canvasSize ?? null;
+  const finalHoleSize = equippedFrame?.holeSize ?? equippedVipData?.holeSize ?? null;
+  const finalOffsetX = equippedFrame?.offsetX ?? equippedVipData?.offsetX ?? 0;
+  const finalOffsetY = equippedFrame?.offsetY ?? equippedVipData?.offsetY ?? 0;
+  const finalAssetType = equippedFrame?.assetType ?? equippedVipData?.assetType ?? null;
   const bgGradient = VIP_BG[vipLevel] || VIP_BG[0];
   const isOwner = profile.userNumber === 1;
   const isAdmin = profile.adminRole === "super" || profile.adminRole === "moderator";
@@ -280,6 +286,11 @@ export default function ProfilePage({
                 frameScale={finalFrameScale}
                 frameOffsetX={finalFrameOffsetX}
                 frameOffsetY={finalFrameOffsetY}
+                canvasSize={finalCanvasSize}
+                holeSize={finalHoleSize}
+                offsetX={finalOffsetX}
+                offsetY={finalOffsetY}
+                assetType={finalAssetType}
               />
             </div>
             {isMe && (
