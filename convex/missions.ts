@@ -26,7 +26,7 @@ const DEFAULT_MISSIONS = [
   { key: "weekly_500_messages",title: "500 رسالة",                description: "500 رسالة هذا الأسبوع",     type: "weekly",  target: 500,  reward: 600,   sortOrder: 11 },
   { key: "weekly_5_new_follows",title: "5 متابعات جديدة",         description: "تابع 5 مستخدمين جدد",       type: "weekly",  target: 5,    reward: 400,   sortOrder: 12 },
   { key: "weekly_10_rooms",   title: "10 غرف مختلفة",             description: "زُر 10 غرف هذا الأسبوع",     type: "weekly",  target: 10,   reward: 500,   sortOrder: 13 },
-];
+] as const;
 
 // ============================================================
 // SEED
