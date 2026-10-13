@@ -18,6 +18,7 @@ import MusicPlayer from "./MusicPlayer";
 import CompactChatInput from "./CompactChatInput";
 import ChatBubble from "./ChatBubble";
 import IconOrImage from "./IconOrImage";
+import VipAvatar from "./ui/VipAvatar";
 import LeaderboardSheet from "./LeaderboardSheet";
 import MiniProfileSheet from "./MiniProfileSheet";
 import ChatThreadSheet from "./ChatThreadSheet";
@@ -767,11 +768,19 @@ export default function RoomView({ roomId, onLeave }: Props) {
                         <div data-mic-seat={seat.seatIndex}
                           onClick={() => handleSeatClick(seat.seatIndex, seat.userId)}
                           className="relative w-full aspect-square flex-shrink-0 cursor-pointer">
-                          <div className={`w-full h-full rounded-full flex items-center justify-center text-white overflow-hidden transition ${occupied ? "ring-2 ring-purple-300" : seat.locked ? "bg-gray-700 ring-2 ring-gray-500" : "bg-white/5 ring-1 ring-white/20 hover:bg-white/15"}`}>
-                            {occupied ? (
-                              <img src={seat?.avatarUrl || "/avatar.png"} alt="" className="w-full h-full object-cover rounded-full" draggable={false} />
-                            ) : seat.locked ? <Lock size={12} className="opacity-70" /> : <span className="text-[10px] font-bold text-white/60">{seat.seatIndex + 1}</span>}
-                          </div>
+                          {occupied ? (
+                            <VipAvatar
+                              src={seat?.avatarUrl}
+                              name={seat?.userName ?? "?"}
+                              size={56}
+                              vip={seat?.userVip ?? 0}
+                              ring={false}
+                            />
+                          ) : (
+                            <div className={`w-full h-full rounded-full flex items-center justify-center text-white overflow-hidden transition ${seat.locked ? "bg-gray-700 ring-2 ring-gray-500" : "bg-white/5 ring-1 ring-white/20 hover:bg-white/15"}`}>
+                              {seat.locked ? <Lock size={12} className="opacity-70" /> : <span className="text-[10px] font-bold text-white/60">{seat.seatIndex + 1}</span>}
+                            </div>
+                          )}
                           {(seat.adminMuted === true || (occupied && seat.muted)) && (
                             <div className={`absolute -bottom-1 -left-1 rounded-full p-1 ring-1 shadow-md z-10 ${seat.adminMuted ? "bg-red-600 ring-red-300/60" : "bg-black/90 ring-white/30"}`}>
                               <MicOff size={10} className="text-white" />
