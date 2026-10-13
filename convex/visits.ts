@@ -35,6 +35,23 @@ export const record = mutation({
 });
 
 // Recent visitors list
+export const countThisMonth = query({
+  args: { userId: v.id("users") },
+  handler: async (ctx, args) => {
+    const start = new Date();
+    start.setDate(1);
+    start.setHours(0, 0, 0, 0);
+    const ts = start.getTime();
+    const rows = await ctx.db
+      .query("visits")
+      .withIndex("by_visited_and_visitedAt", (q) =>
+        q.eq("visitedUserId", args.userId).gte("visitedAt", ts),
+      )
+      .collect();
+    return rows.length;
+  },
+});
+
 export const recent = query({
   args: {
     userId: v.id("users"),
