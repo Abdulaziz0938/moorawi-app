@@ -6,6 +6,9 @@ import { getDeviceId } from "../lib/device";
 import { dialog } from "../lib/dialog";
 import { useBackButton } from "../lib/hooks/useBackButton";
 import UserAvatar from "./UserAvatar";
+import Card from "./ui/Card";
+import StatBadge from "./ui/StatBadge";
+import SectionTitle from "./ui/SectionTitle";
 import { ChevronRight, Loader2, Briefcase, Users, Award, Crown, Clock, TrendingUp, Heart, DollarSign, LogOut, Copy, Check, Building2, User, Gem, Gift } from "lucide-react";
 
 interface Props {
@@ -123,7 +126,7 @@ function AgencyInfo({ agency, isOwner }: any) {
   return (
     <div className="space-y-4">
       {/* Card */}
-      <div className="rounded-2xl bg-gradient-to-br from-teal-900/40 to-purple-900/40 border border-teal-400/30 p-4">
+<Card tone="purple" padding="lg">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-16 h-16 rounded-2xl bg-black/40 flex items-center justify-center overflow-hidden flex-shrink-0">
             {agency.logoUrl ? (
@@ -152,24 +155,22 @@ function AgencyInfo({ agency, isOwner }: any) {
           {copied ? <Check size={14} className="text-green-300" /> : <Copy size={14} />}
           نسخ رقم الوكالة
         </button>
-      </div>
+      </Card>
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3">
-        <StatCard icon={Users} label="مضيفون" value={agency.activeHostCount ?? agency.hostCount} color="text-emerald-300" />
-        <StatCard icon={TrendingUp} label="نقاط الفريق" value={formatNum(agency.totalPoints30d)} color="text-purple-300" />
-        <StatCard icon={DollarSign} label="الإيرادات" value={`$${formatNum(agency.totalEarned)}`} color="text-amber-300" />
+        <StatBadge icon={Users} label="مضيفون" value={agency.activeHostCount ?? agency.hostCount} tone="emerald" size="sm" />
+        <StatBadge icon={TrendingUp} label="نقاط الفريق" value={formatNum(agency.totalPoints30d)} tone="purple" size="sm" />
+        <StatBadge icon={DollarSign} label="الإيرادات" value={`$${formatNum(agency.totalEarned)}`} tone="gold" size="sm" />
       </div>
 
       {/* Leave button (if not owner) */}
       {!isOwner && (
-        <button
-          onClick={handleLeave}
-          className="w-full rounded-2xl bg-red-500/10 border border-red-400/30 py-3.5 text-red-300 text-sm font-black flex items-center justify-center gap-2 active:scale-95"
-        >
-          <LogOut size={16} />
-          مغادرة الوكالة
-        </button>
+<Card tone="danger" interactive onClick={handleLeave} padding="lg">
+          <div className="flex items-center justify-center gap-2 text-red-300 text-sm font-black">
+            
+          </div>
+        </Card>
       )}
     </div>
   );
@@ -191,16 +192,18 @@ function HostsList({ agencyId, onUserClick }: { agencyId: any; onUserClick?: (id
 
   if (hosts.length === 0) {
     return (
-      <div className="text-center py-16 text-white/40">
-        <Users size={48} className="mx-auto mb-3 opacity-30" />
-        <p className="text-sm">لا يوجد مضيفون</p>
-      </div>
+<Card tone="default" padding="lg">
+        <div className="text-center py-12 text-white/40">
+          <Users size={48} className="mx-auto mb-3 opacity-30" />
+          <p className="text-sm">لا يوجد مضيفون</p>
+        </div>
+      </Card>
     );
   }
 
   return (
     <div className="space-y-2">
-      <p className="text-white/50 text-xs text-center mb-2">{hosts.length} مضيف</p>
+      <SectionTitle icon={Users} title={`${hosts.length} مضيف`} tone="purple" />
       {hosts.map((h: any) => (
         <HostRow key={h._id} host={h} onUserClick={onUserClick} />
       ))}
@@ -215,9 +218,10 @@ function HostRow({ host, onUserClick }: any) {
   const [showStats, setShowStats] = useState(false);
 
   return (
-    <button
+<Card
+      interactive
       onClick={() => setShowStats((v) => !v)}
-      className="w-full rounded-2xl bg-white/5 border border-white/10 p-3 text-right active:bg-white/10 transition"
+      padding="md"
     >
       {/* Top row: avatar + name + VIP */}
       <div className="flex items-center gap-3">
@@ -275,7 +279,7 @@ function HostRow({ host, onUserClick }: any) {
           </div>
         </div>
       )}
-    </button>
+    </Card>
   );
 }
 
@@ -294,14 +298,9 @@ function StatMini({ label, value, color }: any) {
 function ReviewPanel({ onShowRequests }: any) {
   return (
     <div className="space-y-3">
-      <button
-        onClick={onShowRequests}
-        className="w-full rounded-2xl bg-gradient-to-br from-purple-700/40 to-pink-700/40 border border-purple-400/40 p-6 flex flex-col items-center justify-center gap-2 active:scale-95"
-      >
-        <Clock size={32} className="text-purple-200" />
-        <p className="text-white font-black text-sm">طلبات الانضمام</p>
-        <p className="text-white/60 text-xs">مراجعة طلبات المضيفين الجدد</p>
-      </button>
+<Card interactive onClick={onShowRequests} tone="purple" padding="lg">
+        
+      </Card>
     </div>
   );
 }
@@ -322,15 +321,6 @@ function TabBtn({ active, onClick, label }: any) {
   );
 }
 
-function StatCard({ icon: Icon, label, value, color }: any) {
-  return (
-    <div className="rounded-2xl bg-white/5 border border-white/10 p-3 flex flex-col items-center gap-1">
-      <Icon size={16} className={color} />
-      <p className="text-white text-sm font-black tabular-nums">{value}</p>
-      <p className="text-white/40 text-[10px]">{label}</p>
-    </div>
-  );
-}
 
 function formatNum(n: number): string {
   if (n >= 1_000_000_000) return (n / 1_000_000_000).toFixed(2) + "B";
