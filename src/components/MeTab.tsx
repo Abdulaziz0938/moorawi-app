@@ -102,6 +102,7 @@ export default function MeTab({ onEnterRoom }: Props) {
         userId={me._id}
         isMe={true}
         onClose={() => setShowFullProfile(false)}
+        onEnterRoom={onEnterRoom}
         onOpenOwnerPanel={() => {
           setShowFullProfile(false);
           setShowAdmin(true);

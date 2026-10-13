@@ -18,6 +18,7 @@ import MedalsRow from "./MedalsRow";
 import ImageCropper from "./ImageCropper";
 import Card from "./ui/Card";
 import MyItemsSheet from "./MyItemsSheet";
+import UserListSheet from "./UserListSheet";
 import { levelFromValue } from "../lib/levels";
 
 interface Props {
@@ -86,6 +87,7 @@ export default function ProfilePage({
   const [copied, setCopied] = useState(false);
   const [tab, setTab] = useState<Tab>("info");
   const [showMyItems, setShowMyItems] = useState(false);
+  const [listMode, setListMode] = useState<"followers" | "following" | "fans" | null>(null);
   const [myItemsCategory, setMyItemsCategory] = useState<"frame" | "vehicle" | "entryEffect" | "chatBubble" | "soundWave" | "profileCard">("frame");
 
   const inventory = useQuery(api.shop.myInventory, { tokenOverride: deviceId });
@@ -460,17 +462,19 @@ export default function ProfilePage({
           <InlineStat
             label="متابعين"
             value={stats.followers}
+            onClick={() => setListMode("followers")}
           />
           <span className="w-px h-8 bg-white/15" />
           <InlineStat
             label="معجبين"
             value={stats.fans}
+            onClick={() => setListMode("fans")}
           />
           <span className="w-px h-8 bg-white/15" />
           <InlineStat
             label="زوار"
             value={stats.visitors}
-            onClick={isMe && onOpenVisits ? onOpenVisits : undefined}
+            onClick={isMe && onOpenVisits ? onOpenVisits : () => dialog.alert("الزيارات — متاح للمالك فقط")}
           />
         </div>
 
@@ -855,6 +859,18 @@ export default function ProfilePage({
           shape="rect"
           onCancel={() => setPendingCover(null)}
           onConfirm={handleCoverCroppedConfirm}
+        />
+      )}
+
+      {listMode && (
+        <UserListSheet
+          userId={userId}
+          mode={listMode}
+          onClose={() => setListMode(null)}
+          onUserClick={(id) => {
+            setListMode(null);
+            dialog.alert("فتح ملف " + id + " قريباً");
+          }}
         />
       )}
 

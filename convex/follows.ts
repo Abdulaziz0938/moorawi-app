@@ -39,6 +39,76 @@ export const isFollowing = query({
   },
 });
 
+// [ezo-social] List user's followers
+export const listFollowers = query({
+  args: { userId: v.id("users"), limit: v.optional(v.number()) },
+  handler: async (ctx, args) => {
+    const limit = Math.min(args.limit ?? 100, 200);
+    const rows = await ctx.db
+      .query("follows")
+      .withIndex("by_following", (q: any) => q.eq("followingId", args.userId))
+      .order("desc")
+      .take(limit);
+    const out = await Promise.all(rows.map(async (r) => {
+      const u = await ctx.db.get("users", r.followerId);
+      if (!u) return null;
+      const avatarUrl = u.avatarUrl ?? (u.avatarId ? await ctx.storage.getUrl(u.avatarId) : null);
+      const vip = (u.vipLevel ?? 0) > 0 && (!u.vipExpiresAt || u.vipExpiresAt > Date.now()) ? (u.vipLevel ?? 0) : 0;
+      return { _id: u._id, name: u.name ?? "—", userNumber: u.userNumber ?? null, avatarUrl, vip, followedAt: r.createdAt };
+    }));
+    return out.filter(Boolean);
+  },
+});
+
+// [ezo-social] List users this user follows
+export const listFollowing = query({
+  args: { userId: v.id("users"), limit: v.optional(v.number()) },
+  handler: async (ctx, args) => {
+    const limit = Math.min(args.limit ?? 100, 200);
+    const rows = await ctx.db
+      .query("follows")
+      .withIndex("by_follower", (q: any) => q.eq("followerId", args.userId))
+      .order("desc")
+      .take(limit);
+    const out = await Promise.all(rows.map(async (r) => {
+      const u = await ctx.db.get("users", r.followingId);
+      if (!u) return null;
+      const avatarUrl = u.avatarUrl ?? (u.avatarId ? await ctx.storage.getUrl(u.avatarId) : null);
+      const vip = (u.vipLevel ?? 0) > 0 && (!u.vipExpiresAt || u.vipExpiresAt > Date.now()) ? (u.vipLevel ?? 0) : 0;
+      return { _id: u._id, name: u.name ?? "—", userNumber: u.userNumber ?? null, avatarUrl, vip, followedAt: r.createdAt };
+    }));
+    return out.filter(Boolean);
+  },
+});
+
+// [ezo-social] Fans = users who sent you gifts (approximated by fanCount relations)
+export const listFans = query({
+  args: { userId: v.id("users"), limit: v.optional(v.number()) },
+  handler: async (ctx, args) => {
+    const limit = Math.min(args.limit ?? 100, 200);
+    // Fans = people who sent gifts to this user
+    const gifts = await ctx.db
+      .query("giftTransactions")
+      .withIndex("by_to", (q: any) => q.eq("toUserId", args.userId))
+      .order("desc")
+      .take(limit * 2);
+    const seen = new Set<string>();
+    const out: any[] = [];
+    for (const g of gifts) {
+      const key = g.fromUserId as string;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const u = await ctx.db.get("users", g.fromUserId);
+      if (!u) continue;
+      const avatarUrl = u.avatarUrl ?? (u.avatarId ? await ctx.storage.getUrl(u.avatarId) : null);
+      const vip = (u.vipLevel ?? 0) > 0 && (!u.vipExpiresAt || u.vipExpiresAt > Date.now()) ? (u.vipLevel ?? 0) : 0;
+      out.push({ _id: u._id, name: u.name ?? "—", userNumber: u.userNumber ?? null, avatarUrl, vip });
+      if (out.length >= limit) break;
+    }
+    return out;
+  },
+});
+
 export const toggle = mutation({
   args: {
     tokenOverride: v.optional(v.string()),
