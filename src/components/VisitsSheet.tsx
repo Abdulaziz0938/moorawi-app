@@ -4,6 +4,7 @@ import { api } from "../../convex/_generated/api";
 import { getDeviceId } from "../lib/device";
 import { useBackButton } from "../lib/hooks/useBackButton";
 import UserAvatar from "./UserAvatar";
+import VipAvatar from "./ui/VipAvatar";
 import { useAssets } from "../lib/assets";
 import { ChevronRight, Loader2, Clock, Eye, User } from "lucide-react";
 
@@ -35,7 +36,7 @@ export default function VisitsSheet({ onClose, onUserClick }: Props) {
                 className="w-full rounded-2xl bg-white/5 border border-white/10 p-3 flex items-center gap-3 active:bg-white/10"
               >
                 <div className="w-12 h-12 rounded-full overflow-hidden bg-purple-700 flex items-center justify-center flex-shrink-0">
-                  <UserAvatar avatarUrl={v.avatarUrl} name={v.name} className="w-full h-full" />
+                  <VipAvatar src={v.avatarUrl} name={v.name} size={48} vip={(v as any).vip ?? 0} />
                 </div>
                 <div className="flex-1 min-w-0 text-right">
                   <p className="text-white text-sm font-black truncate">{v.name ?? "—"}</p>

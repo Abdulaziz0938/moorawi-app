@@ -4,6 +4,7 @@ import { api } from "../../convex/_generated/api";
 import { useAssets, resolveAsset } from "../lib/assets";
 import type { Id } from "../../convex/_generated/dataModel";
 import { X, HelpCircle, Loader2, Home, Trophy, Flame, Gem, Gift, Construction } from "lucide-react";
+import VipAvatar from "./ui/VipAvatar";
 import { UserName } from "./UserBadges";
 import LevelBadge from "./LevelBadge";
 import { levelFromValue } from "../lib/levels";
@@ -39,16 +40,8 @@ function formatNumber(n: number): string {
 }
 
 // ============ Avatar inside podium circle ============
-function PodiumAvatar({ url, name, size }: { url: string | null; name: string; size: string }) {
-  return (
-    <div className={`${size} rounded-full overflow-hidden bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white font-black shadow-xl`}>
-      {url ? (
-        <img src={url} alt="" className="w-full h-full object-cover" />
-      ) : (
-        <span className="text-xl">{name[0] || "?"}</span>
-      )}
-    </div>
-  );
+function PodiumAvatar({ url, name, size, vip = 0 }: { url: string | null; name: string; size: number; vip?: number }) {
+  return <VipAvatar src={url} name={name} size={size} vip={vip} />;
 }
 
 // ============ Podium (crown on corner + circle) ============

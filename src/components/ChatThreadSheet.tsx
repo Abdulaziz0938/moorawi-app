@@ -8,6 +8,7 @@ import { uploadToCloudinary } from "../lib/cloudinary";
 import { dialog } from "../lib/dialog";
 import { useBackButton } from "../lib/hooks/useBackButton";
 import UserAvatar from "./UserAvatar";
+import VipAvatar from "./ui/VipAvatar";
 import { ChevronRight, Loader2, Send, Image as ImageIcon, Check } from "lucide-react";
 
 interface Props {
@@ -96,7 +97,12 @@ export default function ChatThreadSheet({ conversationId, onClose }: Props) {
         {thread.other && (
           <>
             <div className="w-10 h-10 rounded-full overflow-hidden bg-purple-700 flex items-center justify-center">
-              <UserAvatar avatarUrl={thread.other.avatarUrl} name={thread.other.name} className="w-full h-full" />
+              <VipAvatar
+                src={thread.other.avatarUrl}
+                name={thread.other.name}
+                size={44}
+                vip={thread.other.vip ?? 0}
+              />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5">

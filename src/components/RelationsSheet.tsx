@@ -4,6 +4,7 @@ import { api } from "../../convex/_generated/api";
 import { getDeviceId } from "../lib/device";
 import { useBackButton } from "../lib/hooks/useBackButton";
 import UserAvatar from "./UserAvatar";
+import VipAvatar from "./ui/VipAvatar";
 import { Header, Spinner, Empty } from "./VisitsSheet";
 import { Heart, Users, Star } from "lucide-react";
 
@@ -32,7 +33,7 @@ export default function RelationsSheet({ onClose, onUserClick }: Props) {
               >
                 <div className="flex items-center gap-3">
                   <div className="w-16 h-16 rounded-full overflow-hidden bg-purple-700 border-2 border-pink-400/50 flex items-center justify-center">
-                    <UserAvatar avatarUrl={r.partner.avatarUrl} name={r.partner.name} className="w-full h-full" />
+                    <VipAvatar src={r.partner.avatarUrl} name={r.partner.name} size={44} vip={(r.partner as any).vip ?? 0} />
                   </div>
                   <div className="flex-1 text-right">
                     <p className="text-white text-sm font-black">{r.partner.name}</p>

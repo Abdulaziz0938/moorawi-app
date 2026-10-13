@@ -6,6 +6,7 @@ import { getDeviceId } from "../lib/device";
 import { dialog } from "../lib/dialog";
 import { useBackButton } from "../lib/hooks/useBackButton";
 import UserAvatar from "./UserAvatar";
+import VipAvatar from "./ui/VipAvatar";
 import { Header } from "./VisitsSheet";
 import { Loader2, Check, X, UserPlus } from "lucide-react";
 
@@ -52,7 +53,7 @@ export default function FriendRequestsSheet({ onClose, onUserClick }: Props) {
                   className="w-full flex items-center gap-3 active:opacity-80"
                 >
                   <div className="w-14 h-14 rounded-full overflow-hidden bg-purple-700 flex items-center justify-center flex-shrink-0">
-                    <UserAvatar avatarUrl={r.avatarUrl} name={r.name} className="w-full h-full" />
+                    <VipAvatar src={r.avatarUrl} name={r.name} size={44} vip={(r as any).vip ?? 0} />
                   </div>
                   <div className="flex-1 min-w-0 text-right">
                     <div className="flex items-center justify-end gap-1.5">
