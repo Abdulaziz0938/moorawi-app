@@ -23,6 +23,7 @@ import MiniProfileSheet from "./MiniProfileSheet";
 import ChatThreadSheet from "./ChatThreadSheet";
 import RoomInfoSheet from "./RoomInfoSheet";
 import MicRequestsSheet from "./MicRequestsSheet";
+import { useRoomPresence } from "../lib/hooks/useRoomPresence";
 import MembersSheet from "./MembersSheet";
 import ActivitySheet from "./ActivitySheet";
 import ProfilePage from "./ProfilePage";
@@ -203,6 +204,9 @@ export default function RoomView({ roomId, onLeave }: Props) {
   });
 
   const [agoraConnected, setAgoraConnected] = useState(false);
+
+  // [ezo-presence] heartbeat + leave تلقائي
+  const { leave: leavePresence } = useRoomPresence(roomId, deviceId);
   const [isMuted, setIsMuted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [remoteCount, setRemoteCount] = useState(0);
@@ -343,12 +347,6 @@ export default function RoomView({ roomId, onLeave }: Props) {
       agoraManager.unpublishMicrophone().catch(console.error);
     }
   }, [agoraConnected, isOnMic]);
-
-  useEffect(() => {
-    const h = () => { if (myInfo?.userId) clearMySeats({ roomId, tokenOverride: deviceId }).catch(() => {}); };
-    window.addEventListener("beforeunload", h);
-    return () => window.removeEventListener("beforeunload", h);
-  }, [roomId, deviceId, myInfo, clearMySeats]);
 
   // [moorawi] Auto-hide my request toast
   useEffect(() => {
@@ -582,6 +580,8 @@ export default function RoomView({ roomId, onLeave }: Props) {
   };
 
   const handleLeave = async () => {
+    // [ezo-presence] إبلاغ الـ server بالخروج فوراً
+    try { await leavePresence({ roomId, tokenOverride: deviceId }); } catch {}
     try { await clearMySeats({ roomId, tokenOverride: deviceId }); } catch {}
     await agoraManager.leave();
     publishedRef.current = false;
@@ -792,7 +792,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
                               )}
                               <p className="text-[8px] text-white/90 truncate leading-tight">{seat.userName}</p>
                             </div>
-                            <p className="text-[8px] text-pink-300 leading-tight">{(seat.charms ?? 0)} <Heart size={8} className="inline text-pink-400" fill="currentColor" /></p>
+                            <p className="text-[8px] text-pink-300 leading-tight">{(seat.sessionCharms ?? 0)} <Heart size={8} className="inline text-pink-400" fill="currentColor" /></p>
                           </>
                         )}
                       </div>

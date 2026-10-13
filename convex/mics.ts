@@ -15,7 +15,7 @@ export const state = query({
       .take(MAX_SEATS);
     const enriched = await Promise.all(
       seats.map(async (s) => {
-        if (!s.userId) return { ...s, userName: null, avatarUrl: null, charms: 0, frame: null, userVip: 0, adminRole: null };
+        if (!s.userId) return { ...s, userName: null, avatarUrl: null, charms: 0, sessionCharms: 0, frame: null, userVip: 0, adminRole: null };
         const user = await ctx.db.get("users", s.userId);
         const avatarUrl = user?.avatarUrl ?? (user?.avatarId ? await ctx.storage.getUrl(user.avatarId) : null);
         return {
@@ -23,7 +23,8 @@ export const state = query({
           userName: user?.name ?? "ضيف",
           userNumber: user?.userNumber ?? null,
           avatarUrl,
-          charms: user?.totalReceived ?? 0,  // [moorawi] 1 coin received = 1 charm
+          charms: user?.totalReceived ?? 0,  // [moorawi] 1 coin received = 1 charm (دائم)
+          sessionCharms: s.sessionCharms ?? 0,  // [ezo-charms] عدّاد الجلسة الحالية
           frame: null,
           userVip: activeVipLevel(user),
           userCharmLevel: levelFromValue(user?.totalReceived ?? 0),
