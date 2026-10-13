@@ -15,15 +15,41 @@ export type AssetsMap = Record<string, string>;
 
 const AssetsContext = createContext<AssetsMap>({});
 
+export type AssetFull = {
+  url: string;
+  frameScale?: number;
+  frameOffsetX?: number;
+  frameOffsetY?: number;
+};
+const AssetsFullContext = createContext<Record<string, AssetFull>>({});
+
 export function AssetsProvider({ children }: { children: ReactNode }) {
   const rows = useQuery(api.assets.list);
   const map: AssetsMap = {};
+  const fullMap: Record<string, AssetFull> = {};
   for (const r of rows ?? []) {
-    if (r.imageUrl) map[r.key] = r.imageUrl;
+    if (r.imageUrl) {
+      map[r.key] = r.imageUrl;
+      fullMap[r.key] = {
+        url: r.imageUrl,
+        frameScale: (r as any).frameScale,
+        frameOffsetX: (r as any).frameOffsetX,
+        frameOffsetY: (r as any).frameOffsetY,
+      };
+    }
   }
   return (
-    <AssetsContext.Provider value={map}>{children}</AssetsContext.Provider>
+    <AssetsContext.Provider value={map}>
+      <AssetsFullContext.Provider value={fullMap}>
+        {children}
+      </AssetsFullContext.Provider>
+    </AssetsContext.Provider>
   );
+}
+
+/** Read full asset data (URL + placement). Safe anywhere (defaults to {}). */
+export function useAssetsFull(): Record<string, AssetFull> {
+  return useContext(AssetsFullContext);
 }
 
 /** Read all overrides. Safe anywhere (defaults to {}). */

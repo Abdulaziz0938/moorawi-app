@@ -24,6 +24,9 @@ export const set = mutation({
   args: {
     key: v.string(),
     imageUrl: v.string(),
+    frameScale: v.optional(v.number()),
+    frameOffsetX: v.optional(v.number()),
+    frameOffsetY: v.optional(v.number()),
     tokenOverride: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
@@ -34,16 +37,23 @@ export const set = mutation({
       .withIndex("by_key", (q) => q.eq("key", args.key))
       .unique();
     if (existing) {
-      await ctx.db.patch("assets", existing._id, {
+      const patch: any = {
         imageUrl: args.imageUrl,
         updatedAt: Date.now(),
         updatedBy: me._id,
-      });
+      };
+      if (args.frameScale !== undefined) patch.frameScale = args.frameScale;
+      if (args.frameOffsetX !== undefined) patch.frameOffsetX = args.frameOffsetX;
+      if (args.frameOffsetY !== undefined) patch.frameOffsetY = args.frameOffsetY;
+      await ctx.db.patch("assets", existing._id, patch);
       return existing._id;
     }
     return await ctx.db.insert("assets", {
       key: args.key,
       imageUrl: args.imageUrl,
+      frameScale: args.frameScale,
+      frameOffsetX: args.frameOffsetX,
+      frameOffsetY: args.frameOffsetY,
       updatedAt: Date.now(),
       updatedBy: me._id,
     });

@@ -672,10 +672,11 @@ function CreateItemModal({ token, onClose, onCreate }: any) {
 // ============================ FramesTunerTab
 function FramesTunerTab({ token }: { token: string | null }) {
   const CATEGORIES = [
-    { key: "frame",       label: "الإطارات" },
+    { key: "frame",       label: "إطارات المتجر" },
     { key: "halo",        label: "الهالات" },
     { key: "vehicle",     label: "المركبات" },
     { key: "profileCard", label: "البطاقات" },
+    { key: "vipframes",   label: "⭐ إطارات VIP" },
   ];
   const [category, setCategory] = useState<string>("frame");
   const [selectedId, setSelectedId] = useState<Id<"shopItems"> | null>(null);
@@ -684,7 +685,30 @@ function FramesTunerTab({ token }: { token: string | null }) {
   const [offsetY, setOffsetY] = useState<number>(0);
   const [saving, setSaving] = useState(false);
 
-  const items = useQuery(api.shop.listByCategory, { category, limit: 100 });
+  const setAsset = useMutation(api.assets.set);
+  const allAssets = useQuery(api.assets.list);
+  const isVipCategory = category === "vipframes";
+  const shopItems = useQuery(
+    api.shop.listByCategory,
+    isVipCategory ? "skip" as any : { category, limit: 100 }
+  );
+  const vipItems = isVipCategory
+    ? [1, 2, 3, 4, 5, 6, 7].map((n) => {
+        const key = `vip.frame.${n}`;
+        const row = (allAssets ?? []).find((a: any) => a.key === key);
+        return {
+          _id: `vip-${n}` as any,
+          key,
+          name: `VIP ${n}`,
+          imageUrl: row?.imageUrl ?? null,
+          frameScale: (row as any)?.frameScale,
+          frameOffsetX: (row as any)?.frameOffsetX,
+          frameOffsetY: (row as any)?.frameOffsetY,
+          isVip: true,
+        };
+      })
+    : [];
+  const items = isVipCategory ? vipItems : shopItems;
   const updateItem = useMutation(api.shop.updateItemAssets);
 
   const selected = (items ?? []).find((i: any) => i._id === selectedId);
@@ -697,16 +721,27 @@ function FramesTunerTab({ token }: { token: string | null }) {
   };
 
   const handleSave = async () => {
-    if (!selectedId) return;
+    if (!selected) return;
     setSaving(true);
     try {
-      await updateItem({
-        itemId: selectedId as Id<"shopItems">,
-        frameScale: scale,
-        frameOffsetX: offsetX,
-        frameOffsetY: offsetY,
-        tokenOverride: token ?? undefined,
-      });
+      if (isVipCategory) {
+        await setAsset({
+          key: (selected as any).key,
+          imageUrl: (selected as any).imageUrl ?? "",
+          frameScale: scale,
+          frameOffsetX: offsetX,
+          frameOffsetY: offsetY,
+          tokenOverride: token ?? undefined,
+        });
+      } else {
+        await updateItem({
+          itemId: selectedId as Id<"shopItems">,
+          frameScale: scale,
+          frameOffsetX: offsetX,
+          frameOffsetY: offsetY,
+          tokenOverride: token ?? undefined,
+        });
+      }
       dialog.alert("✓ تم حفظ الإعدادات");
     } catch (e: any) {
       dialog.alert(e?.message || "فشل الحفظ");
@@ -733,15 +768,26 @@ function FramesTunerTab({ token }: { token: string | null }) {
         setSaving(true);
         try {
           for (const it of list) {
-            await updateItem({
-              itemId: it._id,
-              frameScale: scale,
-              frameOffsetX: offsetX,
-              frameOffsetY: offsetY,
-              tokenOverride: token ?? undefined,
-            });
+            if (isVipCategory) {
+              await setAsset({
+                key: (it as any).key,
+                imageUrl: (it as any).imageUrl ?? "",
+                frameScale: scale,
+                frameOffsetX: offsetX,
+                frameOffsetY: offsetY,
+                tokenOverride: token ?? undefined,
+              });
+            } else {
+              await updateItem({
+                itemId: it._id,
+                frameScale: scale,
+                frameOffsetX: offsetX,
+                frameOffsetY: offsetY,
+                tokenOverride: token ?? undefined,
+              });
+            }
           }
-          dialog.alert(`✓ تم تطبيق الإعدادات على ${list.length} إطار`);
+          dialog.alert(`✓ تم تطبيق الإعدادات على ${list.length} عنصر`);
         } catch (e: any) {
           dialog.alert(e?.message || "فشل التطبيق");
         } finally {
@@ -895,7 +941,7 @@ function FramesTunerTab({ token }: { token: string | null }) {
               disabled={saving}
               className="w-full py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 text-white text-sm font-black flex items-center justify-center gap-2 disabled:opacity-50 active:scale-95"
             >
-              {saving ? <Loader2 size={16} className="animate-spin" /> : <><Sparkles size={14} /> تطبيق على كل إطارات "{category}"</>}
+              {saving ? <Loader2 size={16} className="animate-spin" /> : <><Sparkles size={14} /> تطبيق على كل عناصر "{category}"</>}
             </button>
 
             <div className="flex gap-2 pt-1">

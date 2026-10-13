@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { useAssets, resolveAsset } from "../lib/assets";
+import { useAssets, resolveAsset, useAssetsFull } from "../lib/assets";
 import type { Id } from "../../convex/_generated/dataModel";
 import { getDeviceId } from "../lib/device";
 import { uploadToCloudinary } from "../lib/cloudinary";
@@ -99,12 +99,15 @@ export default function ProfilePage({
 
   const vipLevel = profile.vip ?? 0;
   const equippedFrame = (equipped as any)?.frame;
-  const vipFrameUrl = vipLevel > 0 ? (assets[`vip.frame.${vipLevel}`] ?? null) : null;
+  const assetsFull = useAssetsFull();
+  const vipFrameKey = vipLevel > 0 ? `vip.frame.${vipLevel}` : null;
+  const vipFrameData = vipFrameKey ? assetsFull[vipFrameKey] : null;
+  const vipFrameUrl = vipFrameData?.url ?? null;
   const finalFrameUrl = equippedFrame?.imageUrl ?? vipFrameUrl;
   // [ezo-frame] Yalla/SUGO standard: scale + offset from DB
-  const finalFrameScale = equippedFrame?.frameScale ?? 3.0;
-  const finalFrameOffsetX = equippedFrame?.frameOffsetX ?? 0;
-  const finalFrameOffsetY = equippedFrame?.frameOffsetY ?? 0;
+  const finalFrameScale = equippedFrame?.frameScale ?? vipFrameData?.frameScale ?? 3.0;
+  const finalFrameOffsetX = equippedFrame?.frameOffsetX ?? vipFrameData?.frameOffsetX ?? 0;
+  const finalFrameOffsetY = equippedFrame?.frameOffsetY ?? vipFrameData?.frameOffsetY ?? 0;
   const bgGradient = VIP_BG[vipLevel] || VIP_BG[0];
   const isOwner = profile.userNumber === 1;
   const isAdmin = profile.adminRole === "super" || profile.adminRole === "moderator";

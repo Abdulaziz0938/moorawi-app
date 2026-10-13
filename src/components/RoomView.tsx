@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { agoraManager } from "../lib/agora";
 import { getDeviceId } from "../lib/device";
-import { useAssets } from "../lib/assets";
+import { useAssets, useAssetsFull } from "../lib/assets";
 import { uploadToCloudinary } from "../lib/cloudinary";
 import SettingsSheet from "./SettingsSheet";
 import RoomLockSheet from "./RoomLockSheet";
@@ -170,6 +170,7 @@ function bubbleClass(vip: number): string {
 export default function RoomView({ roomId, onLeave }: Props) {
   const deviceId = getDeviceId();
   const assets = useAssets();
+  const assetsFull = useAssetsFull();
   const room = useQuery(api.rooms.get, { roomId });
   const roomWeekly = useQuery(api.rooms.weeklyTotal, { roomId });
   const seats = useQuery(api.mics.state, { roomId });
@@ -796,7 +797,9 @@ export default function RoomView({ roomId, onLeave }: Props) {
                               vip={seat?.userVip ?? 0}
                               ring={false}
                                                 customFrameUrl={seat?.userFrameUrl ?? (seat?.userVip ? assets[`vip.frame.${seat.userVip}`] : null) ?? null}
-                                                frameScale={3.0}
+                                                frameScale={seat?.userVip ? (assetsFull[`vip.frame.${seat.userVip}`]?.frameScale ?? 3.0) : 3.0}
+                                                frameOffsetX={seat?.userVip ? (assetsFull[`vip.frame.${seat.userVip}`]?.frameOffsetX ?? 0) : 0}
+                                                frameOffsetY={seat?.userVip ? (assetsFull[`vip.frame.${seat.userVip}`]?.frameOffsetY ?? 0) : 0}
                             />
                           ) : (
                             <div className={`w-full h-full rounded-full flex items-center justify-center text-white overflow-hidden transition ${seat.locked ? "bg-gray-700 ring-2 ring-gray-500" : "bg-white/5 ring-1 ring-white/20 hover:bg-white/15"}`}>
