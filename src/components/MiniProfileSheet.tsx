@@ -151,29 +151,25 @@ export default function MiniProfileSheet({
         <div className="absolute inset-x-0 top-0 h-px bg-white/40" />
 
         <div className="relative z-10 flex flex-col max-h-[92vh] overflow-y-auto">
-          {/* ============ Cover + Avatar + Info ============ */}
-          <div className="relative">
-            {/* Cover strip */}
-            <div className={`h-24 w-full bg-gradient-to-b ${bgGradient}`} />
-            <div className="absolute inset-0 h-24 bg-gradient-to-b from-black/20 to-black/60" />
-
-            {/* Close button */}
+          {/* ============ Header row (Close + VIP badge) ============ */}
+          <div className="flex items-center justify-between px-4 pt-3 pb-2">
             <button
               onClick={onClose}
-              className="absolute top-3 left-3 w-9 h-9 rounded-full bg-black/40 backdrop-blur border border-white/20 flex items-center justify-center text-white hover:bg-black/60 transition z-20"
+              className="w-9 h-9 rounded-full bg-white/15 backdrop-blur border border-white/20 flex items-center justify-center text-white hover:bg-white/25 transition"
             >
               <X size={18} />
             </button>
-
-            {/* VIP level badge (top-right) */}
             {vipLevel > 0 && (
-              <span className="absolute top-3 right-3 text-[11px] font-black text-yellow-300 bg-black/40 backdrop-blur px-3 py-1 rounded-full border border-yellow-300/30 z-20">
+              <span className="text-[11px] font-black text-yellow-300 bg-black/30 backdrop-blur px-3 py-1 rounded-full border border-yellow-300/30">
                 VIP {vipLevel}
               </span>
             )}
+          </div>
 
+          {/* ============ Avatar + Info ============ */}
+          <div className="relative">
             {/* Avatar + Name block — right-aligned */}
-            <div className="px-4 -mt-14 flex flex-col items-start relative z-10">
+            <div className="px-4 pt-2 flex flex-col items-start relative z-10">
               <button
                 onClick={onOpenFullProfile}
                 className="active:scale-95 transition-transform"
