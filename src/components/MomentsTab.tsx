@@ -8,6 +8,7 @@ import { dialog } from "../lib/dialog";
 import UserAvatar from "./UserAvatar";
 import MomentCreateSheet from "./MomentCreateSheet";
 import MomentViewSheet from "./MomentViewSheet";
+import Card from "./ui/Card";
 import {
   Plus, Heart, MessageCircle, Loader2, Image as ImageIcon,
   MoreVertical, Trash2, Check,
@@ -59,20 +60,23 @@ export default function MomentsTab({ onUserClick }: Props) {
         {feed === undefined ? (
           <div className="flex justify-center py-16"><Loader2 size={28} className="animate-spin text-white/40" /></div>
         ) : feed.length === 0 ? (
-          <div className="text-center py-20 text-white/40">
-            <ImageIcon size={56} className="mx-auto mb-3 opacity-30" />
-            <p className="text-sm font-black">لا توجد لحظات</p>
+<Card tone="default" padding="lg">
+            <div className="text-center py-12 text-white/40">
+              <ImageIcon size={56} className="mx-auto mb-3 opacity-30" />
+              <p className="text-sm font-black">لا توجد لحظات</p>
             <p className="text-xs mt-1">كن أول من ينشر لحظة</p>
-            <button
-              onClick={() => setShowCreate(true)}
-              className="mt-4 px-6 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-sm font-black active:scale-95"
-            >
-              انشر الآن
-            </button>
-          </div>
+            
+              <button
+                onClick={() => setShowCreate(true)}
+                className="mt-4 px-6 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-sm font-black active:scale-95"
+              >
+                انشر الآن
+              </button>
+            </div>
+          </Card>
         ) : (
           feed.map((m: any) => (
-            <article key={m._id} className="rounded-3xl bg-white/5 border border-white/10 overflow-hidden">
+            <article key={m._id} className="rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xl overflow-hidden">
               {/* Author */}
               <div className="flex items-center gap-3 p-3">
                 <button
@@ -101,7 +105,7 @@ export default function MomentsTab({ onUserClick }: Props) {
                       <MoreVertical size={16} />
                     </button>
                     {menuId === m._id && (
-                      <div className="absolute top-full left-0 mt-1 bg-slate-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden z-20">
+                      <div className="absolute top-full left-0 mt-1 bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl overflow-hidden z-20">
                         <button
                           onClick={() => handleDelete(m)}
                           className="px-4 py-2.5 text-red-400 text-xs font-black flex items-center gap-2 hover:bg-white/5 whitespace-nowrap"
