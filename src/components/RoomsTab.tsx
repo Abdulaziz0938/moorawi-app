@@ -10,7 +10,6 @@ import RoomSearchScreen from "./RoomSearchScreen";
 import { UserName } from "./UserBadges";
 import Card from "./ui/Card";
 import RankBadge from "./ui/RankBadge";
-import SectionTitle from "./ui/SectionTitle";
 import {
   Home, Plus, X, Check, Loader2, Search, Lock,
   Users, Flame, Sparkles, Clock, Crown, Heart,
@@ -432,7 +431,6 @@ function RoomsWithStatsGrid({ onEnter }: { onEnter: (id: Id<"rooms">) => void })
 
 function RoomCardGrid({ room, onEnter }: { room: any; onEnter: (id: Id<"rooms">) => void }) {
   const showRank = room.rank <= 3;
-  const rankColors = ["from-amber-400 to-yellow-500", "from-slate-200 to-slate-400", "from-orange-500 to-amber-700"];
 
   return (
     <button
