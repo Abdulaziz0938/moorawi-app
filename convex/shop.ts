@@ -73,6 +73,41 @@ export const myInventory = query({
   },
 });
 
+// Get user's equipped assets (full data for display)
+export const getEquippedAssets = query({
+  args: { userId: v.id("users") },
+  handler: async (ctx, args) => {
+    const user = await ctx.db.get("users", args.userId);
+    if (!user) return null;
+    const result: Record<string, any> = {};
+    if (user.equippedFrameId) {
+      const item = await ctx.db.get("shopItems", user.equippedFrameId);
+      if (item) result.frame = item;
+    }
+    if (user.equippedVehicleId) {
+      const item = await ctx.db.get("shopItems", user.equippedVehicleId);
+      if (item) result.vehicle = item;
+    }
+    if (user.equippedEntryEffectId) {
+      const item = await ctx.db.get("shopItems", user.equippedEntryEffectId);
+      if (item) result.entryEffect = item;
+    }
+    if (user.equippedChatBubbleId) {
+      const item = await ctx.db.get("shopItems", user.equippedChatBubbleId);
+      if (item) result.chatBubble = item;
+    }
+    if (user.equippedSoundWaveId) {
+      const item = await ctx.db.get("shopItems", user.equippedSoundWaveId);
+      if (item) result.soundWave = item;
+    }
+    if (user.equippedProfileCardId) {
+      const item = await ctx.db.get("shopItems", user.equippedProfileCardId);
+      if (item) result.profileCard = item;
+    }
+    return result;
+  },
+});
+
 // Check if user owns item
 export const ownsItem = query({
   args: {

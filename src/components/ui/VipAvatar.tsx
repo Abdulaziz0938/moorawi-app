@@ -11,6 +11,8 @@ interface Props {
   ring?: boolean;      // إطار عادي إذا VIP = 0
   className?: string;
   onClick?: () => void;
+  customFrameUrl?: string | null;  // إطار مخصص من المتجر
+  customFrameInset?: number;       // هامش الإطار المخصص (px)
 }
 
 // الحجم النسبي لطبقة الإطار (نسبة إلى الأفاتار)
@@ -27,6 +29,8 @@ export default function VipAvatar({
   ring = true,
   className = "",
   onClick,
+  customFrameUrl,
+  customFrameInset = 0,
 }: Props) {
   const pad = FRAME_PADDING[vip] ?? 2;
   const innerSize = size - pad * 2;
@@ -38,7 +42,7 @@ export default function VipAvatar({
       style={{ width: size, height: size }}
     >
       {/* Outer frame (rotating for 5-7) */}
-      {vip >= 1 && (
+      {!customFrameUrl && vip >= 1 && (
         <div
           className={cx(
             "absolute inset-0 rounded-full",
@@ -59,8 +63,24 @@ export default function VipAvatar({
         />
       )}
 
+      {/* Custom frame from shop (overrides default) */}
+      {customFrameUrl && (
+        <img
+          src={customFrameUrl}
+          alt=""
+          className="absolute pointer-events-none z-20"
+          style={{
+            top: -customFrameInset,
+            left: -customFrameInset,
+            width: size + customFrameInset * 2,
+            height: size + customFrameInset * 2,
+          }}
+          draggable={false}
+        />
+      )}
+
       {/* Non-VIP ring */}
-      {vip === 0 && ring && (
+      {!customFrameUrl && vip === 0 && ring && (
         <div className="absolute inset-0 rounded-full ring-1 ring-white/20" />
       )}
 

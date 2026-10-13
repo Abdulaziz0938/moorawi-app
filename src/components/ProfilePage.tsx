@@ -9,7 +9,7 @@ import { dialog } from "../lib/dialog";
 import {
   X, Home, Gift, MessageCircle, UserPlus, Crown, Loader2,
   Pencil, Camera, Eye, Trash2, ImageIcon, Copy, Check, Radio, Send, Inbox, Coins,
-    Users, Heart, Award, Star, ChevronRight } from "lucide-react";
+    Users, Heart, Award, Star, ChevronRight, Wand2 } from "lucide-react";
 import { UserName } from "./UserBadges";
 import LevelBadge from "./LevelBadge";
 import VipAvatar from "./ui/VipAvatar";
@@ -74,6 +74,9 @@ export default function ProfilePage({
   const [showMyItems, setShowMyItems] = useState(false);
   const [myItemsCategory, setMyItemsCategory] = useState<"frame" | "vehicle" | "entryEffect" | "chatBubble" | "soundWave" | "profileCard">("frame");
   const inventory = useQuery(api.shop.myInventory, { tokenOverride: deviceId });
+  const equipped = useQuery(api.shop.getEquippedAssets, {
+    userId: userId as Id<"users">,
+  });
   const invCounts: Record<string, number> = {};
   for (const inv of inventory ?? []) {
     invCounts[inv.category] = (invCounts[inv.category] ?? 0) + 1;
@@ -208,12 +211,14 @@ export default function ProfilePage({
           <div className="relative">
             <div onClick={handleAvatarClick} className="active:scale-95 transition-transform cursor-pointer">
               <VipAvatar
-                src={profile?.avatarUrl}
-                name={profile?.name ?? "?"}
-                size={128}
-                vip={vipLevel}
-                ring={vipLevel === 0}
-              />
+                  src={profile?.avatarUrl}
+                  name={profile?.name ?? "?"}
+                  size={128}
+                  vip={vipLevel}
+                  ring={vipLevel === 0}
+                  customFrameUrl={(equipped as any)?.frame?.imageUrl ?? null}
+                  customFrameInset={14}
+                />
             </div>
             {isMe && (
               <div className="absolute bottom-1 right-1 w-7 h-7 rounded-full bg-black/60 backdrop-blur-xl border border-white/30 flex items-center justify-center pointer-events-none z-20">
@@ -320,6 +325,30 @@ export default function ProfilePage({
           {vipLevel > 0 && (
             <div className="badge-glow">
               <img src={assets[`vip.logo.${vipLevel}`] ?? ""} alt={`VIP ${vipLevel}`} className="h-6 w-auto object-contain" draggable={false} />
+            </div>
+          )}
+        
+          {(equipped as any)?.vehicle?.imageUrl && (
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border border-blue-400/40 backdrop-blur-xl">
+              <img
+                src={(equipped as any).vehicle.imageUrl}
+                alt={(equipped as any).vehicle.name}
+                className="h-4 w-auto object-contain"
+                draggable={false}
+              />
+              <span className="text-[10px] font-black text-cyan-200">{(equipped as any).vehicle.name}</span>
+            </div>
+          )}
+          {(equipped as any)?.chatBubble?.imageUrl && (
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-400/40 backdrop-blur-xl">
+              <MessageCircle size={11} className="text-emerald-300" />
+              <span className="text-[10px] font-black text-emerald-200">{(equipped as any).chatBubble.name}</span>
+            </div>
+          )}
+          {(equipped as any)?.entryEffect?.imageUrl && (
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gradient-to-r from-pink-500/20 to-purple-500/20 border border-pink-400/40 backdrop-blur-xl">
+              <Wand2 size={11} className="text-pink-300" />
+              <span className="text-[10px] font-black text-pink-200">دخولية</span>
             </div>
           )}
         </div>
