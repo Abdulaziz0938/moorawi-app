@@ -271,8 +271,12 @@ export default function VipShopSheet({ onClose }: Props) {
                   return (
                     <div
                       key={slot.key}
-                      className="aspect-square rounded-xl border border-white/10 bg-black/30 flex items-center justify-center overflow-hidden p-1"
-                      style={{ borderColor: plan.color + "40" }}
+                      className="aspect-square rounded-xl border bg-black/30 flex items-center justify-center overflow-hidden p-1.5 relative group transition active:scale-95"
+                      style={{
+                        borderColor: url ? plan.color + "60" : plan.color + "25",
+                        boxShadow: url ? `0 0 12px ${plan.accent}30, inset 0 0 0 1px ${plan.color}20` : undefined,
+                        background: url ? `linear-gradient(135deg, ${plan.color}15, transparent)` : undefined,
+                      }}
                     >
                       {url ? (
                         <img
@@ -282,9 +286,18 @@ export default function VipShopSheet({ onClose }: Props) {
                           draggable={false}
                         />
                       ) : (
-                        <div className="flex flex-col items-center justify-center gap-1">
-                          <Sparkles size={22} style={{ color: plan.accent, opacity: 0.5 }} />
-                          <span className="text-white/60 text-[9px]">{slot.label}</span>
+                        <div className="flex flex-col items-center justify-center gap-1 opacity-70">
+                          <Sparkles size={22} style={{ color: plan.accent, opacity: 0.6 }} />
+                          <span className="text-white/50 text-[9px] font-bold">{slot.label}</span>
+                        </div>
+                      )}
+                      {/* Checkmark if owned asset */}
+                      {url && (
+                        <div
+                          className="absolute top-1 right-1 w-3.5 h-3.5 rounded-full flex items-center justify-center"
+                          style={{ background: plan.accent }}
+                        >
+                          <Check size={8} className="text-black" strokeWidth={3} />
                         </div>
                       )}
                     </div>
@@ -299,7 +312,10 @@ export default function VipShopSheet({ onClose }: Props) {
                   <p className="text-white text-sm font-black">امتيازات VIP</p>
                   <Sparkles size={14} className="text-amber-300" />
                 </div>
-                <div className="rounded-2xl border border-white/10 bg-white/5 divide-y divide-white/5">
+                <div
+                  className="rounded-2xl border divide-y divide-white/5 overflow-hidden"
+                  style={{ borderColor: plan.color + "30", background: `linear-gradient(135deg, ${plan.color}08, transparent)` }}
+                >
                   {selectedBenefits.length === 0 ? (
                     <div className="p-6 text-center text-white/40 text-xs">
                       لا توجد امتيازات بعد
@@ -310,13 +326,16 @@ export default function VipShopSheet({ onClose }: Props) {
                       return (
                         <div key={b._id} className="flex items-center gap-3 px-4 py-3">
                           <div
-                            className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                            style={{ background: plan.color + "30" }}
+                            className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                            style={{
+                              background: `linear-gradient(135deg, ${plan.color}40, ${plan.accent}20)`,
+                              boxShadow: `0 0 8px ${plan.accent}30`,
+                            }}
                           >
-                            <Icon size={14} style={{ color: plan.accent }} />
+                            <Icon size={15} style={{ color: plan.accent }} />
                           </div>
-                          <span className="text-white/85 text-sm">{b.textAr}</span>
-                          <Check size={14} className="text-emerald-400 mr-auto" />
+                          <span className="text-white/90 text-sm font-bold">{b.textAr}</span>
+                          <Check size={15} className="text-emerald-400 mr-auto" strokeWidth={2.5} />
                         </div>
                       );
                     })
