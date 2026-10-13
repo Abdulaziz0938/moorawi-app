@@ -29,6 +29,17 @@ const ICONS: Record<string, any> = {
 };
 
 // 9 asset slot keys per level (order matters for grid 3x3)
+// [ezo-vip] ألوان المستويات (تطابق CSS vip-frame-N / vip-halo-N)
+const VIP_COLORS: Record<number, { main: string; glow: string; ring: string }> = {
+  1: { main: "#10b981", glow: "rgba(16,185,129,0.5)",  ring: "ring-emerald-400/60" },
+  2: { main: "#3b82f6", glow: "rgba(59,130,246,0.5)",  ring: "ring-blue-400/60" },
+  3: { main: "#a855f7", glow: "rgba(168,85,247,0.5)",  ring: "ring-purple-400/60" },
+  4: { main: "#dc2626", glow: "rgba(220,38,38,0.5)",   ring: "ring-red-400/60" },
+  5: { main: "#eab308", glow: "rgba(234,179,8,0.55)",  ring: "ring-amber-400/70" },
+  6: { main: "#f97316", glow: "rgba(249,115,22,0.6)",  ring: "ring-orange-400/70" },
+  7: { main: "#fbbf24", glow: "rgba(251,191,36,0.7)",  ring: "ring-yellow-300/80" },
+};
+
 const VIP_SLOTS: { key: string; label: string }[] = [
   { key: "logo",     label: "الشعار" },
   { key: "medal",    label: "الميدالية" },
@@ -157,18 +168,29 @@ export default function VipShopSheet({ onClose }: Props) {
             const p = plans.find((x) => x.level === lvl);
             const isSel = lvl === selected;
             const isOwned = lvl <= currentLevel && active;
+            const c = VIP_COLORS[lvl] ?? VIP_COLORS[1];
             return (
               <button
                 key={lvl}
                 onClick={() => setSelected(lvl)}
-                className={`flex-shrink-0 px-3 py-1.5 rounded-full border transition active:scale-95 text-xs font-black ${
+                className={`flex-shrink-0 px-3 py-2 rounded-xl border-2 transition active:scale-95 text-xs font-black relative ${
                   isSel
-                    ? "bg-white/15 border-white/40 text-white"
-                    : "bg-white/5 border-white/10 text-white/60"
+                    ? "text-white"
+                    : "text-white/50 border-white/10 bg-white/[0.03]"
                 }`}
+                style={isSel ? {
+                  background: `linear-gradient(135deg, ${c.main}40, ${c.main}15)`,
+                  borderColor: c.main,
+                  boxShadow: `0 0 14px ${c.glow}, inset 0 0 0 1px ${c.main}30`,
+                } : undefined}
               >
                 VIP {lvl}
-                {isOwned && <span className="mr-1 text-[8px] text-amber-300">●</span>}
+                {isOwned && (
+                  <span
+                    className="absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-black"
+                    style={{ background: c.main }}
+                  />
+                )}
               </button>
             );
           })}
@@ -192,23 +214,35 @@ export default function VipShopSheet({ onClose }: Props) {
                         : `linear-gradient(135deg, ${plan.color}30 0%, ${plan.accent}15 50%, transparent 100%)`,
                     }}
                   >
-                    <div className="aspect-[16/9] flex items-center justify-center relative">
+                    <div className="aspect-[16/9] flex items-center justify-center relative overflow-hidden">
+                      {/* Radiant glow behind (premium look) */}
+                      <div
+                        className="absolute inset-0 pointer-events-none"
+                        style={{
+                          background: `radial-gradient(circle at 50% 60%, ${plan.accent}25 0%, transparent 60%)`,
+                        }}
+                      />
                       {heroUrl ? (
                         <img
                           src={heroUrl}
                           alt={plan.name}
-                          className="max-h-full max-w-full object-contain drop-shadow-2xl"
+                          className="max-h-full max-w-full object-contain drop-shadow-2xl relative z-10"
                           draggable={false}
                         />
                       ) : (
-                        <div className="flex flex-col items-center gap-2">
+                        <div className="flex flex-col items-center gap-2 relative z-10">
                           <div
-                            className="w-24 h-24 rounded-2xl flex items-center justify-center"
-                            style={{ background: `${plan.color}40` }}
+                            className="w-28 h-28 rounded-full flex items-center justify-center relative"
+                            style={{
+                              background: `conic-gradient(from 0deg, ${plan.color}, ${plan.accent}, ${plan.color})`,
+                              boxShadow: `0 0 32px ${plan.accent}80, 0 0 60px ${plan.color}40`,
+                            }}
                           >
-                            <Crown size={56} style={{ color: plan.accent }} strokeWidth={1.2} />
+                            <div className="w-[100px] h-[100px] rounded-full bg-black/70 flex items-center justify-center">
+                              <Crown size={52} style={{ color: plan.accent }} strokeWidth={1.2} fill={plan.accent + "40"} />
+                            </div>
                           </div>
-                          <p className="text-white text-3xl font-black tracking-wider">
+                          <p className="text-white text-3xl font-black tracking-wider mt-1" style={{ textShadow: `0 0 20px ${plan.accent}80` }}>
                             {plan.name}
                           </p>
                           {plan.exclusive && (
@@ -221,9 +255,9 @@ export default function VipShopSheet({ onClose }: Props) {
                       )}
                     </div>
                     <div className="py-2 text-center text-white/70 text-xs">
-                      ✦ <span className="text-amber-200 font-black">
+                      <span className="text-amber-200 font-black">
                         {selectedBenefits.length} امتيازاً
-                      </span> ✦
+                      </span>
                     </div>
                   </div>
                 );
@@ -260,9 +294,11 @@ export default function VipShopSheet({ onClose }: Props) {
 
               {/* ===== Benefits ===== */}
               <div className="mx-4 mt-4 pb-4">
-                <p className="text-center text-white text-sm font-black mb-3">
-                  ✦ امتيازات VIP ✦
-                </p>
+                <div className="flex items-center justify-center gap-2 mb-3">
+                  <Sparkles size={14} className="text-amber-300" />
+                  <p className="text-white text-sm font-black">امتيازات VIP</p>
+                  <Sparkles size={14} className="text-amber-300" />
+                </div>
                 <div className="rounded-2xl border border-white/10 bg-white/5 divide-y divide-white/5">
                   {selectedBenefits.length === 0 ? (
                     <div className="p-6 text-center text-white/40 text-xs">
