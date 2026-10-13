@@ -3,7 +3,6 @@ import { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { getDeviceId } from "../lib/device";
-import { useBackButton } from "../lib/hooks/useBackButton";
 import UserAvatar from "./UserAvatar";
 import VipAvatar from "./ui/VipAvatar";
 import { useAssets } from "../lib/assets";
@@ -12,7 +11,7 @@ import { ChevronRight, Loader2, Clock, Eye, User, Crown, Lock, Sparkles } from "
 interface Props { onClose: () => void; onUserClick?: (id: any) => void; }
 
 export default function VisitsSheet({ onClose, onUserClick }: Props) {
-  useBackButton(true, onClose);
+  // Back handled by parent (MeTab)
   const deviceId = getDeviceId();
   const me = useQuery(api.profiles.me, { tokenOverride: deviceId });
   const visits = useQuery(
