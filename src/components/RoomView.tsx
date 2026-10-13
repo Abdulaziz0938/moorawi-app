@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { agoraManager } from "../lib/agora";
 import { getDeviceId } from "../lib/device";
+import { useAssets } from "../lib/assets";
 import { uploadToCloudinary } from "../lib/cloudinary";
 import SettingsSheet from "./SettingsSheet";
 import RoomLockSheet from "./RoomLockSheet";
@@ -168,6 +169,7 @@ function bubbleClass(vip: number): string {
 
 export default function RoomView({ roomId, onLeave }: Props) {
   const deviceId = getDeviceId();
+  const assets = useAssets();
   const room = useQuery(api.rooms.get, { roomId });
   const roomWeekly = useQuery(api.rooms.weeklyTotal, { roomId });
   const seats = useQuery(api.mics.state, { roomId });
@@ -793,7 +795,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
                               size={56}
                               vip={seat?.userVip ?? 0}
                               ring={false}
-                                                customFrameUrl={seat?.userFrameUrl ?? null}
+                                                customFrameUrl={seat?.userFrameUrl ?? (seat?.userVip ? assets[`vip.frame.${seat.userVip}`] : null) ?? null}
                                                 customFrameInset={6}
                             />
                           ) : (
@@ -948,7 +950,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
                       <span className="text-[8px] text-white/40 mr-auto">{formatTime(m.createdAt)}</span>
                     </div>
                     {(m.text || m.imageUrl) && (
-                      <ChatBubble vip={m.senderVip ?? 0} customBubbleUrl={m.senderBubbleUrl ?? null}>
+                      <ChatBubble vip={m.senderVip ?? 0} customBubbleUrl={m.senderBubbleUrl ?? (m.senderVip ? assets[`vip.bubble.${m.senderVip}`] : null) ?? null}>
                         {m.text && <p className="text-white text-xs break-words whitespace-pre-wrap">{m.text}</p>}
                         {m.imageUrl && <img src={m.imageUrl} alt="" className="mt-1 rounded-lg max-w-[140px] max-h-[140px] object-cover" />}
                       </ChatBubble>

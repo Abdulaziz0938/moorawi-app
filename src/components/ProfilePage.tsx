@@ -98,6 +98,9 @@ export default function ProfilePage({
   }
 
   const vipLevel = profile.vip ?? 0;
+  const vipFrameUrl = vipLevel > 0 ? (assets[`vip.frame.${vipLevel}`] ?? null) : null;
+  const equippedFrameUrl = (equipped as any)?.frame?.imageUrl ?? null;
+  const finalFrameUrl = equippedFrameUrl ?? vipFrameUrl;
   const bgGradient = VIP_BG[vipLevel] || VIP_BG[0];
   const isOwner = profile.userNumber === 1;
   const isAdmin = profile.adminRole === "super" || profile.adminRole === "moderator";
@@ -216,7 +219,7 @@ export default function ProfilePage({
                   size={128}
                   vip={vipLevel}
                   ring={vipLevel === 0}
-                  customFrameUrl={(equipped as any)?.frame?.imageUrl ?? null}
+                  customFrameUrl={finalFrameUrl}
                   customFrameInset={14}
                 />
             </div>
