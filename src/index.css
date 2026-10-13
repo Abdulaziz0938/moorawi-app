@@ -570,3 +570,32 @@ html, body {
   60% { transform: translateX(8%); opacity: 1; }
   100% { transform: translateX(0); opacity: 1; }
 }
+
+/* ============================================================
+   [ezo-medals] Medal tier animations
+   ============================================================ */
+
+/* SSS: نبض خفيف */
+.medal-sss-pulse {
+  animation: medal-sss-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes medal-sss-pulse {
+  0%, 100% { transform: scale(1); filter: brightness(1); }
+  50% { transform: scale(1.05); filter: brightness(1.15); }
+}
+
+/* SSS: sparkle overlay */
+.medal-sparkle::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, transparent 0%, rgba(255,255,255,0.4) 25%, transparent 50%, rgba(255,255,255,0.4) 75%, transparent 100%);
+  animation: medal-sparkle-spin 3s linear infinite;
+  opacity: 0.6;
+}
+
+@keyframes medal-sparkle-spin {
+  to { transform: rotate(360deg); }
+}
