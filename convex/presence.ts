@@ -171,17 +171,31 @@ export const sweepInactive = internalMutation({
   handler: async (ctx) => {
     const threshold = Date.now() - STALE_THRESHOLD_MS;
 
-    // 1) الأعضاء الميتون
-    const stale = await ctx.db
+    // 1) الأعضاء الميتون — مرتين:
+    //    (أ) عبر index (lastSeenAt < threshold) — سريع وفعّال
+    //    (ب) التقاط السجلات بدون lastSeenAt (بيانات ما قبل presence)
+    const staleIndexed = await ctx.db
       .query("roomMembers")
       .withIndex("by_lastSeen", (q) => q.lt("lastSeenAt", threshold))
       .take(200);
 
+    const allMembers = await ctx.db.query("roomMembers").take(300);
+    const legacyNoTimestamp = allMembers.filter((m) => !m.lastSeenAt);
+
+    const toRemove = [...staleIndexed, ...legacyNoTimestamp];
+
     let removed = 0;
-    for (const m of stale) {
-      // المالك يبقى — لكن نُحدّث lastSeenAt بمؤشر "ميت لكن مالك"
+    const processedIds = new Set<string>();
+    for (const m of toRemove) {
+      if (processedIds.has(m._id)) continue;
+      processedIds.add(m._id);
+
+      // المالك يبقى — لكن نُعطيه lastSeenAt جديد (شرط أساسي)
       const room = await ctx.db.get("rooms", m.roomId);
       if (room && room.ownerId === m.userId) {
+        if (!m.lastSeenAt) {
+          await ctx.db.patch("roomMembers", m._id, { lastSeenAt: Date.now() });
+        }
         continue;
       }
       await ctx.db.delete("roomMembers", m._id);
