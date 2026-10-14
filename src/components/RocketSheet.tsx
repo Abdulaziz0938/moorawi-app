@@ -13,6 +13,7 @@ interface Props {
   roomId: Id<"rooms">;
   onClose: () => void;
   onOpenGiftSheet?: () => void;
+  autoOpenRewards?: boolean;
 }
 
 interface RocketState {
@@ -52,7 +53,7 @@ function useResetCountdown() {
   return remaining;
 }
 
-export default function RocketSheet({ roomId, onClose, onOpenGiftSheet }: Props) {
+export default function RocketSheet({ roomId, onClose, onOpenGiftSheet, autoOpenRewards }: Props) {
   useBackButton(true, onClose);
   const deviceId = getDeviceId();
   const token = getActiveToken() ?? deviceId;
@@ -71,6 +72,11 @@ export default function RocketSheet({ roomId, onClose, onOpenGiftSheet }: Props)
     launcher: { avatarUrl?: string; name: string };
   } | null>(null);
   const [showRewardsAfterLaunch, setShowRewardsAfterLaunch] = useState(false);
+
+  // [ezo-rocket] فتح المكافآت تلقائياً عند الإطلاق
+  useEffect(() => {
+    if (autoOpenRewards) setShowRewardsAfterLaunch(true);
+  }, [autoOpenRewards]);
   const seenLaunchIdsRef = useRef<Set<string>>(new Set());
   const initDoneRef = useRef(false);
 

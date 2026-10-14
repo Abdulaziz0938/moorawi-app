@@ -30,6 +30,7 @@ import MicRequestsSheet from "./MicRequestsSheet";
 import SystemNotifSheet from "./SystemNotifSheet";
 import GiftWavesLayer, { type GiftWavesHandle } from "./GiftWavesLayer";
 import RocketSheet from "./RocketSheet";
+import RocketLaunchOverlay from "./RocketLaunchOverlay";
 import { useRoomPresence } from "../lib/hooks/useRoomPresence";
 import MembersSheet from "./MembersSheet";
 import GamesSheet from "./GamesSheet";
@@ -194,6 +195,13 @@ export default function RoomView({ roomId, onLeave }: Props) {
   // [ezo-notif-badge] نفس استعلام SystemNotifSheet — Convex dedupe تلقائي
   const _notifs = useQuery(api.notifications.listMine, { tokenOverride: deviceId });
   const unreadNotifs = (_notifs ?? []).filter((n: any) => !n.readAt).length;
+
+  // [ezo-rocket-launch] كشف إطلاق جديد — عرض Overlay في RoomView
+  const recentLaunch = useQuery(api.rockets.listRoomHistory, { roomId, limit: 1 });
+  const [launchAnimEvent, setLaunchAnimEvent] = useState<any>(null);
+  const [openRewardsOnSheet, setOpenRewardsOnSheet] = useState(false);
+  const seenLaunchesRef = useRef<Set<string>>(new Set());
+  const launchInitRef = useRef(false);
 
   // [ezo-room-emoji] بث الإيموجي لكل من في الغرفة
   const activeEmojis = useQuery(api.roomEmojis.listActive, { roomId });
@@ -476,6 +484,21 @@ export default function RoomView({ roomId, onLeave }: Props) {
       setGiftQueue((q) => [...q, latestGift]);
     }
   }, [latestGift]);
+
+  // [ezo-rocket-launch] كشف الإطلاق الجديد
+  useEffect(() => {
+    if (!recentLaunch || recentLaunch.length === 0) return;
+    const latest = recentLaunch[0];
+    if (!launchInitRef.current) {
+      seenLaunchesRef.current.add(latest._id);
+      launchInitRef.current = true;
+      return;
+    }
+    if (!seenLaunchesRef.current.has(latest._id)) {
+      seenLaunchesRef.current.add(latest._id);
+      setLaunchAnimEvent(latest);
+    }
+  }, [recentLaunch]);
 
   // [ezo-gift-fix] تأخير الفيديو حتى انتهاء طيران الهدية (~1.1s)
   useEffect(() => {
@@ -1750,10 +1773,34 @@ export default function RoomView({ roomId, onLeave }: Props) {
 
       {showNotifSheet && <SystemNotifSheet onClose={() => setShowNotifSheet(false)} />}
 
+      {/* [ezo-rocket-launch] Launch animation */}
+      {launchAnimEvent && (
+        <RocketLaunchOverlay
+          rocket={{
+            img: `/rockets/rocket-${["green", "blue", "purple", "red", "gold"][launchAnimEvent.levelIndex] ?? "green"}.png`,
+            color: launchAnimEvent.levelColor ?? "#10b981",
+            name: launchAnimEvent.levelName ?? "أخضر",
+          }}
+          launcher={{
+            avatarUrl: launchAnimEvent.lastHitAvatarUrl ?? undefined,
+            name: launchAnimEvent.lastHitUserName ?? "لاعب",
+          }}
+          onComplete={() => {
+            setLaunchAnimEvent(null);
+            setOpenRewardsOnSheet(true);
+            setShowRocketSheet(true);
+          }}
+        />
+      )}
+
       {showRocketSheet && (
         <RocketSheet
           roomId={roomId}
-          onClose={() => setShowRocketSheet(false)}
+          autoOpenRewards={openRewardsOnSheet}
+          onClose={() => {
+            setShowRocketSheet(false);
+            setOpenRewardsOnSheet(false);
+          }}
           onOpenGiftSheet={() => {
             setShowRocketSheet(false);
             setTimeout(() => setShowGifts(true), 200);
