@@ -505,7 +505,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
     if (comboOverlayTimerRef.current) clearTimeout(comboOverlayTimerRef.current);
     comboOverlayTimerRef.current = setTimeout(() => {
       setComboOverlay(null);
-    }, 1800);
+    }, 2600); // [ezo-combo-pro] يبقى 2.6s بعد آخر هدية
   }, [comboCount, activeGift]);
 
   // Gift: queue processor
@@ -1424,7 +1424,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
                   <span className="text-white text-[10px] font-bold truncate max-w-[70px]">{activeGift.fromName}</span>
                   <span className="text-white/60 text-[8px] truncate max-w-[70px]">أرسل إلى {activeGift.toName}</span>
                 </div>
-                <span className="text-yellow-300 text-xs font-black italic">×{totalQuantity}</span>
+                <span className="text-yellow-300 text-xl font-black italic drop-shadow-[0_0_10px_rgba(250,204,21,0.7)]">×{totalQuantity}</span>
               </div>
             </div>
           )}
@@ -1671,7 +1671,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
       {comboOverlay && comboOverlay.gift?.mediaUrl && (
         <div className="fixed inset-0 z-[72] pointer-events-none flex items-center justify-center" dir="rtl">
           <div
-            key={comboOverlay.id}
+            key={`combo_${comboOverlay.count}`}
             className="combo-pop-in flex flex-col items-center"
           >
             <div className="w-32 h-32 flex items-center justify-center">
@@ -1689,9 +1689,31 @@ export default function RoomView({ roomId, onLeave }: Props) {
                 />
               )}
             </div>
-            <div className="mt-1 bg-black/70 backdrop-blur-md rounded-full px-4 py-1 border border-yellow-400/40 shadow-2xl">
-              <span className="text-yellow-300 text-2xl font-black italic drop-shadow-lg">
+            {/* Big italic glowing number */}
+            <div
+              key={`num_${comboOverlay.count}`}
+              className="combo-number-pulse relative"
+            >
+              <span className="text-6xl font-black italic tracking-tighter bg-gradient-to-br from-yellow-200 via-yellow-400 to-amber-500 bg-clip-text text-transparent drop-shadow-[0_4px_16px_rgba(250,204,21,0.8)]">
                 ×{comboOverlay.count}
+              </span>
+            </div>
+
+            {/* Sender → Recipient */}
+            <div className="bg-black/85 backdrop-blur-xl rounded-full px-5 py-2 border border-yellow-400/50 shadow-[0_0_24px_rgba(250,204,21,0.35)] flex items-center gap-2">
+              {comboOverlay.gift.fromAvatar && (
+                <img
+                  src={comboOverlay.gift.fromAvatar}
+                  alt=""
+                  className="w-6 h-6 rounded-full object-cover ring-1 ring-yellow-400/70"
+                />
+              )}
+              <span className="text-white text-xs font-black truncate max-w-[80px]">
+                {comboOverlay.gift.fromName}
+              </span>
+              <span className="text-white/50 text-[10px]">→</span>
+              <span className="text-white text-xs font-black truncate max-w-[80px]">
+                {comboOverlay.gift.toName}
               </span>
             </div>
           </div>
