@@ -13,7 +13,7 @@ import {
   Zap, ShoppingBag, Wand2, Award, Ban, Ghost, IdCard, Share2,
   Megaphone, ShieldOff, BadgeCheck, Users, Mic, UserCircle,
   Car, Home, AudioLines, MicVocal, Bell, Music, Palette,
-  LayoutGrid, Check,
+  LayoutGrid, Check, Type, Gem, ScrollText, Shield, Trophy,
 } from "lucide-react";
 
 interface Props {
@@ -26,6 +26,8 @@ const ICONS: Record<string, any> = {
   Zap, ShoppingBag, Wand2, Award, Ban, Ghost, IdCard, Share2,
   Megaphone, ShieldOff, BadgeCheck, Users, Mic, UserCircle,
   Car, Home, AudioLines, MicVocal, Bell, Music, Palette, LayoutGrid,
+  // [ezo-vip] أيقونات مزايا VIP7 الإضافية
+  Type, Gem, ScrollText, Shield, Sparkles, Trophy, Crown,
 };
 
 // 9 asset slot keys per level (order matters for grid 3x3)
