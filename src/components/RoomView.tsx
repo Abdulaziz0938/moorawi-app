@@ -853,8 +853,16 @@ export default function RoomView({ roomId, onLeave }: Props) {
                                                 frameOffsetY={seat?.userVip ? (assetsFull[`vip.frame.${seat.userVip}`]?.frameOffsetY ?? 0) : 0}
                             />
                           {isMySeat && activeEmoji && (
-                            <div className="absolute -top-6 left-1/2 -translate-x-1/2 z-40 pointer-events-none">
-                              <span className="text-2xl animate-bounce">{activeEmoji}</span>
+                            <div
+                              key={activeEmoji}
+                              className="absolute inset-0 z-40 pointer-events-none flex items-center justify-center animate-emoji-burst"
+                            >
+                              <img
+                                src={activeEmoji}
+                                alt=""
+                                draggable={false}
+                                className="w-14 h-14 object-contain drop-shadow-[0_4px_12px_rgba(0,0,0,0.6)]"
+                              />
                             </div>
                           )}
                           </>

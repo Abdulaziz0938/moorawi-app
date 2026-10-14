@@ -599,3 +599,16 @@ html, body {
 @keyframes medal-sparkle-spin {
   to { transform: rotate(360deg); }
 }
+
+/* [ezo-emoji] Animated emoji on mic seat — Yalla/Binmo style */
+@keyframes emojiBurst {
+  0%   { transform: scale(0)    translateY(0)     rotate(-12deg); opacity: 0; }
+  12%  { transform: scale(1.35) translateY(-6px)  rotate(8deg);   opacity: 1; }
+  25%  { transform: scale(1.15) translateY(-10px) rotate(-6deg);  opacity: 1; }
+  40%  { transform: scale(1.05) translateY(-16px) rotate(4deg);   opacity: 1; }
+  60%  { transform: scale(1)    translateY(-26px) rotate(0deg);   opacity: 1; }
+  100% { transform: scale(0.85) translateY(-48px) rotate(-4deg);  opacity: 0; }
+}
+.animate-emoji-burst {
+  animation: emojiBurst 3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
