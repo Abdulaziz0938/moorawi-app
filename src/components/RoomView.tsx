@@ -30,6 +30,7 @@ import MicRequestsSheet from "./MicRequestsSheet";
 import { useRoomPresence } from "../lib/hooks/useRoomPresence";
 import MembersSheet from "./MembersSheet";
 import GamesSheet from "./GamesSheet";
+import EmojiSheet from "./EmojiSheet";
 import ActivitySheet from "./ActivitySheet";
 import ProfilePage from "./ProfilePage";
 import { UserName } from "./UserBadges";
@@ -1693,6 +1694,17 @@ export default function RoomView({ roomId, onLeave }: Props) {
 
       <MusicPlayer roomId={roomId} variant="hidden" />
       {showGamesSheet && <GamesSheet onClose={() => setShowGamesSheet(false)} />}
+
+      {showEmojiSheet && (
+        <EmojiSheet
+          onClose={() => setShowEmojiSheet(false)}
+          onPick={(url: string) => {
+            setActiveEmoji(url);
+            // [ezo-emoji] Auto-clear after 8s
+            setTimeout(() => setActiveEmoji(null), 8000);
+          }}
+        />
+      )}
 
       {showMusicSheet && (
         <MusicSheet
