@@ -1113,15 +1113,10 @@ export default function RoomView({ roomId, onLeave }: Props) {
             className="p-2 rounded-full active:scale-90 transition text-white/90"
           >
             <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-              <circle cx="6" cy="6" r="2.2" />
-              <circle cx="12" cy="6" r="2.2" />
-              <circle cx="18" cy="6" r="2.2" />
-              <circle cx="6" cy="12" r="2.2" />
-              <circle cx="12" cy="12" r="2.2" />
-              <circle cx="18" cy="12" r="2.2" />
-              <circle cx="6" cy="18" r="2.2" />
-              <circle cx="12" cy="18" r="2.2" />
-              <circle cx="18" cy="18" r="2.2" />
+              <rect x="3" y="3" width="8" height="8" rx="2.5" />
+              <rect x="13" y="3" width="8" height="8" rx="2.5" />
+              <rect x="3" y="13" width="8" height="8" rx="2.5" />
+              <rect x="13" y="13" width="8" height="8" rx="2.5" />
             </svg>
           </button>
 
