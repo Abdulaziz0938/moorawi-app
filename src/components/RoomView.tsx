@@ -199,6 +199,16 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const toggleLock = useMutation(api.mics.toggleLock);
   const toggleMuteSeat = useMutation(api.mics.toggleMuteSeat);
   const toggleAdminMute = useMutation(api.mics.toggleAdminMute);
+
+  // [ezo-mute] sync initial state
+  useEffect(() => {
+    const mySeat = seats?.find((s: any) => myInfo?.userId && s.userId === myInfo.userId);
+    if (mySeat) {
+      setIsMuted(!!mySeat.muted);
+      agoraManager.muteMicrophone(!!mySeat.muted);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [seats, myInfo?.userId]);
   const kickFromRoom = useMutation(api.mics.kickFromRoom);
   const toggleBanUser = useMutation(api.mics.toggleBanUser);
   const promoteToMod = useMutation(api.mics.promoteToMod);
@@ -223,6 +233,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
   // [ezo-presence] heartbeat + leave تلقائي
   const { leave: leavePresence } = useRoomPresence(roomId, deviceId);
   const [isMuted, setIsMuted] = useState(false);
+  // sync from server (see useEffect below)
   const [error, setError] = useState<string | null>(null);
   const [remoteCount, setRemoteCount] = useState(0);
 
@@ -611,10 +622,22 @@ export default function RoomView({ roomId, onLeave }: Props) {
     setMySeatIndexForMiniProfile(null);
   };
 
-  const handleToggleMute = () => {
+  const handleToggleMute = async () => {
     const next = !isMuted;
     setIsMuted(next);
     agoraManager.muteMicrophone(next);
+    // [ezo-mute] Sync server state (so others see mute icon on my seat)
+    const mySeat = seats?.find((s: any) => myInfo?.userId && s.userId === myInfo.userId);
+    if (mySeat) {
+      try {
+        await toggleMuteSeat({ roomId, seatIndex: mySeat.seatIndex, tokenOverride: deviceId });
+      } catch (e: any) {
+        // Rollback local state + Agora on server failure
+        setIsMuted(!next);
+        agoraManager.muteMicrophone(!next);
+        dialog.alert(e?.message || "فشل الكتم");
+      }
+    }
   };
 
   const handleLeave = async () => {
@@ -823,7 +846,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
                             </div>
                           )}
                           {(seat.adminMuted === true || (occupied && seat.muted)) && (
-                            <div className={`absolute -bottom-1 -left-1 rounded-full p-1 ring-1 shadow-md z-10 ${seat.adminMuted ? "bg-red-600 ring-red-300/60" : "bg-black/90 ring-white/30"}`}>
+                            <div className={`absolute -bottom-1 -left-1 rounded-full p-1 ring-1 shadow-md z-40 ${seat.adminMuted ? "bg-red-600 ring-red-300/60" : "bg-black/90 ring-white/30"}`}>
                               <MicOff size={10} className="text-white" />
                             </div>
                           )}
