@@ -150,48 +150,31 @@ export default function RocketSheet({ roomId, onClose, onOpenGiftSheet, autoOpen
       <div className="absolute bottom-0 left-0 right-0 rounded-t-3xl overflow-visible shadow-2xl animate-slide-up">
         {/* Big rocket — floats above sheet */}
         {current && tab === "main" && (
-          <div className="absolute -top-[90px] left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 pointer-events-none">
-            {/* Circular progress on the left */}
-            <div className="relative w-16 h-16 flex-shrink-0">
-              <svg
-                viewBox="0 0 64 64"
-                className="w-full h-full -rotate-90"
-                style={{ filter: `drop-shadow(0 0 8px ${ringColor}88)` }}
-              >
-                <circle
-                  cx="32"
-                  cy="32"
-                  r={R}
-                  fill="none"
-                  stroke="rgba(255,255,255,0.15)"
-                  strokeWidth="5"
-                />
-                <circle
-                  cx="32"
-                  cy="32"
-                  r={R}
-                  fill="none"
-                  stroke={ringColor}
-                  strokeWidth="5"
-                  strokeLinecap="round"
-                  strokeDasharray={C}
-                  strokeDashoffset={dashOffset}
-                  style={{ transition: "stroke-dashoffset 0.6s ease" }}
-                />
-              </svg>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-white text-xs font-black">
-                  {Math.round(current.progress)}%
-                </span>
-              </div>
-            </div>
-
-            {/* Big rocket */}
+          <div className="absolute -top-[140px] left-1/2 -translate-x-1/2 z-20 pointer-events-none flex flex-col items-center">
+            {/* Rocket — 3x bigger, no ring */}
             <img
               src={current.img}
               alt={current.name}
-              className="w-24 h-32 object-contain drop-shadow-[0_10px_24px_rgba(0,0,0,0.7)] animate-[rocketFloat_2.5s_ease-in-out_infinite]"
+              className="w-40 h-56 object-contain drop-shadow-[0_15px_30px_rgba(0,0,0,0.8)] animate-[rocketFloat_2.5s_ease-in-out_infinite]"
             />
+
+            {/* Horizontal progress bar below rocket */}
+            <div className="w-44 h-2 bg-black/60 rounded-full overflow-hidden mt-1 border border-white/10">
+              <div
+                className="h-full rounded-full transition-all duration-700"
+                style={{
+                  width: `${current.progress}%`,
+                  background: `linear-gradient(90deg, ${current.color}, ${current.color}dd)`,
+                  boxShadow: `0 0 8px ${current.color}`,
+                }}
+              />
+            </div>
+            <span
+              className="text-[10px] font-black mt-1 tabular-nums"
+              style={{ color: current.color, textShadow: "0 1px 4px rgba(0,0,0,0.9)" }}
+            >
+              {Math.round(current.progress)}%
+            </span>
           </div>
         )}
 
@@ -255,7 +238,7 @@ export default function RocketSheet({ roomId, onClose, onOpenGiftSheet, autoOpen
             {tab === "main" && (
               <>
                 {/* Spacer for floating rocket */}
-                <div className="h-[80px]" />
+                <div className="h-[140px]" />
 
                 {/* Timer */}
                 <div className="text-center text-white/70 text-[10px] font-bold">

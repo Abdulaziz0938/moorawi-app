@@ -945,12 +945,12 @@ export default function RoomView({ roomId, onLeave }: Props) {
                               )}
                               <VipName
                                 level={seat.userVip ?? 0}
-                                className="text-[11px] font-bold truncate leading-tight"
+                                className="text-[8px] font-bold truncate leading-tight"
                               >
                                 {seat.userName}
                               </VipName>
                             </div>
-                            <p className="text-[10px] text-pink-300 leading-tight">{(seat.sessionCharms ?? 0)} <Heart size={8} className="inline text-pink-400" fill="currentColor" /></p>
+                            <p className="text-[8px] text-pink-300 leading-tight">{(seat.sessionCharms ?? 0)} <Heart size={8} className="inline text-pink-400" fill="currentColor" /></p>
                           </>
                         )}
                       </div>
