@@ -291,6 +291,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
 
   // Gift queue + combo
   const [activeGift, setActiveGift] = useState<any>(null);
+  const [videoReady, setVideoReady] = useState(false); // [ezo-gift-fix] ينتظر انتهاء طيران الهدية
   const [giftTarget, setGiftTarget] = useState<{x: number; y: number} | null>(null);
   const [giftQueue, setGiftQueue] = useState<any[]>([]);
   const [comboCount, setComboCount] = useState(1);
@@ -451,7 +452,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
       setTimeout(() => setShowComboPulse(false), 350);
 
       // أطلق موجة جديدة للشلال
-      if ((latestGift.price ?? 0) < 1000 && latestGift.mediaUrl && recipientIds.length > 0) {
+      if (latestGift.mediaUrl && recipientIds.length > 0) { // [ezo-gift-fix] طيران لكل الهدايا بلا استثناء
         const waveId = Date.now() + Math.random();
         const { particles } = calculateTargetCoords(recipientIds, seats, qty);
         const waveGift = latestGift;
@@ -476,6 +477,17 @@ export default function RoomView({ roomId, onLeave }: Props) {
       setGiftQueue((q) => [...q, latestGift]);
     }
   }, [latestGift]);
+
+  // [ezo-gift-fix] تأخير الفيديو حتى انتهاء طيران الهدية (~1.1s)
+  useEffect(() => {
+    if (!activeGift) { setVideoReady(false); return; }
+    const isBigVideo =
+      (activeGift.price ?? 0) >= 1000 && activeGift.mediaType === "video";
+    if (!isBigVideo) { setVideoReady(true); return; }
+    setVideoReady(false);
+    const t = setTimeout(() => setVideoReady(true), 1100);
+    return () => clearTimeout(t);
+  }, [activeGift?._id]);
 
   // Global broadcast effect (≥ 30000 in any room)
   useEffect(() => {
@@ -546,7 +558,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
       comboTimeoutRef.current = setTimeout(() => finishActiveGift(), 2400);
     } else {
       // مؤقت أمان للفيديو (12s) في حال فشل onEnded
-      comboTimeoutRef.current = setTimeout(() => finishActiveGift(), 12000);
+      comboTimeoutRef.current = setTimeout(() => finishActiveGift(), 60000); // [ezo-gift-fix] fallback فقط — onEnded يُنهي عادةً
     }
   }, [giftQueue, activeGift, seats]);
 
@@ -1223,7 +1235,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
       {activeGift && (
         <>
           {/* ============ VIDEO FULLSCREEN (≥ 1000) ============ */}
-          {(activeGift.price ?? 0) >= 1000 && activeGift.mediaType === "video" && activeGift.mediaUrl && (
+          {(activeGift.price ?? 0) >= 1000 && activeGift.mediaType === "video" && activeGift.mediaUrl && videoReady && (
             <div className="fixed inset-0 z-[80] pointer-events-none flex items-center justify-center">
               <video
                 ref={videoRef}
