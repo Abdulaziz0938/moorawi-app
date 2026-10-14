@@ -29,6 +29,7 @@ import RoomInfoSheet from "./RoomInfoSheet";
 import MicRequestsSheet from "./MicRequestsSheet";
 import { useRoomPresence } from "../lib/hooks/useRoomPresence";
 import MembersSheet from "./MembersSheet";
+import GamesSheet from "./GamesSheet";
 import ActivitySheet from "./ActivitySheet";
 import ProfilePage from "./ProfilePage";
 import { UserName } from "./UserBadges";
@@ -264,6 +265,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const cancelMyRequestMutation = useMutation(api.mics.cancelMyRequest);
   const [showGifts, setShowGifts] = useState(false);
   const [showMusicSheet, setShowMusicSheet] = useState(false);
+  const [showGamesSheet, setShowGamesSheet] = useState(false);
   const [showChatInput, setShowChatInput] = useState(false);
   const [chatTab, setChatTab] = useState<"all" | "chat">("all");
   const [showEmojiSheet, setShowEmojiSheet] = useState(false);
@@ -1084,7 +1086,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
 
           {/* 2. Games / Controller */}
           <button
-            onClick={() => dialog.alert("قريباً: ألعاب")}
+            onClick={() => setShowGamesSheet(true)}
             className="p-2 rounded-full active:scale-90 transition text-amber-300"
           >
             <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
@@ -1690,6 +1692,8 @@ export default function RoomView({ roomId, onLeave }: Props) {
       )}
 
       <MusicPlayer roomId={roomId} variant="hidden" />
+      {showGamesSheet && <GamesSheet onClose={() => setShowGamesSheet(false)} />}
+
       {showMusicSheet && (
         <MusicSheet
           roomId={roomId}
