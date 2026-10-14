@@ -898,11 +898,11 @@ export default function RoomView({ roomId, onLeave }: Props) {
                               <VipAvatar
                               src={seat?.avatarUrl}
                               name={seat?.userName ?? "?"}
-                              size={56}
+                              size={44}
                               vip={seat?.userVip ?? 0}
                               ring={false}
                                                 customFrameUrl={seat?.userFrameUrl ?? (seat?.userVip ? assets[`vip.frame.${seat.userVip}`] : null) ?? null}
-                                                frameScale={seat?.userVip ? (assetsFull[`vip.frame.${seat.userVip}`]?.frameScale ?? 1.4) : 1.4}
+                                                frameScale={seat?.userVip ? (assetsFull[`vip.frame.${seat.userVip}`]?.frameScale ?? 1.15) : 1.15}
                                                 frameOffsetX={seat?.userVip ? (assetsFull[`vip.frame.${seat.userVip}`]?.frameOffsetX ?? 0) : 0}
                                                 frameOffsetY={seat?.userVip ? (assetsFull[`vip.frame.${seat.userVip}`]?.frameOffsetY ?? 0) : 0}
                             />
@@ -945,12 +945,12 @@ export default function RoomView({ roomId, onLeave }: Props) {
                               )}
                               <VipName
                                 level={seat.userVip ?? 0}
-                                className="text-[8px] font-bold truncate leading-tight"
+                                className="text-[11px] font-bold truncate leading-tight"
                               >
                                 {seat.userName}
                               </VipName>
                             </div>
-                            <p className="text-[8px] text-pink-300 leading-tight">{(seat.sessionCharms ?? 0)} <Heart size={8} className="inline text-pink-400" fill="currentColor" /></p>
+                            <p className="text-[10px] text-pink-300 leading-tight">{(seat.sessionCharms ?? 0)} <Heart size={8} className="inline text-pink-400" fill="currentColor" /></p>
                           </>
                         )}
                       </div>
