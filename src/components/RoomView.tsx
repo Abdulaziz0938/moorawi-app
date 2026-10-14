@@ -957,7 +957,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
           )}
         </div>
 
-        <div className="flex-shrink-0 mx-3 mt-2 flex items-center justify-end gap-4 border-b border-white/5">
+        <div className="flex-shrink-0 mx-3 mt-2 flex items-center justify-start gap-4 border-b border-white/5">
           <button
             onClick={() => setChatTab("all")}
             className="relative pb-1.5 text-xs font-black transition"
