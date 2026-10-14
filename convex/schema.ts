@@ -996,6 +996,7 @@ export default defineSchema({
     mvpUserName: v.string(),
     lastHitUserId: v.id("users"),
     lastHitUserName: v.string(),
+    lastHitAvatarUrl: v.optional(v.string()),
     recipientCount: v.number(),
     createdAt: v.number(),
   })

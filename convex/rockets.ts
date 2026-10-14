@@ -264,6 +264,7 @@ export const launch = internalMutation({
     // MVP = lastHitUserId (الأقرب للإطلاق)
     const mvpId = rocket.lastHitUserId;
     const mvpUser = mvpId ? await ctx.db.get("users", mvpId) : null;
+    const launcherAvatarUrl = mvpUser?.avatarUrl ?? undefined;
 
     // للإحصاءات: أعلى مرسل في هذه الدورة لهذا المستوى
     const mvpName = mvpUser?.name ?? "ضيف";
@@ -280,6 +281,7 @@ export const launch = internalMutation({
       mvpUserName: mvpName,
       lastHitUserId: mvpFinalId,
       lastHitUserName: mvpName,
+      lastHitAvatarUrl: launcherAvatarUrl,
       recipientCount: occupied.length,
       createdAt: Date.now(),
     });

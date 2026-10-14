@@ -7,6 +7,7 @@ import { getDeviceId } from "../lib/device";
 import { getActiveToken } from "../lib/session";
 import { useBackButton } from "../lib/hooks/useBackButton";
 import { X, Gift, Loader2 } from "lucide-react";
+import RocketLaunchOverlay from "./RocketLaunchOverlay";
 
 interface Props {
   roomId: Id<"rooms">;
@@ -65,6 +66,13 @@ export default function RocketSheet({ roomId, onClose, onOpenGiftSheet }: Props)
   const [selectedLevel, setSelectedLevel] = useState(0);
   const [tab, setTab] = useState<"main" | "history" | "rewards">("main");
   const [claiming, setClaiming] = useState<string | null>(null);
+  const [launchAnim, setLaunchAnim] = useState<{
+    rocket: { img: string; color: string; name: string };
+    launcher: { avatarUrl?: string; name: string };
+  } | null>(null);
+  const [showRewardsAfterLaunch, setShowRewardsAfterLaunch] = useState(false);
+  const seenLaunchIdsRef = useRef<Set<string>>(new Set());
+  const initDoneRef = useRef(false);
 
   const current = rocketState?.[selectedLevel];
 
@@ -89,6 +97,34 @@ export default function RocketSheet({ roomId, onClose, onOpenGiftSheet }: Props)
       setClaiming(null);
     }
   };
+
+  // [ezo-launch] كشف الإطلاق الجديد
+  useEffect(() => {
+    if (!history || !rocketState) return;
+
+    if (!initDoneRef.current) {
+      history.forEach((evt: any) => seenLaunchIdsRef.current.add(evt._id));
+      initDoneRef.current = true;
+      return;
+    }
+
+    for (const evt of history) {
+      if (!seenLaunchIdsRef.current.has(evt._id)) {
+        seenLaunchIdsRef.current.add(evt._id);
+        const rocket = rocketState.find((r) => r.levelIndex === evt.levelIndex);
+        if (rocket) {
+          setLaunchAnim({
+            rocket: { img: rocket.img, color: rocket.color, name: rocket.name },
+            launcher: {
+              avatarUrl: evt.lastHitAvatarUrl ?? undefined,
+              name: evt.lastHitUserName ?? "لاعب",
+            },
+          });
+        }
+        break;
+      }
+    }
+  }, [history, rocketState]);
 
   // حسابات SVG للـ progress الدائري
   const R = 26;
@@ -417,6 +453,103 @@ export default function RocketSheet({ roomId, onClose, onOpenGiftSheet }: Props)
           </div>
         </div>
       </div>
+
+      {/* Launch Animation */}
+      {launchAnim && (
+        <RocketLaunchOverlay
+          rocket={launchAnim.rocket}
+          launcher={launchAnim.launcher}
+          onComplete={() => {
+            setLaunchAnim(null);
+            setShowRewardsAfterLaunch(true);
+          }}
+        />
+      )}
+
+      {/* Rewards popup after launch */}
+      {showRewardsAfterLaunch && (
+        <div
+          className="fixed inset-0 z-[350] flex items-center justify-center p-4 bg-black/85 animate-fade-in"
+          onClick={() => setShowRewardsAfterLaunch(false)}
+        >
+          <div
+            className="w-full max-w-sm rounded-3xl overflow-hidden border-2 border-yellow-400/40 bg-gradient-to-b from-purple-900/95 via-black/95 to-purple-900/95 backdrop-blur-xl shadow-[0_0_60px_rgba(250,204,21,0.4)] animate-slide-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-4 text-center border-b border-white/10">
+              <img
+                src="/ui/treasure-box-opened.png"
+                alt=""
+                className="w-20 h-20 object-contain mx-auto -mt-2"
+              />
+              <div className="text-yellow-300 text-lg font-black">
+                مبروك! حصلت على مكافآت
+              </div>
+              <div className="text-white/60 text-[11px] mt-1">
+                من إطلاق صاروخ {launchAnim?.rocket.name ?? ""}
+              </div>
+            </div>
+
+            <div className="p-3 max-h-[50dvh] overflow-y-auto">
+              {!myRewards ? (
+                <div className="flex justify-center py-6">
+                  <Loader2 className="text-white/40 animate-spin" size={24} />
+                </div>
+              ) : myRewards.length === 0 ? (
+                <div className="text-center text-white/60 text-xs py-6">
+                  لم تحصل على مكافأة — كن على المايك في المرة القادمة!
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-2">
+                  {myRewards.slice(0, 8).map((r: any) => (
+                    <div
+                      key={r._id}
+                      className={`bg-white/5 rounded-xl p-2 border flex flex-col items-center ${
+                        r.claimed ? "border-white/10 opacity-50" : "border-yellow-400/40"
+                      }`}
+                    >
+                      <img
+                        src={r.rewardImgUrl}
+                        alt=""
+                        className="w-12 h-12 object-contain"
+                      />
+                      <div className="text-white text-[10px] font-black mt-1 text-center">
+                        {r.rewardAmount
+                          ? `${r.rewardAmount} ${r.rewardType === "bcoins" ? "B" : "🪙"}`
+                          : r.rewardType === "vip"
+                          ? "VIP"
+                          : r.rewardType === "vehicle"
+                          ? "مركبة"
+                          : "إطار"}
+                      </div>
+                      {r.claimed ? (
+                        <span className="text-[9px] text-white/40 mt-1">✓ مستلم</span>
+                      ) : (
+                        <button
+                          onClick={() => handleClaim(r._id)}
+                          disabled={claiming === r._id}
+                          className="w-full mt-1 py-1 rounded-full bg-yellow-400 text-black text-[10px] font-black active:scale-95 transition"
+                        >
+                          {claiming === r._id ? "..." : "استلام"}
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="p-3 border-t border-white/10">
+              <button
+                onClick={() => setShowRewardsAfterLaunch(false)}
+                className="w-full py-2.5 rounded-xl bg-yellow-400 text-black font-black text-sm active:scale-95 transition"
+              >
+                حسناً
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
