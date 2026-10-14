@@ -192,6 +192,14 @@ export default function RoomView({ roomId, onLeave }: Props) {
   // [ezo-notif-badge] نفس استعلام SystemNotifSheet — Convex dedupe تلقائي
   const _notifs = useQuery(api.notifications.listMine, { tokenOverride: deviceId });
   const unreadNotifs = (_notifs ?? []).filter((n: any) => !n.readAt).length;
+
+  // [ezo-room-emoji] بث الإيموجي لكل من في الغرفة
+  const activeEmojis = useQuery(api.roomEmojis.listActive, { roomId });
+  const sendEmoji = useMutation(api.roomEmojis.sendEmoji);
+  const emojiByUser: Record<string, { url: string; id: string }> = {};
+  (activeEmojis ?? []).forEach((e: any) => {
+    emojiByUser[String(e.userId)] = { url: e.emojiUrl, id: String(e._id) };
+  });
   const msgSinceRef = useRef(Date.now());
   const messages = useQuery(api.messages.list, { roomId, since: msgSinceRef.current });
   const listeners = useQuery(api.mics.listeners, { roomId });
@@ -275,7 +283,6 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const [chatTab, setChatTab] = useState<"all" | "chat">("all");
   const [showEmojiSheet, setShowEmojiSheet] = useState(false);
   const [showNotifSheet, setShowNotifSheet] = useState(false);
-  const [activeEmoji, setActiveEmoji] = useState<string | null>(null);
   const [openSeatMenu, setOpenSeatMenu] = useState<number | null>(null);
   const [openSeatMenuPos, setOpenSeatMenuPos] = useState<{ x: number; y: number } | null>(null);
   const [inviteSeatIndex, setInviteSeatIndex] = useState<number | null>(null);
@@ -852,13 +859,13 @@ export default function RoomView({ roomId, onLeave }: Props) {
                                                 frameOffsetX={seat?.userVip ? (assetsFull[`vip.frame.${seat.userVip}`]?.frameOffsetX ?? 0) : 0}
                                                 frameOffsetY={seat?.userVip ? (assetsFull[`vip.frame.${seat.userVip}`]?.frameOffsetY ?? 0) : 0}
                             />
-                          {isMySeat && activeEmoji && (
+                          {occupied && emojiByUser[String(seat.userId)] && (
                             <div
-                              key={activeEmoji}
+                              key={emojiByUser[String(seat.userId)].id}
                               className="absolute inset-0 z-40 pointer-events-none flex items-center justify-center animate-emoji-burst"
                             >
                               <img
-                                src={activeEmoji}
+                                src={emojiByUser[String(seat.userId)].url}
                                 alt=""
                                 draggable={false}
                                 className="w-14 h-14 object-contain drop-shadow-[0_4px_12px_rgba(0,0,0,0.6)]"
@@ -1711,9 +1718,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
         <EmojiSheet
           onClose={() => setShowEmojiSheet(false)}
           onPick={(url: string) => {
-            setActiveEmoji(url);
-            // [ezo-emoji] Auto-clear after 8s
-            setTimeout(() => setActiveEmoji(null), 3000);
+            sendEmoji({ roomId, emojiUrl: url, tokenOverride: deviceId });
           }}
         />
       )}

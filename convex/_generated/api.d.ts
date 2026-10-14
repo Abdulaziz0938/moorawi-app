@@ -39,6 +39,7 @@ import type * as profiles from "../profiles.js";
 import type * as relationships from "../relationships.js";
 import type * as resetStats from "../resetStats.js";
 import type * as rewards from "../rewards.js";
+import type * as roomEmojis from "../roomEmojis.js";
 import type * as rooms from "../rooms.js";
 import type * as seedMedals from "../seedMedals.js";
 import type * as seedShop from "../seedShop.js";
@@ -89,6 +90,7 @@ declare const fullApi: ApiFromModules<{
   relationships: typeof relationships;
   resetStats: typeof resetStats;
   rewards: typeof rewards;
+  roomEmojis: typeof roomEmojis;
   rooms: typeof rooms;
   seedMedals: typeof seedMedals;
   seedShop: typeof seedShop;

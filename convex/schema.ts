@@ -956,4 +956,16 @@ export default defineSchema({
     .index("by_room_status", ["roomId", "status", "addedAt"])
     .index("by_room_and_user", ["roomId", "userId"]),
 
+  // ================================================================
+  // [ezo-room-emoji] إيموجي متحرك فوق كرسي المايك — يُبث للجميع
+  // ================================================================
+  roomEmojis: defineTable({
+    roomId: v.id("rooms"),
+    userId: v.id("users"),
+    emojiUrl: v.string(),
+    expiresAt: v.number(),
+  })
+    .index("by_room_expires", ["roomId", "expiresAt"])
+    .index("by_user_room", ["userId", "roomId"]),
+
 });
