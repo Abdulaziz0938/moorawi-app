@@ -612,3 +612,21 @@ html, body {
 .animate-emoji-burst {
   animation: emojiBurst 3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
+
+/* [ezo-gift-banner] بانر عائم للهدايا — Yalla/Binmo style */
+@keyframes bannerFloating {
+  0%   { transform: translateY(-140%); opacity: 0; }
+  12%  { transform: translateY(0);     opacity: 1; }
+  88%  { transform: translateY(0);     opacity: 1; }
+  100% { transform: translateY(-140%); opacity: 0; }
+}
+.animate-banner-floating {
+  animation: bannerFloating 3.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* [ezo-gift-waves] عزل طبقة الشلال — منع الوميض */
+.gift-waves-layer {
+  contain: strict;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}

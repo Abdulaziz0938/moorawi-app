@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
@@ -485,7 +485,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
       (activeGift.price ?? 0) >= 1000 && activeGift.mediaType === "video";
     if (!isBigVideo) { setVideoReady(true); return; }
     setVideoReady(false);
-    const t = setTimeout(() => setVideoReady(true), 1100);
+    const t = setTimeout(() => setVideoReady(true), 2400); // [ezo-gift] ينتظر انتهاء طيران الهدية (2.2s)
     return () => clearTimeout(t);
   }, [activeGift?._id]);
 
@@ -715,6 +715,38 @@ export default function RoomView({ roomId, onLeave }: Props) {
       </div>
     );
   }
+
+
+  // [ezo-gift-waves] useMemo لعزل JSX الشلال — منع الوميض عند الإرسال السريع
+  const wavesJsx = useMemo(() => (
+    stackedWaves.length > 0 ? (
+      <div className="fixed inset-0 z-[74] pointer-events-none gift-waves-layer">
+        {stackedWaves.map((wave) =>
+          wave.particles.map((target, idx) => (
+            <div
+              key={`wave_${wave.id}_${target.userId}_${idx}`}
+              className="fixed pointer-events-none multi-gift-particle"
+              style={{
+                left: "50%",
+                top: "50%",
+                animationDelay: `${target.delay ?? 0}ms`,
+                ["--spread-x" as any]: `${target.spreadX}px`,
+                ["--spread-y" as any]: `${target.spreadY}px`,
+                ["--target-x" as any]: `${target.targetX}px`,
+                ["--target-y" as any]: `${target.targetY}px`,
+              }}
+            >
+              <img
+                src={wave.gift.mediaUrl}
+                alt=""
+                className={`${target.isOnMic ? "w-24 h-24" : "w-16 h-16"} object-contain drop-shadow-2xl`}
+              />
+            </div>
+          ))
+        )}
+      </div>
+    ) : null
+  ), [stackedWaves]);
 
   return (
     <div className="flex flex-col overflow-hidden fixed inset-0 mx-auto" dir="rtl"
@@ -1262,10 +1294,10 @@ export default function RoomView({ roomId, onLeave }: Props) {
 
           {/* ============ ROOM BANNER (1000 - 29999) ============ */}
           {((activeGift.price ?? 0) >= 1000 || comboValue >= 950) && (activeGift.price ?? 0) < 30000 && (
-            <div className={`fixed top-4 left-0 right-0 z-[85] flex justify-center pointer-events-none transition-all duration-300 ${showComboPulse ? "scale-[1.03]" : "scale-100"}`}>
-              <div className="max-w-[330px] w-[calc(100%-24px)] bg-gradient-to-r from-purple-900/90 via-black/90 to-purple-900/90 backdrop-blur-md rounded-full px-3 py-1.5 border border-purple-400/50 shadow-2xl flex items-center justify-between">
+            <div key={activeGift._id} className="fixed top-4 left-0 right-0 z-[85] flex justify-center pointer-events-none animate-banner-floating">
+              <div className={`max-w-[360px] w-[calc(100%-20px)] bg-gradient-to-r from-purple-900/95 via-black/95 to-purple-900/95 backdrop-blur-xl rounded-2xl px-4 py-2.5 border border-purple-400/60 shadow-[0_0_30px_rgba(168,85,247,0.4)] flex items-center justify-between transition-transform duration-300 ${showComboPulse ? "scale-[1.06]" : "scale-100"}`}>
                 <div className="flex items-center gap-1.5 truncate">
-                  <div className="w-7 h-7 rounded-full overflow-hidden ring-1 ring-purple-400 flex-shrink-0">
+                  <div className="w-9 h-9 rounded-full overflow-hidden ring-2 ring-purple-400/80 flex-shrink-0 shadow-lg">
                     {activeGift.fromAvatar ? (
                       <img src={activeGift.fromAvatar} alt="" className="w-full h-full object-cover" />
                     ) : (
@@ -1297,7 +1329,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
                 </div>
                 <div className="flex items-center gap-1.5 truncate">
                   <span className="text-white text-xs font-bold truncate max-w-[60px]">{activeGift.toName}</span>
-                  <div className="w-7 h-7 rounded-full overflow-hidden ring-1 ring-purple-400 flex-shrink-0">
+                  <div className="w-9 h-9 rounded-full overflow-hidden ring-2 ring-purple-400/80 flex-shrink-0 shadow-lg">
                     {activeGift.toAvatar ? (
                       <img src={activeGift.toAvatar} alt="" className="w-full h-full object-cover" />
                     ) : (
@@ -1406,33 +1438,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
           )}
 
           {/* ============ [moorawi-waterfall] STACKED COMBO WAVES ============ */}
-          {stackedWaves.length > 0 && (
-            <div className="fixed inset-0 z-[74] pointer-events-none">
-              {stackedWaves.map((wave) =>
-                wave.particles.map((target, idx) => (
-                  <div
-                    key={`wave_${wave.id}_${target.userId}_${idx}`}
-                    className="fixed pointer-events-none multi-gift-particle"
-                    style={{
-                      left: "50%",
-                      top: "50%",
-                      animationDelay: `${target.delay ?? 0}ms`,
-                      ["--spread-x" as any]: `${target.spreadX}px`,
-                      ["--spread-y" as any]: `${target.spreadY}px`,
-                      ["--target-x" as any]: `${target.targetX}px`,
-                      ["--target-y" as any]: `${target.targetY}px`,
-                    }}
-                  >
-                    <img
-                      src={wave.gift.mediaUrl}
-                      alt=""
-                      className={`${target.isOnMic ? "w-24 h-24" : "w-16 h-16"} object-contain drop-shadow-2xl`}
-                    />
-                  </div>
-                ))
-              )}
-            </div>
-          )}
+          {wavesJsx}
 
           {/* ============ BOTTOM PILL (always visible) ============ */}
           {(
