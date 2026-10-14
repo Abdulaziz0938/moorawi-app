@@ -266,6 +266,8 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const [showMusicSheet, setShowMusicSheet] = useState(false);
   const [showChatInput, setShowChatInput] = useState(false);
   const [chatTab, setChatTab] = useState<"all" | "chat">("all");
+  const [showEmojiSheet, setShowEmojiSheet] = useState(false);
+  const [activeEmoji, setActiveEmoji] = useState<string | null>(null);
   const [openSeatMenu, setOpenSeatMenu] = useState<number | null>(null);
   const [openSeatMenuPos, setOpenSeatMenuPos] = useState<{ x: number; y: number } | null>(null);
   const [inviteSeatIndex, setInviteSeatIndex] = useState<number | null>(null);
@@ -830,7 +832,8 @@ export default function RoomView({ roomId, onLeave }: Props) {
                           onClick={() => handleSeatClick(seat.seatIndex, seat.userId)}
                           className="relative w-full aspect-square flex-shrink-0 cursor-pointer">
                           {occupied ? (
-                            <VipAvatar
+                            <>
+                              <VipAvatar
                               src={seat?.avatarUrl}
                               name={seat?.userName ?? "?"}
                               size={56}
@@ -841,6 +844,12 @@ export default function RoomView({ roomId, onLeave }: Props) {
                                                 frameOffsetX={seat?.userVip ? (assetsFull[`vip.frame.${seat.userVip}`]?.frameOffsetX ?? 0) : 0}
                                                 frameOffsetY={seat?.userVip ? (assetsFull[`vip.frame.${seat.userVip}`]?.frameOffsetY ?? 0) : 0}
                             />
+                          {isMySeat && activeEmoji && (
+                            <div className="absolute -top-6 left-1/2 -translate-x-1/2 z-40 pointer-events-none">
+                              <span className="text-2xl animate-bounce">{activeEmoji}</span>
+                            </div>
+                          )}
+                          </>
                           ) : (
                             <div className={`w-full h-full rounded-full flex items-center justify-center text-white overflow-hidden transition ${seat.locked ? "bg-gray-700 ring-2 ring-gray-500" : "bg-white/5 ring-1 ring-white/20 hover:bg-white/15"}`}>
                               {seat.locked ? <Lock size={12} className="opacity-70" /> : <span className="text-[10px] font-bold text-white/60">{seat.seatIndex + 1}</span>}
@@ -1064,16 +1073,94 @@ export default function RoomView({ roomId, onLeave }: Props) {
           </div>
         )}
 
-        <footer className="border-t border-white/10 px-2 py-1.5 flex items-center justify-around flex-shrink-0 backdrop-blur-md bg-black/40">
-          <button onClick={() => setShowChatInput((v) => !v)} className={`p-2 rounded-full text-white ${showChatInput ? "bg-purple-600" : "hover:bg-white/10"}`}><IconOrImage assetKey="ui.room.chat" Icon={MessageCircle} size={20} imgSize={52} /></button>
+        <footer className="border-t border-white/10 px-2 py-1.5 flex items-center justify-around flex-shrink-0 bg-black/50 backdrop-blur-md">
+          {/* 1. Gift (colored) */}
+          <button
+            onClick={() => setShowGifts(true)}
+            className="p-2 rounded-full active:scale-90 transition"
+          >
+            <Gift size={22} className="text-pink-400" fill="currentColor" />
+          </button>
+
+          {/* 2. Games / Controller */}
+          <button
+            onClick={() => dialog.alert("قريباً: ألعاب")}
+            className="p-2 rounded-full active:scale-90 transition text-amber-300"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M7 6h10c2.2 0 4 1.8 4 4v4c0 2.2-1.8 4-4 4h-1.5l-1-2h-5l-1 2H7c-2.2 0-4-1.8-4-4v-4c0-2.2 1.8-4 4-4zm1 3v2H6v2h2v2h2v-2h2v-2h-2V9H8zm8 1.5a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm-2 1a1 1 0 100 2 1 1 0 000-2z" />
+            </svg>
+          </button>
+
+          {/* 3. Mail (with badge) */}
+          <button
+            onClick={() => dialog.alert("قريباً: صندوق الرسائل")}
+            className="p-2 rounded-full active:scale-90 transition text-white/90 relative"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="5" width="18" height="14" rx="2" />
+              <path d="M3 7l9 6 9-6" />
+            </svg>
+            
+          </button>
+
+          {/* 4. Apps grid */}
+          <button
+            onClick={() => setShowSettings(true)}
+            className="p-2 rounded-full active:scale-90 transition text-white/90"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+              <circle cx="6" cy="6" r="2.2" />
+              <circle cx="12" cy="6" r="2.2" />
+              <circle cx="18" cy="6" r="2.2" />
+              <circle cx="6" cy="12" r="2.2" />
+              <circle cx="12" cy="12" r="2.2" />
+              <circle cx="18" cy="12" r="2.2" />
+              <circle cx="6" cy="18" r="2.2" />
+              <circle cx="12" cy="18" r="2.2" />
+              <circle cx="18" cy="18" r="2.2" />
+            </svg>
+          </button>
+
+          {/* 5. Emoji — only if on mic */}
           {isOnMic && (
-            <button onClick={handleToggleMute} className={`p-2 rounded-full transition ${isMuted ? "bg-yellow-600" : "hover:bg-white/10"} text-white`}>
-              {isMuted ? <MicOff size={20} /> : <IconOrImage assetKey="ui.room.mic" Icon={Mic} size={20} imgSize={52} />}
+            <button
+              onClick={() => setShowEmojiSheet(true)}
+              className="p-2 rounded-full active:scale-90 transition text-white/90"
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="9" />
+                <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+                <line x1="9" y1="9" x2="9.01" y2="9" />
+                <line x1="15" y1="9" x2="15.01" y2="9" />
+              </svg>
             </button>
           )}
-          <button onClick={() => setShowSettings(true)} className="p-2 rounded-full hover:bg-white/10 text-white"><IconOrImage assetKey="ui.room.grid" Icon={Grid2x2} size={20} imgSize={52} /></button>
-          <button onClick={() => setShowMusicSheet(true)} className="p-2 rounded-full hover:bg-white/10 text-white" title="موسيقى"><Music size={20} /></button>
-          <button onClick={() => setShowGifts(true)} className="p-2 rounded-full hover:bg-white/10 text-white"><IconOrImage assetKey="ui.room.gift" Icon={Gift} size={20} imgSize={52} /></button>
+
+          {/* 6. Mic — only if on mic (plain icon, strike when muted) */}
+          {isOnMic && (
+            <button
+              onClick={handleToggleMute}
+              className="p-2 rounded-full active:scale-90 transition text-white relative"
+            >
+              <Mic size={22} />
+              {isMuted && (
+                <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <span className="w-7 h-0.5 bg-red-500 rotate-45 rounded-full" />
+                </span>
+              )}
+            </button>
+          )}
+
+          {/* 7. Chat toggle */}
+          <button
+            onClick={() => setShowChatInput((v) => !v)}
+            className="p-2 rounded-full active:scale-90 transition text-white/90"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 12a8 8 0 01-8 8H7l-4 3v-7a8 8 0 018-8h2a8 8 0 018 4z" />
+            </svg>
+          </button>
         </footer>
       </div>
 
