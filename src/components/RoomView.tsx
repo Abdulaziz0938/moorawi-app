@@ -1249,9 +1249,9 @@ export default function RoomView({ roomId, onLeave }: Props) {
             <img
               src={activeRocket.img}
               alt="rocket"
-              className="w-24 h-32 object-contain drop-shadow-[0_6px_16px_rgba(0,0,0,0.8)]"
+              className="w-16 h-22 object-contain drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)]"
             />
-            <div className="w-20 h-[3px] bg-black/70 rounded-full overflow-hidden mt-1">
+            <div className="w-14 h-[3px] bg-black/70 rounded-full overflow-hidden mt-0.5">
               <div
                 className="h-full rounded-full transition-all duration-500"
                 style={{
