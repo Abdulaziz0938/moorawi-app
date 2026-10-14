@@ -1701,7 +1701,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
           onPick={(url: string) => {
             setActiveEmoji(url);
             // [ezo-emoji] Auto-clear after 8s
-            setTimeout(() => setActiveEmoji(null), 8000);
+            setTimeout(() => setActiveEmoji(null), 3000);
           }}
         />
       )}
