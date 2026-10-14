@@ -1,32 +1,50 @@
 # Ezo Group — Session Summary 2026-10-14
 
-## Last Commit
-aa72e2d style: footer reversed (chat→...→gift) + no bar background
+## آخر commit
+(سيُحدَّث بعد commit Snake)
 
-## Commits هذه الجلسة
-aa72e2d style: footer reversed + no bar background
-841248a style: footer icons — reversed order + transparent circles
-d304fcf style: settings icon — 4 rounded squares
-3bdcf27 fix: emoji duration 8s → 3s
-9c42cd2 feat: EmojiSheet — animated emojis (Noto CDN)
-869450c feat: GamesSheet with working Ludo game
+## Commits الجلسة (من الأحدث)
+- feat: SnakeGame — 12x12 grid, arrows control
+- feat: MemoryGame — 4x4 cards, 8 pairs
+- feat: TicTacToe game — 2-player hot-seat
+- feat: unread badge on Mail button in RoomView
+- feat: Mail button → SystemNotifSheet
+- style: footer reversed (chat→...→gift) + no bar background
+- style: footer icons — reversed order + transparent circles
+- style: settings icon — 4 rounded squares (2x2)
+- fix: emoji duration 8s → 3s
+- feat: EmojiSheet — animated emojis (Noto CDN)
+- feat: GamesSheet with working Ludo game
 
-## المكتمل
-- GamesSheet + LudoGame (4-player)
-- EmojiSheet (24 emojis, Noto CDN)
-- Footer: 7 أيقونات شفافة، reversed RTL
-- Emoji duration: 3s
+## ✅ المكتمل
+- GamesSheet + 4 ألعاب تعمل فعلاً (Ludo, TicTacToe, Memory, Snake)
+- EmojiSheet (24 emojis, Noto CDN, auto-clear 3s)
+- SystemNotifSheet مربوط بزر Mail + Badge unread
+- Footer: 7 أيقونات شفافة RTL (chat→...→gift)
 - Icon: 4-squares بدل 9-dots
 
-## المتبقي
-1. Mail → SystemNotifSheet + badge
-2. TicTacToe + Memory + Snake
-3. Live Video (Agora)
-4. AI Transparency (background-removal)
-5. SVGA Player
-6. Trending Rooms
-7. APK + Play Store
-8. Emoji 100+
+## 🚧 المتبقي
+1. Live Video (Agora) — بث مباشر
+2. AI Transparency (background-removal)
+3. SVGA Player integration
+4. Trending Rooms
+5. APK + Play Store
+6. Emoji أكثر (100+)
+
+## 🎯 ملاحظة مهمة — قرار الألعاب الحقيقي
+الألعاب الحالية hot-seat (محلي). الألعاب الحقيقية
+(Yalla/Binmo style) تحتاج:
+- Convex gameTables schema
+- Server-authoritative logic (anti-cheat)
+- Real-time multiplayer
+- Coins economy integration
+- Bots
+
+اللعبة الأنسب للبدء: Ludo (نعيد استخدام اللوحة الموجودة).
+مؤجل — ناقشناه بمفصّل، والقرار: لاحقاً.
 
 ## بداية الجلسة القادمة
-cd ~/moorawi-app && git log --oneline -5 && npx tsc -b --noEmit 2>&1 | head -3
+cd ~/moorawi-app && \
+cat NOTES-SESSION-2026-10-14.md && \
+git log --oneline -5 && \
+npx tsc -b --noEmit 2>&1 | head -3
