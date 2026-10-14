@@ -28,6 +28,7 @@ import ChatThreadSheet from "./ChatThreadSheet";
 import RoomInfoSheet from "./RoomInfoSheet";
 import MicRequestsSheet from "./MicRequestsSheet";
 import SystemNotifSheet from "./SystemNotifSheet";
+import GiftWavesLayer, { type GiftWavesHandle } from "./GiftWavesLayer";
 import { useRoomPresence } from "../lib/hooks/useRoomPresence";
 import MembersSheet from "./MembersSheet";
 import GamesSheet from "./GamesSheet";
@@ -311,6 +312,8 @@ export default function RoomView({ roomId, onLeave }: Props) {
 
   // [moorawi-waterfall] Combo stacked waves (شلال)
   const [stackedWaves, setStackedWaves] = useState<StackedWave[]>([]);
+  // [ezo-gifts-pro] imperative wave spawner ref — لا React re-render
+  const wavesRef = useRef<GiftWavesHandle>(null);
 
   // [moorawi-fix] Track latest userId for cleanup on unmount
   const myUserIdRef = useRef<Id<"users"> | undefined>(undefined);
@@ -457,14 +460,8 @@ export default function RoomView({ roomId, onLeave }: Props) {
         const { particles } = calculateTargetCoords(recipientIds, seats, qty);
         const waveGift = latestGift;
 
-        setStackedWaves((w) => {
-          const next = [...w, { id: waveId, particles, gift: waveGift }];
-          return next.length > MAX_STACKED_WAVES ? next.slice(-MAX_STACKED_WAVES) : next;
-        });
-
-        setTimeout(() => {
-          setStackedWaves((w) => w.filter((x) => x.id !== waveId));
-        }, 2500);
+        // [ezo-pro] imperative spawn — لا re-render
+        wavesRef.current?.spawn(waveGift, particles);
       }
 
       if (comboTimeoutRef.current) clearTimeout(comboTimeoutRef.current);
@@ -718,35 +715,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
 
 
   // [ezo-gift-waves] useMemo لعزل JSX الشلال — منع الوميض عند الإرسال السريع
-  const wavesJsx = useMemo(() => (
-    stackedWaves.length > 0 ? (
-      <div className="fixed inset-0 z-[74] pointer-events-none gift-waves-layer">
-        {stackedWaves.map((wave) =>
-          wave.particles.map((target, idx) => (
-            <div
-              key={`wave_${wave.id}_${target.userId}_${idx}`}
-              className="fixed pointer-events-none multi-gift-particle"
-              style={{
-                left: "50%",
-                top: "50%",
-                animationDelay: `${target.delay ?? 0}ms`,
-                ["--spread-x" as any]: `${target.spreadX}px`,
-                ["--spread-y" as any]: `${target.spreadY}px`,
-                ["--target-x" as any]: `${target.targetX}px`,
-                ["--target-y" as any]: `${target.targetY}px`,
-              }}
-            >
-              <img
-                src={wave.gift.mediaUrl}
-                alt=""
-                className={`${target.isOnMic ? "w-24 h-24" : "w-16 h-16"} object-contain drop-shadow-2xl`}
-              />
-            </div>
-          ))
-        )}
-      </div>
-    ) : null
-  ), [stackedWaves]);
+  const wavesJsx = null; // [ezo-pro] replaced by <GiftWavesLayer ref={wavesRef} />
 
   return (
     <div className="flex flex-col overflow-hidden fixed inset-0 mx-auto" dir="rtl"
@@ -1438,7 +1407,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
           )}
 
           {/* ============ [moorawi-waterfall] STACKED COMBO WAVES ============ */}
-          {wavesJsx}
+          <GiftWavesLayer ref={wavesRef} />
 
           {/* ============ BOTTOM PILL (always visible) ============ */}
           {(
