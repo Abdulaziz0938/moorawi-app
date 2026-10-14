@@ -1076,56 +1076,39 @@ export default function RoomView({ roomId, onLeave }: Props) {
           </div>
         )}
 
-        <footer className="border-t border-white/10 px-2 py-1.5 flex items-center justify-around flex-shrink-0 bg-black/50 backdrop-blur-md">
-          {/* 1. Gift (pink) — RIGHT in RTL */}
+        <footer className="px-2 py-2 flex items-center justify-around flex-shrink-0">
+          {/* 1. Chat — RIGHT in RTL (reversed) */}
           <button
-            onClick={() => setShowGifts(true)}
-            className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center active:scale-90 transition"
+            onClick={() => setShowChatInput((v) => !v)}
+            className="w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center active:scale-90 transition text-white/90"
           >
-            <Gift size={22} className="text-pink-400" fill="currentColor" />
-          </button>
-
-          {/* 2. Games / Controller */}
-          <button
-            onClick={() => setShowGamesSheet(true)}
-            className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center active:scale-90 transition text-amber-300"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M7 6h10c2.2 0 4 1.8 4 4v4c0 2.2-1.8 4-4 4h-1.5l-1-2h-5l-1 2H7c-2.2 0-4-1.8-4-4v-4c0-2.2 1.8-4 4-4zm1 3v2H6v2h2v2h2v-2h2v-2h-2V9H8zm8 1.5a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm-2 1a1 1 0 100 2 1 1 0 000-2z" />
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 12a8 8 0 01-8 8H7l-4 3v-7a8 8 0 018-8h2a8 8 0 018 4z" />
             </svg>
           </button>
 
-          {/* 3. Mail */}
-          <button
-            onClick={() => dialog.alert("قريباً: صندوق الرسائل")}
-            className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center active:scale-90 transition text-white/90"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="5" width="18" height="14" rx="2" />
-              <path d="M3 7l9 6 9-6" />
-            </svg>
-          </button>
+          {/* 2. Mic (mic-only) */}
+          {isOnMic && (
+            <button
+              onClick={handleToggleMute}
+              className="w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center active:scale-90 transition text-white relative"
+            >
+              <Mic size={22} />
+              {isMuted && (
+                <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <span className="w-7 h-0.5 bg-red-500 rotate-45 rounded-full" />
+                </span>
+              )}
+            </button>
+          )}
 
-          {/* 4. Apps / Settings (4-squares) */}
-          <button
-            onClick={() => setShowSettings(true)}
-            className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center active:scale-90 transition text-white/90"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-              <rect x="3" y="3" width="8" height="8" rx="2.5" />
-              <rect x="13" y="3" width="8" height="8" rx="2.5" />
-              <rect x="3" y="13" width="8" height="8" rx="2.5" />
-              <rect x="13" y="13" width="8" height="8" rx="2.5" />
-            </svg>
-          </button>
-
-          {/* 5. Emoji (mic-only) */}
+          {/* 3. Emoji (mic-only) */}
           {isOnMic && (
             <button
               onClick={() => setShowEmojiSheet(true)}
-              className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center active:scale-90 transition text-white/90"
+              className="w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center active:scale-90 transition text-white/90"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="9" />
                 <path d="M8 14s1.5 2 4 2 4-2 4-2" />
                 <line x1="9" y1="9" x2="9.01" y2="9" />
@@ -1134,29 +1117,46 @@ export default function RoomView({ roomId, onLeave }: Props) {
             </button>
           )}
 
-          {/* 6. Mic (mic-only) */}
-          {isOnMic && (
-            <button
-              onClick={handleToggleMute}
-              className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center active:scale-90 transition text-white relative"
-            >
-              <Mic size={20} />
-              {isMuted && (
-                <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <span className="w-6 h-0.5 bg-red-500 rotate-45 rounded-full" />
-                </span>
-              )}
-            </button>
-          )}
-
-          {/* 7. Chat toggle — LEFT in RTL */}
+          {/* 4. Apps / Settings (4-squares) */}
           <button
-            onClick={() => setShowChatInput((v) => !v)}
-            className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center active:scale-90 transition text-white/90"
+            onClick={() => setShowSettings(true)}
+            className="w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center active:scale-90 transition text-white/90"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 12a8 8 0 01-8 8H7l-4 3v-7a8 8 0 018-8h2a8 8 0 018 4z" />
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="3" y="3" width="8" height="8" rx="2.5" />
+              <rect x="13" y="3" width="8" height="8" rx="2.5" />
+              <rect x="3" y="13" width="8" height="8" rx="2.5" />
+              <rect x="13" y="13" width="8" height="8" rx="2.5" />
             </svg>
+          </button>
+
+          {/* 5. Mail */}
+          <button
+            onClick={() => dialog.alert("قريباً: صندوق الرسائل")}
+            className="w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center active:scale-90 transition text-white/90"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="5" width="18" height="14" rx="2" />
+              <path d="M3 7l9 6 9-6" />
+            </svg>
+          </button>
+
+          {/* 6. Games */}
+          <button
+            onClick={() => setShowGamesSheet(true)}
+            className="w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center active:scale-90 transition text-amber-300"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M7 6h10c2.2 0 4 1.8 4 4v4c0 2.2-1.8 4-4 4h-1.5l-1-2h-5l-1 2H7c-2.2 0-4-1.8-4-4v-4c0-2.2 1.8-4 4-4zm1 3v2H6v2h2v2h2v-2h2v-2h-2V9H8zm8 1.5a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm-2 1a1 1 0 100 2 1 1 0 000-2z" />
+            </svg>
+          </button>
+
+          {/* 7. Gift — LEFT in RTL (reversed) */}
+          <button
+            onClick={() => setShowGifts(true)}
+            className="w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center active:scale-90 transition"
+          >
+            <Gift size={22} className="text-pink-400" fill="currentColor" />
           </button>
         </footer>
       </div>
