@@ -957,26 +957,24 @@ export default function RoomView({ roomId, onLeave }: Props) {
           )}
         </div>
 
-        <div className="flex-shrink-0 mx-2 mt-1 flex items-center justify-center gap-1">
+        <div className="flex-shrink-0 mx-3 mt-2 flex items-center justify-end gap-4 border-b border-white/5">
           <button
             onClick={() => setChatTab("all")}
-            className={`px-3 py-1 rounded-full text-[11px] font-black transition ${
-              chatTab === "all"
-                ? "text-white bg-white/15 border border-white/20"
-                : "text-white/50 hover:text-white/80"
-            }`}
+            className="relative pb-1.5 text-xs font-black transition"
           >
-            الكل
+            <span className={chatTab === "all" ? "text-white" : "text-white/50"}>الكل</span>
+            {chatTab === "all" && (
+              <span className="absolute bottom-0 right-0 left-0 h-0.5 rounded-full bg-emerald-400" />
+            )}
           </button>
           <button
             onClick={() => setChatTab("chat")}
-            className={`px-3 py-1 rounded-full text-[11px] font-black transition ${
-              chatTab === "chat"
-                ? "text-white bg-white/15 border border-white/20"
-                : "text-white/50 hover:text-white/80"
-            }`}
+            className="relative pb-1.5 text-xs font-black transition"
           >
-            الدردشة
+            <span className={chatTab === "chat" ? "text-white" : "text-white/50"}>الدردشة</span>
+            {chatTab === "chat" && (
+              <span className="absolute bottom-0 right-0 left-0 h-0.5 rounded-full bg-emerald-400" />
+            )}
           </button>
         </div>
 
