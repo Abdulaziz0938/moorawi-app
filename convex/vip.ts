@@ -24,13 +24,13 @@ import { activeVipLevel } from "./lib/vip";
 // Admin can later upload real images via adminPanel and update imageUrl.
 // ============================================================
 export const VIP_LEVELS = [
-  { level: 1, name: "VIP 1",  priceCoins: 24_000,   color: "#10b981", accent: "#34d399", exclusive: false },
-  { level: 2, name: "VIP 2",  priceCoins: 60_000,   color: "#3b82f6", accent: "#60a5fa", exclusive: false },
-  { level: 3, name: "VIP 3",  priceCoins: 240_000,  color: "#a855f7", accent: "#c084fc", exclusive: false },
-  { level: 4, name: "VIP 4",  priceCoins: 599_998,  color: "#dc2626", accent: "#f87171", exclusive: false },
-  { level: 5, name: "VIP 5",  priceCoins: null,     color: "#eab308", accent: "#facc15", exclusive: true },
-  { level: 6, name: "VIP 6",  priceCoins: null,     color: "#f97316", accent: "#fb923c", exclusive: true },
-  { level: 7, name: "VIP 7",  priceCoins: null,     color: "#fbbf24", accent: "#fde047", exclusive: true },
+  { level: 1, name: "VIP 1",  priceCoins: 24_000,    color: "#10b981", accent: "#34d399", exclusive: false, exclusiveReason: null },
+  { level: 2, name: "VIP 2",  priceCoins: 60_000,    color: "#3b82f6", accent: "#60a5fa", exclusive: false, exclusiveReason: null },
+  { level: 3, name: "VIP 3",  priceCoins: 240_000,   color: "#a855f7", accent: "#c084fc", exclusive: false, exclusiveReason: null },
+  { level: 4, name: "VIP 4",  priceCoins: 599_998,   color: "#dc2626", accent: "#f87171", exclusive: false, exclusiveReason: null },
+  { level: 5, name: "VIP 5",  priceCoins: null,      color: "#eab308", accent: "#facc15", exclusive: true,  exclusiveReason: "حصري — يُحصل عليه عبر الشحن التركي" },
+  { level: 6, name: "VIP 6",  priceCoins: null,      color: "#f97316", accent: "#fb923c", exclusive: true,  exclusiveReason: "حصري — يُحصل عليه عبر الشحن التركي" },
+  { level: 7, name: "VIP 7",  priceCoins: null,      color: "#fbbf24", accent: "#fde047", exclusive: true,  exclusiveReason: "حصري — يُحصل عليه عبر الشحن التركي" },
 ] as const;
 
 const VIP_DAYS = 30;
@@ -292,40 +292,62 @@ export const seedBenefits = internalMutation({
   handler: async (ctx) => {
     // القائمة الموحّدة (بدون level) — نوزّعها حسب المستوى
     const BASE = [
-      { icon: "Gift",     textAr: "هدايا VIP الحصرية" },
-      { icon: "Star",     textAr: "الاسم ذهبي" },
-      { icon: "Coins",    textAr: "عملات يومية" },
-      { icon: "Eye",      textAr: "عرض الزوار" },
-      { icon: "Heart",    textAr: "متابعة غير محدودة" },
-      { icon: "Percent",  textAr: "خصم للترقية أو التجديد" },
-      { icon: "TrendingUp", textAr: "الأعلى في القائمة" },
-      { icon: "MessageCircle", textAr: "Private chat" },
-      { icon: "Zap",      textAr: "تقدم أسرع في المستويات" },
-      { icon: "ShoppingBag", textAr: "خصم المتجر" },
-      { icon: "Wand2",    textAr: "تصميم تأثير الدخول" },
-      { icon: "Award",    textAr: "مقعد الشرف" },
-      { icon: "Ban",      textAr: "يحظر المتابعة" },
-      { icon: "Ghost",    textAr: "تخفي" },
-      { icon: "IdCard",   textAr: "شراء ايدي مميز" },
-      { icon: "Share2",   textAr: "شارك ال VIP الخاص بك" },
-      { icon: "Megaphone", textAr: "إعلان المنصة" },
-      { icon: "ShieldOff", textAr: "تجنب الطرد" },
-      { icon: "BadgeCheck", textAr: "شراء امتيازات VIP" },
-      { icon: "Users",    textAr: "الشخص الغامض" },
-      { icon: "Mic",      textAr: "تغيير الصوت الحصري" },
-      { icon: "UserCircle", textAr: "ديكور الرجل الغامض" },
-      { icon: "Car",      textAr: "المركبة الحصرية" },
-      { icon: "Home",     textAr: "Home Decorate Ar" },
-      { icon: "AudioLines", textAr: "تأثير تفعيل الميكروفون" },
-      { icon: "MicVocal", textAr: "Mic Ar" },
-      { icon: "Bell",     textAr: "إشعار لكل السيستم" },
-      { icon: "Music",    textAr: "استخدام الميكروفون مجاناً" },
-      { icon: "Gift",     textAr: "شريط هدايا حصري" },
-      { icon: "Palette",  textAr: "App Skin Ar" },
-      { icon: "LayoutGrid", textAr: "تخطيط الغرفة" },
-      { icon: "BadgeCheck", textAr: "الشهادة" },
+      // ─── Tier 1 (14 items — لكل VIP) ───
+      { icon: "Gift",           textAr: "هدايا VIP الحصرية" },
+      { icon: "Type",           textAr: "الاسم ذهبي" },
+      { icon: "Coins",          textAr: "عملات يومية" },
+      { icon: "Eye",            textAr: "عرض الزوار" },
+      { icon: "Heart",          textAr: "متابعة غير محدودة" },
+      { icon: "Percent",        textAr: "خصم للترقية أو التجديد" },
+      { icon: "TrendingUp",     textAr: "الأعلى في القائمة" },
+      { icon: "MessageCircle",  textAr: "Private chat" },
+      { icon: "Zap",            textAr: "تقدم أسرع في المستويات" },
+      { icon: "ShoppingBag",    textAr: "خصم المتجر" },
+      { icon: "Wand2",          textAr: "تصميم تأثير الدخول" },
+      { icon: "Award",          textAr: "مقعد الشرف" },
+      { icon: "Ban",            textAr: "يحظر المتابعة" },
+      { icon: "Ghost",          textAr: "تخفي" },
+
+      // ─── Tier 2 (2 more — VIP2+ = 16) ───
+      { icon: "IdCard",         textAr: "شراء ايدي مميز" },
+      { icon: "Share2",         textAr: "شارك ال VIP الخاص بك" },
+
+      // ─── Tier 3 (2 more — VIP3+ = 18) ───
+      { icon: "Megaphone",      textAr: "إعلان المنصة" },
+      { icon: "ShieldOff",      textAr: "تجنب الطرد" },
+
+      // ─── Tier 4 (4 more — VIP4+ = 22) ───
+      { icon: "BadgeCheck",     textAr: "شراء امتيازات VIP" },
+      { icon: "Users",          textAr: "الشخص الغامض" },
+      { icon: "Mic",            textAr: "تغيير الصوت الحصري" },
+      { icon: "UserCircle",     textAr: "ديكور الرجل الغامض" },
+
+      // ─── Tier 5 (6 more — VIP5+ = 28) ───
+      { icon: "Car",            textAr: "المركبة الحصرية" },
+      { icon: "Home",           textAr: "Home Decorate Ar" },
+      { icon: "AudioLines",     textAr: "تأثير تفعيل الميكروفون" },
+      { icon: "MicVocal",       textAr: "Mic Ar" },
+      { icon: "Bell",           textAr: "إشعار لكل السيستم" },
+      { icon: "Music",          textAr: "استخدام الميكروفون مجاناً" },
+
+      // ─── Tier 6 (3 more — VIP6+ = 31) ───
+      { icon: "Gift",           textAr: "شريط هدايا حصري" },
+      { icon: "Palette",        textAr: "App Skin Ar" },
+      { icon: "LayoutGrid",     textAr: "تخطيط الغرفة" },
+
+      // ─── Tier 7 (9 more — VIP7 = 40) ───
+      { icon: "ScrollText",     textAr: "الشهادة" },
+      { icon: "Crown",          textAr: "الملكية الكاملة للغرفة" },
+      { icon: "Sparkles",       textAr: "تأثيرات دخول حصرية" },
+      { icon: "Shield",         textAr: "حماية من الطرد التلقائي" },
+      { icon: "Trophy",         textAr: "تاج المليونير" },
+      { icon: "Star",           textAr: "نجمة على البروفايل" },
+      { icon: "Zap",            textAr: "طاقة مضاعفة" },
+      { icon: "Eye",            textAr: "زيادة الزوار 3x" },
+      { icon: "Gem",            textAr: "الألماسة الحمراء" },
     ];
 
+    // [ezo-vip] عدد المزايا لكل مستوى (Binmo-style)
     const COUNTS: Record<number, number> = {
       1: 14, 2: 16, 3: 18, 4: 22, 5: 28, 6: 31, 7: 40,
     };
@@ -342,7 +364,8 @@ export const seedBenefits = internalMutation({
 
       const count = COUNTS[level];
       for (let i = 0; i < count; i++) {
-        const base = BASE[i % BASE.length];
+        if (i >= BASE.length) break; // [ezo-vip-fix] لا تكرار
+        const base = BASE[i];
         await ctx.db.insert("vipBenefits", {
           level,
           order: i,

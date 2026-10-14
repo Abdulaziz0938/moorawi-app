@@ -96,7 +96,14 @@ export default function VipShopSheet({ onClose }: Props) {
   const handleBuy = () => {
     if (!plan) return;
     if (plan.exclusive) {
-      dialog.alert("هذا المستوى حصري — يُحصل عليه عبر الشحن التركي");
+      dialog.alert(
+        (plan as any).exclusiveReason ??
+          "هذا المستوى حصري — يُحصل عليه عبر الشحن التركي"
+      );
+      return;
+    }
+    if (plan.priceCoins == null) {
+      dialog.alert("السعر غير محدد بعد — يرجى المحاولة لاحقاً");
       return;
     }
     const price = plan.priceCoins ?? 0;
