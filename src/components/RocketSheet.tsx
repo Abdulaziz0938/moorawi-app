@@ -304,14 +304,14 @@ export default function RocketSheet({ roomId, onClose, onOpenGiftSheet, autoOpen
                   <div className="flex gap-2 px-4 pb-3">
                     <div className="flex-1 bg-black/40 backdrop-blur rounded-xl p-2 flex flex-col items-center border border-white/10">
                       <img
-                        src="/rewards/coins-large.png"
+                        src="/rewards/coins-large.webp"
                         alt=""
                         className="w-10 h-10 object-contain"
                       />
                     </div>
                     <div className="flex-1 bg-black/40 backdrop-blur rounded-xl p-2 flex flex-col items-center border border-white/10">
                       <img
-                        src="/rewards/bcoins-large.png"
+                        src="/rewards/bcoins-large.webp"
                         alt=""
                         className="w-10 h-10 object-contain"
                       />
@@ -484,7 +484,7 @@ export default function RocketSheet({ roomId, onClose, onOpenGiftSheet, autoOpen
           >
             <div className="p-4 text-center border-b border-white/10">
               <img
-                src="/ui/treasure-box-opened.png"
+                src="/ui/treasure-box-opened.webp"
                 alt=""
                 className="w-20 h-20 object-contain mx-auto -mt-2"
               />
@@ -564,7 +564,7 @@ function MiniEmpty({ title, subtitle }: { title: string; subtitle: string }) {
   return (
     <div className="flex flex-col items-center justify-center py-10 text-center">
       <img
-        src="/ui/treasure-box-closed.png"
+        src="/ui/treasure-box-closed.webp"
         alt=""
         className="w-16 h-16 object-contain opacity-40"
       />

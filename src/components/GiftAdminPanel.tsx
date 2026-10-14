@@ -7,6 +7,8 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { getDeviceId } from "../lib/device";
 import { uploadToCloudinary } from "../lib/cloudinary";
+import { smartUpload } from "../lib/uploadAssets";
+import { processImage } from "../lib/imageProcessor";
 import { dialog } from "../lib/dialog";
 import { X, Loader2, Globe, Music, Heart, Video, Gift, Coins } from "lucide-react";
 
@@ -31,8 +33,19 @@ export default function GiftsAdmin() {
     }
     setUploading(true);
     try {
-      const mediaType: "image" | "video" = mediaFile.type.startsWith("video") ? "video" : "image";
-      const result = await uploadToCloudinary(mediaFile, mediaType);
+      const uploadResult = await smartUpload(mediaFile, {
+        category: "gift",
+        allowVideo: true,
+      });
+      const mediaType = uploadResult.mediaType;
+      const result = {
+        url: uploadResult.url,
+        originalUrl: uploadResult.originalUrl,
+        publicId: "",
+        resourceType: mediaType,
+        format: uploadResult.format,
+        bytes: uploadResult.size,
+      };
       await createGift({
         name: name.trim(),
         price,
@@ -71,7 +84,7 @@ export default function GiftsAdmin() {
         </select>
 
         <label className="block cursor-pointer">
-          <input ref={mediaRef} type="file" accept="image/*,video/webm,video/mp4"
+          <input ref={mediaRef} type="file" accept="image/*,video/webm,video/mp4,video/quicktime,video/x-matroska"
             onChange={(e) => setMediaFile(e.target.files?.[0] ?? null)} className="hidden" />
           <div className="w-full p-2.5 bg-white/10 border-2 border-dashed border-white/30 rounded-xl text-center text-white text-xs hover:bg-white/15">
             {mediaFile ? <span className="inline-flex items-center gap-1"><Video size={14} /> {mediaFile.name}</span> : "اختر صورة / فيديو الهدية"}

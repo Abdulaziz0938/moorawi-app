@@ -1238,7 +1238,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
           title="الصاروخ"
         >
           <img
-            src="/rockets/rocket-red.png"
+            src="/rockets/rocket-red.webp"
             alt="rocket"
             className="w-7 h-7 object-contain"
           />

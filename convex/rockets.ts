@@ -12,45 +12,45 @@ export const ROCKET_LEVELS = [
     name: "أخضر",
     threshold: 25_000,
     color: "#10b981",
-    img: "/rockets/rocket-green.png",
-    vehicle: "/rewards/vehicle-motorcycle.png",
-    frame: "/rewards/frame-green.png",
+    img: "/rockets/rocket-green.webp",
+    vehicle: "/rewards/vehicle-motorcycle.webp",
+    frame: "/rewards/frame-green.webp",
     vip: 1,
   },
   {
     name: "أزرق",
     threshold: 250_000,
     color: "#3b82f6",
-    img: "/rockets/rocket-blue.png",
-    vehicle: "/rewards/vehicle-sportscar.png",
-    frame: "/rewards/frame-blue.png",
+    img: "/rockets/rocket-blue.webp",
+    vehicle: "/rewards/vehicle-sportscar.webp",
+    frame: "/rewards/frame-blue.webp",
     vip: 2,
   },
   {
     name: "بنفسجي",
     threshold: 625_000,
     color: "#8b5cf6",
-    img: "/rockets/rocket-purple.png",
-    vehicle: "/rewards/vehicle-yacht.png",
-    frame: "/rewards/frame-purple.png",
+    img: "/rockets/rocket-purple.webp",
+    vehicle: "/rewards/vehicle-yacht.webp",
+    frame: "/rewards/frame-purple.webp",
     vip: 2,
   },
   {
     name: "أحمر",
     threshold: 1_000_000,
     color: "#ef4444",
-    img: "/rockets/rocket-red.png",
-    vehicle: "/rewards/vehicle-redcar.png",
-    frame: "/rewards/frame-red.png",
+    img: "/rockets/rocket-red.webp",
+    vehicle: "/rewards/vehicle-redcar.webp",
+    frame: "/rewards/frame-red.webp",
     vip: 3,
   },
   {
     name: "ذهبي",
     threshold: 1_500_000,
     color: "#fbbf24",
-    img: "/rockets/rocket-gold.png",
-    vehicle: "/rewards/vehicle-military.png",
-    frame: "/rewards/frame-gold.png",
+    img: "/rockets/rocket-gold.webp",
+    vehicle: "/rewards/vehicle-military.webp",
+    frame: "/rewards/frame-gold.webp",
     vip: 3,
   },
 ] as const;
@@ -335,15 +335,15 @@ export const launch = internalMutation({
       if (roll < 0.4) {
         rewardType = "coins";
         rewardAmount = 500 + Math.floor(Math.random() * 2000);
-        rewardImgUrl = rewardAmount > 1500 ? "/rewards/coins-large.png"
-                      : rewardAmount > 800 ? "/rewards/coins-medium.png"
-                      : "/rewards/coins-small.png";
+        rewardImgUrl = rewardAmount > 1500 ? "/rewards/coins-large.webp"
+                      : rewardAmount > 800 ? "/rewards/coins-medium.webp"
+                      : "/rewards/coins-small.webp";
       } else if (roll < 0.7) {
         rewardType = "bcoins";
         rewardAmount = 100 + Math.floor(Math.random() * 400);
-        rewardImgUrl = rewardAmount > 350 ? "/rewards/bcoins-large.png"
-                      : rewardAmount > 200 ? "/rewards/bcoins-medium.png"
-                      : "/rewards/bcoins-small.png";
+        rewardImgUrl = rewardAmount > 350 ? "/rewards/bcoins-large.webp"
+                      : rewardAmount > 200 ? "/rewards/bcoins-medium.webp"
+                      : "/rewards/bcoins-small.webp";
       } else if (roll < 0.9 && idx < 3) {
         rewardType = "vip";
         rewardImgUrl = `/rewards/vip${lvl.vip}.png`;
@@ -355,7 +355,7 @@ export const launch = internalMutation({
       } else {
         rewardType = "coins";
         rewardAmount = 300 + Math.floor(Math.random() * 500);
-        rewardImgUrl = "/rewards/coins-small.png";
+        rewardImgUrl = "/rewards/coins-small.webp";
       }
 
       await ctx.db.insert("userRocketRewards", {

@@ -114,7 +114,7 @@ export default function RocketLaunchOverlay({ rocket, launcher, onComplete }: Pr
           {/* 3. Golden rays */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <img
-              src="/ui/glow-gold.png"
+              src="/ui/glow-gold.webp"
               alt=""
               className="w-[100vw] h-[100vw] max-w-[600px] max-h-[600px] object-contain animate-rays"
             />

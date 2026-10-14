@@ -572,7 +572,7 @@ function CreateItemModal({ token, onClose, onCreate }: any) {
                  imageUrl ? <img src={imageUrl} alt="" className="w-full h-full object-contain p-2" /> :
                  <span className="text-white/40 text-xs">اضغط لرفع صورة</span>}
               </div>
-              <input type="file" accept="image/*" className="hidden"
+              <input type="file" accept="image/*,video/*" className="hidden"
                 onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImage(f); e.target.value = ""; }} />
             </label>
           </div>
