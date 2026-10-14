@@ -4,6 +4,7 @@ import { useBackButton } from "../lib/hooks/useBackButton";
 import LudoGame from "./games/LudoGame";
 import TicTacToe from "./games/TicTacToe";
 import MemoryGame from "./games/MemoryGame";
+import SnakeGame from "./games/SnakeGame";
 
 interface Props { onClose: () => void; }
 
@@ -12,7 +13,7 @@ type GameKey = "ludo" | "snake" | "memory" | "tictactoe";
 const GAMES: { key: GameKey; label: string; emoji: string; soon?: boolean }[] = [
   { key: "ludo",      label: "لودو",      emoji: "🎲" },
   { key: "tictactoe", label: "إكس أو",    emoji: "⭕" },
-  { key: "snake",     label: "ثعبان",     emoji: "🐍", soon: true },
+  { key: "snake",     label: "ثعبان",     emoji: "🐍" },
   { key: "memory",    label: "ذاكرة",     emoji: "🧠" },
 ];
 
@@ -67,6 +68,7 @@ export default function GamesSheet({ onClose }: Props) {
           {active === "ludo" && <LudoGame onClose={onClose} />}
             {active === "tictactoe" && <TicTacToe onClose={onClose} />}
             {active === "memory" && <MemoryGame onClose={onClose} />}
+            {active === "snake" && <SnakeGame onClose={onClose} />}
         </div>
       </div>
     </div>
