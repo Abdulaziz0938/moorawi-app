@@ -2,6 +2,7 @@ import { ConvexError, v } from "convex/values";
 import { levelFromValue } from "./lib/levels";
 import { activeVipLevel } from "./lib/vip";
 import { mutation, query } from "./_generated/server";
+import { internal } from "./_generated/api";
 import { requireUser, isFullAdmin } from "./lib/auth";
 import { weekKey } from "./lib/week";
 import { checkAndGrantMedals } from "./medals";
@@ -345,6 +346,17 @@ export const sendBatch = mutation({
       text: `${user.name ?? "ضيف"} أرسل ${gift.name} × ${args.quantity} ${summary}`,
       system: true,
     });
+
+    // [ezo-rocket] شحن الصاروخ عند كل دفعة هدايا
+    try {
+      await ctx.scheduler.runAfter(0, internal.rockets.addEnergy, {
+        roomId: args.roomId,
+        fromUserId: user._id,
+        amount: totalPrice,
+      });
+    } catch (e) {
+      console.error("[rocket] addEnergy failed:", e);
+    }
 
     return {
       success: true,
