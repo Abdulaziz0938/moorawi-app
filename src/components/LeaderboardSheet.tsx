@@ -5,6 +5,7 @@ import { useAssets, resolveAsset } from "../lib/assets";
 import type { Id } from "../../convex/_generated/dataModel";
 import { X, HelpCircle, Loader2, Home, Trophy, Flame, Gem, Gift, Construction } from "lucide-react";
 import VipAvatar from "./ui/VipAvatar";
+import VipName from "./VipName";
 import { UserName } from "./UserBadges";
 import LevelBadge from "./LevelBadge";
 import { levelFromValue } from "../lib/levels";
@@ -135,9 +136,9 @@ function PodiumSlot({
 
       {/* Name + role icon */}
       <div className="mt-4 flex items-center gap-1 max-w-full">
-        <span className="text-[12px] font-black text-amber-900 truncate">
+        <VipName level={v} className="text-[12px] font-black text-amber-900 truncate">
           {user.name}
-        </span>
+        </VipName>
         {rank === 1 && <Home size={11} className="text-amber-600 inline-block" />}
       </div>
 

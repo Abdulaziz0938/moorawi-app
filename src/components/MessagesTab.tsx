@@ -9,6 +9,7 @@ import SystemNotifSheet from "./SystemNotifSheet";
 import FriendRequestsSheet from "./FriendRequestsSheet";
 import Card from "./ui/Card";
 import SectionTitle from "./ui/SectionTitle";
+import VipName from "./VipName";
 import {
   Search, Loader2, MessageCircle, Bell, Heart, UserPlus,
   Check, ChevronLeft,
@@ -235,7 +236,12 @@ export default function MessagesTab({ onUserClick }: Props) {
                     <div className="flex-1 min-w-0 text-right">
                       <div className="flex items-center justify-end gap-1.5">
                         {f.verified && <Check size={11} className="text-blue-400" />}
-                        <p className="text-white text-sm font-black truncate">{f.name}</p>
+                        <VipName
+                          level={f.vip ?? 0}
+                          className="text-white text-sm font-black truncate"
+                        >
+                          {f.name}
+                        </VipName>
                       </div>
                       <p className="text-white/40 text-[10px]" dir="ltr">ID:{f.userNumber ?? "—"}</p>
                     </div>

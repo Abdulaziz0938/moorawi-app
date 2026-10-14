@@ -9,6 +9,7 @@ import { dialog } from "../lib/dialog";
 import { useBackButton } from "../lib/hooks/useBackButton";
 import UserAvatar from "./UserAvatar";
 import VipAvatar from "./ui/VipAvatar";
+import VipName from "./VipName";
 import { ChevronRight, Loader2, Send, Image as ImageIcon, Check } from "lucide-react";
 
 interface Props {
@@ -107,7 +108,12 @@ export default function ChatThreadSheet({ conversationId, onClose }: Props) {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5">
                 {thread.other.verified && <Check size={11} className="text-blue-400" />}
-                <p className="text-white text-sm font-black truncate">{thread.other.name}</p>
+                <VipName
+                  level={thread.other.vip ?? 0}
+                  className="text-white text-sm font-black truncate"
+                >
+                  {thread.other.name}
+                </VipName>
               </div>
               <p className="text-white/40 text-[10px]" dir="ltr">ID:{thread.other.userNumber ?? "—"}</p>
             </div>

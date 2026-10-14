@@ -4,6 +4,7 @@ import type { Id } from "../../convex/_generated/dataModel";
 import { useBackButton } from "../lib/hooks/useBackButton";
 import { ChevronRight, Loader2, Users } from "lucide-react";
 import VipAvatar from "./ui/VipAvatar";
+import VipName from "./VipName";
 
 interface Props {
   userId: string;
@@ -67,7 +68,12 @@ export default function UserListSheet({ userId, mode, onClose, onUserClick }: Pr
                   <VipAvatar src={u.avatarUrl} name={u.name} size={48} vip={u.vip ?? 0} />
                 </div>
                 <div className="flex-1 min-w-0 text-right">
-                  <p className="text-white text-sm font-black truncate">{u.name ?? "—"}</p>
+                  <VipName
+                    level={u.vip ?? 0}
+                    className="text-white text-sm font-black truncate"
+                  >
+                    {u.name ?? "—"}
+                  </VipName>
                   <p className="text-white/40 text-[10px]" dir="ltr">ID:{u.userNumber ?? "—"}</p>
                 </div>
                 <ChevronRight size={16} className="text-white/30 rotate-180" />

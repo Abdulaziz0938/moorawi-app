@@ -21,6 +21,7 @@ import CompactChatInput from "./CompactChatInput";
 import ChatBubble from "./ChatBubble";
 import IconOrImage from "./IconOrImage";
 import VipAvatar from "./ui/VipAvatar";
+import VipName from "./VipName";
 import VipEntryOverlay from "./VipEntryOverlay";
 import LeaderboardSheet from "./LeaderboardSheet";
 import MiniProfileSheet from "./MiniProfileSheet";
@@ -942,7 +943,12 @@ export default function RoomView({ roomId, onLeave }: Props) {
                               {!seat.adminRole && (
                                 <User size={9} className="text-emerald-400 flex-shrink-0" fill="currentColor" strokeWidth={1.5} />
                               )}
-                              <p className="text-[8px] text-white/90 truncate leading-tight">{seat.userName}</p>
+                              <VipName
+                                level={seat.userVip ?? 0}
+                                className="text-[8px] font-bold truncate leading-tight"
+                              >
+                                {seat.userName}
+                              </VipName>
                             </div>
                             <p className="text-[8px] text-pink-300 leading-tight">{(seat.sessionCharms ?? 0)} <Heart size={8} className="inline text-pink-400" fill="currentColor" /></p>
                           </>
