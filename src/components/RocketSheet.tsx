@@ -158,23 +158,17 @@ export default function RocketSheet({ roomId, onClose, onOpenGiftSheet, autoOpen
               className="w-40 h-56 object-contain drop-shadow-[0_15px_30px_rgba(0,0,0,0.8)] animate-[rocketFloat_2.5s_ease-in-out_infinite]"
             />
 
-            {/* Horizontal progress bar below rocket */}
-            <div className="w-44 h-2 bg-black/60 rounded-full overflow-hidden mt-1 border border-white/10">
+            {/* Ultra-thin horizontal progress bar below rocket */}
+            <div className="w-44 h-[3px] bg-black/70 rounded-full overflow-hidden mt-1">
               <div
                 className="h-full rounded-full transition-all duration-700"
                 style={{
                   width: `${current.progress}%`,
                   background: `linear-gradient(90deg, ${current.color}, ${current.color}dd)`,
-                  boxShadow: `0 0 8px ${current.color}`,
+                  boxShadow: `0 0 6px ${current.color}`,
                 }}
               />
             </div>
-            <span
-              className="text-[10px] font-black mt-1 tabular-nums"
-              style={{ color: current.color, textShadow: "0 1px 4px rgba(0,0,0,0.9)" }}
-            >
-              {Math.round(current.progress)}%
-            </span>
           </div>
         )}
 
