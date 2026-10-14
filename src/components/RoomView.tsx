@@ -1200,18 +1200,18 @@ export default function RoomView({ roomId, onLeave }: Props) {
           </button>
         </footer>
 
-        // [ezo-rocket] زر الصاروخ العائم — أسفل يمين
+        {/* [ezo-rocket] زر الصاروخ العائم */}
         <button
           onClick={() => setShowRocketSheet(true)}
-          className="fixed bottom-20 right-3 z-[71] w-14 h-14 rounded-full bg-gradient-to-br from-red-500 to-amber-600 backdrop-blur-md flex items-center justify-center shadow-[0_0_24px_rgba(239,68,68,0.6)] border-2 border-white/40 active:scale-90 transition-transform"
+          className="fixed bottom-24 right-3 z-[72] w-12 h-12 rounded-full bg-gradient-to-br from-red-500 to-amber-600 flex items-center justify-center shadow-[0_0_18px_rgba(239,68,68,0.7)] border border-white/50 active:scale-90 transition-transform"
           title="الصاروخ"
         >
           <img
             src="/rockets/rocket-red.png"
             alt="rocket"
-            className="w-9 h-9 object-contain asset-blend"
+            className="w-7 h-7 object-contain"
           />
-          <span className="absolute inset-0 rounded-full ring-2 ring-red-400/50 animate-ping pointer-events-none" />
+          <span className="absolute inset-0 rounded-full ring-1 ring-red-400/60 animate-ping pointer-events-none" />
         </button>
       </div>
 
