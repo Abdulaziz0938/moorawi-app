@@ -3,6 +3,7 @@ import { X, Dices, Loader2 } from "lucide-react";
 import { useBackButton } from "../lib/hooks/useBackButton";
 import LudoGame from "./games/LudoGame";
 import TicTacToe from "./games/TicTacToe";
+import MemoryGame from "./games/MemoryGame";
 
 interface Props { onClose: () => void; }
 
@@ -12,7 +13,7 @@ const GAMES: { key: GameKey; label: string; emoji: string; soon?: boolean }[] = 
   { key: "ludo",      label: "لودو",      emoji: "🎲" },
   { key: "tictactoe", label: "إكس أو",    emoji: "⭕" },
   { key: "snake",     label: "ثعبان",     emoji: "🐍", soon: true },
-  { key: "memory",    label: "ذاكرة",     emoji: "🧠", soon: true },
+  { key: "memory",    label: "ذاكرة",     emoji: "🧠" },
 ];
 
 export default function GamesSheet({ onClose }: Props) {
@@ -65,6 +66,7 @@ export default function GamesSheet({ onClose }: Props) {
         <div className="flex-1 overflow-hidden">
           {active === "ludo" && <LudoGame onClose={onClose} />}
             {active === "tictactoe" && <TicTacToe onClose={onClose} />}
+            {active === "memory" && <MemoryGame onClose={onClose} />}
         </div>
       </div>
     </div>
