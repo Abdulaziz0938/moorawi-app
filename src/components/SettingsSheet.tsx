@@ -53,7 +53,7 @@ interface Props {
 type Tab = "main" | "layout" | "editRoom" | "background" | "gifts";
 
 function LayoutPreview({ layoutKey }: { layoutKey: string }) {
-  const rows = LAYOUT_ROWS[layoutKey] ?? [6, 6, 6];
+  const rows = LAYOUT_ROWS[layoutKey] ?? [5, 5, 5, 3];
   return (
     <div className="flex flex-col items-center gap-0.5">
       {rows.map((count, i) => (
