@@ -967,5 +967,64 @@ export default defineSchema({
   })
     .index("by_room_expires", ["roomId", "expiresAt"])
     .index("by_user_room", ["userId", "roomId"]),
+  // ================================================================
+  // [ezo-rockets] نظام الصاروخ (Binmo-style energy bar)
+  // ================================================================
+  roomRockets: defineTable({
+    roomId: v.id("rooms"),
+    cycleKey: v.string(),        // YYYY-MM-DD (GMT+3)
+    levelIndex: v.number(),      // 0-4
+    currentEnergy: v.number(),
+    targetEnergy: v.number(),
+    launched: v.boolean(),
+    launchedAt: v.optional(v.number()),
+    mvpUserId: v.optional(v.id("users")),
+    lastHitUserId: v.optional(v.id("users")),
+    updatedAt: v.number(),
+  })
+    .index("by_room_cycle", ["roomId", "cycleKey"])
+    .index("by_room_cycle_level", ["roomId", "cycleKey", "levelIndex"]),
+
+  // أرشيف إطلاقات الصاروخ
+  rocketLaunchEvents: defineTable({
+    roomId: v.id("rooms"),
+    levelIndex: v.number(),
+    levelName: v.string(),
+    levelColor: v.string(),
+    totalValue: v.number(),
+    mvpUserId: v.id("users"),
+    mvpUserName: v.string(),
+    lastHitUserId: v.id("users"),
+    lastHitUserName: v.string(),
+    recipientCount: v.number(),
+    createdAt: v.number(),
+  })
+    .index("by_room", ["roomId"])
+    .index("by_room_created", ["roomId", "createdAt"]),
+
+  // مكافآت المستخدمين (سجل "تسجيلي")
+  userRocketRewards: defineTable({
+    userId: v.id("users"),
+    roomId: v.id("rooms"),
+    launchId: v.id("rocketLaunchEvents"),
+    levelIndex: v.number(),
+    levelName: v.string(),
+    levelColor: v.string(),
+    rewardType: v.union(
+      v.literal("coins"),
+      v.literal("bcoins"),
+      v.literal("vip"),
+      v.literal("vehicle"),
+      v.literal("frame"),
+    ),
+    rewardItemId: v.optional(v.id("shopItems")),
+    rewardAmount: v.optional(v.number()),
+    rewardImgUrl: v.string(),
+    claimed: v.boolean(),
+    claimedAt: v.optional(v.number()),
+    createdAt: v.number(),
+  })
+    .index("by_user_created", ["userId", "createdAt"])
+    .index("by_user_room", ["userId", "roomId"]),
 
 });

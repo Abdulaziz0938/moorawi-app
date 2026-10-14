@@ -29,6 +29,7 @@ import RoomInfoSheet from "./RoomInfoSheet";
 import MicRequestsSheet from "./MicRequestsSheet";
 import SystemNotifSheet from "./SystemNotifSheet";
 import GiftWavesLayer, { type GiftWavesHandle } from "./GiftWavesLayer";
+import RocketSheet from "./RocketSheet";
 import { useRoomPresence } from "../lib/hooks/useRoomPresence";
 import MembersSheet from "./MembersSheet";
 import GamesSheet from "./GamesSheet";
@@ -284,6 +285,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const [chatTab, setChatTab] = useState<"all" | "chat">("all");
   const [showEmojiSheet, setShowEmojiSheet] = useState(false);
   const [showNotifSheet, setShowNotifSheet] = useState(false);
+  const [showRocketSheet, setShowRocketSheet] = useState(false);
   const [openSeatMenu, setOpenSeatMenu] = useState<number | null>(null);
   const [openSeatMenuPos, setOpenSeatMenuPos] = useState<{ x: number; y: number } | null>(null);
   const [inviteSeatIndex, setInviteSeatIndex] = useState<number | null>(null);
@@ -1197,6 +1199,20 @@ export default function RoomView({ roomId, onLeave }: Props) {
             <Gift size={22} className="text-pink-400" fill="currentColor" />
           </button>
         </footer>
+
+        // [ezo-rocket] زر الصاروخ العائم — أسفل يمين
+        <button
+          onClick={() => setShowRocketSheet(true)}
+          className="fixed bottom-20 right-3 z-[71] w-14 h-14 rounded-full bg-gradient-to-br from-red-500 to-amber-600 backdrop-blur-md flex items-center justify-center shadow-[0_0_24px_rgba(239,68,68,0.6)] border-2 border-white/40 active:scale-90 transition-transform"
+          title="الصاروخ"
+        >
+          <img
+            src="/rockets/rocket-red.png"
+            alt="rocket"
+            className="w-9 h-9 object-contain asset-blend"
+          />
+          <span className="absolute inset-0 rounded-full ring-2 ring-red-400/50 animate-ping pointer-events-none" />
+        </button>
       </div>
 
       {/* ==================== GLOBAL MARQUEE (≥ 30000) ==================== */}
@@ -1733,6 +1749,17 @@ export default function RoomView({ roomId, onLeave }: Props) {
       )}
 
       {showNotifSheet && <SystemNotifSheet onClose={() => setShowNotifSheet(false)} />}
+
+      {showRocketSheet && (
+        <RocketSheet
+          roomId={roomId}
+          onClose={() => setShowRocketSheet(false)}
+          onOpenGiftSheet={() => {
+            setShowRocketSheet(false);
+            setTimeout(() => setShowGifts(true), 200);
+          }}
+        />
+      )}
 
       {showMusicSheet && (
         <MusicSheet
