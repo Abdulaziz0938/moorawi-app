@@ -265,6 +265,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const [showGifts, setShowGifts] = useState(false);
   const [showMusicSheet, setShowMusicSheet] = useState(false);
   const [showChatInput, setShowChatInput] = useState(false);
+  const [chatTab, setChatTab] = useState<"all" | "chat">("all");
   const [openSeatMenu, setOpenSeatMenu] = useState<number | null>(null);
   const [openSeatMenuPos, setOpenSeatMenuPos] = useState<{ x: number; y: number } | null>(null);
   const [inviteSeatIndex, setInviteSeatIndex] = useState<number | null>(null);
@@ -956,50 +957,105 @@ export default function RoomView({ roomId, onLeave }: Props) {
           )}
         </div>
 
-        <div ref={chatBoxRef} className="thin-scroll flex-1 min-h-0 overflow-y-auto px-2 py-2 mx-2 mt-1 bg-black/30 backdrop-blur rounded-2xl">
+        <div className="flex-shrink-0 mx-2 mt-1 flex items-center justify-center gap-1">
+          <button
+            onClick={() => setChatTab("all")}
+            className={`px-3 py-1 rounded-full text-[11px] font-black transition ${
+              chatTab === "all"
+                ? "text-white bg-white/15 border border-white/20"
+                : "text-white/50 hover:text-white/80"
+            }`}
+          >
+            الكل
+          </button>
+          <button
+            onClick={() => setChatTab("chat")}
+            className={`px-3 py-1 rounded-full text-[11px] font-black transition ${
+              chatTab === "chat"
+                ? "text-white bg-white/15 border border-white/20"
+                : "text-white/50 hover:text-white/80"
+            }`}
+          >
+            الدردشة
+          </button>
+        </div>
+
+        <div ref={chatBoxRef} className="thin-scroll flex-1 min-h-0 overflow-y-auto px-3 py-2 mx-1 mt-1 space-y-1.5">
           {messages === undefined ? (
             <div className="flex justify-center py-6"><Loader2 className="animate-spin text-white/40" size={18} /></div>
           ) : messages.length === 0 ? (
             <p className="text-white/40 text-xs text-center py-6">{room.welcomeMessage || "لا توجد رسائل بعد"}</p>
           ) : (
             <div className="space-y-2">
-              {messages.filter((m: any) => (m.createdAt ?? 0) >= enteredAt || m.system).map((m: any) => (
-                <div key={m._id} className="flex gap-2 items-start">
-                  <div className="w-6 h-6 rounded-full overflow-hidden bg-purple-500 flex items-center justify-center text-[9px] font-bold text-white flex-shrink-0">
-                    {true ? <img src={m?.avatarUrl || "/avatar.png"} alt="" className="w-full h-full object-cover" /> : (m.senderName?.[0] || "?")}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    {/* [moorawi] UserName — unified badges (clickable) */}
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setMiniProfileUserId(m.senderId);
-                          setMySeatIndexForMiniProfile(null);
-                        }}
-                        className="flex items-center gap-2 hover:opacity-80 transition active:scale-95"
-                      >
-                        <UserName
-                          name={m.senderName}
-                          vip={m.senderVip}
-                          charmValue={m.senderCharmValue}
-                          wealthValue={m.senderWealthValue}
-                          adminRole={m.senderAdminRole}
-                          roomRole={m.senderRoomRole}
-                          size="sm"
-                        />
-                      </button>
-                      <span className="text-[8px] text-white/40 mr-auto">{formatTime(m.createdAt)}</span>
+              {messages
+              .filter((m: any) => (m.createdAt ?? 0) >= enteredAt || m.system)
+              .filter((m: any) => chatTab === "all" || !m.system)
+              .map((m: any) => {
+                // [ezo-chat] System messages (entry/announcement) — centered pill
+                if (m.system || !m.senderId) {
+                  const isAnnouncement = (m.text ?? "").includes("اعلان") || (m.text ?? "").includes("إعلان");
+                  return (
+                    <div key={m._id} className="flex justify-center py-0.5">
+                      <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border backdrop-blur-md ${
+                        isAnnouncement
+                          ? "bg-amber-500/10 border-amber-400/30"
+                          : "bg-white/5 border-white/10"
+                      }`}>
+                        {isAnnouncement && <span className="text-amber-200 text-[10px]">📢</span>}
+                        <span className={`text-[10px] font-bold ${isAnnouncement ? "text-amber-200" : "text-white/60"}`}>
+                          {m.text ?? ""}
+                        </span>
+                      </div>
                     </div>
-                    {(m.text || m.imageUrl) && (
-                      <ChatBubble vip={m.senderVip ?? 0} customBubbleUrl={m.senderBubbleUrl ?? (m.senderVip ? assets[`vip.bubble.${m.senderVip}`] : null) ?? null}>
-                        {m.text && <p className="text-white text-xs break-words whitespace-pre-wrap">{m.text}</p>}
-                        {m.imageUrl && <img src={m.imageUrl} alt="" className="mt-1 rounded-lg max-w-[140px] max-h-[140px] object-cover" />}
-                      </ChatBubble>
-                    )}
+                  );
+                }
+
+                // Regular chat message
+                return (
+                  <div key={m._id} className="flex gap-2 items-start">
+                    <button
+                      onClick={() => {
+                        setMiniProfileUserId(m.senderId);
+                        setMySeatIndexForMiniProfile(null);
+                      }}
+                      className="flex-shrink-0 active:scale-95 transition"
+                    >
+                      <div className="w-7 h-7 rounded-full overflow-hidden bg-purple-500 flex items-center justify-center text-[10px] font-bold text-white">
+                        <img src={m?.avatarUrl || "/avatar.png"} alt="" className="w-full h-full object-cover" />
+                      </div>
+                    </button>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setMiniProfileUserId(m.senderId);
+                            setMySeatIndexForMiniProfile(null);
+                          }}
+                          className="hover:opacity-80 transition active:scale-95"
+                        >
+                          <UserName
+                            name={m.senderName}
+                            vip={m.senderVip}
+                            charmValue={m.senderCharmValue}
+                            wealthValue={m.senderWealthValue}
+                            adminRole={m.senderAdminRole}
+                            roomRole={m.senderRoomRole}
+                            size="sm"
+                          />
+                        </button>
+                        <span className="text-[9px] text-white/30 mr-auto">{formatTime(m.createdAt)}</span>
+                      </div>
+                      {(m.text || m.imageUrl) && (
+                        <div className="inline-block max-w-[85%] rounded-2xl rounded-tr-sm bg-white/5 border border-white/10 px-2.5 py-1.5">
+                          {m.text && <p className="text-white text-xs break-words whitespace-pre-wrap leading-relaxed">{m.text}</p>}
+                          {m.imageUrl && <img src={m.imageUrl} alt="" className="mt-1 rounded-lg max-w-[160px] max-h-[160px] object-cover" />}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
