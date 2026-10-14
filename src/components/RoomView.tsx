@@ -27,6 +27,7 @@ import MiniProfileSheet from "./MiniProfileSheet";
 import ChatThreadSheet from "./ChatThreadSheet";
 import RoomInfoSheet from "./RoomInfoSheet";
 import MicRequestsSheet from "./MicRequestsSheet";
+import SystemNotifSheet from "./SystemNotifSheet";
 import { useRoomPresence } from "../lib/hooks/useRoomPresence";
 import MembersSheet from "./MembersSheet";
 import GamesSheet from "./GamesSheet";
@@ -270,6 +271,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const [showChatInput, setShowChatInput] = useState(false);
   const [chatTab, setChatTab] = useState<"all" | "chat">("all");
   const [showEmojiSheet, setShowEmojiSheet] = useState(false);
+  const [showNotifSheet, setShowNotifSheet] = useState(false);
   const [activeEmoji, setActiveEmoji] = useState<string | null>(null);
   const [openSeatMenu, setOpenSeatMenu] = useState<number | null>(null);
   const [openSeatMenuPos, setOpenSeatMenuPos] = useState<{ x: number; y: number } | null>(null);
@@ -1132,7 +1134,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
 
           {/* 5. Mail */}
           <button
-            onClick={() => dialog.alert("قريباً: صندوق الرسائل")}
+            onClick={() => setShowNotifSheet(true)}
             className="w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center active:scale-90 transition text-white/90"
           >
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1699,6 +1701,8 @@ export default function RoomView({ roomId, onLeave }: Props) {
           }}
         />
       )}
+
+      {showNotifSheet && <SystemNotifSheet onClose={() => setShowNotifSheet(false)} />}
 
       {showMusicSheet && (
         <MusicSheet
