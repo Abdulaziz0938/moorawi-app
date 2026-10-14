@@ -259,19 +259,30 @@ export const launch = internalMutation({
       .collect();
 
     const occupied = seats.filter((s) => s.userId);
-    if (occupied.length === 0) return { ok: false };
 
     // MVP = lastHitUserId (الأقرب للإطلاق)
     const mvpId = rocket.lastHitUserId;
     const mvpUser = mvpId ? await ctx.db.get("users", mvpId) : null;
     const launcherAvatarUrl = mvpUser?.avatarUrl ?? undefined;
 
-    // للإحصاءات: أعلى مرسل في هذه الدورة لهذا المستوى
     const mvpName = mvpUser?.name ?? "ضيف";
-    const mvpFinalId = mvpId ?? occupied[0].userId!;
+    // [ezo-fix] لا تكسر إذا ما فيه أحد على المايك — استخدم المرسل
+    const mvpFinalId = mvpId ?? occupied[0]?.userId ?? null;
+
+    // إذا ما فيه mvp أصلاً — ضع علامة "أُطلق" بدون توزيع
+    if (!mvpFinalId) {
+      await ctx.db.patch("roomRockets", args.rocketId, {
+        launched: true,
+        launchedAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+      return { ok: true, empty: true };
+    }
 
     // سجّل حدث الإطلاق
-    const eventId = await ctx.db.insert("rocketLaunchEvents", {
+    let eventId: any;
+    try {
+      eventId = await ctx.db.insert("rocketLaunchEvents", {
       roomId: rocket.roomId,
       levelIndex: args.levelIndex,
       levelName: lvl.name,
@@ -284,7 +295,11 @@ export const launch = internalMutation({
       lastHitAvatarUrl: launcherAvatarUrl,
       recipientCount: occupied.length,
       createdAt: Date.now(),
-    });
+      });
+    } catch (e) {
+      console.error("[launch] insert failed:", e);
+      // استمر — ضع علامة أُطلق على أي حال
+    }
 
     // وزّع المكافآت على المايكات (عشوائي)
     // لكل مستخدم: 1 من [coins, bcoins] + فرصة VIP/مركبة/إطار لـ 3 أعلى
