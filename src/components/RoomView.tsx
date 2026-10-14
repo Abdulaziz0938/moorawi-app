@@ -189,6 +189,9 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const seats = useQuery(api.mics.state, { roomId });
   const members = useQuery(api.rooms.members, { roomId });
   const myInfo = useQuery(api.mics.myInfo, { roomId, tokenOverride: deviceId });
+  // [ezo-notif-badge] نفس استعلام SystemNotifSheet — Convex dedupe تلقائي
+  const _notifs = useQuery(api.notifications.listMine, { tokenOverride: deviceId });
+  const unreadNotifs = (_notifs ?? []).filter((n: any) => !n.readAt).length;
   const msgSinceRef = useRef(Date.now());
   const messages = useQuery(api.messages.list, { roomId, since: msgSinceRef.current });
   const listeners = useQuery(api.mics.listeners, { roomId });
@@ -1135,12 +1138,17 @@ export default function RoomView({ roomId, onLeave }: Props) {
           {/* 5. Mail */}
           <button
             onClick={() => setShowNotifSheet(true)}
-            className="w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center active:scale-90 transition text-white/90"
+            className="relative w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center active:scale-90 transition text-white/90"
           >
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="3" y="5" width="18" height="14" rx="2" />
               <path d="M3 7l9 6 9-6" />
             </svg>
+            {unreadNotifs > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[9px] font-black flex items-center justify-center">
+                {unreadNotifs > 99 ? "99+" : unreadNotifs}
+              </span>
+            )}
           </button>
 
           {/* 6. Games */}
