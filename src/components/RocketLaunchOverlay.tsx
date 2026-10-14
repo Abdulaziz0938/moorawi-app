@@ -22,7 +22,9 @@ export default function RocketLaunchOverlay({ rocket, launcher, onComplete }: Pr
   }, [onComplete]);
 
   return (
-    <div className="fixed inset-0 z-[400] pointer-events-none overflow-hidden">
+    <div className={`fixed inset-0 z-[400] overflow-hidden ${
+      phase === "exploding" ? "animate-shake" : ""
+    }`}>
       {/* Dark vignette */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/70 animate-fade-in" />
 
@@ -87,16 +89,66 @@ export default function RocketLaunchOverlay({ rocket, launcher, onComplete }: Pr
         </div>
       </div>
 
-      {/* Explosion */}
+      {/* ═══ Explosion (Binmo style) ═══ */}
       {phase === "exploding" && (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <img
-            src="/ui/glow-gold.png"
-            alt=""
-            className="w-[120vw] h-[120vw] max-w-[600px] max-h-[600px] object-contain animate-explosion"
-            style={{ filter: "drop-shadow(0 0 30px rgba(250,204,21,0.9))" }}
-          />
-        </div>
+        <>
+          {/* 1. White flash */}
+          <div className="absolute inset-0 bg-white animate-flash pointer-events-none" />
+
+          {/* 2. Shockwave rings (3 layers) */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div
+              className="w-32 h-32 rounded-full border-white/80 animate-shockwave"
+              style={{ borderWidth: "40px", borderStyle: "solid" }}
+            />
+            <div
+              className="absolute w-32 h-32 rounded-full border-amber-400/60 animate-shockwave"
+              style={{ borderWidth: "30px", borderStyle: "solid", animationDelay: "0.15s" }}
+            />
+            <div
+              className="absolute w-32 h-32 rounded-full border-yellow-300/40 animate-shockwave"
+              style={{ borderWidth: "20px", borderStyle: "solid", animationDelay: "0.3s" }}
+            />
+          </div>
+
+          {/* 3. Golden rays */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <img
+              src="/ui/glow-gold.png"
+              alt=""
+              className="w-[100vw] h-[100vw] max-w-[600px] max-h-[600px] object-contain animate-rays"
+            />
+          </div>
+
+          {/* 4. Golden particles (24 flying out) */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            {Array.from({ length: 24 }).map((_, i) => {
+              const angle = (i / 24) * Math.PI * 2;
+              const dist = 150 + Math.random() * 200;
+              const px = Math.cos(angle) * dist;
+              const py = Math.sin(angle) * dist;
+              const size = 8 + Math.random() * 12;
+              return (
+                <div
+                  key={i}
+                  className="absolute rounded-full animate-particle"
+                  style={{
+                    width: size,
+                    height: size,
+                    background:
+                      i % 2 === 0
+                        ? "radial-gradient(circle, #fde047, #f59e0b)"
+                        : "radial-gradient(circle, #fbbf24, transparent)",
+                    boxShadow: "0 0 12px rgba(250, 204, 21, 0.9)",
+                    ["--px" as any]: `${px}px`,
+                    ["--py" as any]: `${py}px`,
+                    animationDelay: `${Math.random() * 0.15}s`,
+                  }}
+                />
+              );
+            })}
+          </div>
+        </>
       )}
     </div>
   );
