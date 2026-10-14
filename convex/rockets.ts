@@ -184,10 +184,11 @@ export const addEnergy = internalMutation({
   handler: async (ctx, args) => {
     const cycle = getCycleKey();
 
-    // للـ 5 مستويات
+    // [ezo-rocket] أول مستوى غير مُطلَق = المستوى النشط
+    // الهدايا تُشحن المستوى النشط فقط (تراكمي)
+    let activeIdx = -1;
     for (let i = 0; i < ROCKET_LEVELS.length; i++) {
-      const lvl = ROCKET_LEVELS[i];
-      const existing = await ctx.db
+      const row = await ctx.db
         .query("roomRockets")
         .withIndex("by_room_cycle_level", (q) =>
           q
@@ -196,46 +197,61 @@ export const addEnergy = internalMutation({
             .eq("levelIndex", i)
         )
         .first();
-
-      if (existing) {
-        if (existing.launched) continue; // هذا المستوى انطلق، تخطاه
-        const newEnergy = existing.currentEnergy + args.amount;
-        await ctx.db.patch("roomRockets", existing._id, {
-          currentEnergy: newEnergy,
-          lastHitUserId: args.fromUserId,
-          updatedAt: Date.now(),
-        });
-
-        // فحص الإطلاق
-        if (newEnergy >= lvl.threshold) {
-          await ctx.scheduler.runAfter(0, internal.rockets.launch, {
-            rocketId: existing._id,
-            levelIndex: i,
-          });
-        }
-      } else {
-        // صف جديد
-        const newId = await ctx.db.insert("roomRockets", {
-          roomId: args.roomId,
-          cycleKey: cycle,
-          levelIndex: i,
-          currentEnergy: args.amount,
-          targetEnergy: lvl.threshold,
-          launched: false,
-          lastHitUserId: args.fromUserId,
-          updatedAt: Date.now(),
-        });
-
-        if (args.amount >= lvl.threshold) {
-          await ctx.scheduler.runAfter(0, internal.rockets.launch, {
-            rocketId: newId,
-            levelIndex: i,
-          });
-        }
+      if (!row || !row.launched) {
+        activeIdx = i;
+        break;
       }
     }
 
-    return { ok: true };
+    // كل المستويات انطلقت → لا شيء لنفعله
+    if (activeIdx === -1) return { ok: true, allLaunched: true };
+
+    const lvl = ROCKET_LEVELS[activeIdx];
+    const existing = await ctx.db
+      .query("roomRockets")
+      .withIndex("by_room_cycle_level", (q) =>
+        q
+          .eq("roomId", args.roomId)
+          .eq("cycleKey", cycle)
+          .eq("levelIndex", activeIdx)
+      )
+      .first();
+
+    if (existing) {
+      const newEnergy = existing.currentEnergy + args.amount;
+      await ctx.db.patch("roomRockets", existing._id, {
+        currentEnergy: newEnergy,
+        lastHitUserId: args.fromUserId,
+        updatedAt: Date.now(),
+      });
+
+      if (newEnergy >= lvl.threshold) {
+        await ctx.scheduler.runAfter(0, internal.rockets.launch, {
+          rocketId: existing._id,
+          levelIndex: activeIdx,
+        });
+      }
+    } else {
+      const newId = await ctx.db.insert("roomRockets", {
+        roomId: args.roomId,
+        cycleKey: cycle,
+        levelIndex: activeIdx,
+        currentEnergy: args.amount,
+        targetEnergy: lvl.threshold,
+        launched: false,
+        lastHitUserId: args.fromUserId,
+        updatedAt: Date.now(),
+      });
+
+      if (args.amount >= lvl.threshold) {
+        await ctx.scheduler.runAfter(0, internal.rockets.launch, {
+          rocketId: newId,
+          levelIndex: activeIdx,
+        });
+      }
+    }
+
+    return { ok: true, activeIdx };
   },
 });
 
