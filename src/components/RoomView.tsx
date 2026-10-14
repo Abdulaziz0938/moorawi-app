@@ -487,14 +487,22 @@ export default function RoomView({ roomId, onLeave }: Props) {
 
   // [ezo-rocket-launch] كشف الإطلاق الجديد
   useEffect(() => {
-    if (!recentLaunch || recentLaunch.length === 0) return;
-    const latest = recentLaunch[0];
+    // انتظر حتى تصل أول استجابة فعلية من السيرفر
+    if (recentLaunch === undefined) return;
+
+    // أول استجابة — ضع التهيئة (حتى لو فارغة)
     if (!launchInitRef.current) {
-      seenLaunchesRef.current.add(latest._id);
       launchInitRef.current = true;
+      // علّم كل الأحداث القديمة كـ "مُشاهدة"
+      for (const evt of recentLaunch) {
+        seenLaunchesRef.current.add(evt._id);
+      }
       return;
     }
-    if (!seenLaunchesRef.current.has(latest._id)) {
+
+    // استجابة لاحقة — افحص الأحدث
+    const latest = recentLaunch[0];
+    if (latest && !seenLaunchesRef.current.has(latest._id)) {
       seenLaunchesRef.current.add(latest._id);
       setLaunchAnimEvent(latest);
     }
