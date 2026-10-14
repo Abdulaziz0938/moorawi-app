@@ -199,6 +199,8 @@ export default function RoomView({ roomId, onLeave }: Props) {
 
   // [ezo-rocket-launch] كشف إطلاق جديد — عرض Overlay في RoomView
   const recentLaunch = useQuery(api.rockets.listRoomHistory, { roomId, limit: 1 });
+  const rocketStates = useQuery(api.rockets.getState, { roomId });
+  const activeRocket = rocketStates?.find((r: any) => !r.launched) ?? rocketStates?.[rocketStates.length - 1];
   const [launchAnimEvent, setLaunchAnimEvent] = useState<any>(null);
   const [openRewardsOnSheet, setOpenRewardsOnSheet] = useState(false);
   const seenLaunchesRef = useRef<Set<string>>(new Set());
@@ -1238,18 +1240,29 @@ export default function RoomView({ roomId, onLeave }: Props) {
         </footer>
 
         {/* [ezo-rocket] زر الصاروخ العائم */}
-        <button
-          onClick={() => setShowRocketSheet(true)}
-          className="fixed bottom-24 left-3 z-[72] w-12 h-12 rounded-full bg-gradient-to-br from-red-500 to-amber-600 flex items-center justify-center shadow-[0_0_18px_rgba(239,68,68,0.7)] border border-white/50 active:scale-90 transition-transform"
-          title="الصاروخ"
-        >
-          <img
-            src="/rockets/rocket-red.webp"
-            alt="rocket"
-            className="w-7 h-7 object-contain"
-          />
-          <span className="absolute inset-0 rounded-full ring-1 ring-red-400/60 animate-ping pointer-events-none" />
-        </button>
+        {activeRocket && (
+          <button
+            onClick={() => setShowRocketSheet(true)}
+            className="fixed bottom-20 left-2 z-[72] flex flex-col items-center active:scale-90 transition-transform"
+            title="الصاروخ"
+          >
+            <img
+              src={activeRocket.img}
+              alt="rocket"
+              className="w-24 h-32 object-contain drop-shadow-[0_6px_16px_rgba(0,0,0,0.8)]"
+            />
+            <div className="w-20 h-[3px] bg-black/70 rounded-full overflow-hidden mt-1">
+              <div
+                className="h-full rounded-full transition-all duration-500"
+                style={{
+                  width: `${activeRocket.progress}%`,
+                  background: `linear-gradient(90deg, ${activeRocket.color}, ${activeRocket.color}dd)`,
+                  boxShadow: `0 0 6px ${activeRocket.color}`,
+                }}
+              />
+            </div>
+          </button>
+        )}
       </div>
 
       {/* ==================== GLOBAL MARQUEE (≥ 30000) ==================== */}

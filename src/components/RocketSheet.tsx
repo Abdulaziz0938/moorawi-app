@@ -169,6 +169,12 @@ export default function RocketSheet({ roomId, onClose, onOpenGiftSheet, autoOpen
                 }}
               />
             </div>
+            <span
+              className="text-[11px] font-black mt-1 tabular-nums"
+              style={{ color: current.color, textShadow: "0 1px 4px rgba(0,0,0,0.9)" }}
+            >
+              {Math.round(current.progress)}%
+            </span>
           </div>
         )}
 
