@@ -15,7 +15,16 @@ import {
 } from "lucide-react";
 import SectionTitle from "./ui/SectionTitle";
 
-export const LAYOUT_ROWS: Record<string, number[]> = { "m1": [1], "m2": [2], "m3": [3], "m5": [2,3], "m7": [1,6], "m18": [6,6,6], "m24": [6,6,6,6], "m12b": [6,6] };
+export const LAYOUT_ROWS: Record<string, number[]> = {
+  "m1":   [1],
+  "m2":   [2],
+  "m3":   [3],
+  "m5":   [5],
+  "m7":   [2, 5],
+  "m12b": [5, 5, 2],
+  "m18":  [5, 5, 5, 3],
+  "m24":  [5, 5, 5, 5, 4],
+};
 
 const LAYOUT_OPTIONS: { key: string; label: string }[] = [
   { key: "m1",   label: "1 مايك" },
@@ -23,9 +32,9 @@ const LAYOUT_OPTIONS: { key: string; label: string }[] = [
   { key: "m3",   label: "3 مايك" },
   { key: "m5",   label: "5 مايك" },
   { key: "m7",   label: "7 مايك" },
-  { key: "m18",  label: "18 مايك (6×3)" },
-  { key: "m24",  label: "24 مايك (6×4)" },
-  { key: "m12b", label: "12 مايك (6×2)" },
+  { key: "m18",  label: "18 مايك" },
+  { key: "m24",  label: "24 مايك" },
+  { key: "m12b", label: "12 مايك" },
 ];
 
 interface Props {

@@ -556,8 +556,8 @@ export default function RoomView({ roomId, onLeave }: Props) {
   };
   const layoutRows = LAYOUT_ROWS[layout] ?? LAYOUT_ROWS["m18"];
   const maxRowCount = Math.max(...layoutRows);
-  const cellWidth = `min(calc((100% - ${(maxRowCount - 1) * 14}px) / ${maxRowCount}), 58px)`;
-  const gridHeight = layoutRows.length * 92 + 20;
+  const cellWidth = `min(calc((100% - ${(maxRowCount - 1) * 18}px) / ${maxRowCount}), 62px)`;
+  const gridHeight = layoutRows.length * 96 + 24;
 
   const handleSeatClick = (seatIndex: number, userId: string | undefined) => {
     const seat = seats?.find((s) => s.seatIndex === seatIndex);
@@ -789,7 +789,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
             {layoutRows.map((count, rowIdx) => {
               const rowStart = layoutRows.slice(0, rowIdx).reduce((a, b) => a + b, 0);
               return (
-                <div key={rowIdx} className="flex justify-center gap-3 flex-1">
+                <div key={rowIdx} className="flex justify-center gap-[18px] flex-1">
                   {Array.from({ length: count }).map((_, i) => {
                     const seat = seats[rowStart + i];
                     if (!seat) return null;
