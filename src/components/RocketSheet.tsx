@@ -1,12 +1,12 @@
-// [ezo-rockets] شيت الصاروخ — bottom sheet مضغوط (Binmo style)
-import { useState, useEffect, useMemo } from "react";
+// [ezo-rockets] شيت الصاروخ — Binmo style (rocket hero + circular progress)
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { getDeviceId } from "../lib/device";
 import { getActiveToken } from "../lib/session";
 import { useBackButton } from "../lib/hooks/useBackButton";
-import { X, Gift, Trophy, Loader2, Sparkles } from "lucide-react";
+import { X, Gift, Loader2 } from "lucide-react";
 
 interface Props {
   roomId: Id<"rooms">;
@@ -27,10 +27,35 @@ interface RocketState {
   launched: boolean;
 }
 
+// عدّاد تنازلي حتى منتصف الليل GMT+3
+function useResetCountdown() {
+  const [remaining, setRemaining] = useState("");
+  useEffect(() => {
+    const tick = () => {
+      const now = new Date();
+      const gmt3 = new Date(now.getTime() + 3 * 60 * 60 * 1000);
+      const midnight = new Date(gmt3);
+      midnight.setUTCHours(24, 0, 0, 0);
+      const diff = midnight.getTime() - gmt3.getTime();
+      const h = Math.floor(diff / 3_600_000);
+      const m = Math.floor((diff % 3_600_000) / 60_000);
+      const s = Math.floor((diff % 60_000) / 1000);
+      setRemaining(
+        `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
+      );
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, []);
+  return remaining;
+}
+
 export default function RocketSheet({ roomId, onClose, onOpenGiftSheet }: Props) {
   useBackButton(true, onClose);
   const deviceId = getDeviceId();
   const token = getActiveToken() ?? deviceId;
+  const resetIn = useResetCountdown();
 
   const rocketState = useQuery(api.rockets.getState, { roomId }) as RocketState[] | undefined;
   const history = useQuery(api.rockets.listRoomHistory, { roomId, limit: 10 });
@@ -43,7 +68,6 @@ export default function RocketSheet({ roomId, onClose, onOpenGiftSheet }: Props)
 
   const current = rocketState?.[selectedLevel];
 
-  // كشف الإطلاق التلقائي — اقفز للمستوى الجديد
   useEffect(() => {
     if (!rocketState) return;
     const firstActive = rocketState.findIndex((r) => !r.launched);
@@ -66,6 +90,12 @@ export default function RocketSheet({ roomId, onClose, onOpenGiftSheet }: Props)
     }
   };
 
+  // حسابات SVG للـ progress الدائري
+  const R = 26;
+  const C = 2 * Math.PI * R;
+  const dashOffset = C * (1 - (current?.progress ?? 0) / 100);
+  const ringColor = current?.color ?? "#fbbf24";
+
   return (
     <div className="fixed inset-0 z-[300]" dir="rtl">
       {/* Overlay */}
@@ -75,301 +105,316 @@ export default function RocketSheet({ roomId, onClose, onOpenGiftSheet }: Props)
       />
 
       {/* Bottom Sheet */}
-      <div className="absolute bottom-0 left-0 right-0 rounded-t-3xl overflow-hidden shadow-2xl animate-slide-up">
-        {/* Background Image */}
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: "url(/ui/rocket-bg.jpg)" }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/75 to-black/95" />
-
-        {/* Content */}
-        <div className="relative z-10 flex flex-col">
-          {/* Handle + Close */}
-          <div className="flex items-center justify-between px-4 pt-2 pb-1">
-            <div className="w-8" />
-            <div className="w-10 h-1 rounded-full bg-white/30" />
-            <button
-              onClick={onClose}
-              className="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center text-white active:scale-90 transition"
-            >
-              <X size={14} />
-            </button>
-          </div>
-
-          {/* Tabs */}
-          <div className="flex items-center justify-center gap-1.5 px-3 pt-1 pb-2">
-            <button
-              onClick={() => setTab("main")}
-              className={`px-3 py-1 rounded-full text-[11px] font-black transition ${
-                tab === "main" ? "bg-yellow-400 text-black" : "bg-white/10 text-white/70"
-              }`}
-            >
-              الصاروخ
-            </button>
-            <button
-              onClick={() => setTab("history")}
-              className={`px-3 py-1 rounded-full text-[11px] font-black transition ${
-                tab === "history" ? "bg-yellow-400 text-black" : "bg-white/10 text-white/70"
-              }`}
-            >
-              السجل
-            </button>
-            <button
-              onClick={() => setTab("rewards")}
-              className={`relative px-3 py-1 rounded-full text-[11px] font-black transition ${
-                tab === "rewards" ? "bg-yellow-400 text-black" : "bg-white/10 text-white/70"
-              }`}
-            >
-              تسجيلي
-              {unclaimedCount > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] px-0.5 rounded-full bg-red-500 text-white text-[8px] font-black flex items-center justify-center">
-                  {unclaimedCount}
+      <div className="absolute bottom-0 left-0 right-0 rounded-t-3xl overflow-visible shadow-2xl animate-slide-up">
+        {/* Big rocket — floats above sheet */}
+        {current && tab === "main" && (
+          <div className="absolute -top-[90px] left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 pointer-events-none">
+            {/* Circular progress on the left */}
+            <div className="relative w-16 h-16 flex-shrink-0">
+              <svg
+                viewBox="0 0 64 64"
+                className="w-full h-full -rotate-90"
+                style={{ filter: `drop-shadow(0 0 8px ${ringColor}88)` }}
+              >
+                <circle
+                  cx="32"
+                  cy="32"
+                  r={R}
+                  fill="none"
+                  stroke="rgba(255,255,255,0.15)"
+                  strokeWidth="5"
+                />
+                <circle
+                  cx="32"
+                  cy="32"
+                  r={R}
+                  fill="none"
+                  stroke={ringColor}
+                  strokeWidth="5"
+                  strokeLinecap="round"
+                  strokeDasharray={C}
+                  strokeDashoffset={dashOffset}
+                  style={{ transition: "stroke-dashoffset 0.6s ease" }}
+                />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-white text-xs font-black">
+                  {Math.round(current.progress)}%
                 </span>
-              )}
-            </button>
-          </div>
-
-          {/* MAIN TAB */}
-          {tab === "main" && (
-            <>
-              {/* Rockets strip — بدون بطاقات */}
-              <div className="flex items-end justify-center gap-4 px-4 pb-3 pt-1">
-                {rocketState === undefined
-                  ? [0, 1, 2, 3, 4].map((i) => (
-                      <div key={i} className="w-10 h-14 rounded bg-white/5 animate-pulse" />
-                    ))
-                  : rocketState.map((r, idx) => {
-                      const sel = selectedLevel === idx;
-                      return (
-                        <button
-                          key={idx}
-                          onClick={() => setSelectedLevel(idx)}
-                          className="flex flex-col items-center active:scale-95 transition-transform"
-                        >
-                          <div
-                            className={`relative transition-all ${
-                              sel ? "scale-110" : "opacity-55"
-                            }`}
-                          >
-                            <img
-                              src={r.img}
-                              alt={r.name}
-                              className="w-10 h-14 object-contain"
-                            />
-                            {r.launched && (
-                              <div className="absolute inset-0 flex items-center justify-center">
-                                <span className="bg-red-500/80 text-white text-[7px] font-black px-1 rounded-full">
-                                  ✓
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                          <div className="w-9 h-1 bg-black/60 rounded-full overflow-hidden mt-1">
-                            <div
-                              className="h-full rounded-full"
-                              style={{
-                                width: `${r.progress}%`,
-                                background: r.color,
-                                boxShadow: sel ? `0 0 6px ${r.color}` : "none",
-                              }}
-                            />
-                          </div>
-                        </button>
-                      );
-                    })}
               </div>
-
-              {/* Selected rocket compact card */}
-              {current && (
-                <div className="px-4 pb-2">
-                  <div className="flex items-center gap-3 bg-black/50 backdrop-blur-md rounded-2xl p-3 border border-white/10">
-                    <img
-                      src={current.img}
-                      alt={current.name}
-                      className="w-10 h-14 object-contain flex-shrink-0"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-white font-black text-xs">
-                          صاروخ {current.name}
-                        </span>
-                        <span
-                          className="text-[10px] font-black"
-                          style={{ color: current.color }}
-                        >
-                          {Math.round(current.progress)}%
-                        </span>
-                      </div>
-                      <div className="h-2 bg-black/60 rounded-full overflow-hidden">
-                        <div
-                          className="h-full rounded-full transition-all duration-700"
-                          style={{
-                            width: `${current.progress}%`,
-                            background: current.color,
-                            boxShadow: `0 0 8px ${current.color}`,
-                          }}
-                        />
-                      </div>
-                      <div className="flex items-center justify-between mt-1 text-[9px] text-white/50">
-                        <span>{current.currentEnergy.toLocaleString()}</span>
-                        <span>
-                          {current.threshold >= 1_000_000
-                            ? `${(current.threshold / 1_000_000).toFixed(1)}M`
-                            : `${Math.round(current.threshold / 1000)}K`}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Rewards compact row */}
-              {current && (
-                <div className="flex gap-2 px-4 pb-3">
-                  <div className="flex-1 bg-white/5 rounded-xl p-1.5 flex flex-col items-center">
-                    <img
-                      src={current.vehicle}
-                      alt=""
-                      className="w-10 h-7 object-contain"
-                    />
-                    <span className="text-[8px] text-white/60 mt-0.5">مركبة</span>
-                  </div>
-                  <div className="flex-1 bg-white/5 rounded-xl p-1.5 flex flex-col items-center">
-                    <img
-                      src={current.frame}
-                      alt=""
-                      className="w-7 h-7 object-contain"
-                    />
-                    <span className="text-[8px] text-white/60 mt-0.5">إطار</span>
-                  </div>
-                  <div className="flex-1 bg-white/5 rounded-xl p-1.5 flex flex-col items-center">
-                    <img
-                      src={`/rewards/vip${
-                        selectedLevel === 0 ? 1 : selectedLevel <= 2 ? 2 : 3
-                      }.png`}
-                      alt=""
-                      className="w-10 h-5 object-contain mt-1"
-                    />
-                    <span className="text-[8px] text-white/60 mt-0.5">VIP</span>
-                  </div>
-                </div>
-              )}
-
-              {/* Send button */}
-              <div className="px-4 pb-5">
-                <button
-                  onClick={onOpenGiftSheet}
-                  className="w-full h-11 rounded-2xl font-black text-sm text-white flex items-center justify-center gap-2 active:scale-95 transition-transform"
-                  style={{
-                    background: current
-                      ? `linear-gradient(90deg, ${current.color}, ${current.color}cc)`
-                      : "linear-gradient(90deg,#fbbf24,#f59e0b)",
-                  }}
-                >
-                  <Gift size={16} />
-                  أرسل هدية
-                </button>
-              </div>
-            </>
-          )}
-
-          {/* HISTORY TAB */}
-          {tab === "history" && (
-            <div className="max-h-[50dvh] overflow-y-auto px-3 pb-5">
-              {!history ? (
-                <div className="flex justify-center py-10">
-                  <Loader2 className="text-white/40 animate-spin" size={24} />
-                </div>
-              ) : history.length === 0 ? (
-                <MiniEmpty
-                  title="لا توجد إطلاقات بعد"
-                  subtitle="أرسل هدايا لشحن الصاروخ"
-                />
-              ) : (
-                <div className="space-y-1.5">
-                  {history.map((evt: any) => (
-                    <div
-                      key={evt._id}
-                      className="flex items-center gap-2 bg-white/5 rounded-xl p-2 border border-white/10"
-                    >
-                      <img
-                        src={`/rockets/rocket-${
-                          ["green", "blue", "purple", "red", "gold"][evt.levelIndex]
-                        }.png`}
-                        className="w-6 h-8 object-contain"
-                        alt=""
-                      />
-                      <div className="flex-1 min-w-0">
-                        <div className="text-white text-[11px] font-black">
-                          صاروخ {evt.levelName}
-                        </div>
-                        <div className="text-white/50 text-[9px] truncate">
-                          MVP: {evt.mvpUserName} • {evt.recipientCount} مستلم
-                        </div>
-                      </div>
-                      <div className="text-yellow-300 text-[10px] font-black">
-                        {evt.totalValue.toLocaleString()}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
-          )}
 
-          {/* REWARDS TAB */}
-          {tab === "rewards" && (
-            <div className="max-h-[50dvh] overflow-y-auto px-3 pb-5">
-              {!myRewards ? (
-                <div className="flex justify-center py-10">
-                  <Loader2 className="text-white/40 animate-spin" size={24} />
+            {/* Big rocket */}
+            <img
+              src={current.img}
+              alt={current.name}
+              className="w-24 h-32 object-contain drop-shadow-[0_10px_24px_rgba(0,0,0,0.7)] animate-[rocketFloat_2.5s_ease-in-out_infinite]"
+            />
+          </div>
+        )}
+
+        {/* Sheet body */}
+        <div className="relative rounded-t-3xl overflow-hidden">
+          {/* Background */}
+          <div
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: "url(/ui/rocket-bg.jpg)" }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/80 to-black/95" />
+
+          {/* Content */}
+          <div className="relative z-10 flex flex-col">
+            {/* Handle + Close */}
+            <div className="flex items-center justify-between px-4 pt-2 pb-1">
+              <div className="w-8" />
+              <div className="w-10 h-1 rounded-full bg-white/30" />
+              <button
+                onClick={onClose}
+                className="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center text-white active:scale-90 transition"
+              >
+                <X size={14} />
+              </button>
+            </div>
+
+            {/* Tabs */}
+            <div className="flex items-center justify-center gap-1.5 px-3 pt-1 pb-2">
+              <button
+                onClick={() => setTab("main")}
+                className={`px-3 py-1 rounded-full text-[11px] font-black transition ${
+                  tab === "main" ? "bg-yellow-400 text-black" : "bg-white/10 text-white/70"
+                }`}
+              >
+                الصاروخ
+              </button>
+              <button
+                onClick={() => setTab("history")}
+                className={`px-3 py-1 rounded-full text-[11px] font-black transition ${
+                  tab === "history" ? "bg-yellow-400 text-black" : "bg-white/10 text-white/70"
+                }`}
+              >
+                السجل
+              </button>
+              <button
+                onClick={() => setTab("rewards")}
+                className={`relative px-3 py-1 rounded-full text-[11px] font-black transition ${
+                  tab === "rewards" ? "bg-yellow-400 text-black" : "bg-white/10 text-white/70"
+                }`}
+              >
+                تسجيلي
+                {unclaimedCount > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] px-0.5 rounded-full bg-red-500 text-white text-[8px] font-black flex items-center justify-center">
+                    {unclaimedCount}
+                  </span>
+                )}
+              </button>
+            </div>
+
+            {/* ============ MAIN TAB ============ */}
+            {tab === "main" && (
+              <>
+                {/* Spacer for floating rocket */}
+                <div className="h-[80px]" />
+
+                {/* Timer */}
+                <div className="text-center text-white/70 text-[10px] font-bold">
+                  <span className="text-white/50">إعادة التعيين</span>{" "}
+                  <span className="text-yellow-300 font-black tabular-nums">{resetIn}</span>
                 </div>
-              ) : myRewards.length === 0 ? (
-                <MiniEmpty
-                  title="لا توجد مكافآت بعد"
-                  subtitle="جرّب حظك في إطلاق الصاروخ"
-                />
-              ) : (
-                <div className="grid grid-cols-3 gap-2">
-                  {myRewards.map((r: any) => (
-                    <div
-                      key={r._id}
-                      className={`bg-white/5 rounded-xl p-2 border flex flex-col items-center ${
-                        r.claimed ? "border-white/10 opacity-50" : "border-yellow-400/40"
-                      }`}
-                    >
+
+                {/* Level selector — small rockets */}
+                <div className="flex items-end justify-center gap-4 px-4 pt-3 pb-3">
+                  {rocketState === undefined
+                    ? [0, 1, 2, 3, 4].map((i) => (
+                        <div key={i} className="w-10 h-14 rounded bg-white/5 animate-pulse" />
+                      ))
+                    : rocketState.map((r, idx) => {
+                        const sel = selectedLevel === idx;
+                        return (
+                          <button
+                            key={idx}
+                            onClick={() => setSelectedLevel(idx)}
+                            className="flex flex-col items-center active:scale-95 transition-transform"
+                          >
+                            <div className={`transition-all ${sel ? "scale-110" : "opacity-55"}`}>
+                              <img
+                                src={r.img}
+                                alt={r.name}
+                                className="w-9 h-12 object-contain"
+                              />
+                            </div>
+                            <div className="w-9 h-1 bg-black/60 rounded-full overflow-hidden mt-1">
+                              <div
+                                className="h-full rounded-full"
+                                style={{
+                                  width: `${r.progress}%`,
+                                  background: r.color,
+                                  boxShadow: sel ? `0 0 6px ${r.color}` : "none",
+                                }}
+                              />
+                            </div>
+                          </button>
+                        );
+                      })}
+                </div>
+
+                {/* Rewards row */}
+                {current && (
+                  <div className="flex gap-2 px-4 pb-3">
+                    <div className="flex-1 bg-black/40 backdrop-blur rounded-xl p-2 flex flex-col items-center border border-white/10">
                       <img
-                        src={r.rewardImgUrl}
+                        src="/rewards/coins-large.png"
                         alt=""
                         className="w-10 h-10 object-contain"
                       />
-                      <div className="text-white text-[9px] font-black mt-1 text-center">
-                        {r.rewardAmount
-                          ? `${r.rewardAmount}`
-                          : r.rewardType === "vip"
-                          ? "VIP"
-                          : r.rewardType === "vehicle"
-                          ? "مركبة"
-                          : "إطار"}
-                      </div>
-                      {r.claimed ? (
-                        <span className="text-[8px] text-white/40 mt-1">✓</span>
-                      ) : (
-                        <button
-                          onClick={() => handleClaim(r._id)}
-                          disabled={claiming === r._id}
-                          className="w-full mt-1 py-0.5 rounded-full bg-yellow-400 text-black text-[9px] font-black active:scale-95 transition"
-                        >
-                          {claiming === r._id ? "..." : "استلام"}
-                        </button>
-                      )}
                     </div>
-                  ))}
+                    <div className="flex-1 bg-black/40 backdrop-blur rounded-xl p-2 flex flex-col items-center border border-white/10">
+                      <img
+                        src="/rewards/bcoins-large.png"
+                        alt=""
+                        className="w-10 h-10 object-contain"
+                      />
+                    </div>
+                    <div className="flex-1 bg-black/40 backdrop-blur rounded-xl p-2 flex flex-col items-center border border-white/10">
+                      <img
+                        src={`/rewards/vip${
+                          selectedLevel === 0 ? 1 : selectedLevel <= 2 ? 2 : 3
+                        }.png`}
+                        alt=""
+                        className="w-12 h-6 object-contain mt-2"
+                      />
+                    </div>
+                    <div className="flex-1 bg-black/40 backdrop-blur rounded-xl p-2 flex flex-col items-center border border-white/10">
+                      <img
+                        src={current.vehicle}
+                        alt=""
+                        className="w-10 h-7 object-contain mt-1"
+                      />
+                    </div>
+                    <div className="flex-1 bg-black/40 backdrop-blur rounded-xl p-2 flex flex-col items-center border border-white/10">
+                      <img
+                        src={current.frame}
+                        alt=""
+                        className="w-8 h-8 object-contain"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Send button */}
+                <div className="px-4 pb-5">
+                  <button
+                    onClick={onOpenGiftSheet}
+                    className="w-full h-11 rounded-2xl font-black text-sm text-white flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-lg"
+                    style={{
+                      background: current
+                        ? `linear-gradient(90deg, ${current.color}, ${current.color}cc)`
+                        : "linear-gradient(90deg,#fbbf24,#f59e0b)",
+                    }}
+                  >
+                    <Gift size={16} />
+                    أرسل هدية
+                  </button>
                 </div>
-              )}
-            </div>
-          )}
+              </>
+            )}
+
+            {/* ============ HISTORY TAB ============ */}
+            {tab === "history" && (
+              <div className="max-h-[55dvh] overflow-y-auto px-3 pb-5 pt-2">
+                {!history ? (
+                  <div className="flex justify-center py-10">
+                    <Loader2 className="text-white/40 animate-spin" size={24} />
+                  </div>
+                ) : history.length === 0 ? (
+                  <MiniEmpty
+                    title="لا توجد إطلاقات بعد"
+                    subtitle="أرسل هدايا لشحن الصاروخ"
+                  />
+                ) : (
+                  <div className="space-y-1.5">
+                    {history.map((evt: any) => (
+                      <div
+                        key={evt._id}
+                        className="flex items-center gap-2 bg-white/5 rounded-xl p-2 border border-white/10"
+                      >
+                        <img
+                          src={`/rockets/rocket-${
+                            ["green", "blue", "purple", "red", "gold"][evt.levelIndex]
+                          }.png`}
+                          className="w-6 h-8 object-contain"
+                          alt=""
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="text-white text-[11px] font-black">
+                            صاروخ {evt.levelName}
+                          </div>
+                          <div className="text-white/50 text-[9px] truncate">
+                            MVP: {evt.mvpUserName} • {evt.recipientCount} مستلم
+                          </div>
+                        </div>
+                        <div className="text-yellow-300 text-[10px] font-black">
+                          {evt.totalValue.toLocaleString()}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ============ REWARDS TAB ============ */}
+            {tab === "rewards" && (
+              <div className="max-h-[55dvh] overflow-y-auto px-3 pb-5 pt-2">
+                {!myRewards ? (
+                  <div className="flex justify-center py-10">
+                    <Loader2 className="text-white/40 animate-spin" size={24} />
+                  </div>
+                ) : myRewards.length === 0 ? (
+                  <MiniEmpty
+                    title="لا توجد مكافآت بعد"
+                    subtitle="جرّب حظك في إطلاق الصاروخ"
+                  />
+                ) : (
+                  <div className="grid grid-cols-3 gap-2">
+                    {myRewards.map((r: any) => (
+                      <div
+                        key={r._id}
+                        className={`bg-white/5 rounded-xl p-2 border flex flex-col items-center ${
+                          r.claimed ? "border-white/10 opacity-50" : "border-yellow-400/40"
+                        }`}
+                      >
+                        <img
+                          src={r.rewardImgUrl}
+                          alt=""
+                          className="w-10 h-10 object-contain"
+                        />
+                        <div className="text-white text-[9px] font-black mt-1 text-center">
+                          {r.rewardAmount
+                            ? `${r.rewardAmount}`
+                            : r.rewardType === "vip"
+                            ? "VIP"
+                            : r.rewardType === "vehicle"
+                            ? "مركبة"
+                            : "إطار"}
+                        </div>
+                        {r.claimed ? (
+                          <span className="text-[8px] text-white/40 mt-1">✓</span>
+                        ) : (
+                          <button
+                            onClick={() => handleClaim(r._id)}
+                            disabled={claiming === r._id}
+                            className="w-full mt-1 py-0.5 rounded-full bg-yellow-400 text-black text-[9px] font-black active:scale-95 transition"
+                          >
+                            {claiming === r._id ? "..." : "استلام"}
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
