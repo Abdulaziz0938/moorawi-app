@@ -10,6 +10,7 @@ import { smartUpload } from "../lib/uploadAssets";
 import { dialog } from "../lib/dialog";
 import { useAssets, useAssetsFull } from "../lib/assets";
 import GiftAdminPanel from "./GiftAdminPanel";
+import AssetTunerTab from "./AssetTunerTab";
 import BannersPanel from "./BannersPanel";
 import BubbleSlicer from "./BubbleSlicer";
 import VipAvatar from "./ui/VipAvatar";
@@ -32,7 +33,7 @@ interface Props {
   token: string | null;
 }
 
-type MainTab = "vip" | "medals" | "gifts" | "bubbles" | "shop" | "banners" | "frames" | "admin" | "ui";
+type MainTab = "vip" | "medals" | "gifts" | "bubbles" | "shop" | "banners" | "frames" | "admin" | "ui" | "tuner";
 
 const VIP_SLOTS = [
   { key: "background", label: "الخلفية" },
@@ -135,6 +136,7 @@ export default function AssetsPanel({ token }: Props) {
         <TabBtn active={tab === "frames"}  onClick={() => setTab("frames")}  icon={Move}         label="ضبط الإطارات" />
         <TabBtn active={tab === "admin"}   onClick={() => setTab("admin")}   icon={Shield}       label="الأدمن" />
         <TabBtn active={tab === "ui"}      onClick={() => setTab("ui")}      icon={LayoutGrid}   label="الواجهة" />
+        <TabBtn active={tab === "tuner"}   onClick={() => setTab("tuner")}   icon={Sparkles}     label="🎛️ ضبط" />
       </div>
 
       {tab === "vip" && <VipAssetsTab token={token} />}
@@ -148,6 +150,7 @@ export default function AssetsPanel({ token }: Props) {
       {tab === "frames" && <FramesTunerTab token={token} />}
       {tab === "admin" && <SimpleSlotsTab token={token} slots={ADMIN_SLOTS} />}
       {tab === "ui" && <SimpleSlotsTab token={token} slots={UI_SLOTS} />}
+      {tab === "tuner" && <AssetTunerTab />}
     </div>
   );
 }
