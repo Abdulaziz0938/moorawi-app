@@ -8,6 +8,8 @@ interface Props {
   defaultTop?: number;
   className?: string;
   fadeOut?: number;
+  /** style override (اختياري) */
+  style?: React.CSSProperties;
 }
 
 export default function VipTopOrnament({
@@ -16,6 +18,7 @@ export default function VipTopOrnament({
   defaultTop = -45,
   className = "",
   fadeOut = 1,
+  style: styleOverride,
 }: Props) {
   // القيم من DB (assets table) — أو default
   // - canvasSize  → عرض القمة % (100 = كامل العرض)
@@ -32,6 +35,7 @@ export default function VipTopOrnament({
       style={{
         top: yPos,
         opacity: fadeOut,
+        ...styleOverride,
       }}
     >
       <img

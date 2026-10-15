@@ -1,7 +1,7 @@
 // [moorawi-assets] AssetsPanel — unified admin panel for ALL assets
 // Tabs: VIP | Medals | Gifts | Shop | Admin | UI
 
-import { useState } from "react";
+import {useState, useEffect} from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
