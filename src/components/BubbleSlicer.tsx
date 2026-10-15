@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { uploadToCloudinary } from "../lib/cloudinary";
+import { smartUpload } from "../lib/uploadAssets";
 import { dialog } from "../lib/dialog";
 import {
   Upload, Loader2, Save, Trash2, Plus, Edit3, Wand2, Percent,
@@ -154,7 +155,7 @@ export default function BubbleSlicer({ token }: Props) {
   const handleUpload = async (file: File) => {
     setUploading(true);
     try {
-      const res = await uploadToCloudinary(file, "image");
+      const res = await smartUpload(file, { allowVideo: true });
       setForm((f) => ({ ...f, imageUrl: res.url }));
       // Auto-detect immediately after upload
       await runAutoDetect(res.url);

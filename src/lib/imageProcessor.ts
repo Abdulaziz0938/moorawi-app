@@ -62,9 +62,26 @@ export async function processImage(
       // اللمعان = max(r, g, b)
       const brightness = Math.max(r, g, b);
 
-      // new alpha = clip((brightness - 20) / 60 * 255)
-      let newAlpha = ((brightness - BLACK_THRESHOLD) / range) * 255;
-      newAlpha = Math.max(0, Math.min(255, newAlpha));
+      // هل البكسل رمادي؟ (R≈G≈B) — مؤشر على checkerboard
+      const dr = Math.abs(r - g);
+      const dg = Math.abs(g - b);
+      const db = Math.abs(b - r);
+      const maxDiff = Math.max(dr, dg, db);
+      const isGray = maxDiff < 12; // رمادي نقي
+
+      // للرمادي: إذا اللمعان بين 60-220 → شفاف (checkerboard)
+      // إذا لمعان < 60 → أسود → شفاف
+      // إذا لمعان > 220 → أبيض → اتركه
+      let newAlpha = 255;
+
+      if (isGray && brightness < 220) {
+        // Gray board (60-200) أو dark (0-60) → شفاف
+        newAlpha = 0;
+      } else {
+        // color pixel → طبق threshold أسود
+        newAlpha = ((brightness - BLACK_THRESHOLD) / range) * 255;
+        newAlpha = Math.max(0, Math.min(255, newAlpha));
+      }
 
       // final = min(original, newAlpha)
       data[i + 3] = Math.min(a, newAlpha);

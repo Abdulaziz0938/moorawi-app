@@ -6,6 +6,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { uploadToCloudinary } from "../lib/cloudinary";
+import { smartUpload } from "../lib/uploadAssets";
 import { dialog } from "../lib/dialog";
 import { useAssets } from "../lib/assets";
 import GiftAdminPanel from "./GiftAdminPanel";
@@ -176,7 +177,7 @@ function VipAssetsTab({ token }: any) {
   const handleFile = async (key: string, file: File) => {
     setBusyKey(key);
     try {
-      const res = await uploadToCloudinary(file, detectResourceType(file));
+      const res = await smartUpload(file, { allowVideo: true });
       await setAsset({ key, imageUrl: res.url, tokenOverride: token ?? undefined });
       dialog.alert("تم الرفع");
     } catch (e: any) { dialog.alert(e?.message || "فشل"); }
@@ -224,7 +225,7 @@ function SimpleSlotsTab({ token, slots }: any) {
   const handleFile = async (key: string, file: File) => {
     setBusyKey(key);
     try {
-      const res = await uploadToCloudinary(file, detectResourceType(file));
+      const res = await smartUpload(file, { allowVideo: true });
       await setAsset({ key, imageUrl: res.url, tokenOverride: token ?? undefined });
       dialog.alert("تم الرفع");
     } catch (e: any) { dialog.alert(e?.message || "فشل"); }
@@ -259,7 +260,7 @@ function MedalsTab({ token }: { token: string | null }) {
   const handleFile = async (medalId: Id<"medals">, file: File) => {
     setBusyId(medalId);
     try {
-      const res = await uploadToCloudinary(file, detectResourceType(file));
+      const res = await smartUpload(file, { allowVideo: true });
       await updateMedal({ medalId, imageUrl: res.url, tokenOverride: token ?? undefined });
       dialog.alert("تم الرفع");
     } catch (e: any) { dialog.alert(e?.message || "فشل"); }
@@ -345,7 +346,7 @@ function ShopTab({ token }: { token: string | null }) {
   const handleFile = async (itemId: Id<"shopItems">, file: File) => {
     setBusyId(itemId);
     try {
-      const res = await uploadToCloudinary(file, detectResourceType(file));
+      const res = await smartUpload(file, { allowVideo: true });
       await updateItem({ itemId, imageUrl: res.url, tokenOverride: token ?? undefined });
       dialog.alert("تم الرفع");
     } catch (e: any) { dialog.alert(e?.message || "فشل"); }
@@ -523,7 +524,7 @@ function CreateItemModal({ token, onClose, onCreate }: any) {
   const handleImage = async (file: File) => {
     setUploading(true);
     try {
-      const res = await uploadToCloudinary(file, detectResourceType(file));
+      const res = await smartUpload(file, { allowVideo: true });
       setImageUrl(res.url);
     } catch (e: any) { dialog.alert(e?.message || "فشل الرفع"); }
     finally { setUploading(false); }

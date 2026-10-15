@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { uploadToCloudinary } from "../lib/cloudinary";
+import { smartUpload } from "../lib/uploadAssets";
 import { dialog } from "../lib/dialog";
 import { Plus, Loader2, Save, Trash2, Upload, Eye, EyeOff, ChevronUp, ChevronDown } from "lucide-react";
 
@@ -34,7 +35,7 @@ export default function BannersPanel({ token }: Props) {
   const handleUpload = async (file: File) => {
     setUploading(true);
     try {
-      const res = await uploadToCloudinary(file, "image");
+      const res = await smartUpload(file, { allowVideo: true });
       setForm((f) => ({ ...f, imageUrl: res.url }));
     } catch (e: any) {
       dialog.alert(e?.message || "فشل الرفع");

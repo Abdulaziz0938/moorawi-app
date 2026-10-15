@@ -183,11 +183,6 @@ export default function MiniProfileSheet({
           </button>
         </div>
 
-                {/* [DEBUG] */}
-        <div className="absolute top-2 left-2 z-50 bg-red-500 text-white text-[9px] px-2 py-1 rounded font-mono">
-          v:{vipLevel} | c:{vipCardUrl ? "✓" : "✗"} | b:{vipBgUrl ? "✓" : "✗"}
-        </div>
-
         {/* [DEBUG] */}
         <div className="absolute top-2 left-2 z-50 bg-red-500 text-white text-[9px] px-2 py-1 rounded font-mono">
           v:{vipLevel} | c:{vipCardUrl ? "✓" : "✗"} | b:{vipBgUrl ? "✓" : "✗"}
