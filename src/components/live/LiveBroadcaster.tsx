@@ -50,8 +50,9 @@ export default function LiveBroadcaster({ streamId, onEnd }: Props) {
   const [sending, setSending] = useState(false);
   const [lastTap, setLastTap] = useState(0);
 
-  // ═══ Join Agora as host ═══
+  // ═══ Join Agora as host — ينتظر تحميل stream ═══
   useEffect(() => {
+    if (!stream?.channelName) return; // انتظر تحميل stream
     let mounted = true;
     (async () => {
       try {
@@ -63,7 +64,7 @@ export default function LiveBroadcaster({ streamId, onEnd }: Props) {
         if (!mounted) return;
         await agoraManager.join(
           appId,
-          stream!.channelName,
+          stream.channelName,
           rtcToken,
           account,
           () => {},
@@ -82,7 +83,7 @@ export default function LiveBroadcaster({ streamId, onEnd }: Props) {
       mounted = false;
       agoraManager.leave();
     };
-  }, [streamId]);
+  }, [streamId, stream?.channelName]);
 
   // ═══ Toggle camera ═══
   const handleToggleCamera = async () => {

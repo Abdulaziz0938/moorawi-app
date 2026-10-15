@@ -42,8 +42,9 @@ export default function LiveViewer({ streamId, onLeave }: Props) {
   const [hearts, setHearts] = useState<{ id: number; x: number; color: string }[]>([]);
   const [lastTap, setLastTap] = useState(0);
 
-  // ═══ Join as audience ═══
+  // ═══ Join as audience — ينتظر stream ═══
   useEffect(() => {
+    if (!stream?.channelName) return;
     let mounted = true;
     (async () => {
       try {
@@ -55,7 +56,7 @@ export default function LiveViewer({ streamId, onLeave }: Props) {
         if (!mounted) return;
         await agoraManager.join(
           appId,
-          stream!.channelName,
+          stream.channelName,
           rtcToken,
           account,
           (user) => {
@@ -85,7 +86,7 @@ export default function LiveViewer({ streamId, onLeave }: Props) {
       }).catch(() => {});
       agoraManager.leave();
     };
-  }, [streamId]);
+  }, [streamId, stream?.channelName]);
 
   // ═══ Auto-scroll comments ═══
   useEffect(() => {
