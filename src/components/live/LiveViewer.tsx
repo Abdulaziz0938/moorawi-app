@@ -10,6 +10,7 @@ import { dialog } from "../../lib/dialog";
 import VipAvatar from "../ui/VipAvatar";
 import LiveGiftSheet from "./LiveGiftSheet";
 import LiveGiftAnimation from "./LiveGiftAnimation";
+import PKView from "./PKView";
 import {
   X, Heart, Users, Send, Gift, Loader2, Share2, Eye,
 } from "lucide-react";
@@ -183,19 +184,44 @@ export default function LiveViewer({ streamId, onLeave }: Props) {
 
   return (
     <div className="fixed inset-0 z-[300] bg-black overflow-hidden" dir="rtl">
-      {/* Video area — fullscreen */}
-      <div
-        ref={videoRef}
-        onClick={handleScreenTap}
-        className="absolute inset-0 bg-gradient-to-br from-purple-900/30 to-black flex items-center justify-center"
-      >
-        {!connected && (
-          <div className="text-white/40 flex flex-col items-center gap-3">
-            <Loader2 className="animate-spin" size={40} />
-            <div className="text-xs font-black">جاري الاتصال...</div>
+      {/* Video area — split عندما PK نشط */}
+      {stream.pkActive && stream.coHostId ? (
+        <div className="absolute inset-0 flex">
+          {/* Host half (left in RTL means visually right) */}
+          <div
+            ref={videoRef}
+            onClick={handleScreenTap}
+            className="flex-1 relative bg-gradient-to-br from-cyan-900/40 to-black border-l border-white/20"
+          >
+            <div className="absolute top-20 right-2 z-20 bg-cyan-500/90 px-2 py-0.5 rounded-full">
+              <span className="text-white text-[9px] font-black">
+                {stream.hostName}
+              </span>
+            </div>
           </div>
-        )}
-      </div>
+          {/* CoHost half */}
+          <div className="flex-1 relative bg-gradient-to-br from-pink-900/40 to-black">
+            <div className="absolute top-20 left-2 z-20 bg-pink-500/90 px-2 py-0.5 rounded-full">
+              <span className="text-white text-[9px] font-black">
+                {stream.coHostName ?? "مذيعة"}
+              </span>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div
+          ref={videoRef}
+          onClick={handleScreenTap}
+          className="absolute inset-0 bg-gradient-to-br from-purple-900/30 to-black flex items-center justify-center"
+        >
+          {!connected && (
+            <div className="text-white/40 flex flex-col items-center gap-3">
+              <Loader2 className="animate-spin" size={40} />
+              <div className="text-xs font-black">جاري الاتصال...</div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ═══ TOP BAR — host info ═══ */}
       <div className="absolute top-0 left-0 right-0 z-30 p-3 pt-5 bg-gradient-to-b from-black/70 to-transparent">
@@ -362,6 +388,27 @@ export default function LiveViewer({ streamId, onLeave }: Props) {
         </div>
       )}
       {/* Gift Sheet */}
+
+      {/* PK Score Bar */}
+      {stream.pkActive && stream.coHostId && (
+        <PKView
+          hostName={stream.hostName}
+          hostAvatarUrl={stream.hostAvatarUrl}
+          hostVipLevel={stream.hostVipLevel}
+          hostScore={stream.hostScore}
+          coHostName={stream.coHostName ?? "مذيعة"}
+          coHostAvatarUrl={stream.coHostAvatarUrl}
+          coHostVipLevel={stream.coHostVipLevel ?? 0}
+          coHostScore={stream.coHostScore}
+          pkStartedAt={stream.pkStartedAt ?? Date.now()}
+          pkDurationSec={stream.pkDurationSec ?? 300}
+        />
+      )}
+
+      {/* Gift Animation */}
+      {!stream.pkActive && <LiveGiftAnimation streamId={streamId} />}
+
+
       {showGiftSheet && stream && (
         <LiveGiftSheet
           streamId={streamId}

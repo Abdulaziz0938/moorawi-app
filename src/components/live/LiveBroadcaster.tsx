@@ -10,6 +10,7 @@ import { dialog } from "../../lib/dialog";
 import LiveGiftSheet from "./LiveGiftSheet";
 import PKInviteSheet from "./PKInviteSheet";
 import PKView from "./PKView";
+import PKWinnerModal from "./PKWinnerModal";
 import LiveGiftAnimation from "./LiveGiftAnimation";
 import {
   X, Heart, Users, Send, Gift, Loader2, Video, VideoOff,
@@ -55,6 +56,21 @@ export default function LiveBroadcaster({ streamId, onEnd }: Props) {
   const [lastTap, setLastTap] = useState(0);
   const [showGiftSheet, setShowGiftSheet] = useState(false);
   const [showPKInvite, setShowPKInvite] = useState(false);
+  const [pkWinnerData, setPkWinnerData] = useState<any>(null);
+  const prevPKRef = useRef<boolean>(false);
+
+  // كشف نهاية PK تلقائياً (من السيرفر أو من عدّاد الوقت)
+  useEffect(() => {
+    if (!stream) return;
+    if (prevPKRef.current === true && stream.pkActive === false) {
+      // PK انتهى
+      if (stream.coHostId) {
+        // نحتاج حفظ الـ scores قبل الإزالة — لكنها أُزيلت مع endPK
+        // نستخدم محلياً
+      }
+    }
+    prevPKRef.current = stream.pkActive;
+  }, [stream?.pkActive]);
 
   // ═══ Join Agora as host — ينتظر تحميل stream ═══
   useEffect(() => {
@@ -354,6 +370,14 @@ export default function LiveBroadcaster({ streamId, onEnd }: Props) {
 
       {/* ═══ Gift Animation ═══ */}
       <LiveGiftAnimation streamId={streamId} />
+
+      {/* ═══ PK Winner Modal ═══ */}
+      {pkWinnerData && (
+        <PKWinnerModal
+          {...pkWinnerData}
+          onClose={() => setPkWinnerData(null)}
+        />
+      )}
 
       {/* ═══ PK Invite Sheet ═══ */}
       {showPKInvite && !stream.pkActive && (
