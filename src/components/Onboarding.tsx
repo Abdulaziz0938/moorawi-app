@@ -4,6 +4,7 @@ import { api } from "../../convex/_generated/api";
 import { getDeviceId } from "../lib/device";
 import { getSessionUsername } from "../lib/session";
 import { uploadToCloudinary } from "../lib/cloudinary";
+import { smartUpload } from "../lib/uploadAssets";
 import ImageCropper from "./ImageCropper";
 import { Camera, Check, Loader2, ChevronLeft, Mic } from "lucide-react";
 
@@ -55,7 +56,7 @@ export default function Onboarding({ onComplete, onBackToAuth }: Props) {
     setLoading(true);
     setError(null);
     try {
-      const result = await uploadToCloudinary(croppedFile, "image");
+      const result = await smartUpload(croppedFile, { allowVideo: false });
       const url = await saveAvatar({ avatarUrl: result.url, tokenOverride: deviceId });
       setAvatarPreview(url);
     } catch (e: any) {

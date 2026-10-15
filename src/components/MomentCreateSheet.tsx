@@ -4,6 +4,7 @@ import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { getDeviceId } from "../lib/device";
 import { uploadToCloudinary } from "../lib/cloudinary";
+import { smartUpload } from "../lib/uploadAssets";
 import { dialog } from "../lib/dialog";
 import { useBackButton } from "../lib/hooks/useBackButton";
 import { X, Plus, Loader2, Send, Image as ImageIcon } from "lucide-react";
@@ -26,7 +27,7 @@ export default function MomentCreateSheet({ onClose }: Props) {
       const list = Array.from(files).slice(0, remaining);
       const urls: string[] = [];
       for (const f of list) {
-        const res = await uploadToCloudinary(f, "image");
+        const res = await smartUpload(f, { allowVideo: false });
         urls.push(res.url);
       }
       setImages((prev) => [...prev, ...urls]);

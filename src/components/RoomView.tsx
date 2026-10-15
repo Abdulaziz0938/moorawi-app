@@ -12,6 +12,7 @@ import { getDeviceId } from "../lib/device";
 import { getActiveToken } from "../lib/session";
 import { useAssets, useAssetsFull } from "../lib/assets";
 import { uploadToCloudinary } from "../lib/cloudinary";
+import { smartUpload } from "../lib/uploadAssets";
 import SettingsSheet from "./SettingsSheet";
 import RoomLockSheet from "./RoomLockSheet";
 import GiftSheet from "./GiftSheet";
@@ -723,7 +724,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const handleImageUpload = async (file: File) => {
     setUploading(true);
     try {
-      const result = await uploadToCloudinary(file, "image");
+      const result = await smartUpload(file, { allowVideo: false });
       await sendMsg({ roomId, imageUrl: result.url, tokenOverride: deviceId });
     } catch (e: any) { dialog.alert(e?.message || "فشل رفع الصورة"); }
     finally { setUploading(false); }

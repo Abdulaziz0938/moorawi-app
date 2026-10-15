@@ -6,6 +6,7 @@ import type { Id } from "../../convex/_generated/dataModel";
 import { getDeviceId } from "../lib/device";
 import { getActiveToken } from "../lib/session";
 import { uploadToCloudinary } from "../lib/cloudinary";
+import { smartUpload } from "../lib/uploadAssets";
 import { dialog } from "../lib/dialog";
 import {
   ChevronLeft, ChevronRight, Home, Gift, MessageCircle, UserPlus, Crown, Loader2,
@@ -173,7 +174,7 @@ export default function ProfilePage({
     setPendingFile(null);
     setUploading(true);
     try {
-      const result = await uploadToCloudinary(croppedFile);
+      const result = await smartUpload(croppedFile, { allowVideo: true });
       await saveAvatar({ avatarUrl: result.url, tokenOverride: deviceId });
       dialog.alert("تم تحديث الصورة");
     } catch (e: any) { dialog.alert(e?.message || "فشل الرفع"); }
@@ -183,7 +184,7 @@ export default function ProfilePage({
     setPendingCover(null);
     setUploading(true);
     try {
-      const result = await uploadToCloudinary(croppedFile, "image");
+      const result = await smartUpload(croppedFile, { allowVideo: false });
       await saveCover({ coverUrl: result.url, tokenOverride: deviceId });
       dialog.alert("تم تحديث الغلاف");
     } catch (e: any) { dialog.alert(e?.message || "فشل الرفع"); }

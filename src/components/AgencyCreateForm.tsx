@@ -4,6 +4,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { getDeviceId } from "../lib/device";
 import { uploadToCloudinary } from "../lib/cloudinary";
+import { smartUpload } from "../lib/uploadAssets";
 import { dialog } from "../lib/dialog";
 import {
   ChevronRight, Loader2, Plus, Briefcase, Phone, MessageCircle,
@@ -148,7 +149,7 @@ function Form({ onClose }: { onClose: () => void }) {
   const handleUpload = async (file: File) => {
     setUploading(true);
     try {
-      const res = await uploadToCloudinary(file, "image");
+      const res = await smartUpload(file, { allowVideo: false });
       setLogo(res.url);
     } catch (e: any) {
       dialog.alert(e?.message || "فشل رفع الصورة");

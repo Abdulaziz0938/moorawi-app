@@ -5,6 +5,7 @@ import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { getDeviceId } from "../lib/device";
 import { uploadToCloudinary } from "../lib/cloudinary";
+import { smartUpload } from "../lib/uploadAssets";
 import { dialog } from "../lib/dialog";
 import { useBackButton } from "../lib/hooks/useBackButton";
 import UserAvatar from "./UserAvatar";
@@ -64,7 +65,7 @@ export default function ChatThreadSheet({ conversationId, onClose }: Props) {
   const handleImage = async (file: File) => {
     setUploading(true);
     try {
-      const res = await uploadToCloudinary(file, "image");
+      const res = await smartUpload(file, { allowVideo: false });
       await send({ conversationId: conversationId as any, imageUrl: res.url, tokenOverride: deviceId });
     } catch (e: any) {
       dialog.alert(e?.message || "فشل الرفع");

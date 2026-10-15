@@ -5,6 +5,7 @@ import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { getDeviceId } from "../lib/device";
 import { uploadToCloudinary } from "../lib/cloudinary";
+import { smartUpload } from "../lib/uploadAssets";
 import { dialog } from "../lib/dialog";
 import GiftAdminPanel from "./GiftAdminPanel";
 import ImageCropper from "./ImageCropper";
@@ -116,7 +117,7 @@ export default function SettingsSheet({
     setPendingCover(null);
     setUploading(true);
     try {
-      const result = await uploadToCloudinary(croppedFile, "image");
+      const result = await smartUpload(croppedFile, { allowVideo: false });
       await updateRoomInfo({ roomId, coverUrl: result.url, tokenOverride: deviceId });
       setCoverUrl(result.url);
     } catch (e: any) { dialog.alert(e?.message || "فشل"); }
@@ -131,7 +132,7 @@ export default function SettingsSheet({
     setPendingBg(null);
     setUploading(true);
     try {
-      const result = await uploadToCloudinary(croppedFile, "image");
+      const result = await smartUpload(croppedFile, { allowVideo: false });
       await updateBackground({ roomId, backgroundUrl: result.url, tokenOverride: deviceId });
       dialog.alert("تم تغيير الخلفية");
     } catch (e: any) { dialog.alert(e?.message || "فشل"); }

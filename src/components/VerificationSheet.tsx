@@ -4,6 +4,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { getDeviceId } from "../lib/device";
 import { uploadToCloudinary } from "../lib/cloudinary";
+import { smartUpload } from "../lib/uploadAssets";
 import { dialog } from "../lib/dialog";
 import { useBackButton } from "../lib/hooks/useBackButton";
 import { Header, Spinner } from "./VisitsSheet";
@@ -96,7 +97,7 @@ export default function VerificationSheet({ onClose }: Props) {
       const blob = await fetch(preview).then((r) => r.blob());
       const file = new File([blob], `verify-${Date.now()}.jpg`, { type: "image/jpeg" });
 
-      const res = await uploadToCloudinary(file, "image");
+      const res = await smartUpload(file, { allowVideo: false });
       await submit({ imageUrl: res.url, tokenOverride: deviceId });
       dialog.alert("تم إرسال طلبك — سيتم المراجعة قريباً ✅");
       onClose();
