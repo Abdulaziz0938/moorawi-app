@@ -114,6 +114,19 @@ export default function MiniProfileSheet({
   const medalCount = (profile as any).stats?.medals ?? medals.length;
   const equippedVipLvl = (profile as any).equippedVipFrameLevel ?? null;
   const vipFrameData = equippedVipLvl ? assetsFull[`vip.frame.${equippedVipLvl}`] : null;
+  const vipBgUrl = vipLevel > 0 ? assets[`vip.background.${vipLevel}`] : null;
+
+  // [ezo-gem] ألوان الجواهر لكل VIP
+  const GEM_COLORS: Record<number, { primary: string; secondary: string; glow: string }> = {
+    1: { primary: "#10b981", secondary: "#34d399", glow: "rgba(16,185,129,0.7)" },
+    2: { primary: "#3b82f6", secondary: "#60a5fa", glow: "rgba(59,130,246,0.7)" },
+    3: { primary: "#a855f7", secondary: "#c084fc", glow: "rgba(168,85,247,0.75)" },
+    4: { primary: "#dc2626", secondary: "#f87171", glow: "rgba(220,38,38,0.75)" },
+    5: { primary: "#eab308", secondary: "#facc15", glow: "rgba(234,179,8,0.8)" },
+    6: { primary: "#f97316", secondary: "#fb923c", glow: "rgba(249,115,22,0.85)" },
+    7: { primary: "#fbbf24", secondary: "#fde047", glow: "rgba(251,191,36,0.9)" },
+  };
+  const gem = vipLevel > 0 ? GEM_COLORS[vipLevel] : null;
 
   const canKick = currentUserRole === "owner" || currentUserRole === "moderator";
   const canBan = currentUserRole === "owner";
@@ -168,10 +181,76 @@ export default function MiniProfileSheet({
           </button>
         </div>
 
+        {/* [ezo-gems] زخارف أعلى الشيت — للـ VIP فقط */}
+        {gem && (
+          <>
+            {/* الزاوية اليسرى */}
+            <div className="absolute -top-3 left-4 z-40 pointer-events-none">
+              <div className="relative" style={{ width: 60, height: 30 }}>
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    background: `linear-gradient(135deg, ${gem.primary}, ${gem.secondary}, ${gem.primary})`,
+                    clipPath: "polygon(0 60%, 12% 20%, 30% 8%, 50% 0, 70% 8%, 88% 20%, 100% 60%, 92% 100%, 8% 100%)",
+                    filter: `drop-shadow(0 0 8px ${gem.glow}) drop-shadow(0 0 16px ${gem.glow})`,
+                  }}
+                />
+                {/* جوهرة مركزية */}
+                <div
+                  className="absolute top-1 left-1/2 -translate-x-1/2 w-3 h-3 rotate-45"
+                  style={{
+                    background: `linear-gradient(135deg, #fff, ${gem.secondary})`,
+                    boxShadow: `0 0 8px ${gem.glow}, inset 0 0 4px rgba(255,255,255,0.9)`,
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* الزاوية اليمنى */}
+            <div className="absolute -top-3 right-4 z-40 pointer-events-none">
+              <div className="relative" style={{ width: 60, height: 30 }}>
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    background: `linear-gradient(225deg, ${gem.primary}, ${gem.secondary}, ${gem.primary})`,
+                    clipPath: "polygon(0 60%, 12% 20%, 30% 8%, 50% 0, 70% 8%, 88% 20%, 100% 60%, 92% 100%, 8% 100%)",
+                    filter: `drop-shadow(0 0 8px ${gem.glow}) drop-shadow(0 0 16px ${gem.glow})`,
+                  }}
+                />
+                <div
+                  className="absolute top-1 left-1/2 -translate-x-1/2 w-3 h-3 rotate-45"
+                  style={{
+                    background: `linear-gradient(225deg, #fff, ${gem.secondary})`,
+                    boxShadow: `0 0 8px ${gem.glow}, inset 0 0 4px rgba(255,255,255,0.9)`,
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* خط ذهبي أعلى الشيت */}
+            <div
+              className="absolute top-0 left-0 right-0 h-[2px] z-40 pointer-events-none"
+              style={{
+                background: `linear-gradient(90deg, transparent 0%, ${gem.primary} 20%, ${gem.secondary} 50%, ${gem.primary} 80%, transparent 100%)`,
+                boxShadow: `0 0 12px ${gem.glow}`,
+                animation: "ezoGemsShimmer 4s ease-in-out infinite",
+              }}
+            />
+          </>
+        )}
+
         {/* Sheet */}
         <div className="relative rounded-t-3xl max-h-[92vh] overflow-hidden flex flex-col">
-          <div className={`absolute inset-0 bg-gradient-to-b ${bgGradient}`} />
-          <div className="absolute inset-0 bg-black/30 backdrop-blur-2xl" />
+          {/* [ezo-bg] VIP background image (fallback to gradient) */}
+          {vipBgUrl ? (
+            <div
+              className="absolute inset-0 bg-cover bg-center"
+              style={{ backgroundImage: `url(${vipBgUrl})` }}
+            />
+          ) : (
+            <div className={`absolute inset-0 bg-gradient-to-b ${bgGradient}`} />
+          )}
+          <div className="absolute inset-0 bg-black/35 backdrop-blur-[2px]" />
           <div className="absolute inset-x-0 top-0 h-px bg-white/40" />
 
           <div className="relative z-10 flex flex-col max-h-[92vh] overflow-y-auto">

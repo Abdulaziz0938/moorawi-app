@@ -144,6 +144,19 @@ export default function ProfilePage({
   const finalOffsetY = equippedFrame?.offsetY ?? equippedVipData?.offsetY ?? 0;
   const finalAssetType = equippedFrame?.assetType ?? equippedVipData?.assetType ?? null;
   const bgGradient = VIP_BG[vipLevel] || VIP_BG[0];
+  const vipBgUrl = vipLevel > 0 ? assets[`vip.background.${vipLevel}`] : null;
+
+  // [ezo-gem] ألوان الجواهر لكل VIP
+  const GEM_COLORS: Record<number, { primary: string; secondary: string; glow: string }> = {
+    1: { primary: "#10b981", secondary: "#34d399", glow: "rgba(16,185,129,0.7)" },
+    2: { primary: "#3b82f6", secondary: "#60a5fa", glow: "rgba(59,130,246,0.7)" },
+    3: { primary: "#a855f7", secondary: "#c084fc", glow: "rgba(168,85,247,0.75)" },
+    4: { primary: "#dc2626", secondary: "#f87171", glow: "rgba(220,38,38,0.75)" },
+    5: { primary: "#eab308", secondary: "#facc15", glow: "rgba(234,179,8,0.8)" },
+    6: { primary: "#f97316", secondary: "#fb923c", glow: "rgba(249,115,22,0.85)" },
+    7: { primary: "#fbbf24", secondary: "#fde047", glow: "rgba(251,191,36,0.9)" },
+  };
+  const gem = vipLevel > 0 ? GEM_COLORS[vipLevel] : null;
   const isOwner = profile.userNumber === 1;
   const isAdmin = profile.adminRole === "super" || profile.adminRole === "moderator";
   const charm = profile.totalReceived ?? 0;
@@ -217,7 +230,14 @@ export default function ProfilePage({
 
   return (
     <div className="fixed inset-0 z-[200] flex flex-col" dir="rtl">
-      <div className={`absolute inset-0 bg-gradient-to-b ${bgGradient}`} />
+      {vipBgUrl ? (
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: `url(${vipBgUrl})` }}
+        />
+      ) : (
+        <div className={`absolute inset-0 bg-gradient-to-b ${bgGradient}`} />
+      )}
       <div className="absolute inset-0 bg-black/40 backdrop-blur-2xl" />
 
       <div className="relative z-10 flex flex-col h-full overflow-y-auto">
@@ -225,6 +245,11 @@ export default function ProfilePage({
         <div className="relative aspect-video flex-shrink-0">
           {profile.coverUrl ? (
             <img src={profile.coverUrl} alt="" className="w-full h-full object-cover" draggable={false} />
+          ) : vipBgUrl ? (
+            <div
+              className="w-full h-full bg-cover bg-center"
+              style={{ backgroundImage: `url(${vipBgUrl})` }}
+            />
           ) : (
             <div className={`w-full h-full bg-gradient-to-b ${bgGradient}`} />
           )}
