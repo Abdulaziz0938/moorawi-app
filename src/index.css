@@ -915,14 +915,3 @@ html, body {
   }
 }
 
-/* [ezo-gems] لمعان خط الزخارف أعلى شيت VIP */
-@keyframes ezoGemsShimmer {
-  0%, 100% {
-    opacity: 0.75;
-    filter: brightness(1);
-  }
-  50% {
-    opacity: 1;
-    filter: brightness(1.4);
-  }
-}

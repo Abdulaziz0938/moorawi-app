@@ -238,7 +238,7 @@ export default function ProfilePage({
       ) : (
         <div className={`absolute inset-0 bg-gradient-to-b ${bgGradient}`} />
       )}
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-2xl" />
+      <div className="absolute inset-0 bg-black/55" />
 
       <div className="relative z-10 flex flex-col h-full overflow-y-auto">
         {/* ============ Cover + Header ============ */}
