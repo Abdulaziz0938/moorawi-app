@@ -157,7 +157,7 @@ export default function LiveBroadcaster({ streamId, onEnd }: Props) {
     );
   }
 
-  const recentComments = ((comments ?? []) as Comment[]).slice(-8);
+  const recentComments = ((comments ?? []) as Comment[]).slice(-5);
 
   return (
     <div className="fixed inset-0 z-[300] bg-black overflow-hidden" dir="rtl">
@@ -169,14 +169,23 @@ export default function LiveBroadcaster({ streamId, onEnd }: Props) {
       >
         {!cameraOn && (
           <div className="text-center text-white/40 flex flex-col items-center gap-3">
-            <Video size={60} strokeWidth={1} />
-            <div className="text-xs font-black">الكاميرا مغلقة</div>
-            <button
-              onClick={handleToggleCamera}
-              className="mt-2 px-5 py-2.5 rounded-full bg-red-500 text-white text-xs font-black active:scale-95"
-            >
-              تشغيل الكاميرا
-            </button>
+            {!agoraReady ? (
+              <>
+                <Loader2 className="animate-spin text-white/40" size={48} />
+                <div className="text-xs font-black">جاري الاتصال بالسيرفر...</div>
+              </>
+            ) : (
+              <>
+                <Video size={60} strokeWidth={1} />
+                <div className="text-xs font-black">الكاميرا مغلقة</div>
+                <button
+                  onClick={handleToggleCamera}
+                  className="mt-2 px-5 py-2.5 rounded-full bg-red-500 text-white text-xs font-black active:scale-95"
+                >
+                  تشغيل الكاميرا
+                </button>
+              </>
+            )}
           </div>
         )}
       </div>
@@ -224,7 +233,7 @@ export default function LiveBroadcaster({ streamId, onEnd }: Props) {
         </button>
 
         {/* Switch camera */}
-        {cameraOn && (
+        {cameraOn && agoraReady && (
           <button
             onClick={handleSwitchCamera}
             className="w-9 h-9 rounded-full bg-black/60 backdrop-blur border border-white/20 flex items-center justify-center text-white active:scale-95"
@@ -237,22 +246,24 @@ export default function LiveBroadcaster({ streamId, onEnd }: Props) {
       {/* ═══ Floating hearts (double-tap visual) ═══ */}
       <FloatingHearts likes={stream.totalLikes} />
 
-      {/* ═══ COMMENTS OVERLAY (bottom-left) ═══ */}
-      <div className="absolute bottom-24 left-3 right-20 z-20 space-y-1.5 max-h-[40dvh] overflow-hidden pointer-events-none">
+      {/* ═══ COMMENTS OVERLAY (bottom-left) — صف واحد ═══ */}
+      <div className="absolute bottom-24 left-3 right-24 z-20 flex flex-col gap-1 max-h-[35dvh] overflow-hidden pointer-events-none">
         {recentComments.map((c) => (
           <div
             key={c._id}
-            className="inline-flex items-center gap-1.5 bg-black/60 backdrop-blur rounded-full px-2.5 py-1 border border-white/10"
+            className="flex items-center gap-2 bg-black/60 backdrop-blur rounded-full px-3 py-1.5 border border-white/10 max-w-full"
           >
-            <div className="w-5 h-5 rounded-full overflow-hidden bg-purple-700 flex-shrink-0 flex items-center justify-center text-white text-[9px] font-black">
+            <div className="w-6 h-6 rounded-full overflow-hidden bg-purple-700 flex-shrink-0 flex items-center justify-center text-white text-[10px] font-black">
               {c.userAvatarUrl ? (
                 <img src={c.userAvatarUrl} alt="" className="w-full h-full object-cover" />
               ) : (
                 (c.userName?.[0] ?? "?").toUpperCase()
               )}
             </div>
-            <span className="text-cyan-300 text-[10px] font-black">{c.userName}</span>
-            <span className="text-white text-[10px]">{c.text}</span>
+            <span className="text-cyan-300 text-xs font-black flex-shrink-0 max-w-[80px] truncate">
+              {c.userName}
+            </span>
+            <span className="text-white text-xs truncate">{c.text}</span>
           </div>
         ))}
       </div>
@@ -277,7 +288,8 @@ export default function LiveBroadcaster({ streamId, onEnd }: Props) {
           {/* Mic */}
           <button
             onClick={handleToggleMic}
-            className={`w-11 h-11 rounded-full flex items-center justify-center text-white active:scale-95 ${
+            disabled={!agoraReady}
+            className={`w-11 h-11 rounded-full flex items-center justify-center text-white active:scale-95 disabled:opacity-40 ${
               micOn ? "bg-black/60 border border-white/20" : "bg-red-500"
             }`}
           >
@@ -287,7 +299,8 @@ export default function LiveBroadcaster({ streamId, onEnd }: Props) {
           {/* Camera */}
           <button
             onClick={handleToggleCamera}
-            className={`w-11 h-11 rounded-full flex items-center justify-center text-white active:scale-95 ${
+            disabled={!agoraReady}
+            className={`w-11 h-11 rounded-full flex items-center justify-center text-white active:scale-95 disabled:opacity-40 ${
               cameraOn ? "bg-black/60 border border-white/20" : "bg-red-500"
             }`}
           >
