@@ -40,6 +40,7 @@ const VIP_SLOTS = [
   { key: "frame",      label: "الإطار" },
   { key: "halo",       label: "الهالة" },
   { key: "card",       label: "البطاقة" },
+  { key: "top",        label: "القمة المزخرفة" },
   { key: "nickname",   label: "الاسم" },
   { key: "entry",      label: "الدخول" },
   { key: "wave",       label: "الموجة" },

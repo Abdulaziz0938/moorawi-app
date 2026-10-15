@@ -63,6 +63,7 @@ export default function ProfilePage({
 }: Props) {
   const deviceId = getDeviceId();
   const [viewUserId, setViewUserId] = useState<string>(userIdProp);
+  const [scrollY, setScrollY] = useState(0);
   const userId = viewUserId;
   const isMe = !!isMeOwn && viewUserId === userIdProp;
   const [listMode, setListMode] = useState<"followers" | "following" | "fans" | null>(null);
@@ -146,6 +147,7 @@ export default function ProfilePage({
   const finalAssetType = equippedFrame?.assetType ?? equippedVipData?.assetType ?? null;
   const bgGradient = VIP_BG[vipLevel] || VIP_BG[0];
   const vipBgUrl = vipLevel > 0 ? assets[`vip.background.${vipLevel}`] : null;
+  const vipTopUrl = vipLevel > 0 ? assets[`vip.top.${vipLevel}`] : null;
 
   // [ezo-gem] ألوان الجواهر لكل VIP
   const GEM_COLORS: Record<number, { primary: string; secondary: string; glow: string }> = {
@@ -241,7 +243,10 @@ export default function ProfilePage({
       )}
       <div className="absolute inset-0 bg-black/55" />
 
-      <div className="relative z-10 flex flex-col h-full overflow-y-auto">
+      <div
+        className="relative z-10 flex flex-col h-full overflow-y-auto"
+        onScroll={(e) => setScrollY(e.currentTarget.scrollTop)}
+      >
         {/* ============ Cover + Header ============ */}
         <div className="relative aspect-video flex-shrink-0">
           {profile.coverUrl ? (
@@ -255,6 +260,24 @@ export default function ProfilePage({
             <div className={`w-full h-full bg-gradient-to-b ${bgGradient}`} />
           )}
           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/80" />
+
+          {/* [ezo-top] القمة المزخرفة على الخط الفاصل — تختفي عند التمرير */}
+          {vipTopUrl && (
+            <div
+              className="absolute left-0 right-0 z-30 pointer-events-none flex justify-center transition-opacity duration-200"
+              style={{
+                bottom: "-30px",
+                opacity: Math.max(0, 1 - scrollY / 80),
+              }}
+            >
+              <img
+                src={vipTopUrl}
+                alt=""
+                className="w-[75%] max-w-[340px] object-contain drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)]"
+                draggable={false}
+              />
+            </div>
+          )}
 
           {isMe && (
             <button

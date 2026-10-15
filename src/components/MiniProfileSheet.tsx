@@ -118,17 +118,7 @@ export default function MiniProfileSheet({
   const vipCardUrl = vipLevel > 0 ? assets[`vip.card.${vipLevel}`] : null;
   
 
-  // [ezo-gem] ألوان الجواهر لكل VIP
-  const GEM_COLORS: Record<number, { primary: string; secondary: string; glow: string }> = {
-    1: { primary: "#10b981", secondary: "#34d399", glow: "rgba(16,185,129,0.7)" },
-    2: { primary: "#3b82f6", secondary: "#60a5fa", glow: "rgba(59,130,246,0.7)" },
-    3: { primary: "#a855f7", secondary: "#c084fc", glow: "rgba(168,85,247,0.75)" },
-    4: { primary: "#dc2626", secondary: "#f87171", glow: "rgba(220,38,38,0.75)" },
-    5: { primary: "#eab308", secondary: "#facc15", glow: "rgba(234,179,8,0.8)" },
-    6: { primary: "#f97316", secondary: "#fb923c", glow: "rgba(249,115,22,0.85)" },
-    7: { primary: "#fbbf24", secondary: "#fde047", glow: "rgba(251,191,36,0.9)" },
-  };
-  const gem = vipLevel > 0 ? GEM_COLORS[vipLevel] : null;
+  const vipTopUrl = vipLevel > 0 ? assets[`vip.top.${vipLevel}`] : null;
 
   const canKick = currentUserRole === "owner" || currentUserRole === "moderator";
   const canBan = currentUserRole === "owner";
@@ -183,24 +173,22 @@ export default function MiniProfileSheet({
           </button>
         </div>
 
-        {/* [DEBUG] */}
-        <div className="absolute top-2 left-2 z-50 bg-red-500 text-white text-[9px] px-2 py-1 rounded font-mono">
-          v:{vipLevel} | c:{vipCardUrl ? "✓" : "✗"} | b:{vipBgUrl ? "✓" : "✗"}
-        </div>
+        {/* [ezo-top] القمة المزخرفة — تظهر فوق الشيت */}
+        {vipTopUrl && (
+          <div className="absolute -top-10 left-0 right-0 z-[35] pointer-events-none flex justify-center">
+            <img
+              src={vipTopUrl}
+              alt=""
+              className="w-[80%] max-w-[360px] object-contain drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)]"
+              draggable={false}
+            />
+          </div>
+        )}
 
         {/* Sheet */}
         <div className="relative rounded-t-3xl max-h-[92vh] overflow-hidden flex flex-col">
-          {/* [ezo-card] VIP card as base (fallback: bg → gradient) */}
-          {vipCardUrl ? (
-            <div
-              className="absolute inset-0"
-              style={{
-                backgroundImage: `url(${vipCardUrl})`,
-                backgroundSize: "100% 100%",
-                backgroundRepeat: "no-repeat",
-              }}
-            />
-          ) : vipBgUrl ? (
+          {/* [ezo-bg] VIP background أو gradient */}
+          {vipBgUrl ? (
             <div
               className="absolute inset-0 bg-cover bg-center"
               style={{ backgroundImage: `url(${vipBgUrl})` }}
@@ -208,11 +196,38 @@ export default function MiniProfileSheet({
           ) : (
             <div className={`absolute inset-0 bg-gradient-to-b ${bgGradient}`} />
           )}
-          {/* subtle darkening only when card used (card has dark center) */}
-          {!vipCardUrl && <div className="absolute inset-0 bg-black/55" />}
 
+          {/* [ezo-card] البطاقة كطبقة خلفية شبه شفافة */}
+          {vipCardUrl && (
+            <div
+              className="absolute inset-0"
+              style={{
+                backgroundImage: `url(${vipCardUrl})`,
+                backgroundSize: "100% 100%",
+                backgroundRepeat: "no-repeat",
+                opacity: 0.4,
+              }}
+            />
+          )}
 
-          <div className="relative z-10 flex flex-col max-h-[92vh] overflow-y-auto px-5 pb-4">
+          {/* طبقة داكنة للقراءة */}
+          <div className="absolute inset-0 bg-black/55" />
+
+          {/* [ezo-card-frame] الإطار الرقيق كـ 9-patch — فوق الطبقات، تحت المحتوى */}
+          {vipCardUrl && (
+            <div
+              className="absolute inset-0 z-[18] pointer-events-none"
+              style={{
+                borderImageSource: `url(${vipCardUrl})`,
+                borderImageSlice: "80",
+                borderImageRepeat: "stretch",
+                borderImageWidth: "45px",
+                borderStyle: "solid",
+              }}
+            />
+          )}
+
+          <div className="relative z-[25] flex flex-col max-h-[92vh] overflow-y-auto px-6 pt-7 pb-6">
             {/* Name + ID — right-aligned */}
             <div className="px-4 pt-12 pb-2 flex flex-col items-start">
               <UserName
