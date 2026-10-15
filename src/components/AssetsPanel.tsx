@@ -13,6 +13,8 @@ import GiftAdminPanel from "./GiftAdminPanel";
 import BannersPanel from "./BannersPanel";
 import BubbleSlicer from "./BubbleSlicer";
 import VipAvatar from "./ui/VipAvatar";
+import { getActiveToken } from "../lib/session";
+import { getDeviceId } from "../lib/device";
 import {
   Crown, Gift, Award, Shield, ShoppingBag, LayoutGrid,
   Upload, RotateCcw, Loader2, Pencil, Save, X, Home, MessageCircle,
