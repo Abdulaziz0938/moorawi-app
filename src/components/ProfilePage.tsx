@@ -267,7 +267,7 @@ export default function ProfilePage({
             <VipTopOrnament
               url={vipTopUrl}
               assetFull={assetsFull[`vip.top.${vipLevel}`]}
-              className="z-30"
+              className="z-[5]"
               style={{ top: "-45px" }}
               fadeOut={Math.max(0, 1 - scrollY / 80)}
             />

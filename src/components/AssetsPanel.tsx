@@ -8,7 +8,7 @@ import type { Id } from "../../convex/_generated/dataModel";
 import { uploadToCloudinary } from "../lib/cloudinary";
 import { smartUpload } from "../lib/uploadAssets";
 import { dialog } from "../lib/dialog";
-import { useAssets } from "../lib/assets";
+import { useAssets, useAssetsFull } from "../lib/assets";
 import GiftAdminPanel from "./GiftAdminPanel";
 import BannersPanel from "./BannersPanel";
 import BubbleSlicer from "./BubbleSlicer";
@@ -170,6 +170,7 @@ function TabBtn({ active, onClick, icon: Icon, label }: any) {
 // ============================ VIP tab
 function VipAssetsTab({ token }: any) {
   const assets = useAssets();
+  const assetsFullAll = useAssetsFull();
   const setAsset = useMutation(api.assets.set);
   const clearAsset = useMutation(api.assets.clear);
   const [busyKey, setBusyKey] = useState<string | null>(null);
@@ -208,8 +209,14 @@ function VipAssetsTab({ token }: any) {
       <div className="grid grid-cols-2 gap-3">
         {VIP_SLOTS.map((slot) => {
           const key = `vip.${slot.key}.${level}`;
-          return <AssetCard key={key} slotKey={key} label={`${slot.label} — VIP ${level}`}
-            src={assets[key]} busy={busyKey === key} onUpload={handleFile} onClear={handleClear} />;
+          const isTop = slot.key === "top";
+          return (
+            <div key={key} className={isTop ? "col-span-2" : ""}>
+              <AssetCard slotKey={key} label={`${slot.label} — VIP ${level}`}
+                src={assets[key]} busy={busyKey === key} onUpload={handleFile} onClear={handleClear} />
+              {isTop && assets[key] && <TopTuner slotKey={key} full={(assetsFullAll || {})[key]} />}
+            </div>
+          );
         })}
       </div>
     </>
@@ -476,6 +483,78 @@ function ShopTab({ token }: { token: string | null }) {
 }
 
 // ============================ Reusable AssetCard
+// [ezo-vip] أداة ضبط القمة المزخرفة — sliders للعرض/الموضع/الحجم
+function TopTuner({ slotKey, full }: { slotKey: string; full?: any }) {
+  const setAsset = useMutation(api.assets.set);
+  const [width, setWidth] = useState<number>(full?.canvasSize ?? 100);
+  const [yOff, setYOff] = useState<number>(full?.offsetY ?? -70);
+  const [scale, setScale] = useState<number>(full?.holeSize ?? 100);
+  const [saving, setSaving] = useState(false);
+
+  // مزامنة لو تغيّرت القيم من خارج
+  useEffect(() => {
+    setWidth(full?.canvasSize ?? 100);
+    setYOff(full?.offsetY ?? -70);
+    setScale(full?.holeSize ?? 100);
+  }, [full?.canvasSize, full?.offsetY, full?.holeSize]);
+
+  const save = async () => {
+    if (!full?.url) return;
+    setSaving(true);
+    try {
+      await setAsset({
+        key: slotKey,
+        imageUrl: full.url,
+        canvasSize: width,
+        offsetY: yOff,
+        holeSize: scale,
+      });
+    } catch (e: any) {
+      dialog.alert(e?.message || "فشل الحفظ");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="mt-2 rounded-lg bg-black/40 border border-amber-400/30 p-2 space-y-1.5" dir="rtl">
+      <div className="text-amber-300 text-[10px] font-black">🎛️ ضبط يدوي</div>
+
+      <div>
+        <div className="flex justify-between text-[9px] text-white/60 mb-0.5">
+          <span>العرض</span><span className="font-mono">{width}%</span>
+        </div>
+        <input type="range" min={50} max={150} value={width}
+          onChange={(e) => setWidth(Number(e.target.value))}
+          className="w-full accent-amber-400" />
+      </div>
+
+      <div>
+        <div className="flex justify-between text-[9px] text-white/60 mb-0.5">
+          <span>Y (سالب = أعلى)</span><span className="font-mono">{yOff}px</span>
+        </div>
+        <input type="range" min={-200} max={30} value={yOff}
+          onChange={(e) => setYOff(Number(e.target.value))}
+          className="w-full accent-amber-400" />
+      </div>
+
+      <div>
+        <div className="flex justify-between text-[9px] text-white/60 mb-0.5">
+          <span>الحجم</span><span className="font-mono">{scale}%</span>
+        </div>
+        <input type="range" min={50} max={200} value={scale}
+          onChange={(e) => setScale(Number(e.target.value))}
+          className="w-full accent-amber-400" />
+      </div>
+
+      <button onClick={save} disabled={saving}
+        className="w-full py-1 rounded bg-amber-500 text-black text-[10px] font-black active:scale-95 disabled:opacity-50">
+        {saving ? "..." : "حفظ"}
+      </button>
+    </div>
+  );
+}
+
 function AssetCard({ slotKey, label, src, busy, onUpload, onClear }: any) {
   return (
     <div className={`rounded-2xl border p-3 flex flex-col items-center gap-2 ${

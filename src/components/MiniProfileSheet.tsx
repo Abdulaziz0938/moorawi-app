@@ -179,7 +179,7 @@ export default function MiniProfileSheet({
           <VipTopOrnament
             url={vipTopUrl}
             assetFull={assetsFull[`vip.top.${vipLevel}`]}
-            className="z-[35]"
+            className="z-20"
             style={{ top: "-45px" }}
           />
         )}
