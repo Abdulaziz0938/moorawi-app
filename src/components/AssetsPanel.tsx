@@ -483,7 +483,7 @@ function ShopTab({ token }: { token: string | null }) {
 }
 
 // ============================ Reusable AssetCard
-// [ezo-vip] أداة ضبط القمة المزخرفة — sliders للعرض/الموضع/الحجم
+// [ezo-vip] أداة ضبط القمة المزخرفة — sliders + معاينة مباشرة
 function TopTuner({ slotKey, full }: { slotKey: string; full?: any }) {
   const setAsset = useMutation(api.assets.set);
   const [width, setWidth] = useState<number>(full?.canvasSize ?? 100);
@@ -491,7 +491,6 @@ function TopTuner({ slotKey, full }: { slotKey: string; full?: any }) {
   const [scale, setScale] = useState<number>(full?.holeSize ?? 100);
   const [saving, setSaving] = useState(false);
 
-  // مزامنة لو تغيّرت القيم من خارج
   useEffect(() => {
     setWidth(full?.canvasSize ?? 100);
     setYOff(full?.offsetY ?? -70);
@@ -508,7 +507,9 @@ function TopTuner({ slotKey, full }: { slotKey: string; full?: any }) {
         canvasSize: width,
         offsetY: yOff,
         holeSize: scale,
+        tokenOverride: getActiveToken() ?? getDeviceId(),
       });
+      dialog.alert("✅ تم الحفظ");
     } catch (e: any) {
       dialog.alert(e?.message || "فشل الحفظ");
     } finally {
@@ -519,6 +520,34 @@ function TopTuner({ slotKey, full }: { slotKey: string; full?: any }) {
   return (
     <div className="mt-2 rounded-lg bg-black/40 border border-amber-400/30 p-2 space-y-1.5" dir="rtl">
       <div className="text-amber-300 text-[10px] font-black">🎛️ ضبط يدوي</div>
+
+      {/* 🎬 معاينة مباشرة — شيت وهمي */}
+      <div className="relative h-32 rounded-lg overflow-hidden border border-white/20 bg-gradient-to-b from-slate-800 to-slate-900">
+        {/* Ornament preview */}
+        {full?.url && (
+          <div
+            className="absolute left-0 right-0 flex justify-center pointer-events-none"
+            style={{ top: yOff / 2 }} // مصغّر للتناسب
+          >
+            <img
+              src={full.url}
+              alt=""
+              className="object-contain"
+              style={{
+                width: `${width}%`,
+                transform: `scale(${scale / 100})`,
+                transformOrigin: "center top",
+              }}
+              draggable={false}
+            />
+          </div>
+        )}
+        {/* Sheet mockup */}
+        <div className="absolute bottom-0 left-3 right-3 top-10 rounded-t-2xl bg-black/60 border-t border-white/20" />
+        {/* Avatar mockup */}
+        <div className="absolute right-4 top-8 w-6 h-6 rounded-full bg-purple-500/60 border border-white/30" />
+        <div className="absolute bottom-1 left-2 text-white/40 text-[8px]">معاينة مصغّرة</div>
+      </div>
 
       <div>
         <div className="flex justify-between text-[9px] text-white/60 mb-0.5">
