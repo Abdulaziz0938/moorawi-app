@@ -116,7 +116,7 @@ export default function MiniProfileSheet({
   const vipFrameData = equippedVipLvl ? assetsFull[`vip.frame.${equippedVipLvl}`] : null;
   const vipBgUrl = vipLevel > 0 ? assets[`vip.background.${vipLevel}`] : null;
   const vipCardUrl = vipLevel > 0 ? assets[`vip.card.${vipLevel}`] : null;
-  console.log("[MiniProfile] vipLevel:", vipLevel, "| cardUrl:", vipCardUrl, "| keys with card:", Object.keys(assets).filter(k => k.includes("card")));
+  
 
   // [ezo-gem] ألوان الجواهر لكل VIP
   const GEM_COLORS: Record<number, { primary: string; secondary: string; glow: string }> = {
@@ -183,7 +183,12 @@ export default function MiniProfileSheet({
           </button>
         </div>
 
-                {/* Sheet */}
+                {/* [DEBUG] */}
+        <div className="absolute top-2 left-2 z-50 bg-red-500 text-white text-[9px] px-2 py-1 rounded font-mono">
+          v:{vipLevel} | c:{vipCardUrl ? "✓" : "✗"} | b:{vipBgUrl ? "✓" : "✗"}
+        </div>
+
+        {/* Sheet */}
         <div className="relative rounded-t-3xl max-h-[92vh] overflow-hidden flex flex-col">
           {/* [ezo-card] VIP card as base (fallback: bg → gradient) */}
           {vipCardUrl ? (
