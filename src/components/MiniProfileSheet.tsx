@@ -115,6 +115,7 @@ export default function MiniProfileSheet({
   const equippedVipLvl = (profile as any).equippedVipFrameLevel ?? null;
   const vipFrameData = equippedVipLvl ? assetsFull[`vip.frame.${equippedVipLvl}`] : null;
   const vipBgUrl = vipLevel > 0 ? assets[`vip.background.${vipLevel}`] : null;
+  const vipCardUrl = vipLevel > 0 ? assets[`vip.card.${vipLevel}`] : null;
 
   // [ezo-gem] ألوان الجواهر لكل VIP
   const GEM_COLORS: Record<number, { primary: string; secondary: string; glow: string }> = {
@@ -183,8 +184,17 @@ export default function MiniProfileSheet({
 
                 {/* Sheet */}
         <div className="relative rounded-t-3xl max-h-[92vh] overflow-hidden flex flex-col">
-          {/* [ezo-bg] VIP background image (fallback to gradient) */}
-          {vipBgUrl ? (
+          {/* [ezo-card] VIP card as base (fallback: bg → gradient) */}
+          {vipCardUrl ? (
+            <div
+              className="absolute inset-0"
+              style={{
+                backgroundImage: `url(${vipCardUrl})`,
+                backgroundSize: "100% 100%",
+                backgroundRepeat: "no-repeat",
+              }}
+            />
+          ) : vipBgUrl ? (
             <div
               className="absolute inset-0 bg-cover bg-center"
               style={{ backgroundImage: `url(${vipBgUrl})` }}
@@ -192,10 +202,11 @@ export default function MiniProfileSheet({
           ) : (
             <div className={`absolute inset-0 bg-gradient-to-b ${bgGradient}`} />
           )}
-          <div className="absolute inset-0 bg-black/55" />
-          <div className="absolute inset-x-0 top-0 h-px bg-white/40" />
+          {/* subtle darkening only when card used (card has dark center) */}
+          {!vipCardUrl && <div className="absolute inset-0 bg-black/55" />}
 
-          <div className="relative z-10 flex flex-col max-h-[92vh] overflow-y-auto">
+
+          <div className="relative z-10 flex flex-col max-h-[92vh] overflow-y-auto px-5 pb-4">
             {/* Name + ID — right-aligned */}
             <div className="px-4 pt-12 pb-2 flex flex-col items-start">
               <UserName
