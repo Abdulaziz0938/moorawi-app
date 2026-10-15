@@ -9,6 +9,7 @@
 // Supports: PNG/WebP (img) + SVGA (SvgaPlayer)
 import { cx } from "../../lib/design";
 import SvgaPlayer from "./SvgaPlayer";
+import { buildAnimProps } from "../../lib/assetAnimations";
 
 interface Props {
   src: string | null | undefined;
@@ -78,6 +79,10 @@ export default function VipAvatar({
   }
 
   const frameSize = size * scale;
+
+  // [ezo-anim] Smart animations for halo + frame
+  const haloAnim = vip >= 1 ? buildAnimProps(`vip.halo.${vip}`) : { className: "", style: {} };
+  const frameAnim = hasCustom ? buildAnimProps(`vip.frame.${vip}`) : { className: "", style: {} };
   const frameLeft = (size - frameSize) / 2 + ox;
   const frameTop = (size - frameSize) / 2 + oy;
 
@@ -99,14 +104,16 @@ export default function VipAvatar({
         />
       )}
 
-      {/* Halo (glow) */}
+      {/* Halo (glow) with animation */}
       {vip >= 1 && (
         <div
           className={cx(
             "absolute inset-0 rounded-full",
             `vip-halo-${vip}`,
-            isLegendary && "vip-sparkle"
+            isLegendary && "vip-sparkle",
+            haloAnim.className
           )}
+          style={haloAnim.style}
         />
       )}
 
@@ -147,12 +154,13 @@ export default function VipAvatar({
       {/* Custom frame (PNG or SVGA) */}
       {hasCustom && (
         <div
-          className="absolute pointer-events-none z-20"
+          className={`absolute pointer-events-none z-20 ${frameAnim.className}`}
           style={{
             width: frameSize,
             height: frameSize,
             left: frameLeft,
             top: frameTop,
+            ...frameAnim.style,
           }}
         >
           {isSvga ? (

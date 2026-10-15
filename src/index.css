@@ -761,3 +761,117 @@ html, body {
 .animate-rays       { animation: raysExpand 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
 .animate-particle   { animation: particleFly 1.4s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
 .animate-shake      { animation: screenShake 0.6s ease-out; }
+
+/* ═══════════════════════════════════════════════════════════
+   [ezo-anim] Animation system for VIP assets
+   ═══════════════════════════════════════════════════════════ */
+
+/* Rotate (continuous) */
+@keyframes ezo-rotate {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.ezo-anim-rotate {
+  animation: ezo-rotate var(--ezo-speed, 12s) linear infinite;
+  animation-direction: var(--ezo-dir, normal);
+}
+
+/* Pulse (scale heartbeat) */
+@keyframes ezo-pulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(calc(1 + var(--ezo-scale, 0.05))); }
+}
+.ezo-anim-pulse {
+  animation: ezo-pulse var(--ezo-speed, 2s) ease-in-out infinite;
+}
+
+/* Breathe (scale + opacity) */
+@keyframes ezo-breathe {
+  0%, 100% { transform: scale(1);   opacity: 0.9; }
+  50%      { transform: scale(1.03); opacity: 1; }
+}
+.ezo-anim-breathe {
+  animation: ezo-breathe var(--ezo-speed, 3s) ease-in-out infinite;
+}
+
+/* Shimmer (horizontal light sweep) */
+@keyframes ezo-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.ezo-anim-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.25) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: ezo-shimmer var(--ezo-speed, 3s) linear infinite;
+  -webkit-mask-image: radial-gradient(circle, black 60%, transparent 100%);
+  mask-image: radial-gradient(circle, black 60%, transparent 100%);
+}
+
+/* Float (up-down) */
+@keyframes ezo-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(calc(-1 * var(--ezo-scale, 5) * 1px)); }
+}
+.ezo-anim-float {
+  animation: ezo-float var(--ezo-speed, 3s) ease-in-out infinite;
+}
+
+/* Glow (drop-shadow pulse) */
+@keyframes ezo-glow {
+  0%, 100% { filter: drop-shadow(0 0 6px currentColor); }
+  50%      { filter: drop-shadow(0 0 20px currentColor) drop-shadow(0 0 30px currentColor); }
+}
+.ezo-anim-glow {
+  animation: ezo-glow var(--ezo-speed, 2.5s) ease-in-out infinite;
+}
+
+/* Sparkle (opacity flicker) */
+@keyframes ezo-sparkle {
+  0%, 100% { opacity: 1; }
+  25%      { opacity: 0.7; }
+  50%      { opacity: 1; filter: brightness(1.4); }
+  75%      { opacity: 0.85; }
+}
+.ezo-anim-sparkle {
+  animation: ezo-sparkle var(--ezo-speed, 1.8s) ease-in-out infinite;
+}
+
+/* Combined: rotate + pulse */
+@keyframes ezo-rotate-pulse {
+  0%   { transform: rotate(0deg)   scale(1); }
+  50%  { transform: rotate(180deg) scale(calc(1 + var(--ezo-scale, 0.05))); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+.ezo-anim-rotate-pulse {
+  animation: ezo-rotate-pulse var(--ezo-speed, 15s) linear infinite;
+}
+
+/* Combined: shimmer + rotate */
+@keyframes ezo-shimmer-rotate {
+  from { transform: rotate(0deg);   filter: brightness(1); }
+  50%  { filter: brightness(1.35); }
+  to   { transform: rotate(360deg); filter: brightness(1); }
+}
+.ezo-anim-shimmer-rotate {
+  animation: ezo-shimmer-rotate var(--ezo-speed, 15s) linear infinite;
+}
+
+/* Combined: float + glow */
+@keyframes ezo-float-glow {
+  0%, 100% {
+    transform: translateY(0);
+    filter: drop-shadow(0 0 8px currentColor);
+  }
+  50% {
+    transform: translateY(calc(-1 * var(--ezo-scale, 5) * 1px));
+    filter: drop-shadow(0 0 24px currentColor) drop-shadow(0 0 40px currentColor);
+  }
+}
+.ezo-anim-float-glow {
+  animation: ezo-float-glow var(--ezo-speed, 3s) ease-in-out infinite;
+}

@@ -417,6 +417,23 @@ export default defineSchema({
       v.literal("svga"),
       v.literal("lottie"),
     )),
+    // [ezo-anim] Animation system for VIP assets
+    animation: v.optional(v.union(
+      v.literal("none"),
+      v.literal("rotate"),          // دوران مستمر
+      v.literal("pulse"),           // نبض (scale)
+      v.literal("breathe"),         // تنفّس (opacity + scale)
+      v.literal("shimmer"),         // لمعان أفقي
+      v.literal("float"),           // طفو صعود/هبوط
+      v.literal("glow"),            // توهج
+      v.literal("sparkle"),         // شرارات متغيرة
+      v.literal("rotate-pulse"),    // دوران + نبض
+      v.literal("shimmer-rotate"),  // لمعان + دوران
+      v.literal("float-glow"),      // طفو + توهج
+    )),
+    animationSpeed: v.optional(v.number()),      // بالثواني (default يحدد حسب النوع)
+    animationDirection: v.optional(v.union(v.literal("normal"), v.literal("reverse"))),
+    animationScale: v.optional(v.number()),      // قوة التأثير (0.5-1.5)
   })
     .index("by_category_active", ["category", "active"])
     .index("by_active", ["active"]),
