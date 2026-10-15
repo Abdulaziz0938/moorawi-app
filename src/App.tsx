@@ -3,6 +3,8 @@ import { useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import type { Id } from "../convex/_generated/dataModel";
 import Dashboard from "./components/Dashboard";
+import LiveBroadcaster from "./components/live/LiveBroadcaster";
+import LiveViewer from "./components/live/LiveViewer";
 import RoomView from "./components/RoomView";
 import Onboarding from "./components/Onboarding";
 import AuthScreen from "./components/AuthScreen";
@@ -16,6 +18,8 @@ function App() {
   const [token, setToken] = useState<string>(() => getActiveToken());
   const [showAuth, setShowAuth] = useState<boolean>(() => !hasSession());
   const [currentRoomId, setCurrentRoomId] = useState<Id<"rooms"> | null>(null);
+  const [currentLiveId, setCurrentLiveId] = useState<string | null>(null);
+  const [isLiveHost, setIsLiveHost] = useState(false);
   const [showDailyLogin, setShowDailyLogin] = useState(false);
 
   // Back button → leave room
@@ -91,10 +95,35 @@ function App() {
   // Main app
   return (
     <div key={refreshKey} className="h-[100dvh] w-full overflow-hidden app-bg" dir="rtl">
-      {currentRoomId ? (
+      {currentLiveId ? (
+        isLiveHost ? (
+          <LiveBroadcaster
+            streamId={currentLiveId}
+            onEnd={() => {
+              setCurrentLiveId(null);
+              setIsLiveHost(false);
+            }}
+          />
+        ) : (
+          <LiveViewer
+            streamId={currentLiveId}
+            onLeave={() => setCurrentLiveId(null)}
+          />
+        )
+      ) : currentRoomId ? (
         <RoomView roomId={currentRoomId} onLeave={() => setCurrentRoomId(null)} />
       ) : (
-        <Dashboard onEnterRoom={setCurrentRoomId} />
+        <Dashboard
+          onEnterRoom={setCurrentRoomId}
+          onEnterLive={(id) => {
+            setIsLiveHost(false);
+            setCurrentLiveId(id);
+          }}
+          onStartLive={(id) => {
+            setIsLiveHost(true);
+            setCurrentLiveId(id);
+          }}
+        />
       )}
       {showDailyLogin && <DailyLoginModal onClose={() => setShowDailyLogin(false)} />}
       {me.profileComplete && <InstallBanner />}

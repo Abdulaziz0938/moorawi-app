@@ -17,9 +17,11 @@ type Tab = "rooms" | "discover" | "moments" | "messages" | "me";
 
 interface Props {
   onEnterRoom: (roomId: Id<"rooms">) => void;
+  onEnterLive?: (streamId: string) => void;
+  onStartLive?: (streamId: string) => void;
 }
 
-export default function Dashboard({ onEnterRoom }: Props) {
+export default function Dashboard({ onEnterRoom, onEnterLive, onStartLive }: Props) {
   const [tab, setTab] = useState<Tab>("rooms");
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -42,7 +44,13 @@ export default function Dashboard({ onEnterRoom }: Props) {
       {/* ============ Content ============ */}
       <PullToRefresh onRefresh={() => setRefreshKey((k) => k + 1)} className="flex-1 pb-20">
         <div key={refreshKey}>
-        {tab === "rooms" && <RoomsTab onEnter={onEnterRoom} />}
+        {tab === "rooms" && (
+          <RoomsTab
+            onEnter={onEnterRoom}
+            onEnterLive={onEnterLive}
+            onStartLive={onStartLive}
+          />
+        )}
 
         {tab === "discover" && <DiscoverTab onEnterRoom={onEnterRoom} />}
 

@@ -8,6 +8,7 @@ import { dialog } from "../lib/dialog";
 import UserAvatar from "./UserAvatar";
 import RoomSearchScreen from "./RoomSearchScreen";
 import LiveListScreen from "./live/LiveListScreen";
+import LiveSetupSheet from "./live/LiveSetupSheet";
 import { UserName } from "./UserBadges";
 import Card from "./ui/Card";
 import RankBadge from "./ui/RankBadge";
@@ -20,6 +21,7 @@ import {
 interface Props {
   onEnter: (roomId: Id<"rooms">) => void;
   onEnterLive?: (streamId: string) => void;
+  onStartLive?: (streamId: string) => void;
 }
 
 type MainTab = "mine" | "trend" | "live";
@@ -28,7 +30,7 @@ type MineSub = "recent" | "following";
 // ============================================================
 // MAIN COMPONENT
 // ============================================================
-export default function RoomsTab({ onEnter, onEnterLive }: Props) {
+export default function RoomsTab({ onEnter, onEnterLive, onStartLive }: Props) {
   const deviceId = getDeviceId();
   const me = useQuery(api.profiles.me, { tokenOverride: deviceId });
   const myRoom = useQuery(api.rooms.myRoom, { tokenOverride: deviceId });
@@ -39,6 +41,7 @@ export default function RoomsTab({ onEnter, onEnterLive }: Props) {
   const [mineSub, setMineSub] = useState<MineSub>("recent");
   const [showCreate, setShowCreate] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  const [showLiveSetup, setShowLiveSetup] = useState(false);
   const [newName, setNewName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -120,7 +123,18 @@ export default function RoomsTab({ onEnter, onEnterLive }: Props) {
         )}
         {mainTab === "trend" && <TrendTab onEnter={handleJoin} />}
         {mainTab === "live" && onEnterLive && (
-          <LiveListScreen onEnter={onEnterLive} />
+          <>
+            {/* Start live button */}
+            {onStartLive && (
+              <button
+                onClick={() => setShowLiveSetup(true)}
+                className="w-full mb-3 py-3 rounded-2xl bg-gradient-to-r from-red-500 to-pink-600 text-white font-black text-sm shadow-lg active:scale-95 flex items-center justify-center gap-2"
+              >
+                🔴 ابدئي البث المباشر
+              </button>
+            )}
+            <LiveListScreen onEnter={onEnterLive} />
+          </>
         )}
       </div>
 
@@ -140,6 +154,17 @@ export default function RoomsTab({ onEnter, onEnterLive }: Props) {
           onCancel={() => { setShowCreate(false); setNewName(""); }}
           onConfirm={handleCreate}
           busy={isCreating}
+        />
+      )}
+
+      {/* Live setup */}
+      {showLiveSetup && onStartLive && (
+        <LiveSetupSheet
+          onClose={() => setShowLiveSetup(false)}
+          onStarted={(id) => {
+            setShowLiveSetup(false);
+            onStartLive(id);
+          }}
         />
       )}
     </div>
