@@ -1044,5 +1044,78 @@ export default defineSchema({
   })
     .index("by_user_created", ["userId", "createdAt"])
     .index("by_user_room", ["userId", "roomId"]),
+  // ================================================================
+  // [ezo-live] البث المباشر (TikTok-style) — أنثى موثقة فقط
+  // ================================================================
+  liveStreams: defineTable({
+    hostId: v.id("users"),
+    hostName: v.string(),
+    hostAvatarUrl: v.optional(v.string()),
+    hostVipLevel: v.number(),
+
+    // PK mode (2 hosts compete)
+    coHostId: v.optional(v.id("users")),
+    coHostName: v.optional(v.string()),
+    coHostAvatarUrl: v.optional(v.string()),
+    coHostVipLevel: v.optional(v.number()),
+    pkActive: v.boolean(),
+    pkStartedAt: v.optional(v.number()),
+    pkDurationSec: v.optional(v.number()), // 5 min default
+    hostScore: v.number(),      // gift value from viewers → host
+    coHostScore: v.number(),    // gift value from viewers → co-host
+
+    // Agora
+    channelName: v.string(),
+
+    // Meta
+    title: v.string(),
+    coverUrl: v.optional(v.string()),
+    status: v.union(
+      v.literal("live"),
+      v.literal("ended"),
+    ),
+
+    // Stats
+    viewerCount: v.number(),
+    peakViewers: v.number(),
+    totalLikes: v.number(),
+    totalGiftValue: v.number(),
+
+    startedAt: v.number(),
+    endedAt: v.optional(v.number()),
+    updatedAt: v.number(),
+  })
+    .index("by_status_started", ["status", "startedAt"])
+    .index("by_host_status", ["hostId", "status"])
+    .index("by_channel", ["channelName"]),
+
+  // تعليقات البث المباشر
+  liveComments: defineTable({
+    streamId: v.id("liveStreams"),
+    userId: v.id("users"),
+    userName: v.string(),
+    userAvatarUrl: v.optional(v.string()),
+    userVipLevel: v.number(),
+    text: v.string(),
+    createdAt: v.number(),
+  })
+    .index("by_stream_created", ["streamId", "createdAt"]),
+
+  // هدايا البث (منفصلة عن giftTransactions للغرف)
+  liveGifts: defineTable({
+    streamId: v.id("liveStreams"),
+    fromUserId: v.id("users"),
+    fromName: v.string(),
+    toUserId: v.id("users"), // host أو co-host
+    giftId: v.id("gifts"),
+    giftName: v.string(),
+    giftIcon: v.string(),
+    price: v.number(),
+    quantity: v.number(),
+    totalValue: v.number(),
+    isPK: v.boolean(), // إذا كان PK نشط
+    createdAt: v.number(),
+  })
+    .index("by_stream_created", ["streamId", "createdAt"]),
 
 });

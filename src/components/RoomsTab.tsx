@@ -7,6 +7,7 @@ import { getDeviceId } from "../lib/device";
 import { dialog } from "../lib/dialog";
 import UserAvatar from "./UserAvatar";
 import RoomSearchScreen from "./RoomSearchScreen";
+import LiveListScreen from "./live/LiveListScreen";
 import { UserName } from "./UserBadges";
 import Card from "./ui/Card";
 import RankBadge from "./ui/RankBadge";
@@ -18,6 +19,7 @@ import {
 
 interface Props {
   onEnter: (roomId: Id<"rooms">) => void;
+  onEnterLive?: (streamId: string) => void;
 }
 
 type MainTab = "mine" | "trend" | "live";
@@ -26,7 +28,7 @@ type MineSub = "recent" | "following";
 // ============================================================
 // MAIN COMPONENT
 // ============================================================
-export default function RoomsTab({ onEnter }: Props) {
+export default function RoomsTab({ onEnter, onEnterLive }: Props) {
   const deviceId = getDeviceId();
   const me = useQuery(api.profiles.me, { tokenOverride: deviceId });
   const myRoom = useQuery(api.rooms.myRoom, { tokenOverride: deviceId });
@@ -117,7 +119,9 @@ export default function RoomsTab({ onEnter }: Props) {
           />
         )}
         {mainTab === "trend" && <TrendTab onEnter={handleJoin} />}
-        {mainTab === "live" && <LiveTab />}
+        {mainTab === "live" && onEnterLive && (
+          <LiveListScreen onEnter={onEnterLive} />
+        )}
       </div>
 
       {/* ============ Search Screen ============ */}

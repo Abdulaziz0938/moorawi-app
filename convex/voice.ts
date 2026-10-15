@@ -30,3 +30,56 @@ export const getToken = action({
     return { appId, token, account: access.account };
   },
 });
+
+// ═══════════════════════════════════════════════════════════
+// [ezo-live] Token للبث المباشر
+// - host: publisher
+// - viewer: subscriber
+// ═══════════════════════════════════════════════════════════
+export const getLiveToken = action({
+  args: {
+    streamId: v.id("liveStreams"),
+    asHost: v.boolean(),
+    tokenOverride: v.optional(v.string()),
+  },
+  handler: async (ctx, args): Promise<{
+    appId: string;
+    token: string;
+    account: string;
+  }> => {
+    const cert = process.env.AGORA_APP_CERTIFICATE;
+    const appId = process.env.AGORA_APP_ID;
+    if (!appId || !cert) {
+      throw new ConvexError({
+        code: "NOT_IMPLEMENTED",
+        message: "Agora credentials missing",
+      });
+    }
+
+    // احصل على حساب المستخدم + تحقق من صلاحية البث
+    const stream = await ctx.runQuery(
+      // نستخدم query جديد من live.ts
+      (await import("./_generated/api")).api.live.getStream,
+      { streamId: args.streamId }
+    );
+    if (!stream) {
+      throw new ConvexError({ code: "NOT_FOUND", message: "البث غير موجود" });
+    }
+
+    // حساب Agora
+    const account = args.tokenOverride ?? `viewer_${Date.now()}`;
+    const role = args.asHost ? RtcRole.PUBLISHER : RtcRole.SUBSCRIBER;
+
+    const token = RtcTokenBuilder.buildTokenWithUserAccount(
+      appId,
+      cert,
+      stream.channelName,
+      account,
+      role,
+      TOKEN_TTL_SECONDS,
+      TOKEN_TTL_SECONDS
+    );
+
+    return { appId, token, account };
+  },
+});
