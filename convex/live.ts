@@ -458,3 +458,133 @@ export const endMyActiveStream = mutation({
     return { ok: true, ended: rows.length };
   },
 });
+
+// ═══════════════════════════════════════════════════════════
+// [ezo-live-gift] إرسال هدية في البث
+// ═══════════════════════════════════════════════════════════
+export const sendGiftToLive = mutation({
+  args: {
+    streamId: v.id("liveStreams"),
+    giftId: v.id("gifts"),
+    quantity: v.number(),
+    toUserId: v.id("users"), // host أو co-host
+    tokenOverride: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
+    if (!me) throw new ConvexError({ code: "UNAUTHORIZED" });
+
+    const stream = await ctx.db.get("liveStreams", args.streamId);
+    if (!stream || stream.status !== "live") {
+      throw new ConvexError({ code: "NOT_FOUND", message: "البث غير متوفر" });
+    }
+
+    // التحقق أن المستلم هو host أو co-host
+    if (
+      args.toUserId !== stream.hostId &&
+      args.toUserId !== stream.coHostId
+    ) {
+      throw new ConvexError({ code: "FORBIDDEN", message: "المستلم ليس مذيعاً" });
+    }
+
+    const gift = await ctx.db.get("gifts", args.giftId);
+    if (!gift || !gift.active) {
+      throw new ConvexError({ code: "NOT_FOUND", message: "الهدية غير متوفرة" });
+    }
+
+    const qty = Math.max(1, Math.min(args.quantity, 99));
+    const total = gift.price * qty;
+    const myCoins = me.coins ?? 0;
+    if (myCoins < total) {
+      throw new ConvexError({
+        code: "INSUFFICIENT_BALANCE",
+        message: `تحتاج ${total.toLocaleString()} عملة — رصيدك ${myCoins.toLocaleString()}`,
+      });
+    }
+
+    const now = Date.now();
+
+    // 1) خصم من المرسل
+    await ctx.db.patch("users", me._id, {
+      coins: myCoins - total,
+      totalSent: (me.totalSent ?? 0) + total,
+    });
+
+    // 2) إضافة للمستلم
+    const recipient = await ctx.db.get("users", args.toUserId);
+    if (recipient) {
+      await ctx.db.patch("users", args.toUserId, {
+        charms: (recipient.charms ?? 0) + total,
+        totalReceived: (recipient.totalReceived ?? 0) + total,
+        diamonds: (recipient.diamonds ?? 0) + Math.floor(total * 0.7),
+      });
+    }
+
+    // 3) تسجيل هدية البث
+    await ctx.db.insert("liveGifts", {
+      streamId: args.streamId,
+      fromUserId: me._id,
+      fromName: me.name ?? "ضيف",
+      toUserId: args.toUserId,
+      giftId: gift._id,
+      giftName: gift.name,
+      giftIcon: gift.mediaUrl ?? "",
+      price: gift.price,
+      quantity: qty,
+      totalValue: total,
+      isPK: stream.pkActive,
+      createdAt: now,
+    });
+
+    // 4) تحديث إحصاءات البث
+    const patch: any = {
+      totalGiftValue: stream.totalGiftValue + total,
+      updatedAt: now,
+    };
+    if (stream.pkActive && stream.coHostId) {
+      if (args.toUserId === stream.hostId) {
+        patch.hostScore = stream.hostScore + total;
+      } else if (args.toUserId === stream.coHostId) {
+        patch.coHostScore = stream.coHostScore + total;
+      }
+    }
+    await ctx.db.patch("liveStreams", args.streamId, patch);
+
+    return {
+      ok: true,
+      totalValue: total,
+      remaining: myCoins - total,
+    };
+  },
+});
+
+// ═══════════════════════════════════════════════════════════
+// [ezo-live] أحدث هدية (للـ animation) — polling كل ثانية
+// ═══════════════════════════════════════════════════════════
+export const latestGift = query({
+  args: {
+    streamId: v.id("liveStreams"),
+    since: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const rows = await ctx.db
+      .query("liveGifts")
+      .withIndex("by_stream_created", (q) => q.eq("streamId", args.streamId))
+      .order("desc")
+      .take(10);
+    const recent = rows.find((r) => r.createdAt > args.since);
+    if (!recent) return null;
+    return {
+      _id: recent._id,
+      giftName: recent.giftName,
+      giftIcon: recent.giftIcon,
+      fromName: recent.fromName,
+      fromUserId: recent.fromUserId,
+      toUserId: recent.toUserId,
+      price: recent.price,
+      quantity: recent.quantity,
+      totalValue: recent.totalValue,
+      createdAt: recent.createdAt,
+    };
+  },
+});

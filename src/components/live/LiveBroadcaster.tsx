@@ -7,6 +7,8 @@ import { getDeviceId } from "../../lib/device";
 import { getActiveToken } from "../../lib/session";
 import { agoraManager } from "../../lib/agora";
 import { dialog } from "../../lib/dialog";
+import LiveGiftSheet from "./LiveGiftSheet";
+import LiveGiftAnimation from "./LiveGiftAnimation";
 import {
   X, Heart, Users, Send, Gift, Loader2, Video, VideoOff,
   Mic, MicOff, Swords, Camera, RotateCcw,
@@ -49,6 +51,7 @@ export default function LiveBroadcaster({ streamId, onEnd }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [lastTap, setLastTap] = useState(0);
+  const [showGiftSheet, setShowGiftSheet] = useState(false);
 
   // ═══ Join Agora as host — ينتظر تحميل stream ═══
   useEffect(() => {
@@ -298,7 +301,7 @@ export default function LiveBroadcaster({ streamId, onEnd }: Props) {
 
           {/* Gift button */}
           <button
-            onClick={() => dialog.alert("هدايا البث قريباً")}
+            onClick={() => setShowGiftSheet(true)}
             className="w-11 h-11 rounded-full bg-pink-500/90 flex items-center justify-center text-white active:scale-95"
           >
             <Gift size={20} />
@@ -327,6 +330,8 @@ export default function LiveBroadcaster({ streamId, onEnd }: Props) {
           </button>
         </div>
       </div>
+
+      {/* Gift Sheet — للـ co-host self gifting غير مفيد، نتجاهله */}
     </div>
   );
 }

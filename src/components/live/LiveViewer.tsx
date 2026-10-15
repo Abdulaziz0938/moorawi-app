@@ -8,6 +8,8 @@ import { getActiveToken } from "../../lib/session";
 import { agoraManager } from "../../lib/agora";
 import { dialog } from "../../lib/dialog";
 import VipAvatar from "../ui/VipAvatar";
+import LiveGiftSheet from "./LiveGiftSheet";
+import LiveGiftAnimation from "./LiveGiftAnimation";
 import {
   X, Heart, Users, Send, Gift, Loader2, Share2, Eye,
 } from "lucide-react";
@@ -46,6 +48,7 @@ export default function LiveViewer({ streamId, onLeave }: Props) {
   const [sending, setSending] = useState(false);
   const [hearts, setHearts] = useState<{ id: number; x: number; color: string }[]>([]);
   const [lastTap, setLastTap] = useState(0);
+  const [showGiftSheet, setShowGiftSheet] = useState(false);
 
   // ═══ Join as audience — ينتظر stream ═══
   useEffect(() => {
@@ -341,7 +344,7 @@ export default function LiveViewer({ streamId, onLeave }: Props) {
 
           {/* Gift */}
           <button
-            onClick={() => dialog.alert("هدايا البث قريباً")}
+            onClick={() => setShowGiftSheet(true)}
             className="w-11 h-11 rounded-full bg-amber-500/90 flex items-center justify-center text-black active:scale-95"
           >
             <Gift size={20} />
@@ -357,6 +360,15 @@ export default function LiveViewer({ streamId, onLeave }: Props) {
             {stream.totalGiftValue.toLocaleString()}
           </span>
         </div>
+      )}
+      {/* Gift Sheet */}
+      {showGiftSheet && stream && (
+        <LiveGiftSheet
+          streamId={streamId}
+          toUserId={String(stream.hostId)}
+          toName={stream.hostName}
+          onClose={() => setShowGiftSheet(false)}
+        />
       )}
     </div>
   );
