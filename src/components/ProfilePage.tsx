@@ -148,7 +148,7 @@ export default function ProfilePage({
   const finalAssetType = equippedFrame?.assetType ?? equippedVipData?.assetType ?? null;
   const bgGradient = VIP_BG[vipLevel] || VIP_BG[0];
   const vipBgUrl = vipLevel > 0 ? assets[`vip.background.${vipLevel}`] : null;
-  const vipTopUrl = vipLevel > 0 ? assets[`vip.top.${vipLevel}`] : null;
+  const vipTopUrl = vipLevel > 0 ? (assets[`vip.top.full.${vipLevel}`] ?? assets[`vip.top.${vipLevel}`]) : null;
 
   // [ezo-gem] ألوان الجواهر لكل VIP
   const GEM_COLORS: Record<number, { primary: string; secondary: string; glow: string }> = {
@@ -266,7 +266,7 @@ export default function ProfilePage({
           {vipTopUrl && (
             <VipTopOrnament
               url={vipTopUrl}
-              assetFull={assetsFull[`vip.top.${vipLevel}`]}
+              assetFull={assetsFull[`vip.top.full.${vipLevel}`] ?? assetsFull[`vip.top.${vipLevel}`]}
               className="z-[5]"
               style={{ top: "-45px" }}
               fadeOut={Math.max(0, 1 - scrollY / 80)}

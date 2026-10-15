@@ -43,7 +43,8 @@ const VIP_SLOTS = [
   { key: "frame",      label: "الإطار" },
   { key: "halo",       label: "الهالة" },
   { key: "card",       label: "البطاقة" },
-  { key: "top",        label: "القمة المزخرفة" },
+  { key: "top",        label: "القمة (MiniProfile)" },
+  { key: "top.full",   label: "القمة (Profile)" },
   { key: "nickname",   label: "الاسم" },
   { key: "entry",      label: "الدخول" },
   { key: "wave",       label: "الموجة" },
@@ -214,7 +215,7 @@ function VipAssetsTab({ token }: any) {
       <div className="grid grid-cols-2 gap-3">
         {VIP_SLOTS.map((slot) => {
           const key = `vip.${slot.key}.${level}`;
-          const isTop = slot.key === "top";
+          const isTop = slot.key.startsWith("top");
           return (
             <div key={key} className={isTop ? "col-span-2" : ""}>
               <AssetCard slotKey={key} label={`${slot.label} — VIP ${level}`}
