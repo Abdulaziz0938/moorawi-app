@@ -33,7 +33,8 @@ export default function VipTopOrnament({
     <div
       className={`absolute left-0 right-0 pointer-events-none flex justify-center ${className}`}
       style={{
-        top: yPos,
+        top: 0,
+        transform: `translateY(${yPos}px)`,
         opacity: fadeOut,
         ...styleOverride,
       }}
