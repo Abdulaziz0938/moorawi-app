@@ -67,18 +67,32 @@ export async function processImage(
       const dg = Math.abs(g - b);
       const db = Math.abs(b - r);
       const maxDiff = Math.max(dr, dg, db);
-      const isGray = maxDiff < 12; // رمادي نقي
+      const isGray = maxDiff < 15;
 
-      // للرمادي: إذا اللمعان بين 60-220 → شفاف (checkerboard)
-      // إذا لمعان < 60 → أسود → شفاف
-      // إذا لمعان > 220 → أبيض → اتركه
+      // المنطق المُحدَّث:
+      // 1) رمادي (checkerboard) — بين 60 و 200 → شفاف
+      // 2) أسود نقي (0-40) → شفاف
+      // 3) رمادي داكن (40-60) → شبه شفاف (transition)
+      // 4) ألوان → opacity حسب سطوع اللون
       let newAlpha = 255;
 
-      if (isGray && brightness < 220) {
-        // Gray board (60-200) أو dark (0-60) → شفاف
-        newAlpha = 0;
+      if (isGray) {
+        // رمادي = checkerboard أو خلفية
+        if (brightness >= 60 && brightness <= 210) {
+          // checkerboard range → شفاف
+          newAlpha = 0;
+        } else if (brightness < 40) {
+          // أسود نقي → شفاف
+          newAlpha = 0;
+        } else if (brightness < 60) {
+          // transition zone 40-60
+          newAlpha = ((brightness - 40) / 20) * 255;
+        } else {
+          // رمادي فاتح >210 → ربما ضوء → اتركه
+          newAlpha = 255;
+        }
       } else {
-        // color pixel → طبق threshold أسود
+        // ألوان → طبق threshold أسود
         newAlpha = ((brightness - BLACK_THRESHOLD) / range) * 255;
         newAlpha = Math.max(0, Math.min(255, newAlpha));
       }
