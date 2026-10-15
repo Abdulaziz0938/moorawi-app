@@ -16,6 +16,7 @@ import {
 import { UserName } from "./UserBadges";
 import LevelBadge from "./LevelBadge";
 import VipAvatar from "./ui/VipAvatar";
+import VipTopOrnament from "./ui/VipTopOrnament";
 import MedalsRow from "./MedalsRow";
 import ImageCropper from "./ImageCropper";
 import Card from "./ui/Card";
@@ -261,22 +262,15 @@ export default function ProfilePage({
           )}
           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/80" />
 
-          {/* [ezo-top] القمة المزخرفة على الخط الفاصل — تختفي عند التمرير */}
+          {/* [ezo-top] القمة المزخرفة على الخط الفاصل */}
           {vipTopUrl && (
-            <div
-              className="absolute left-0 right-0 z-30 pointer-events-none flex justify-center transition-opacity duration-200"
-              style={{
-                bottom: "-30px",
-                opacity: Math.max(0, 1 - scrollY / 80),
-              }}
-            >
-              <img
-                src={vipTopUrl}
-                alt=""
-                className="w-[75%] max-w-[340px] object-contain drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)]"
-                draggable={false}
-              />
-            </div>
+            <VipTopOrnament
+              url={vipTopUrl}
+              assetFull={assetsFull[`vip.top.${vipLevel}`]}
+              className="z-30"
+              style={{ bottom: "-30px" }}
+              fadeOut={Math.max(0, 1 - scrollY / 80)}
+            />
           )}
 
           {isMe && (

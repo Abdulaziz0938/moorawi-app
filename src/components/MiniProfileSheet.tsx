@@ -15,6 +15,7 @@ import LevelBadge from "./LevelBadge";
 import MedalsRow from "./MedalsRow";
 import { levelFromValue } from "../lib/levels";
 import VipAvatar from "./ui/VipAvatar";
+import VipTopOrnament from "./ui/VipTopOrnament";
 
 interface Props {
   userId: string;
@@ -173,16 +174,14 @@ export default function MiniProfileSheet({
           </button>
         </div>
 
-        {/* [ezo-top] القمة المزخرفة — تظهر فوق الشيت */}
+        {/* [ezo-top] القمة المزخرفة — تمتد كامل الشيت */}
         {vipTopUrl && (
-          <div className="absolute -top-10 left-0 right-0 z-[35] pointer-events-none flex justify-center">
-            <img
-              src={vipTopUrl}
-              alt=""
-              className="w-[80%] max-w-[360px] object-contain drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)]"
-              draggable={false}
-            />
-          </div>
+          <VipTopOrnament
+            url={vipTopUrl}
+            assetFull={assetsFull[`vip.top.${vipLevel}`]}
+            className="z-[35]"
+            style={{ bottom: "-30px" }}
+          />
         )}
 
         {/* Sheet */}
