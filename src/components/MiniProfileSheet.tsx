@@ -116,6 +116,7 @@ export default function MiniProfileSheet({
   const vipFrameData = equippedVipLvl ? assetsFull[`vip.frame.${equippedVipLvl}`] : null;
   const vipBgUrl = vipLevel > 0 ? assets[`vip.background.${vipLevel}`] : null;
   const vipCardUrl = vipLevel > 0 ? assets[`vip.card.${vipLevel}`] : null;
+  console.log("[MiniProfile] vipLevel:", vipLevel, "| cardUrl:", vipCardUrl, "| keys with card:", Object.keys(assets).filter(k => k.includes("card")));
 
   // [ezo-gem] ألوان الجواهر لكل VIP
   const GEM_COLORS: Record<number, { primary: string; secondary: string; glow: string }> = {
