@@ -82,6 +82,17 @@ export default function VipAvatar({
 
   // [ezo-anim] Smart animations for halo + frame
   const haloAnim = vip >= 1 ? buildAnimProps(`vip.halo.${vip}`) : { className: "", style: {} };
+  // [ezo-glow] لون VIP لحساب أشعة النور
+  const VIP_GLOW_COLORS: Record<number, string> = {
+    1: "rgba(16, 185, 129, 0.85)",
+    2: "rgba(59, 130, 246, 0.85)",
+    3: "rgba(168, 85, 247, 0.9)",
+    4: "rgba(220, 38, 38, 0.9)",
+    5: "rgba(234, 179, 8, 0.95)",
+    6: "rgba(249, 115, 22, 0.95)",
+    7: "rgba(251, 191, 36, 1.0)",
+  };
+  const glowColor = VIP_GLOW_COLORS[vip] ?? "transparent";
   const frameAnim = hasCustom ? buildAnimProps(`vip.frame.${vip}`) : { className: "", style: {} };
   const frameLeft = (size - frameSize) / 2 + ox;
   const frameTop = (size - frameSize) / 2 + oy;
@@ -150,6 +161,58 @@ export default function VipAvatar({
           </span>
         )}
       </div>
+
+      {/* [ezo-glow] أشعة النور حول الإطار — تظهر فقط للـ VIP */}
+      {hasCustom && vip >= 1 && (
+        <>
+          {/* حلقة ضوء خارجية (توهج ثابت) */}
+          <div
+            className="absolute rounded-full pointer-events-none z-[15]"
+            style={{
+              width: size * 1.5,
+              height: size * 1.5,
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              background: `radial-gradient(circle, ${glowColor} 0%, ${glowColor.replace("0.85", "0.4").replace("0.9", "0.4").replace("0.95", "0.45").replace("1.0", "0.5")} 35%, transparent 70%)`,
+              filter: "blur(8px)",
+              animation: "ezoGlowPulse 3s ease-in-out infinite",
+              willChange: "opacity, transform",
+            }}
+          />
+          {/* أشعة دوارة (light rays) */}
+          <div
+            className="absolute rounded-full pointer-events-none z-[16]"
+            style={{
+              width: size * 1.8,
+              height: size * 1.8,
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              background: `conic-gradient(
+                from 0deg,
+                transparent 0deg,
+                ${glowColor.replace("0.85", "0.6").replace("0.9", "0.6").replace("0.95", "0.65").replace("1.0", "0.7")} 20deg,
+                transparent 45deg,
+                transparent 90deg,
+                ${glowColor.replace("0.85", "0.6").replace("0.9", "0.6").replace("0.95", "0.65").replace("1.0", "0.7")} 110deg,
+                transparent 135deg,
+                transparent 180deg,
+                ${glowColor.replace("0.85", "0.6").replace("0.9", "0.6").replace("0.95", "0.65").replace("1.0", "0.7")} 200deg,
+                transparent 225deg,
+                transparent 270deg,
+                ${glowColor.replace("0.85", "0.6").replace("0.9", "0.6").replace("0.95", "0.65").replace("1.0", "0.7")} 290deg,
+                transparent 315deg
+              )`,
+              opacity: 0.65,
+              maskImage: "radial-gradient(circle, transparent 38%, black 55%, black 75%, transparent 95%)",
+              WebkitMaskImage: "radial-gradient(circle, transparent 38%, black 55%, black 75%, transparent 95%)",
+              animation: "ezo-rays-rotate 18s linear infinite",
+              willChange: "transform",
+            }}
+          />
+        </>
+      )}
 
       {/* Custom frame (PNG or SVGA) */}
       {hasCustom && (
