@@ -8,6 +8,8 @@ import { getActiveToken } from "../../lib/session";
 import { agoraManager } from "../../lib/agora";
 import { dialog } from "../../lib/dialog";
 import LiveGiftSheet from "./LiveGiftSheet";
+import PKInviteSheet from "./PKInviteSheet";
+import PKView from "./PKView";
 import LiveGiftAnimation from "./LiveGiftAnimation";
 import {
   X, Heart, Users, Send, Gift, Loader2, Video, VideoOff,
@@ -52,6 +54,7 @@ export default function LiveBroadcaster({ streamId, onEnd }: Props) {
   const [sending, setSending] = useState(false);
   const [lastTap, setLastTap] = useState(0);
   const [showGiftSheet, setShowGiftSheet] = useState(false);
+  const [showPKInvite, setShowPKInvite] = useState(false);
 
   // ═══ Join Agora as host — ينتظر تحميل stream ═══
   useEffect(() => {
@@ -226,14 +229,16 @@ export default function LiveBroadcaster({ streamId, onEnd }: Props) {
 
         <div className="flex-1" />
 
-        {/* PK invite button */}
-        <button
-          onClick={() => dialog.alert("PK قريباً")}
-          className="w-9 h-9 rounded-full bg-black/60 backdrop-blur border border-amber-400/40 flex items-center justify-center text-amber-300 active:scale-95"
-          title="منافسة PK"
-        >
-          <Swords size={16} />
-        </button>
+        {/* PK invite button — يظهر فقط عندما لا يوجد PK نشط */}
+        {!stream.pkActive && (
+          <button
+            onClick={() => setShowPKInvite(true)}
+            className="w-9 h-9 rounded-full bg-black/60 backdrop-blur border border-amber-400/40 flex items-center justify-center text-amber-300 active:scale-95"
+            title="منافسة PK"
+          >
+            <Swords size={16} />
+          </button>
+        )}
 
         {/* Switch camera */}
         {cameraOn && agoraReady && (
@@ -331,7 +336,36 @@ export default function LiveBroadcaster({ streamId, onEnd }: Props) {
         </div>
       </div>
 
-      {/* Gift Sheet — للـ co-host self gifting غير مفيد، نتجاهله */}
+      {/* ═══ PK Split Screen ═══ */}
+      {stream.pkActive && stream.coHostId && (
+        <PKView
+          hostName={stream.hostName}
+          hostAvatarUrl={stream.hostAvatarUrl}
+          hostVipLevel={stream.hostVipLevel}
+          hostScore={stream.hostScore}
+          coHostName={stream.coHostName ?? "مذيعة"}
+          coHostAvatarUrl={stream.coHostAvatarUrl}
+          coHostVipLevel={stream.coHostVipLevel ?? 0}
+          coHostScore={stream.coHostScore}
+          pkStartedAt={stream.pkStartedAt ?? Date.now()}
+          pkDurationSec={stream.pkDurationSec ?? 300}
+        />
+      )}
+
+      {/* ═══ Gift Animation ═══ */}
+      <LiveGiftAnimation streamId={streamId} />
+
+      {/* ═══ PK Invite Sheet ═══ */}
+      {showPKInvite && !stream.pkActive && (
+        <PKInviteSheet
+          streamId={streamId}
+          onClose={() => setShowPKInvite(false)}
+          onPKStarted={() => {
+            setShowPKInvite(false);
+            dialog.alert("⚔️ بدأت المنافسة!");
+          }}
+        />
+      )}
     </div>
   );
 }
