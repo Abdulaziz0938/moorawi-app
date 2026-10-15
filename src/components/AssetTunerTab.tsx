@@ -319,48 +319,51 @@ export default function AssetTunerTab() {
       </div>
 
       {/* ═══ SECTION 1: MiniProfile ═══ */}
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <MiniPreview level={level} assets={assets} assetsFull={assetsFull} />
-          <div className="text-center text-[9px] text-purple-300 font-black mt-1">
-            MiniProfile
+      <div className="rounded-2xl border border-purple-400/40 bg-purple-500/5 p-3 space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="text-purple-300 text-sm font-black">📱 MiniProfile</div>
+          <div className="text-[9px] text-purple-300/60 font-mono">vip.top.{level}</div>
+        </div>
+
+        {/* Preview — full width but centered and smaller */}
+        <div className="flex justify-center">
+          <div className="w-40">
+            <MiniPreview level={level} assets={assets} assetsFull={assetsFull} />
           </div>
         </div>
-        <div className="space-y-2">
-          <TunerSection
-            level={level}
-            slotKey="top"
-            title="🎯 قمة الميني"
-            accentColor="#a855f7"
-            defaultY={-70}
-          />
-        </div>
-      </div>
 
-      {/* Divider */}
-      <div className="flex items-center gap-2">
-        <div className="flex-1 h-px bg-white/10" />
-        <span className="text-[9px] text-white/30">═══</span>
-        <div className="flex-1 h-px bg-white/10" />
+        {/* Sliders below — full width */}
+        <TunerSection
+          level={level}
+          slotKey="top"
+          title="🎯 قمة الميني"
+          accentColor="#a855f7"
+          defaultY={-70}
+        />
       </div>
 
       {/* ═══ SECTION 2: Profile ═══ */}
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <ProfilePreview level={level} assets={assets} assetsFull={assetsFull} />
-          <div className="text-center text-[9px] text-emerald-300 font-black mt-1">
-            Profile
+      <div className="rounded-2xl border border-emerald-400/40 bg-emerald-500/5 p-3 space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="text-emerald-300 text-sm font-black">👤 Profile</div>
+          <div className="text-[9px] text-emerald-300/60 font-mono">vip.top.full.{level}</div>
+        </div>
+
+        {/* Preview — full width but centered and smaller */}
+        <div className="flex justify-center">
+          <div className="w-40">
+            <ProfilePreview level={level} assets={assets} assetsFull={assetsFull} />
           </div>
         </div>
-        <div className="space-y-2">
-          <TunerSection
-            level={level}
-            slotKey="top.full"
-            title="🎯 قمة البروفايل"
-            accentColor="#10b981"
-            defaultY={-55}
-          />
-        </div>
+
+        {/* Sliders below — full width */}
+        <TunerSection
+          level={level}
+          slotKey="top.full"
+          title="🎯 قمة البروفايل"
+          accentColor="#10b981"
+          defaultY={-55}
+        />
       </div>
     </div>
   );
