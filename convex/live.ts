@@ -559,20 +559,17 @@ export const sendGiftToLive = mutation({
 });
 
 // ═══════════════════════════════════════════════════════════
-// [ezo-live] أحدث هدية (للـ animation) — polling كل ثانية
+// [ezo-live] أحدث هدية — يبث تلقائياً لكل المشاهدين
 // ═══════════════════════════════════════════════════════════
 export const latestGift = query({
-  args: {
-    streamId: v.id("liveStreams"),
-    since: v.number(),
-  },
+  args: { streamId: v.id("liveStreams") },
   handler: async (ctx, args) => {
     const rows = await ctx.db
       .query("liveGifts")
       .withIndex("by_stream_created", (q) => q.eq("streamId", args.streamId))
       .order("desc")
-      .take(10);
-    const recent = rows.find((r) => r.createdAt > args.since);
+      .take(1);
+    const recent = rows[0];
     if (!recent) return null;
     return {
       _id: recent._id,

@@ -1,4 +1,4 @@
-// [ezo-live-gift] عرض الهدية المتحركة في البث
+// [ezo-live-gift] عرض الهدية المتحركة — لكل المشاهدين
 import { useEffect, useState, useRef } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
@@ -8,58 +8,59 @@ interface Props {
   streamId: string;
 }
 
-interface LiveGiftEvent {
-  _id: string;
-  giftName: string;
-  giftIcon: string;
-  fromName: string;
-  fromUserId: string;
-  toUserId: string;
-  price: number;
-  quantity: number;
-  totalValue: number;
-  createdAt: number;
-}
-
 export default function LiveGiftAnimation({ streamId }: Props) {
-  const sinceRef = useRef<number>(Date.now());
-  const [current, setCurrent] = useState<LiveGiftEvent | null>(null);
-  const [combo, setCombo] = useState(0);
-  const lastGiftRef = useRef<{ id: string; time: number } | null>(null);
-  const timeoutRef = useRef<any>(null);
-
-  // Poll for new gifts (كل ثانية)
+  // استعلام الهدية الأخيرة — reactive
   const latest = useQuery(api.live.latestGift, {
     streamId: streamId as Id<"liveStreams">,
-    since: sinceRef.current,
   });
 
+  // نمنع عرض الهدايا القديمة عند أول mount
+  const initializedRef = useRef(false);
+  const [lastSeenId, setLastSeenId] = useState<string | null>(null);
+  const [current, setCurrent] = useState<any>(null);
+  const [combo, setCombo] = useState(0);
+  const lastGiftRef = useRef<{ userId: string; time: number } | null>(null);
+  const timeoutRef = useRef<any>(null);
+
+  // أول mount → تجاهل الهدية الموجودة أصلاً
   useEffect(() => {
+    if (latest !== undefined && !initializedRef.current) {
+      setLastSeenId(latest?._id ?? null);
+      initializedRef.current = true;
+    }
+  }, [latest]);
+
+  // هدية جديدة → اعرض
+  useEffect(() => {
+    if (!initializedRef.current) return;
     if (!latest) return;
+    if (latest._id === lastSeenId) return; // نفس الهدية → تجاهل
 
-    const now = latest.createdAt;
-    sinceRef.current = now;
+    setLastSeenId(latest._id);
 
-    // Combo detection: نفس المُرسل خلال 3 ثواني
+    const now = Date.now();
+    // كشف combo: نفس المُرسل خلال 3 ثواني
     const isCombo =
-      lastGiftRef.current?.id === latest.fromUserId &&
+      lastGiftRef.current?.userId === latest.fromUserId &&
       now - lastGiftRef.current.time < 3000;
 
     setCombo(isCombo ? (c) => c + latest.quantity : latest.quantity);
-    lastGiftRef.current = { id: latest.fromUserId, time: now };
+    lastGiftRef.current = { userId: latest.fromUserId, time: now };
 
-    setCurrent(latest as any);
+    setCurrent(latest);
 
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     timeoutRef.current = setTimeout(() => {
       setCurrent(null);
       setCombo(0);
     }, 4000);
+  }, [latest?._id]);
 
+  useEffect(() => {
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
-  }, [latest?._id]);
+  }, []);
 
   if (!current) return null;
 
