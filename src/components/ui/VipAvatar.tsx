@@ -180,6 +180,39 @@ export default function VipAvatar({
               willChange: "opacity, transform",
             }}
           />
+          {/* [ezo-shimmer] لمعان متحرك يمر عبر الإطار */}
+          <div
+            className="absolute rounded-full pointer-events-none z-[21] overflow-hidden"
+            style={{
+              width: size * 1.15,
+              height: size * 1.15,
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              maskImage: "radial-gradient(circle, transparent 42%, black 50%, black 70%, transparent 78%)",
+              WebkitMaskImage: "radial-gradient(circle, transparent 42%, black 50%, black 70%, transparent 78%)",
+            }}
+          >
+            <div
+              className="absolute inset-0"
+              style={{
+                background: `linear-gradient(
+                  115deg,
+                  transparent 0%,
+                  transparent 35%,
+                  rgba(255, 255, 255, 0.85) 45%,
+                  rgba(255, 255, 255, 1) 50%,
+                  rgba(255, 255, 255, 0.85) 55%,
+                  transparent 65%,
+                  transparent 100%
+                )`,
+                backgroundSize: "250% 100%",
+                animation: "ezoFrameShimmer 4s ease-in-out infinite",
+                willChange: "background-position",
+              }}
+            />
+          </div>
+
           {/* أشعة دوارة (light rays) */}
           <div
             className="absolute rounded-full pointer-events-none z-0"

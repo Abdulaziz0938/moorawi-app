@@ -892,3 +892,25 @@ html, body {
   from { transform: translate(-50%, -50%) rotate(0deg); }
   to   { transform: translate(-50%, -50%) rotate(360deg); }
 }
+
+/* [ezo-shimmer] لمعان الإطارات — موجة ضوء تمر عبر الإطار */
+@keyframes ezoFrameShimmer {
+  0% {
+    background-position: -150% 50%;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  50% {
+    background-position: 50% 50%;
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    background-position: 250% 50%;
+    opacity: 0;
+  }
+}
