@@ -42,6 +42,8 @@ export default function RoomsTab({ onEnter, onEnterLive, onStartLive }: Props) {
   const [showCreate, setShowCreate] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [showLiveSetup, setShowLiveSetup] = useState(false);
+  const myLive = useQuery(api.live.myLive, { tokenOverride: deviceId });
+  const endMyStream = useMutation(api.live.endMyActiveStream);
   const [newName, setNewName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -124,8 +126,37 @@ export default function RoomsTab({ onEnter, onEnterLive, onStartLive }: Props) {
         {mainTab === "trend" && <TrendTab onEnter={handleJoin} />}
         {mainTab === "live" && onEnterLive && (
           <>
-            {/* Start live button */}
-            {onStartLive && (
+            {/* Active stream banner */}
+            {myLive && onStartLive && (
+              <div className="w-full mb-3 rounded-2xl bg-red-500/15 border border-red-400/40 p-3 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse flex-shrink-0" />
+                <div className="flex-1">
+                  <div className="text-white text-xs font-black">أنتِ تبثين الآن</div>
+                  <div className="text-white/60 text-[10px] truncate">{myLive.title}</div>
+                </div>
+                <button
+                  onClick={() => onStartLive(myLive._id)}
+                  className="px-3 py-1.5 rounded-full bg-red-500 text-white text-[10px] font-black active:scale-95"
+                >
+                  متابعة
+                </button>
+                <button
+                  onClick={async () => {
+                    try {
+                      await endMyStream({ tokenOverride: deviceId });
+                    } catch (e: any) {
+                      dialog.alert(e?.message || "فشل");
+                    }
+                  }}
+                  className="px-2 py-1.5 rounded-full bg-black/60 text-white/70 text-[10px] font-black active:scale-95"
+                >
+                  إنهاء
+                </button>
+              </div>
+            )}
+
+            {/* Start live button — only if no active stream */}
+            {onStartLive && !myLive && (
               <button
                 onClick={() => setShowLiveSetup(true)}
                 className="w-full mb-3 py-3 rounded-2xl bg-gradient-to-r from-red-500 to-pink-600 text-white font-black text-sm shadow-lg active:scale-95 flex items-center justify-center gap-2"

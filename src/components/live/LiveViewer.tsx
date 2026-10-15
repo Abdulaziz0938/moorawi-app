@@ -24,6 +24,10 @@ export default function LiveViewer({ streamId, onLeave }: Props) {
   const stream = useQuery(api.live.getStream, {
     streamId: streamId as Id<"liveStreams">,
   });
+
+  const me = useQuery(api.profiles.me, { tokenOverride: token });
+  const endStream = useMutation(api.live.endStream);
+  const isHost = !!me && !!stream && String(me._id) === String(stream.hostId);
   const comments = useQuery(api.live.listComments, {
     streamId: streamId as Id<"liveStreams">,
     limit: 40,
@@ -33,6 +37,7 @@ export default function LiveViewer({ streamId, onLeave }: Props) {
   const leaveViewer = useMutation(api.live.leaveViewer);
   const sendLikes = useMutation(api.live.sendLikes);
   const sendComment = useMutation(api.live.sendComment);
+
 
   const videoRef = useRef<HTMLDivElement>(null);
   const commentsRef = useRef<HTMLDivElement>(null);
@@ -199,6 +204,24 @@ export default function LiveViewer({ streamId, onLeave }: Props) {
           >
             <X size={18} />
           </button>
+
+          {/* End stream button — if I am the host */}
+          {isHost && (
+            <button
+              onClick={async () => {
+                try {
+                  await endStream({ streamId: streamId as Id<"liveStreams">, tokenOverride: token });
+                  agoraManager.leave();
+                  onLeave();
+                } catch (e: any) {
+                  dialog.alert(e?.message || "فشل الإنهاء");
+                }
+              }}
+              className="px-3 h-9 rounded-full bg-red-500 text-white text-[10px] font-black flex items-center gap-1 active:scale-95 shadow-lg"
+            >
+              🔴 إنهاء البث
+            </button>
+          )}
 
           {/* Host card */}
           <div className="flex items-center gap-2 bg-black/50 backdrop-blur rounded-full pl-1 pr-3 py-1 border border-white/15">

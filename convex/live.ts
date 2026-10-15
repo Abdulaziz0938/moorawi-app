@@ -433,3 +433,28 @@ export const onGiftReceived = internalMutation({
     await ctx.db.patch("liveStreams", args.streamId, patch);
   },
 });
+
+// ═══════════════════════════════════════════════════════════
+// إنهاء أي بث نشط للمستخدم الحالي
+// ═══════════════════════════════════════════════════════════
+export const endMyActiveStream = mutation({
+  args: { tokenOverride: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
+    if (!me) throw new ConvexError({ code: "UNAUTHORIZED" });
+    const rows = await ctx.db
+      .query("liveStreams")
+      .withIndex("by_host_status", (q) =>
+        q.eq("hostId", me._id).eq("status", "live")
+      )
+      .collect();
+    for (const r of rows) {
+      await ctx.db.patch("liveStreams", r._id, {
+        status: "ended",
+        endedAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+    }
+    return { ok: true, ended: rows.length };
+  },
+});
