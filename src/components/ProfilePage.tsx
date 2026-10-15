@@ -20,6 +20,7 @@ import ImageCropper from "./ImageCropper";
 import Card from "./ui/Card";
 import MyItemsSheet from "./MyItemsSheet";
 import UserListSheet from "./UserListSheet";
+import ChatThreadSheet from "./ChatThreadSheet";
 import { levelFromValue } from "../lib/levels";
 
 interface Props {
@@ -78,6 +79,10 @@ export default function ProfilePage({
   );
 
   const [editingName, setEditingName] = useState(false);
+  const [dmConversationId, setDmConversationId] = useState<string | null>(null);
+  const [friendSent, setFriendSent] = useState(false);
+  const openWith = useMutation(api.directMessages.openWith);
+  const sendFriendRequest = useMutation(api.friends.sendRequest);
   const assets = useAssets();
   const assetsFull = useAssetsFull();
   const [newName, setNewName] = useState("");
@@ -753,20 +758,66 @@ export default function ProfilePage({
             >
               <Gift size={24} />
             </button>
-            <button className="w-14 h-14 rounded-full bg-white/15 backdrop-blur border border-white/25 flex items-center justify-center text-white hover:bg-white/25 transition active:scale-90">
+            <button
+              onClick={async () => {
+                try {
+                  const res = await openWith({
+                    otherUserId: userId as Id<"users">,
+                    tokenOverride: deviceId,
+                  });
+                  setDmConversationId(res.conversationId);
+                } catch (e: any) {
+                  dialog.alert(e?.message || "فشل فتح المحادثة");
+                }
+              }}
+              className="w-14 h-14 rounded-full bg-white/15 backdrop-blur border border-white/25 flex items-center justify-center text-white hover:bg-white/25 transition active:scale-90"
+              title="مراسلة"
+            >
               <MessageCircle size={22} />
             </button>
             <button
-              onClick={async () => { try { await toggleFollow({ targetUserId: userId as Id<"users">, tokenOverride: deviceId }); } catch (e: any) { dialog.alert(e?.message || "فشل"); } }}
-              className="w-14 h-14 rounded-full bg-white/15 backdrop-blur border border-white/25 flex items-center justify-center text-white hover:bg-white/25 transition active:scale-90"
+              onClick={async () => {
+                try {
+                  if (friendSent) {
+                    dialog.alert("تم إرسال الطلب مسبقاً");
+                    return;
+                  }
+                  await sendFriendRequest({
+                    targetUserId: userId as Id<"users">,
+                    tokenOverride: deviceId,
+                  });
+                  setFriendSent(true);
+                  dialog.alert("✅ تم إرسال طلب الصداقة");
+                } catch (e: any) {
+                  dialog.alert(e?.message || "فشل إرسال الطلب");
+                }
+              }}
+              className={`w-14 h-14 rounded-full backdrop-blur border flex items-center justify-center text-white transition active:scale-90 ${
+                friendSent
+                  ? "bg-emerald-500/30 border-emerald-400/50"
+                  : "bg-white/15 border-white/25 hover:bg-white/25"
+              }`}
+              title="إضافة صديق"
             >
-              {isFollowing ? <Check size={22} className="text-emerald-300" /> : <UserPlus size={22} />}
+              {friendSent ? (
+                <Check size={22} className="text-emerald-300" />
+              ) : (
+                <UserPlus size={22} />
+              )}
             </button>
           </div>
         )}
 
         <div className="h-8" />
       </div>
+
+      {/* ============ Direct Chat ============ */}
+      {dmConversationId && (
+        <ChatThreadSheet
+          conversationId={dmConversationId as any}
+          onClose={() => setDmConversationId(null)}
+        />
+      )}
 
       {/* ============ Avatar Menu ============ */}
       {isMe && showAvatarMenu && (
