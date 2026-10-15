@@ -167,10 +167,10 @@ export default function VipAvatar({
         <>
           {/* حلقة ضوء خارجية (توهج ثابت) */}
           <div
-            className="absolute rounded-full pointer-events-none z-[15]"
+            className="absolute rounded-full pointer-events-none z-0"
             style={{
-              width: size * 1.5,
-              height: size * 1.5,
+              width: size * 1.35,
+              height: size * 1.35,
               top: "50%",
               left: "50%",
               transform: "translate(-50%, -50%)",
@@ -182,10 +182,10 @@ export default function VipAvatar({
           />
           {/* أشعة دوارة (light rays) */}
           <div
-            className="absolute rounded-full pointer-events-none z-[16]"
+            className="absolute rounded-full pointer-events-none z-0"
             style={{
-              width: size * 1.8,
-              height: size * 1.8,
+              width: size * 1.5,
+              height: size * 1.5,
               top: "50%",
               left: "50%",
               transform: "translate(-50%, -50%)",
@@ -204,9 +204,9 @@ export default function VipAvatar({
                 ${glowColor.replace("0.85", "0.6").replace("0.9", "0.6").replace("0.95", "0.65").replace("1.0", "0.7")} 290deg,
                 transparent 315deg
               )`,
-              opacity: 0.65,
-              maskImage: "radial-gradient(circle, transparent 38%, black 55%, black 75%, transparent 95%)",
-              WebkitMaskImage: "radial-gradient(circle, transparent 38%, black 55%, black 75%, transparent 95%)",
+              opacity: 0.45,
+              maskImage: "radial-gradient(circle, transparent 45%, black 58%, black 72%, transparent 90%)",
+              WebkitMaskImage: "radial-gradient(circle, transparent 45%, black 58%, black 72%, transparent 90%)",
               animation: "ezo-rays-rotate 18s linear infinite",
               willChange: "transform",
             }}
