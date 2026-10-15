@@ -35,7 +35,7 @@ export default function LiveBroadcaster({ streamId, onEnd }: Props) {
   });
   const comments = useQuery(api.live.listComments, {
     streamId: streamId as Id<"liveStreams">,
-    limit: 40,
+    limit: 100,
   });
   const getLiveToken = useAction(api.voice.getLiveToken);
   const endStream = useMutation(api.live.endStream);
@@ -157,7 +157,7 @@ export default function LiveBroadcaster({ streamId, onEnd }: Props) {
     );
   }
 
-  const recentComments = ((comments ?? []) as Comment[]).slice(-5);
+  const recentComments = (comments ?? []) as Comment[]; // كل الرسائل
 
   return (
     <div className="fixed inset-0 z-[300] bg-black overflow-hidden" dir="rtl">
@@ -246,15 +246,27 @@ export default function LiveBroadcaster({ streamId, onEnd }: Props) {
       {/* ═══ Floating hearts (double-tap visual) ═══ */}
       <FloatingHearts likes={stream.totalLikes} />
 
-      {/* ═══ COMMENTS OVERLAY — آخر 5 بتدرج شفافية ═══ */}
-      <div className="absolute bottom-24 left-3 right-3 z-20 flex flex-col gap-1 max-h-[35dvh] overflow-hidden pointer-events-none">
+      {/* ═══ COMMENTS OVERLAY — قابل للسحب ═══ */}
+      <div
+        className="absolute bottom-24 left-3 right-3 z-20 max-h-[40dvh] overflow-y-auto thin-scroll flex flex-col gap-1 pointer-events-auto pb-1"
+        style={{ WebkitOverflowScrolling: "touch" }}
+      >
         {recentComments.map((c, idx) => {
           const total = recentComments.length;
-          const opacity = total <= 1 ? 1 : 0.3 + (idx / (total - 1)) * 0.7;
+          // آخر 5 = بتدرج، الأقدم = شفاف ثابت
+          const fromEnd = total - 1 - idx;
+          let opacity = 0.25;
+          if (fromEnd === 0) opacity = 1;
+          else if (fromEnd === 1) opacity = 0.9;
+          else if (fromEnd === 2) opacity = 0.7;
+          else if (fromEnd === 3) opacity = 0.5;
+          else if (fromEnd === 4) opacity = 0.3;
+          else opacity = 0.25;
+
           return (
             <div
               key={c._id}
-              className="flex items-center gap-2 bg-black/60 backdrop-blur rounded-full px-3 py-1.5 border border-white/10 max-w-full self-start"
+              className="flex items-center gap-2 bg-black/60 backdrop-blur rounded-full px-3 py-1.5 border border-white/10 max-w-full self-start flex-shrink-0"
               style={{ opacity, transition: "opacity 300ms ease" }}
             >
               <div className="w-6 h-6 rounded-full overflow-hidden bg-purple-700 flex-shrink-0 flex items-center justify-center text-white text-[10px] font-black">
