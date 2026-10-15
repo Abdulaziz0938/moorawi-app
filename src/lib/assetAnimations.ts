@@ -34,17 +34,17 @@ export function assetSlot(key: string): string {
 export const SMART_DEFAULTS: Record<string, AnimConfig> = {
   // ─── الإطارات: دوران بطيء ───
   frame: {
-    animation: "rotate",
-    speed: 20,
-    scale: 1.0,
+    animation: "pulse",
+    speed: 2.5,
+    scale: 0.06,
     direction: "normal",
   },
 
   // ─── الهالات: نبض ناعم ───
   halo: {
-    animation: "pulse",
-    speed: 2.5,
-    scale: 0.08,
+    animation: "rotate",
+    speed: 20,
+    scale: 1.0,
     direction: "normal",
   },
 
