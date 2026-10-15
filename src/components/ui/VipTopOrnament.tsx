@@ -25,11 +25,14 @@ export default function VipTopOrnament({
   const scalePct = assetFull?.holeSize ?? 100;
   const scale = scalePct / 100;
 
+  // yOffset من DB — يمكن أن يكون سالب (فوق الحد) أو موجب (أسفل)
   return (
     <div
       className={`absolute left-0 right-0 pointer-events-none flex justify-center ${className}`}
       style={{
-        bottom: yOffset,
+        // القمة تُثبّت على الحافة العليا للـ parent (top: 0)
+        // ثم يزحزحها yOffset
+        top: yOffset,
         opacity: fadeOut,
         ...style,
       }}
@@ -41,7 +44,7 @@ export default function VipTopOrnament({
         style={{
           width: `${widthPct}%`,
           transform: `scale(${scale})`,
-          transformOrigin: "center center",
+          transformOrigin: "center top",
         }}
         draggable={false}
       />

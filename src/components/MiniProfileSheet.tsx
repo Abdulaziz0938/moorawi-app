@@ -174,13 +174,13 @@ export default function MiniProfileSheet({
           </button>
         </div>
 
-        {/* [ezo-top] القمة المزخرفة — تمتد كامل الشيت */}
+        {/* [ezo-top] القمة المزخرفة — على الحافة العليا للشيت */}
         {vipTopUrl && (
           <VipTopOrnament
             url={vipTopUrl}
             assetFull={assetsFull[`vip.top.${vipLevel}`]}
             className="z-[35]"
-            style={{ bottom: "-30px" }}
+            style={{ top: "-45px" }}
           />
         )}
 
