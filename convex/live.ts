@@ -391,8 +391,29 @@ export const endPK = mutation({
     ) {
       throw new ConvexError({ code: "FORBIDDEN" });
     }
+    // حفظ النتيجة النهائية متزامنة لكل المشاهدين والمذيعين
+    const hostScore = stream.hostScore ?? 0;
+    const coHostScore = stream.coHostScore ?? 0;
+    const hostWon = hostScore > coHostScore;
+    const isDraw = hostScore === coHostScore;
+
+    const winnerId = isDraw ? null : (hostWon ? stream.hostId : (stream.coHostId ?? null));
+
     await ctx.db.patch("liveStreams", args.streamId, {
       pkActive: false,
+      pkResult: {
+        hostName: stream.hostName ?? "المضيف",
+        hostAvatarUrl: stream.hostAvatarUrl,
+        hostVipLevel: stream.hostVipLevel ?? 0,
+        hostScore,
+        coHostName: stream.coHostName ?? "الضيف",
+        coHostAvatarUrl: stream.coHostAvatarUrl,
+        coHostVipLevel: stream.coHostVipLevel ?? 0,
+        coHostScore,
+        winnerId,
+        isDraw,
+        endedAt: Date.now(),
+      },
       coHostId: undefined,
       coHostName: undefined,
       coHostAvatarUrl: undefined,

@@ -11,6 +11,7 @@ import VipAvatar from "../ui/VipAvatar";
 import LiveGiftSheet from "./LiveGiftSheet";
 import LiveGiftAnimation from "./LiveGiftAnimation";
 import PKView from "./PKView";
+import PKWinnerModal from "./PKWinnerModal";
 import {
   X, Heart, Users, Send, Gift, Loader2, Share2, Eye,
 } from "lucide-react";
@@ -415,6 +416,20 @@ export default function LiveViewer({ streamId, onLeave }: Props) {
           toUserId={String(stream.hostId)}
           toName={stream.hostName}
           onClose={() => setShowGiftSheet(false)}
+        />
+      )}
+      {/* ═══ PK Winner Modal للجمهور ═══ */}
+      {stream?.pkResult && (Date.now() - (stream.pkResult.endedAt || 0) < 6500) && (
+        <PKWinnerModal
+          hostName={stream.pkResult.hostName}
+          hostAvatarUrl={stream.pkResult.hostAvatarUrl}
+          hostVipLevel={stream.pkResult.hostVipLevel}
+          hostScore={stream.pkResult.hostScore}
+          coHostName={stream.pkResult.coHostName}
+          coHostAvatarUrl={stream.pkResult.coHostAvatarUrl}
+          coHostVipLevel={stream.pkResult.coHostVipLevel}
+          coHostScore={stream.pkResult.coHostScore}
+          onClose={() => {}}
         />
       )}
     </div>

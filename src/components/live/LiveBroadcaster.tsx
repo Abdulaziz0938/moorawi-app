@@ -371,8 +371,20 @@ export default function LiveBroadcaster({ streamId, onEnd }: Props) {
       {/* ═══ Gift Animation ═══ */}
       <LiveGiftAnimation streamId={streamId} />
 
-      {/* ═══ PK Winner Modal ═══ */}
-      {pkWinnerData && (
+      {/* ═══ PK Winner Modal متزامن مع السيرفر ═══ */}
+      {(stream?.pkResult && (Date.now() - (stream.pkResult.endedAt || 0) < 6500)) ? (
+        <PKWinnerModal
+          hostName={stream.pkResult.hostName}
+          hostAvatarUrl={stream.pkResult.hostAvatarUrl}
+          hostVipLevel={stream.pkResult.hostVipLevel}
+          hostScore={stream.pkResult.hostScore}
+          coHostName={stream.pkResult.coHostName}
+          coHostAvatarUrl={stream.pkResult.coHostAvatarUrl}
+          coHostVipLevel={stream.pkResult.coHostVipLevel}
+          coHostScore={stream.pkResult.coHostScore}
+          onClose={() => {}}
+        />
+      ) : pkWinnerData && (
         <PKWinnerModal
           {...pkWinnerData}
           onClose={() => setPkWinnerData(null)}

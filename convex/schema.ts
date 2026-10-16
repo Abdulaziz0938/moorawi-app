@@ -1060,7 +1060,22 @@ export default defineSchema({
     coHostVipLevel: v.optional(v.number()),
     pkActive: v.boolean(),
     pkStartedAt: v.optional(v.number()),
-    pkDurationSec: v.optional(v.number()), // 5 min default
+    pkDurationSec: v.optional(v.number()),
+    pkResult: v.optional(
+      v.object({
+        hostName: v.string(),
+        hostAvatarUrl: v.optional(v.string()),
+        hostVipLevel: v.number(),
+        hostScore: v.number(),
+        coHostName: v.string(),
+        coHostAvatarUrl: v.optional(v.string()),
+        coHostVipLevel: v.number(),
+        coHostScore: v.number(),
+        winnerId: v.union(v.id("users"), v.null()),
+        isDraw: v.boolean(),
+        endedAt: v.number(),
+      })
+    ), // 5 min default
     hostScore: v.number(),      // gift value from viewers → host
     coHostScore: v.number(),    // gift value from viewers → co-host
 
