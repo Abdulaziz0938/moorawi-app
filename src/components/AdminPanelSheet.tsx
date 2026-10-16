@@ -14,6 +14,7 @@ import AssetsPanel from "./AssetsPanel";
 import AgencyRequestsPanel from "./AgencyRequestsPanel";
 import VerificationPanel from "./VerificationPanel";
 import AgencyAdminReport from "./AgencyAdminReport";
+import AdminAgentsSheet from "./AdminAgentsSheet";
 
 interface Props {
   onClose: () => void;
@@ -47,6 +48,7 @@ export default function AdminPanelSheet({ onClose }: Props) {
   const [showAgencyRequests, setShowAgencyRequests] = useState(false);
   const [showAdminReport, setShowAdminReport] = useState(false);
   const [showVerifications, setShowVerifications] = useState(false);
+  const [showAgentAdmin, setShowAgentAdmin] = useState(false);
 
   const [grantAmount, setGrantAmount] = useState("10000");
 
@@ -202,11 +204,11 @@ export default function AdminPanelSheet({ onClose }: Props) {
               </div>
             )}
             <h2 className="text-white text-lg font-black">
-              {showVerifications ? "طلبات التوثيق" : showAdminReport ? "تقارير الوكالات" : showAgencyRequests ? "طلبات الوكالات" : showAssets ? "الأصول والصور" : editUser ? `تعديل: ${editUser.username}` : "لوحة المالك"}
+              {showAgentAdmin ? "إدارة وكلاء الشحن" : showVerifications ? "طلبات التوثيق" : showAdminReport ? "تقارير الوكالات" : showAgencyRequests ? "طلبات الوكالات" : showAssets ? "الأصول والصور" : editUser ? `تعديل: ${editUser.username}` : "لوحة المالك"}
             </h2>
           </div>
           <div className="flex items-center gap-1">
-            {!editUser && !showAssets && !showAgencyRequests && !showAdminReport && !showVerifications && (
+            {!editUser && !showAssets && !showAgencyRequests && !showAdminReport && !showVerifications && !showAgentAdmin && (
               <>
                 <button
                   onClick={() => setShowVerifications(true)}
@@ -214,6 +216,16 @@ export default function AdminPanelSheet({ onClose }: Props) {
                   className="p-2 rounded-full hover:bg-white/10 text-white"
                 >
                   <ShieldCheck size={20} />
+                </button>
+
+                <button
+                  onClick={() => setShowAgentAdmin(true)}
+                  className="flex-1 min-w-0 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-400/30 p-3 flex flex-col items-center gap-1.5 active:scale-95 transition"
+                >
+                  <div className="w-10 h-10 rounded-full bg-emerald-500/30 flex items-center justify-center">
+                    <ShieldCheck size={18} className="text-emerald-300" />
+                  </div>
+                  <span className="text-white text-[11px] font-black">وكلاء الشحن</span>
                 </button>
                 <button
                   onClick={() => setShowAdminReport(true)}
@@ -248,7 +260,9 @@ export default function AdminPanelSheet({ onClose }: Props) {
         <div className="flex-1 overflow-y-auto">
 
           {/* ============ VERIFICATIONS ============ */}
-          {showVerifications ? (
+          {showAgentAdmin ? (
+            <AdminAgentsSheet onClose={() => setShowAgentAdmin(false)} />
+          ) : showVerifications ? (
             <VerificationPanel token={token} />
           ) : showAdminReport ? (
             <AgencyAdminReport onClose={() => setShowAdminReport(false)} />
