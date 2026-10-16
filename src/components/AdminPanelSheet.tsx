@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { getActiveToken } from "../lib/session";
 import { dialog } from "../lib/dialog";
-import { Calendar, 
+import { AlertTriangle, Calendar, 
   X, Loader2, Search, Coins, Gem, Ban, ShieldCheck, Crown,
   Users, Home, ShoppingBag, TrendingUp, Plus, Save, ChevronLeft,
   UserCheck, UserX, Image as ImageIcon, Upload, RotateCcw, Briefcase, BarChart3,
@@ -17,6 +17,7 @@ import AgencyAdminReport from "./AgencyAdminReport";
 import AdminAgentsSheet from "./AdminAgentsSheet";
 import AdminRechargeSheet from "./AdminRechargeSheet";
 import AdminDailyLoginSheet from "./AdminDailyLoginSheet";
+import AdminReportsSheet from "./AdminReportsSheet";
 
 interface Props {
   onClose: () => void;
@@ -53,6 +54,7 @@ export default function AdminPanelSheet({ onClose }: Props) {
   const [showAgentAdmin, setShowAgentAdmin] = useState(false);
   const [showRechargeAdmin, setShowRechargeAdmin] = useState(false);
   const [showDailyLoginAdmin, setShowDailyLoginAdmin] = useState(false);
+  const [showReportsAdmin, setShowReportsAdmin] = useState(false);
 
   const [grantAmount, setGrantAmount] = useState("10000");
 
@@ -208,7 +210,7 @@ export default function AdminPanelSheet({ onClose }: Props) {
               </div>
             )}
             <h2 className="text-white text-lg font-black">
-              {showDailyLoginAdmin ? "المكافأة اليومية" : showRechargeAdmin ? "طلبات الشحن" : showAgentAdmin ? "إدارة وكلاء الشحن" : showVerifications ? "طلبات التوثيق" : showAdminReport ? "تقارير الوكالات" : showAgencyRequests ? "طلبات الوكالات" : showAssets ? "الأصول والصور" : editUser ? `تعديل: ${editUser.username}` : "لوحة المالك"}
+              {showReportsAdmin ? "الإبلاغات" : showDailyLoginAdmin ? "المكافأة اليومية" : showRechargeAdmin ? "طلبات الشحن" : showAgentAdmin ? "إدارة وكلاء الشحن" : showVerifications ? "طلبات التوثيق" : showAdminReport ? "تقارير الوكالات" : showAgencyRequests ? "طلبات الوكالات" : showAssets ? "الأصول والصور" : editUser ? `تعديل: ${editUser.username}` : "لوحة المالك"}
             </h2>
           </div>
           <div className="flex items-center gap-1">
@@ -251,6 +253,16 @@ export default function AdminPanelSheet({ onClose }: Props) {
                   <Calendar size={18} className="text-amber-300" />
                 </div>
                 <span className="text-white text-[10px] font-black text-center leading-tight">المكافأة اليومية</span>
+              </button>
+
+              <button
+                onClick={() => setShowReportsAdmin(true)}
+                className="rounded-2xl bg-gradient-to-br from-red-500/20 to-orange-500/20 border border-red-400/30 p-3 flex flex-col items-center gap-1.5 active:scale-95 transition"
+              >
+                <div className="w-10 h-10 rounded-full bg-red-500/30 flex items-center justify-center">
+                  <AlertTriangle size={18} className="text-red-300" />
+                </div>
+                <span className="text-white text-[10px] font-black text-center leading-tight">الإبلاغات</span>
               </button>
 
               <button
@@ -298,7 +310,9 @@ export default function AdminPanelSheet({ onClose }: Props) {
         <div className="flex-1 overflow-y-auto">
 
           {/* ============ VERIFICATIONS ============ */}
-          {showDailyLoginAdmin ? (
+          {showReportsAdmin ? (
+            <AdminReportsSheet onClose={() => setShowReportsAdmin(false)} />
+          ) : showDailyLoginAdmin ? (
             <AdminDailyLoginSheet onClose={() => setShowDailyLoginAdmin(false)} />
           ) : showRechargeAdmin ? (
             <AdminRechargeSheet onClose={() => setShowRechargeAdmin(false)} />
