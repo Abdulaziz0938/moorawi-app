@@ -17,6 +17,7 @@ import { levelFromValue } from "../lib/levels";
 import VipAvatar from "./ui/VipAvatar";
 import VipTopOrnament from "./ui/VipTopOrnament";
 import ReportSheet from "./ReportSheet";
+import ProfileActionsSheet from "./ProfileActionsSheet";
 
 interface Props {
   userId: string;
@@ -96,6 +97,7 @@ export default function MiniProfileSheet({
   const [dmConversationId, setDmConversationId] = useState<string | null>(null);
   const [friendBusy, setFriendBusy] = useState(false);
   const [showReport, setShowReport] = useState(false);
+  const [showActions, setShowActions] = useState(false);
   const assets = useAssets();
   const assetsFull = useAssetsFull();
 
@@ -387,7 +389,7 @@ export default function MiniProfileSheet({
                 )}
                 <ActionBtn
                   icon={<MoreVertical size={22} />}
-                  onClick={() => setShowMore((v) => !v)}
+                  onClick={() => setShowActions(true)}
                 />
               </div>
             )}
@@ -426,6 +428,18 @@ export default function MiniProfileSheet({
           </div>
         </div>
       </div>
+
+      {showActions && (
+        <ProfileActionsSheet
+          userId={userId as any}
+          userName={profile?.name ?? "مستخدم"}
+          onClose={() => setShowActions(false)}
+          onOpenReport={() => {
+            setShowActions(false);
+            setShowReport(true);
+          }}
+        />
+      )}
 
       {showReport && (
         <ReportSheet

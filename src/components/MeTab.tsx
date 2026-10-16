@@ -31,6 +31,7 @@ import MedalsSheet from "./MedalsSheet";
 import Card from "./ui/Card";
 import StatBadge from "./ui/StatBadge";
 import VipAvatar from "./ui/VipAvatar";
+import BlockListSheet from "./BlockListSheet";
 
 interface Props {
   onEnterRoom?: (roomId: any) => void;
@@ -66,6 +67,7 @@ export default function MeTab({ onEnterRoom }: Props) {
   const [showSupporterVip, setShowSupporterVip] = useState(false);
   const [showLanguage, setShowLanguage] = useState(false);
   const [showUserSettings, setShowUserSettings] = useState(false);
+  const [showBlockList, setShowBlockList] = useState(false);
 
   // [moorawi-global] ربط زر الشحن من GiftSheet
   useEffect(() => {
@@ -98,6 +100,7 @@ export default function MeTab({ onEnterRoom }: Props) {
   useBackButton(showSupporterVip, () => setShowSupporterVip(false));
   useBackButton(showLanguage, () => setShowLanguage(false));
   useBackButton(showUserSettings, () => setShowUserSettings(false));
+  useBackButton(showBlockList, () => setShowBlockList(false));
 
   const myAgent = useQuery(
     api.agents.myAgent,

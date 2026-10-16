@@ -1270,4 +1270,16 @@ export default defineSchema({
     .index("by_target", ["targetUserId"])
     .index("by_reporter_and_createdAt", ["reporterId", "createdAt"]),
 
+  // [ezo-blocks] حظر المستخدمين
+  blocks: defineTable({
+    blockerId: v.id("users"),
+    blockedId: v.id("users"),
+    blockedName: v.string(),
+    blockedUserNumber: v.optional(v.number()),
+    createdAt: v.number(),
+  })
+    .index("by_blocker", ["blockerId", "createdAt"])
+    .index("by_pair", ["blockerId", "blockedId"])
+    .index("by_blocked", ["blockedId"]),
+
 });

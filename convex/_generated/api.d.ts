@@ -14,6 +14,7 @@ import type * as agents from "../agents.js";
 import type * as assets from "../assets.js";
 import type * as auth from "../auth.js";
 import type * as banners from "../banners.js";
+import type * as blocks from "../blocks.js";
 import type * as bubbles from "../bubbles.js";
 import type * as config from "../config.js";
 import type * as crons from "../crons.js";
@@ -72,6 +73,7 @@ declare const fullApi: ApiFromModules<{
   assets: typeof assets;
   auth: typeof auth;
   banners: typeof banners;
+  blocks: typeof blocks;
   bubbles: typeof bubbles;
   config: typeof config;
   crons: typeof crons;
