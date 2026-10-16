@@ -45,6 +45,9 @@ export default function LiveViewer({ streamId, onLeave }: Props) {
 
   const hostVideoRef = useRef<HTMLDivElement>(null);
   const coHostVideoRef = useRef<HTMLDivElement>(null);
+  const hostAgoraUidRef = useRef<string | null>(null);
+  const coHostAgoraUidRef = useRef<string | null>(null);
+  const coHostIdRef = useRef<string | null>(null);
   const commentsRef = useRef<HTMLDivElement>(null);
   const [connected, setConnected] = useState(false);
   const [commentText, setCommentText] = useState("");
@@ -71,30 +74,39 @@ export default function LiveViewer({ streamId, onLeave }: Props) {
           rtcToken,
           account,
           (user) => {
-            // Remote user published video
             if (!user.videoTrack) return;
             const uid = String(user.uid);
-            // إذا كان PK — نفرّق بين المضيف والضيفة
-            // نستخدم hostId و coHostId من stream
-            if (stream?.coHostId) {
-              // نحتاج نعرف uid → user nào
-              // نستخدم mapping من account
-              // host عادة uid يبدأ بـ live_host_ أو مشابه
-              // نبسيطها: أي واحد لم يُملأ يُملأ بأول user
-              if (hostVideoRef.current && !hostVideoRef.current.dataset.filled) {
-                user.videoTrack.play(hostVideoRef.current);
-                hostVideoRef.current.dataset.filled = "1";
-              } else if (coHostVideoRef.current) {
-                user.videoTrack.play(coHostVideoRef.current);
-              }
-            } else {
-              // single host
-              if (hostVideoRef.current) {
-                user.videoTrack.play(hostVideoRef.current);
-              }
+            if (hostAgoraUidRef.current === uid) {
+              if (hostVideoRef.current) user.videoTrack.play(hostVideoRef.current);
+              return;
+            }
+            if (coHostAgoraUidRef.current === uid) {
+              if (coHostVideoRef.current) user.videoTrack.play(coHostVideoRef.current);
+              return;
+            }
+            if (!hostAgoraUidRef.current) {
+              hostAgoraUidRef.current = uid;
+              if (hostVideoRef.current) user.videoTrack.play(hostVideoRef.current);
+              return;
+            }
+            if (!coHostAgoraUidRef.current && coHostIdRef.current) {
+              coHostAgoraUidRef.current = uid;
+              if (coHostVideoRef.current) user.videoTrack.play(coHostVideoRef.current);
             }
           },
-          () => {},
+          (user, mediaType) => {
+            if (mediaType === "audio") return;
+            const uid = String(user.uid);
+            if (hostAgoraUidRef.current === uid) {
+              if (hostVideoRef.current) hostVideoRef.current.innerHTML = "";
+              hostAgoraUidRef.current = null;
+              return;
+            }
+            if (coHostAgoraUidRef.current === uid) {
+              if (coHostVideoRef.current) coHostVideoRef.current.innerHTML = "";
+              coHostAgoraUidRef.current = null;
+            }
+          },
           { asHost: false }
         );
         if (mounted) setConnected(true);
@@ -116,6 +128,29 @@ export default function LiveViewer({ streamId, onLeave }: Props) {
       agoraManager.leave();
     };
   }, [streamId, stream?.channelName]);
+
+  // ═══ مزامنة coHostIdRef + ربط slot الضيفة عند التغيير ═══
+  useEffect(() => {
+    coHostIdRef.current = stream?.coHostId ?? null;
+    if (!stream?.coHostId) {
+      if (coHostVideoRef.current) coHostVideoRef.current.innerHTML = "";
+      coHostAgoraUidRef.current = null;
+      return;
+    }
+    const t = setTimeout(() => {
+      const remotes = agoraManager.getRemoteUsers();
+      for (const u of remotes) {
+        const uid = String(u.uid);
+        if (!u.videoTrack) continue;
+        if (hostAgoraUidRef.current === uid) continue;
+        if (coHostAgoraUidRef.current === uid) continue;
+        coHostAgoraUidRef.current = uid;
+        if (coHostVideoRef.current) u.videoTrack.play(coHostVideoRef.current);
+        break;
+      }
+    }, 150);
+    return () => clearTimeout(t);
+  }, [stream?.coHostId]);
 
   // ═══ Auto-scroll comments ═══
   useEffect(() => {
