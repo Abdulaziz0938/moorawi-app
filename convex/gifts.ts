@@ -279,6 +279,16 @@ export const sendBatch = mutation({
 
     const gift = await ctx.db.get("gifts", args.giftId);
     if (!gift) throw new ConvexError({ code: "NOT_FOUND", message: "الهدية غير موجودة" });
+    // [VIP-Lock] فحص حصرية هدايا VIP في الإرسال الجماعي
+    if (gift.category === "vip") {
+      const myVip = activeVipLevel(user);
+      if (myVip <= 0) {
+        throw new ConvexError({
+          code: "FORBIDDEN",
+          message: "هذه الهدية حصرية لأعضاء VIP فقط! اشترك في VIP لإرسالها.",
+        });
+      }
+    }
 
     // إزالة التكرار (حماية من إرسال نفس الـ ID مرتين)
     const uniqueIds = Array.from(new Set(args.toUserIds));
