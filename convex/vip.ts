@@ -1,3 +1,32 @@
+
+// [custom-vip-tiers] عتبات مستويات الـ VIP متوافقة مع سعر الصرف (700 coins = $1)
+export const BINMO_VIP_LEVELS = [
+  { level: 0, minCoins: 0, usd: 0, name: "عادي" },
+  { level: 1, minCoins: 7000, usd: 10, name: "فارس" },       // 7K Coins (~$10)
+  { level: 2, minCoins: 35000, usd: 50, name: "نبيل" },      // 35K Coins (~$50)
+  { level: 3, minCoins: 105000, usd: 150, name: "فيكونت" },  // 105K Coins (~$150)
+  { level: 4, minCoins: 350000, usd: 500, name: "دوق" },     // 350K Coins (~$500)
+  { level: 5, minCoins: 1050000, usd: 1500, name: "الملك" },  // 1.05M Coins (~$1,500) - King
+  { level: 6, minCoins: 3500000, usd: 5000, name: "الإمبراطور" }, // 3.5M Coins (~$5,000) - Emperor
+  { level: 7, minCoins: 10500000, usd: 15000, name: "الأسطورة" }, // 10.5M Coins (~$15,000) - SVIP Legend
+];
+
+/**
+ * حساب مستوى الـ VIP التلقائي بناءً على إجمالي العملات المشحونة بسعر صرفك
+ */
+export function calculateBinmoVipLevel(totalRechargedCoins: number = 0): number {
+  let currentLevel = 0;
+  for (const tier of BINMO_VIP_LEVELS) {
+    if (totalRechargedCoins >= tier.minCoins) {
+      currentLevel = tier.level;
+    } else {
+      break;
+    }
+  }
+  return currentLevel;
+}
+
+
 // [moorawi-vip] VIP subscription system
 //
 // VIP is a PAID subscription (1-7), not a wealth/charm level.
