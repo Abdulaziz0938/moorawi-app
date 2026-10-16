@@ -42,6 +42,7 @@ import type * as presence from "../presence.js";
 import type * as profileFull from "../profileFull.js";
 import type * as profiles from "../profiles.js";
 import type * as relationships from "../relationships.js";
+import type * as reports from "../reports.js";
 import type * as resetStats from "../resetStats.js";
 import type * as rewards from "../rewards.js";
 import type * as rockets from "../rockets.js";
@@ -99,6 +100,7 @@ declare const fullApi: ApiFromModules<{
   profileFull: typeof profileFull;
   profiles: typeof profiles;
   relationships: typeof relationships;
+  reports: typeof reports;
   resetStats: typeof resetStats;
   rewards: typeof rewards;
   rockets: typeof rockets;

@@ -1243,4 +1243,31 @@ export default defineSchema({
   })
     .index("by_dayIndex", ["dayIndex"]),
 
+  // [ezo-reports] نظام الإبلاغ
+  reports: defineTable({
+    reporterId: v.id("users"),
+    reporterName: v.string(),
+    targetUserId: v.id("users"),
+    targetName: v.string(),
+    targetUserNumber: v.optional(v.number()),
+    reason: v.string(),
+    details: v.optional(v.string()),
+    context: v.optional(v.string()),
+    roomId: v.optional(v.id("rooms")),
+    messageId: v.optional(v.id("messages")),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("reviewed"),
+      v.literal("dismissed"),
+      v.literal("actioned"),
+    ),
+    adminId: v.optional(v.id("users")),
+    adminNote: v.optional(v.string()),
+    createdAt: v.number(),
+    reviewedAt: v.optional(v.number()),
+  })
+    .index("by_status", ["status", "createdAt"])
+    .index("by_target", ["targetUserId"])
+    .index("by_reporter_and_createdAt", ["reporterId", "createdAt"]),
+
 });
