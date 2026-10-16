@@ -47,6 +47,9 @@ export default function LiveBroadcaster({ streamId, onEnd }: Props) {
   const sendLikes = useMutation(api.live.sendLikes);
 
   const videoRef = useRef<HTMLDivElement>(null);
+  const coHostVideoRef = useRef<HTMLDivElement>(null);
+  const coHostUidRef = useRef<string | null>(null);
+  const pkActiveRef = useRef<boolean>(false);
   const [agoraReady, setAgoraReady] = useState(false);
   const [cameraOn, setCameraOn] = useState(false);
   const [micOn, setMicOn] = useState(true);
@@ -72,6 +75,26 @@ export default function LiveBroadcaster({ streamId, onEnd }: Props) {
     prevPKRef.current = stream.pkActive;
   }, [stream?.pkActive]);
 
+  useEffect(() => {
+    pkActiveRef.current = !!stream?.pkActive;
+    if (!stream?.pkActive) {
+      if (coHostVideoRef.current) coHostVideoRef.current.innerHTML = "";
+      coHostUidRef.current = null;
+      return;
+    }
+    const t = setTimeout(() => {
+      const remotes = agoraManager.getRemoteUsers();
+      for (const u of remotes) {
+        if (u.videoTrack && coHostVideoRef.current) {
+          u.videoTrack.play(coHostVideoRef.current);
+          coHostUidRef.current = String(u.uid);
+          break;
+        }
+      }
+    }, 150);
+    return () => clearTimeout(t);
+  }, [stream?.pkActive, stream?.coHostId]);
+
   // ═══ Join Agora as host — ينتظر تحميل stream ═══
   useEffect(() => {
     if (!stream?.channelName) return; // انتظر تحميل stream
@@ -89,8 +112,22 @@ export default function LiveBroadcaster({ streamId, onEnd }: Props) {
           stream.channelName,
           rtcToken,
           account,
-          () => {},
-          () => {},
+          (user: any) => {
+            if (!user?.videoTrack) return;
+            if (!pkActiveRef.current) return;
+            const uid = String(user.uid);
+            if (coHostUidRef.current && coHostUidRef.current !== uid) return;
+            const el = coHostVideoRef.current;
+            if (!el) return;
+            user.videoTrack.play(el);
+            coHostUidRef.current = uid;
+          },
+          (user: any, mediaType?: "audio" | "video" | "datachannel") => {
+            if (coHostUidRef.current !== String(user.uid)) return;
+            if (mediaType === "audio") return;
+            if (coHostVideoRef.current) coHostVideoRef.current.innerHTML = "";
+            coHostUidRef.current = null;
+          },
           { asHost: true }
         );
         // Publish mic by default
@@ -183,33 +220,51 @@ export default function LiveBroadcaster({ streamId, onEnd }: Props) {
 
   return (
     <div className="fixed inset-0 z-[300] bg-black overflow-hidden" dir="rtl">
-      {/* Video area */}
-      <div
-        ref={videoRef}
-        onClick={handleScreenTap}
-        className="absolute inset-0 bg-gradient-to-br from-purple-900/40 to-black flex items-center justify-center"
-      >
-        {!cameraOn && (
-          <div className="text-center text-white/40 flex flex-col items-center gap-3">
-            {!agoraReady ? (
-              <>
-                <Loader2 className="animate-spin text-white/40" size={48} />
-                <div className="text-xs font-black">جاري الاتصال بالسيرفر...</div>
-              </>
-            ) : (
-              <>
-                <Video size={60} strokeWidth={1} />
-                <div className="text-xs font-black">الكاميرا مغلقة</div>
-                <button
-                  onClick={handleToggleCamera}
-                  className="mt-2 px-5 py-2.5 rounded-full bg-red-500 text-white text-xs font-black active:scale-95"
-                >
-                  تشغيل الكاميرا
-                </button>
-              </>
-            )}
-          </div>
-        )}
+      {/* Video area - split عندما PK نشط */}
+      <div className="absolute inset-0 flex">
+        <div
+          ref={videoRef}
+          onClick={handleScreenTap}
+          className={`relative bg-gradient-to-br from-purple-900/40 to-black flex items-center justify-center ${
+            stream.pkActive && stream.coHostId ? "flex-1 border-l border-white/20" : "flex-1"
+          }`}
+        >
+          {!cameraOn && (
+            <div className="text-center text-white/40 flex flex-col items-center gap-3">
+              {!agoraReady ? (
+                <>
+                  <Loader2 className="animate-spin text-white/40" size={48} />
+                  <div className="text-xs font-black">جاري الاتصال بالسيرفر...</div>
+                </>
+              ) : (
+                <>
+                  <Video size={60} strokeWidth={1} />
+                  <div className="text-xs font-black">الكاميرا مغلقة</div>
+                  <button
+                    onClick={handleToggleCamera}
+                    className="mt-2 px-5 py-2.5 rounded-full bg-red-500 text-white text-xs font-black active:scale-95"
+                  >
+                    تشغيل الكاميرا
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+        <div
+          ref={coHostVideoRef}
+          className={`relative bg-gradient-to-br from-pink-900/40 to-black ${
+            stream.pkActive && stream.coHostId ? "flex-1" : "hidden"
+          }`}
+        >
+          {stream.pkActive && stream.coHostId && (
+            <div className="absolute top-20 left-2 z-20 bg-pink-500/90 px-2 py-0.5 rounded-full">
+              <span className="text-white text-[9px] font-black">
+                {stream.coHostName ?? "مذيعة"}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Error banner */}

@@ -34,7 +34,7 @@ class AgoraManager {
     token: string,
     uid: string,
     onUserJoined: (user: IAgoraRTCRemoteUser) => void,
-    onUserLeft: (user: IAgoraRTCRemoteUser) => void,
+    onUserLeft: (user: IAgoraRTCRemoteUser, mediaType?: "audio" | "video" | "datachannel") => void,
     options: { asHost?: boolean } = {}
   ) {
     await this.leave();
@@ -55,8 +55,8 @@ class AgoraManager {
       }
     });
 
-    this.client.on("user-unpublished", (user) => {
-      onUserLeft(user);
+    this.client.on("user-unpublished", (user, mediaType) => {
+      onUserLeft(user, mediaType);
     });
 
     await this.client.join(appId, channel, token, uid);
