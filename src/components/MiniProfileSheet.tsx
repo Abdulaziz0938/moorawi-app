@@ -70,6 +70,12 @@ export default function MiniProfileSheet({
   const profile = useQuery(api.profileFull.getFull, { userId: userId as Id<"users"> });
   const itemCounts = useQuery(api.shop.countUserItems, { userId: userId as Id<"users"> });
   const recordVisit = useMutation(api.visits.record);
+  const sendFriendRequest = useMutation(api.friends.sendRequest);
+  const openWith = useMutation(api.directMessages.openWith);
+  const friendStatus = useQuery(
+    api.friends.isFriend,
+    userId ? { otherUserId: userId as Id<"users">, tokenOverride: getActiveToken() } : ("skip" as any)
+  );
   useEffect(() => {
     if (userId) {
       recordVisit({
@@ -83,6 +89,8 @@ export default function MiniProfileSheet({
   const [copied, setCopied] = useState(false);
   const [showAllMedals, setShowAllMedals] = useState(false);
   const [showMore, setShowMore] = useState(false);
+  const [dmConversationId, setDmConversationId] = useState<string | null>(null);
+  const [friendBusy, setFriendBusy] = useState(false);
   const assets = useAssets();
   const assetsFull = useAssetsFull();
 
@@ -128,6 +136,26 @@ export default function MiniProfileSheet({
   const giftTotal =
     ((profile as any).giftStats?.sent?.count ?? 0) +
     ((profile as any).giftStats?.received?.count ?? 0);
+
+  const handleOpenChat = async () => {
+    if (onOpenChat) { onOpenChat(); return; }
+    try {
+      const res = await openWith({ otherUserId: userId as Id<"users">, tokenOverride: getActiveToken() });
+      setDmConversationId(res.conversationId);
+    } catch (e: any) { dialog.alert(e?.message || "فشل فتح المحادثة"); }
+  };
+
+  const handleSendFriend = async () => {
+    if (friendBusy) return;
+    if (friendStatus?.status === "sent") { dialog.alert("تم إرسال الطلب مسبقاً"); return; }
+    if (friendStatus?.status === "friends") { dialog.alert("أنتما صديقان بالفعل"); return; }
+    setFriendBusy(true);
+    try {
+      const result = await sendFriendRequest({ targetUserId: userId as Id<"users">, tokenOverride: getActiveToken() });
+      dialog.alert(result.autoAccepted ? "✅ أصبحتما صديقين" : "✅ تم إرسال طلب الصداقة");
+    } catch (e: any) { dialog.alert(e?.message || "فشل إرسال الطلب"); }
+    finally { setFriendBusy(false); }
+  };
 
   const handleCopy = async () => {
     if (!profile.userNumber) return;
@@ -333,11 +361,12 @@ export default function MiniProfileSheet({
                 <ActionBtn icon={<Gift size={22} />} onClick={onOpenGift} />
                 <ActionBtn
                   icon={<MessageCircle size={22} />}
-                  onClick={onOpenChat ?? (() => dialog.alert("قريباً"))}
+                  onClick={handleOpenChat}
                 />
                 <ActionBtn
-                  icon={<UserPlus size={22} />}
-                  onClick={onFollowToggle ?? (() => dialog.alert("قريباً"))}
+                  icon={friendStatus?.status === "friends" ? <Check size={22} className="text-emerald-300" /> : friendStatus?.status === "sent" ? <Check size={22} className="text-amber-300" /> : <UserPlus size={22} />}
+                  onClick={handleSendFriend}
+                  disabled={friendBusy || friendStatus?.status === "sent" || friendStatus?.status === "friends"}
                 />
                 {roomId && !isTargetOnMic && (
                   <ActionBtn icon={<Mic size={22} />} onClick={onInviteToMic} />
