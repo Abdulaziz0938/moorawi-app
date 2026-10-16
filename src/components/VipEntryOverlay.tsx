@@ -79,7 +79,7 @@ export default function VipEntryOverlay({ entry }: { entry: Entry | null }) {
           border: `2px solid ${c.main}`,
           boxShadow: `0 0 40px ${c.glow}, 0 0 80px ${c.glow.replace("0.6", "0.3")}, inset 0 0 20px ${c.main}20`,
           backdropFilter: "blur(20px)",
-          animation: "vipEntrySlide 3.5s cubic-bezier(0.22, 1, 0.36, 1)",
+          animation: "vipEntrySlideGPU 3.5s cubic-bezier(0.22, 1, 0.36, 1) forwards", willChange: "transform, opacity", transform: "translate3d(0,0,0)",
         }}
       >
         {/* Crown row */}
@@ -118,22 +118,7 @@ export default function VipEntryOverlay({ entry }: { entry: Entry | null }) {
         </p>
       </div>
 
-      {/* Keyframes */}
-      <style>{`
-        @keyframes vipEntrySlide {
-          0% { transform: scale(0.5) translateY(40px); opacity: 0; }
-          15% { transform: scale(1.08) translateY(0); opacity: 1; }
-          25% { transform: scale(1); }
-          85% { transform: scale(1); opacity: 1; }
-          100% { transform: scale(0.95); opacity: 0; }
-        }
-        @keyframes vipEntryFade {
-          0% { opacity: 0; }
-          15% { opacity: 1; }
-          85% { opacity: 1; }
-          100% { opacity: 0; }
-        }
-      `}</style>
+      
     </div>
   );
 }

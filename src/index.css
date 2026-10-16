@@ -936,3 +936,19 @@ html, body {
   0%, 100% { transform: scale(1); }
   50%      { transform: scale(1.08); }
 }
+
+/* [optimized-vip-entry] GPU-accelerated keyframes */
+@keyframes vipEntrySlideGPU {
+  0% { transform: translate3d(0, 40px, 0) scale(0.6); opacity: 0; }
+  18% { transform: translate3d(0, 0, 0) scale(1.04); opacity: 1; }
+  28% { transform: translate3d(0, 0, 0) scale(1); opacity: 1; }
+  85% { transform: translate3d(0, 0, 0) scale(1); opacity: 1; }
+  100% { transform: translate3d(0, -10px, 0) scale(0.96); opacity: 0; }
+}
+
+@keyframes vipEntryFadeGPU {
+  0% { opacity: 0; }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { opacity: 0; }
+}

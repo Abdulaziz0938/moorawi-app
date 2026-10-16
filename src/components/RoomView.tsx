@@ -1618,7 +1618,14 @@ export default function RoomView({ roomId, onLeave }: Props) {
           }}
           onKick={() => {
             if (!miniProfileUserId) return;
-            kickFromRoom({ roomId, toUserId: miniProfileUserId as any, tokenOverride: deviceId })
+            (() => {
+            const seatItem = seats?.find((s: any) => s.userId === miniProfileUserId);
+            if (seatItem && (seatItem.userVip || 0) >= 5) {
+              alert("عذراً، هذا العضو يتمتع بحصانة ملكية (VIP 5+) ضد الطرد");
+              return Promise.reject(new Error("VIP immunity"));
+            }
+            return kickFromRoom({ roomId, toUserId: miniProfileUserId as any, tokenOverride: deviceId });
+          })()
               .then(() => {
                 setMiniProfileUserId(null);
                 setMySeatIndexForMiniProfile(null);
