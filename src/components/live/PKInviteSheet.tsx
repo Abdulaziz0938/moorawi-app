@@ -7,7 +7,7 @@ import { getDeviceId } from "../../lib/device";
 import { getActiveToken } from "../../lib/session";
 import { dialog } from "../../lib/dialog";
 import VipAvatar from "../ui/VipAvatar";
-import { X, Swords, Loader2, Search } from "lucide-react";
+import { X, Swords, Loader2, Search, Users } from "lucide-react";
 
 interface Props {
   streamId: string;
@@ -27,6 +27,7 @@ export default function PKInviteSheet({ streamId, onClose, onInviteSent }: Props
   const [selectedHostName, setSelectedHostName] = useState("");
   const [busy, setBusy] = useState(false);
   const [search, setSearch] = useState("");
+  const [mode, setMode] = useState<"casual" | "pk">("casual");
 
   // استثناء نفسي
   const me = useQuery(api.profiles.me, { tokenOverride: token });
@@ -46,6 +47,7 @@ export default function PKInviteSheet({ streamId, onClose, onInviteSent }: Props
       await invitePK({
         streamId: streamId as Id<"liveStreams">,
         coHostId: selectedHostId,
+        mode,
         tokenOverride: token,
       });
       onInviteSent(selectedHostName);
@@ -69,12 +71,22 @@ export default function PKInviteSheet({ streamId, onClose, onInviteSent }: Props
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
           <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-full bg-amber-500/20 flex items-center justify-center">
-              <Swords size={18} className="text-amber-400" />
+            <div className={`w-9 h-9 rounded-full flex items-center justify-center ${
+              mode === "pk" ? "bg-amber-500/20" : "bg-cyan-500/20"
+            }`}>
+              {mode === "pk" ? (
+                <Swords size={18} className="text-amber-400" />
+              ) : (
+                <Users size={18} className="text-cyan-400" />
+              )}
             </div>
             <div>
-              <h2 className="text-white text-base font-black">منافسة PK</h2>
-              <p className="text-white/50 text-[10px]">5 دقائق — سيتم إرسال دعوة للطرف الآخر</p>
+              <h2 className="text-white text-base font-black">
+                {mode === "pk" ? "منافسة PK" : "دعوة للجلوس"}
+              </h2>
+              <p className="text-white/50 text-[10px]">
+                {mode === "pk" ? "5 دقائق — الهدايا تحدد الفائزة" : "بث مشترك مع ضيفة"}
+              </p>
             </div>
           </div>
           <button
@@ -82,6 +94,32 @@ export default function PKInviteSheet({ streamId, onClose, onInviteSent }: Props
             className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white active:scale-95"
           >
             <X size={18} />
+          </button>
+        </div>
+
+        {/* Mode toggle */}
+        <div className="px-4 pt-3 flex gap-2">
+          <button
+            onClick={() => setMode("casual")}
+            className={`flex-1 h-11 rounded-xl font-black text-xs flex items-center justify-center gap-2 transition active:scale-95 ${
+              mode === "casual"
+                ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg"
+                : "bg-white/5 text-white/50 border border-white/10"
+            }`}
+          >
+            <Users size={14} />
+            جلوس مشترك
+          </button>
+          <button
+            onClick={() => setMode("pk")}
+            className={`flex-1 h-11 rounded-xl font-black text-xs flex items-center justify-center gap-2 transition active:scale-95 ${
+              mode === "pk"
+                ? "bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg"
+                : "bg-white/5 text-white/50 border border-white/10"
+            }`}
+          >
+            <Swords size={14} />
+            منافسة PK
           </button>
         </div>
 
@@ -153,14 +191,23 @@ export default function PKInviteSheet({ streamId, onClose, onInviteSent }: Props
             <button
               onClick={handleStart}
               disabled={busy}
-              className="w-full h-12 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-black text-sm shadow-2xl active:scale-95 disabled:opacity-40 flex items-center justify-center gap-2"
+              className={`w-full h-12 rounded-2xl text-white font-black text-sm shadow-2xl active:scale-95 disabled:opacity-40 flex items-center justify-center gap-2 ${
+              mode === "pk"
+                ? "bg-gradient-to-r from-amber-500 to-orange-600"
+                : "bg-gradient-to-r from-cyan-500 to-blue-600"
+            }`}
             >
               {busy ? (
                 <Loader2 size={18} className="animate-spin" />
-              ) : (
+              ) : mode === "pk" ? (
                 <>
                   <Swords size={18} />
-                  أرسل دعوة إلى {selectedHostName}
+                  أرسل تحدّي PK إلى {selectedHostName}
+                </>
+              ) : (
+                <>
+                  <Users size={18} />
+                  أرسل دعوة جلوس إلى {selectedHostName}
                 </>
               )}
             </button>

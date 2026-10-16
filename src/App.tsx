@@ -34,7 +34,11 @@ function App() {
     me ? { tokenOverride: token } : "skip" as any
   );
   const pkInvite = !currentLiveId && !currentRoomId
-    ? (notifs ?? []).find((n: any) => n.actionType === "pk_invite" && !n.readAt)
+    ? (notifs ?? []).find(
+        (n: any) =>
+          (n.actionType === "pk_invite" || n.actionType === "cohost_invite") &&
+          !n.readAt
+      )
     : null;
 
   // [moorawi-missions] Daily login check — once per 24h

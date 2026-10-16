@@ -46,6 +46,8 @@ export default function LiveBroadcaster({ streamId, onEnd, asCoHost = false }: P
   const getLiveToken = useAction(api.voice.getLiveToken);
   const endStream = useMutation(api.live.endStream);
   const sendLikes = useMutation(api.live.sendLikes);
+  const endCoHost = useMutation(api.live.endCoHost);
+  const startPKFromCoHost = useMutation(api.live.startPKFromCoHost);
 
   const videoRef = useRef<HTMLDivElement>(null);
   const coHostVideoRef = useRef<HTMLDivElement>(null);
@@ -80,15 +82,12 @@ export default function LiveBroadcaster({ streamId, onEnd, asCoHost = false }: P
   }, [stream?.pkActive]);
 
   useEffect(() => {
-    const wasActive = wasPkActiveRef.current;
-    wasPkActiveRef.current = !!stream?.pkActive;
-    pkActiveRef.current = !!stream?.pkActive;
-    if (!stream?.pkActive) {
+    const hasCoHost = !!stream?.coHostId;
+    pkActiveRef.current = hasCoHost;
+    if (!hasCoHost) {
       if (remoteRef.current) remoteRef.current.innerHTML = "";
       coHostUidRef.current = null;
-      if (asCoHost && wasActive) {
-        onEnd();
-      }
+      if (asCoHost) onEnd();
       return;
     }
     const t = setTimeout(() => {
@@ -102,7 +101,7 @@ export default function LiveBroadcaster({ streamId, onEnd, asCoHost = false }: P
       }
     }, 150);
     return () => clearTimeout(t);
-  }, [stream?.pkActive, stream?.coHostId]);
+  }, [stream?.coHostId]);
 
   // ═══ Join Agora as host — ينتظر تحميل stream ═══
   useEffect(() => {
@@ -204,6 +203,9 @@ export default function LiveBroadcaster({ streamId, onEnd, asCoHost = false }: P
   const handleEnd = async () => {
     if (asCoHost) {
       await agoraManager.leave();
+      try {
+        await endCoHost({ streamId: streamId as Id<"liveStreams">, tokenOverride: token });
+      } catch {}
       onEnd();
       return;
     }
@@ -216,6 +218,25 @@ export default function LiveBroadcaster({ streamId, onEnd, asCoHost = false }: P
         dialog.alert(e?.message || "فشل الإنهاء");
       }
     }, "إنهاء", "إنهاء");
+  };
+
+  // ═══ بدء PK من جلوس عادي ═══
+  const handleStartPKFromCasual = async () => {
+    dialog.confirm(
+      "بدء منافسة PK مع الضيفة؟",
+      async () => {
+        try {
+          await startPKFromCoHost({
+            streamId: streamId as Id<"liveStreams">,
+            tokenOverride: token,
+          });
+        } catch (e: any) {
+          dialog.alert(e?.message || "فشل بدء PK");
+        }
+      },
+      "ابدأ",
+      "ابدأ"
+    );
   };
 
   // ═══ Double tap for like ═══
@@ -251,7 +272,7 @@ export default function LiveBroadcaster({ streamId, onEnd, asCoHost = false }: P
           ref={videoRef}
           onClick={handleScreenTap}
           className={`relative bg-gradient-to-br from-purple-900/40 to-black flex items-center justify-center ${
-            stream.pkActive && stream.coHostId ? "flex-1 border-l border-white/20" : "flex-1"
+            stream.coHostId ? "flex-1 border-l border-white/20" : "flex-1"
           }`}
         >
           {!cameraOn && (
@@ -279,10 +300,10 @@ export default function LiveBroadcaster({ streamId, onEnd, asCoHost = false }: P
         <div
           ref={coHostVideoRef}
           className={`relative bg-gradient-to-br from-pink-900/40 to-black ${
-            stream.pkActive && stream.coHostId ? "flex-1" : "hidden"
+            stream.coHostId ? "flex-1" : "hidden"
           }`}
         >
-          {stream.pkActive && stream.coHostId && (
+          {stream.coHostId && (
             <div className="absolute top-20 left-2 z-20 bg-pink-500/90 px-2 py-0.5 rounded-full">
               <span className="text-white text-[9px] font-black">
                 {stream.coHostName ?? "مذيعة"}
@@ -291,6 +312,17 @@ export default function LiveBroadcaster({ streamId, onEnd, asCoHost = false }: P
           )}
         </div>
       </div>
+
+      {/* ═══ زر بدء PK أثناء جلوس عادي (للمضيف فقط) ═══ */}
+      {!asCoHost && stream.coHostId && !stream.pkActive && (
+        <button
+          onClick={handleStartPKFromCasual}
+          className="absolute top-20 left-1/2 -translate-x-1/2 z-40 bg-gradient-to-r from-amber-500 to-orange-600 px-4 py-2 rounded-full text-white text-xs font-black shadow-2xl active:scale-95 flex items-center gap-1.5"
+        >
+          <Swords size={14} />
+          ابدأ PK
+        </button>
+      )}
 
       {/* Error banner */}
       {error && (
@@ -326,7 +358,7 @@ export default function LiveBroadcaster({ streamId, onEnd, asCoHost = false }: P
         <div className="flex-1" />
 
         {/* PK invite button — يظهر فقط عندما لا يوجد PK نشط */}
-        {!stream.pkActive && !asCoHost && (
+        {!stream.pkActive && !stream.coHostId && !asCoHost && (
           <button
             onClick={() => setShowPKInvite(true)}
             className="w-9 h-9 rounded-full bg-black/60 backdrop-blur border border-amber-400/40 flex items-center justify-center text-amber-300 active:scale-95"

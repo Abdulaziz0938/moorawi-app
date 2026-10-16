@@ -832,3 +832,34 @@ export const endCoHost = mutation({
     return { ok: true };
   },
 });
+
+// ═══════════════════════════════════════════════════════════
+// [ezo-live-binmo] بدء PK أثناء جلوس عادي (coHost موجود)
+// ═══════════════════════════════════════════════════════════
+export const startPKFromCoHost = mutation({
+  args: {
+    streamId: v.id("liveStreams"),
+    tokenOverride: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
+    if (!me) throw new ConvexError({ code: "UNAUTHORIZED" });
+    const stream = await ctx.db.get("liveStreams", args.streamId);
+    if (!stream) throw new ConvexError({ code: "NOT_FOUND" });
+    if (stream.hostId !== me._id) throw new ConvexError({ code: "FORBIDDEN" });
+    if (!stream.coHostId)
+      throw new ConvexError({ code: "CONFLICT", message: "لا توجد ضيفة" });
+    if (stream.pkActive)
+      throw new ConvexError({ code: "CONFLICT", message: "PK نشط بالفعل" });
+    const now = Date.now();
+    await ctx.db.patch("liveStreams", args.streamId, {
+      pkActive: true,
+      pkStartedAt: now,
+      pkDurationSec: 300,
+      hostScore: 0,
+      coHostScore: 0,
+      updatedAt: now,
+    });
+    return { ok: true, endAt: now + 300 * 1000 };
+  },
+});

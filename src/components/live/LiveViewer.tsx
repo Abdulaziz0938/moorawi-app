@@ -76,7 +76,7 @@ export default function LiveViewer({ streamId, onLeave }: Props) {
             const uid = String(user.uid);
             // إذا كان PK — نفرّق بين المضيف والضيفة
             // نستخدم hostId و coHostId من stream
-            if (stream?.pkActive && stream?.coHostId) {
+            if (stream?.coHostId) {
               // نحتاج نعرف uid → user nào
               // نستخدم mapping من account
               // host عادة uid يبدأ بـ live_host_ أو مشابه
@@ -205,7 +205,7 @@ export default function LiveViewer({ streamId, onLeave }: Props) {
   return (
     <div className="fixed inset-0 z-[300] bg-black overflow-hidden" dir="rtl">
       {/* Video area — split عندما PK نشط */}
-      {stream.pkActive && stream.coHostId ? (
+      {stream.coHostId ? (
         <div className="absolute inset-0 flex">
           {/* Host half (left in RTL means visually right) */}
           <div
