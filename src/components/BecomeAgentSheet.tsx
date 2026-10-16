@@ -48,8 +48,6 @@ export default function BecomeAgentSheet({ onClose }: Props) {
           <p className="text-white font-black text-lg">كن شريكاً رسمياً لـ Ezo</p>
           <p className="text-white/60 text-[11px] mt-1 leading-relaxed">
             اربح من بيع العملات الذهبية للمستخدمين
-            <br />
-            بأسعار تحددها أنت
           </p>
         </div>
 
@@ -98,10 +96,6 @@ export default function BecomeAgentSheet({ onClose }: Props) {
         <div className="rounded-2xl bg-violet-500/10 border border-violet-400/30 p-4">
           <p className="text-violet-200 text-xs font-black mb-2">ميزات الوكيل:</p>
           <ul className="text-white/70 text-[11px] space-y-1.5 leading-relaxed">
-            <li className="flex items-start gap-2">
-              <span className="text-violet-300 font-black">•</span>
-              تحديد سعر البيع بنفسك للمستخدمين
-            </li>
             <li className="flex items-start gap-2">
               <span className="text-violet-300 font-black">•</span>
               زر مخصص في حسابك لإدارة الشحن والسجل
