@@ -295,6 +295,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const [showGamesSheet, setShowGamesSheet] = useState(false);
   const [showChatInput, setShowChatInput] = useState(false);
   const [chatTab, setChatTab] = useState<"all" | "chat">("all");
+  const [pendingMention, setPendingMention] = useState<{ name: string; ts: number } | null>(null);
   const [showEmojiSheet, setShowEmojiSheet] = useState(false);
   const [showNotifSheet, setShowNotifSheet] = useState(false);
   const [showRocketSheet, setShowRocketSheet] = useState(false);
@@ -1154,7 +1155,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
 
         {showChatInput && (
           <div className="px-2 pt-1 flex-shrink-0">
-            <CompactChatInput onSend={handleSendMsg} onImage={handleImageUpload} sending={sending} uploading={uploading} />
+            <CompactChatInput onSend={handleSendMsg} onImage={handleImageUpload} sending={sending} uploading={uploading} pendingMention={pendingMention} />
           </div>
         )}
 
@@ -1602,7 +1603,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
             try {
               const res = await openDM({
                 otherUserId: miniProfileUserId as any,
-                tokenOverride: getDeviceId(),
+                tokenOverride: getActiveToken() ?? deviceId,
               });
               setMiniProfileUserId(null);
               setMySeatIndexForMiniProfile(null);
@@ -1613,7 +1614,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
           }}
           onFollowToggle={() => {
             if (!miniProfileUserId) return;
-            toggleFollow({ targetUserId: miniProfileUserId as any, tokenOverride: getDeviceId() })
+            toggleFollow({ targetUserId: miniProfileUserId as any, tokenOverride: getActiveToken() ?? deviceId })
               .then(() => dialog.alert("تم التحديث"))
               .catch((e: any) => dialog.alert(e?.message || "فشل"));
           }}
@@ -1622,6 +1623,12 @@ export default function RoomView({ roomId, onLeave }: Props) {
             setFullProfileIsMe(miniProfileUserId === myInfo?.userId);
             setMiniProfileUserId(null);
             setMySeatIndexForMiniProfile(null);
+          }}
+          onMention={(name: string) => {
+            setPendingMention({ name, ts: Date.now() });
+            setMiniProfileUserId(null);
+            setMySeatIndexForMiniProfile(null);
+            setShowChatInput(true);
           }}
           onKick={() => {
             if (!miniProfileUserId) return;

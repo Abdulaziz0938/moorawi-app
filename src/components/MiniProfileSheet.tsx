@@ -30,6 +30,7 @@ interface Props {
   onFollowToggle?: () => void;
   isFollowing?: boolean;
   onOpenFullProfile?: () => void;
+  onMention?: (name: string) => void;
   onEnterRoom?: (roomId: any) => void;
   onKick?: () => void;
   onBan?: () => void;
@@ -62,7 +63,7 @@ const VIP_BG: Record<number, string> = {
 export default function MiniProfileSheet({
   userId, roomId, currentUserRole,
   isMySeat, isMySeatMuted, isTargetOnMic,
-  onClose, onOpenGift, onOpenFullProfile, onOpenChat, onFollowToggle,
+  onClose, onOpenGift, onOpenFullProfile, onOpenChat, onFollowToggle, onMention,
   onKick, onBan, onMute, onRemoveFromSeat,
   onPromote, onDemote, onInviteToMic,
   targetIsMod = false,
@@ -70,6 +71,8 @@ export default function MiniProfileSheet({
   const profile = useQuery(api.profileFull.getFull, { userId: userId as Id<"users"> });
   const itemCounts = useQuery(api.shop.countUserItems, { userId: userId as Id<"users"> });
   const recordVisit = useMutation(api.visits.record);
+  const authMe = useQuery(api.auth.me, { tokenOverride: getActiveToken() });
+  const isMeViewer = !!authMe && String(authMe._id) === String(userId);
   const sendFriendRequest = useMutation(api.friends.sendRequest);
   const openWith = useMutation(api.directMessages.openWith);
   const friendStatus = useQuery(
@@ -77,7 +80,7 @@ export default function MiniProfileSheet({
     userId ? { otherUserId: userId as Id<"users">, tokenOverride: getActiveToken() } : ("skip" as any)
   );
   useEffect(() => {
-    if (userId) {
+    if (userId && !isMeViewer) {
       recordVisit({
         visitedUserId: userId as Id<"users">,
         source: "profile",
@@ -97,7 +100,7 @@ export default function MiniProfileSheet({
   if (profile === undefined) {
     return (
       <div className="fixed inset-0 z-[110] flex items-end" dir="rtl">
-        <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+        <div className="absolute inset-0 bg-black" onClick={onClose} />
         <div className="relative w-full max-w-md mx-auto bg-white/10 backdrop-blur-2xl rounded-t-3xl p-8 flex items-center justify-center border-t border-white/20">
           <Loader2 className="animate-spin text-white" size={32} />
         </div>
@@ -107,7 +110,7 @@ export default function MiniProfileSheet({
   if (profile === null) {
     return (
       <div className="fixed inset-0 z-[110] flex items-end" dir="rtl">
-        <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+        <div className="absolute inset-0 bg-black" onClick={onClose} />
         <div className="relative w-full max-w-md mx-auto bg-white/10 backdrop-blur-2xl rounded-t-3xl p-8 text-center border-t border-white/20">
           <p className="text-white">المستخدم غير موجود</p>
         </div>
@@ -177,7 +180,7 @@ export default function MiniProfileSheet({
 
   return (
     <div className="fixed inset-0 z-[110] flex items-end" dir="rtl">
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-black" onClick={onClose} />
 
       <div className="relative w-full max-w-md mx-auto">
         {/* Avatar straddling top edge */}
@@ -238,7 +241,7 @@ export default function MiniProfileSheet({
           )}
 
           {/* طبقة داكنة للقراءة */}
-          <div className="absolute inset-0 bg-black/55" />
+          <div className="absolute inset-0 bg-black/80" />
 
           {/* [ezo-card-frame] الإطار الرقيق كـ 9-patch — فوق الطبقات، تحت المحتوى */}
           {vipCardUrl && (
@@ -345,18 +348,21 @@ export default function MiniProfileSheet({
               <PropertyBar label="مركبة" value={itemCounts?.vehicle ?? 0} tone="blue" />
             </div>
 
-            {/* Bottom actions — one full bar */}
-            {isMySeat ? (
-              <div className="mx-4 mt-4 mb-4 h-14 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 flex items-stretch divide-x divide-white/10 rtl:divide-x-reverse overflow-hidden">
-                <ActionBtn icon={<Gift size={22} />} onClick={onOpenGift} />
-                <ActionBtn
-                  icon={isMySeatMuted ? <MicOff size={22} className="text-red-300" /> : <MicOff size={22} />}
-                  onClick={onMute}
-                  disabled={isMySeatMuted}
-                />
-                <ActionBtn icon={<ArrowDown size={22} />} onClick={onRemoveFromSeat} />
-              </div>
+            {/* Bottom actions — Binmo-style */}
+            {isMeViewer ? (
+              isMySeat ? (
+                // أنا + على المايك: كتم + نزول
+                <div className="mx-4 mt-4 mb-4 h-14 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 flex items-stretch divide-x divide-white/10 rtl:divide-x-reverse overflow-hidden">
+                  <ActionBtn
+                    icon={isMySeatMuted ? <MicOff size={22} className="text-red-300" /> : <Mic size={22} className="text-emerald-300" />}
+                    onClick={onMute}
+                  />
+                  <ActionBtn icon={<ArrowDown size={22} />} onClick={onRemoveFromSeat} />
+                </div>
+              ) : null
+              // أنا + لست على المايك: بلا أزرار
             ) : (
+              // شخص آخر
               <div className="mx-4 mt-4 mb-4 h-14 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 flex items-stretch divide-x divide-white/10 rtl:divide-x-reverse overflow-hidden">
                 <ActionBtn icon={<Gift size={22} />} onClick={onOpenGift} />
                 <ActionBtn
@@ -368,6 +374,12 @@ export default function MiniProfileSheet({
                   onClick={handleSendFriend}
                   disabled={friendBusy || friendStatus?.status === "sent" || friendStatus?.status === "friends"}
                 />
+                {onMention && (
+                  <ActionBtn
+                    icon={<span className="text-white text-xl font-black">@</span>}
+                    onClick={() => onMention(profile.name ?? "")}
+                  />
+                )}
                 {roomId && !isTargetOnMic && (
                   <ActionBtn icon={<Mic size={22} />} onClick={onInviteToMic} />
                 )}
@@ -381,7 +393,7 @@ export default function MiniProfileSheet({
             )}
 
             {/* More actions drawer (kicks, bans, promotions) */}
-            {showMore && roomId && (
+            {showMore && roomId && !isMeViewer && (
               <div className="mx-4 mb-4 p-2 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center gap-2 flex-wrap">
                 {canKick && isTargetOnMic && (
                   <SmallAction icon={<MicOff size={18} />} label="كتم" onClick={onMute} />

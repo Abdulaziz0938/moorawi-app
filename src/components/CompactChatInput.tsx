@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Send, Image as ImageIcon, Loader2 } from "lucide-react";
 
 interface Props {
@@ -6,12 +6,34 @@ interface Props {
   onImage: (file: File) => Promise<void>;
   sending: boolean;
   uploading: boolean;
+  /** [ezo-mention] عند تغييره → يُضاف "@name " إلى النص الحالي */
+  pendingMention?: { name: string; ts: number } | null;
 }
 
-export default function CompactChatInput({ onSend, onImage, sending, uploading }: Props) {
+export default function CompactChatInput({ onSend, onImage, sending, uploading, pendingMention }: Props) {
   const [text, setText] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const lastMentionTsRef = useRef<number>(0);
+
+  // [ezo-mention] عندما يضغط المستخدم @ في MiniProfile، نضيف "@name " للنص
+  useEffect(() => {
+    if (!pendingMention || pendingMention.ts <= lastMentionTsRef.current) return;
+    lastMentionTsRef.current = pendingMention.ts;
+    setText((prev) => {
+      const prefix = prev.length === 0 || prev.endsWith(" ") ? "" : " ";
+      return `${prev}${prefix}@${pendingMention.name} `;
+    });
+    requestAnimationFrame(() => {
+      textareaRef.current?.focus();
+      if (textareaRef.current) {
+        textareaRef.current.style.height = "auto";
+        textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 100) + "px";
+        const len = textareaRef.current.value.length;
+        textareaRef.current.setSelectionRange(len, len);
+      }
+    });
+  }, [pendingMention?.ts]);
 
   const handleSend = async () => {
     const clean = text.trim();
