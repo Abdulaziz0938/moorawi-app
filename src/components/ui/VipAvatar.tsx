@@ -1,3 +1,4 @@
+import { getOptimizedImageUrl } from "../../lib/imageUtils";
 // [ezo-vip] VipAvatar — Professional frame rendering (Yalla/SUGO/Bigo Standard)
 //
 // Canvas Standard Formula:
@@ -147,7 +148,7 @@ export default function VipAvatar({
       >
         {src ? (
           <img
-            src={src}
+            src={getOptimizedImageUrl(src, 150, 150)}
             alt={name}
             className="w-full h-full object-cover"
             draggable={false}

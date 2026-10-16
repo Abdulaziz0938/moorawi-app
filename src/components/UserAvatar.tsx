@@ -1,3 +1,4 @@
+import { getOptimizedImageUrl } from "../lib/imageUtils";
 // [moorawi] Unified user avatar — Single Source of Truth
 // Uses /avatar.png (admin-managed default) when user has no image.
 
@@ -22,7 +23,7 @@ export default function UserAvatar({
   const style = size ? { width: size, height: size } : undefined;
   return (
     <img
-      src={src}
+      src={getOptimizedImageUrl(src, 120, 120)}
       alt={alt ?? name ?? ""}
       className={`object-cover ${rounded} ${className}`}
       style={style}
