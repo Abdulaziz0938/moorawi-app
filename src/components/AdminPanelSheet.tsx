@@ -212,68 +212,6 @@ export default function AdminPanelSheet({ onClose }: Props) {
             </h2>
           </div>
           <div className="flex items-center gap-1">
-            {!editUser && !showAssets && !showAgencyRequests && !showAdminReport && !showVerifications && !showAgentAdmin && !showRechargeAdmin && !showDailyLoginAdmin && (
-              <>
-                <button
-                  onClick={() => setShowVerifications(true)}
-                  title="طلبات التوثيق"
-                  className="p-2 rounded-full hover:bg-white/10 text-white"
-                >
-                  <ShieldCheck size={20} />
-                </button>
-
-                <button
-                  onClick={() => setShowAgentAdmin(true)}
-                  className="flex-1 min-w-0 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-400/30 p-3 flex flex-col items-center gap-1.5 active:scale-95 transition"
-                >
-                  <div className="w-10 h-10 rounded-full bg-emerald-500/30 flex items-center justify-center">
-                    <ShieldCheck size={18} className="text-emerald-300" />
-                  </div>
-                  <span className="text-white text-[11px] font-black">وكلاء الشحن</span>
-                </button>
-
-                <button
-                  onClick={() => setShowRechargeAdmin(true)}
-                  className="flex-1 min-w-0 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-400/30 p-3 flex flex-col items-center gap-1.5 active:scale-95 transition"
-                >
-                  <div className="w-10 h-10 rounded-full bg-cyan-500/30 flex items-center justify-center">
-                    <Coins size={18} className="text-cyan-300" />
-                  </div>
-                  <span className="text-white text-[11px] font-black">طلبات الشحن</span>
-                </button>
-
-                <button
-                  onClick={() => setShowDailyLoginAdmin(true)}
-                  className="flex-1 min-w-0 rounded-2xl bg-gradient-to-br from-amber-500/20 to-yellow-500/20 border border-amber-400/30 p-3 flex flex-col items-center gap-1.5 active:scale-95 transition"
-                >
-                  <div className="w-10 h-10 rounded-full bg-amber-500/30 flex items-center justify-center">
-                    <Calendar size={18} className="text-amber-300" />
-                  </div>
-                  <span className="text-white text-[11px] font-black">المكافأة اليومية</span>
-                </button>
-                <button
-                  onClick={() => setShowAdminReport(true)}
-                  title="تقارير الوكالات"
-                  className="p-2 rounded-full hover:bg-white/10 text-white"
-                >
-                  <BarChart3 size={20} />
-                </button>
-                <button
-                  onClick={() => setShowAgencyRequests(true)}
-                  title="طلبات الوكالات"
-                  className="p-2 rounded-full hover:bg-white/10 text-white"
-                >
-                  <Briefcase size={20} />
-                </button>
-                <button
-                  onClick={() => setShowAssets(true)}
-                  title="الأصول والصور"
-                  className="p-2 rounded-full hover:bg-white/10 text-white"
-                >
-                  <ImageIcon size={20} />
-                </button>
-              </>
-            )}
             <button onClick={onClose} className="p-2 rounded-full hover:bg-white/10 text-white">
               <X size={20} />
             </button>
@@ -281,6 +219,82 @@ export default function AdminPanelSheet({ onClose }: Props) {
         </div>
 
         {/* ===== Content ===== */}
+
+          {/* ═══ Grid الأزرار — 3×3 ═══ */}
+          {!editUser && !showAssets && !showAgencyRequests && !showAdminReport && !showVerifications && !showAgentAdmin && !showRechargeAdmin && !showDailyLoginAdmin && (
+            <div className="grid grid-cols-3 gap-2 p-3 border-b border-white/10">
+              <button
+                onClick={() => setShowAgentAdmin(true)}
+                className="rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-400/30 p-3 flex flex-col items-center gap-1.5 active:scale-95 transition"
+              >
+                <div className="w-10 h-10 rounded-full bg-emerald-500/30 flex items-center justify-center">
+                  <ShieldCheck size={18} className="text-emerald-300" />
+                </div>
+                <span className="text-white text-[10px] font-black text-center leading-tight">وكلاء الشحن</span>
+              </button>
+
+              <button
+                onClick={() => setShowRechargeAdmin(true)}
+                className="rounded-2xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-400/30 p-3 flex flex-col items-center gap-1.5 active:scale-95 transition"
+              >
+                <div className="w-10 h-10 rounded-full bg-cyan-500/30 flex items-center justify-center">
+                  <Coins size={18} className="text-cyan-300" />
+                </div>
+                <span className="text-white text-[10px] font-black text-center leading-tight">طلبات الشحن</span>
+              </button>
+
+              <button
+                onClick={() => setShowDailyLoginAdmin(true)}
+                className="rounded-2xl bg-gradient-to-br from-amber-500/20 to-yellow-500/20 border border-amber-400/30 p-3 flex flex-col items-center gap-1.5 active:scale-95 transition"
+              >
+                <div className="w-10 h-10 rounded-full bg-amber-500/30 flex items-center justify-center">
+                  <Calendar size={18} className="text-amber-300" />
+                </div>
+                <span className="text-white text-[10px] font-black text-center leading-tight">المكافأة اليومية</span>
+              </button>
+
+              <button
+                onClick={() => setShowVerifications(true)}
+                className="rounded-2xl bg-gradient-to-br from-sky-500/20 to-indigo-500/20 border border-sky-400/30 p-3 flex flex-col items-center gap-1.5 active:scale-95 transition"
+              >
+                <div className="w-10 h-10 rounded-full bg-sky-500/30 flex items-center justify-center">
+                  <UserCheck size={18} className="text-sky-300" />
+                </div>
+                <span className="text-white text-[10px] font-black text-center leading-tight">طلبات التوثيق</span>
+              </button>
+
+              <button
+                onClick={() => setShowAdminReport(true)}
+                className="rounded-2xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-400/30 p-3 flex flex-col items-center gap-1.5 active:scale-95 transition"
+              >
+                <div className="w-10 h-10 rounded-full bg-purple-500/30 flex items-center justify-center">
+                  <BarChart3 size={18} className="text-purple-300" />
+                </div>
+                <span className="text-white text-[10px] font-black text-center leading-tight">تقارير الوكالات</span>
+              </button>
+
+              <button
+                onClick={() => setShowAgencyRequests(true)}
+                className="rounded-2xl bg-gradient-to-br from-rose-500/20 to-red-500/20 border border-rose-400/30 p-3 flex flex-col items-center gap-1.5 active:scale-95 transition"
+              >
+                <div className="w-10 h-10 rounded-full bg-rose-500/30 flex items-center justify-center">
+                  <Briefcase size={18} className="text-rose-300" />
+                </div>
+                <span className="text-white text-[10px] font-black text-center leading-tight">طلبات الوكالات</span>
+              </button>
+
+              <button
+                onClick={() => setShowAssets(true)}
+                className="rounded-2xl bg-gradient-to-br from-fuchsia-500/20 to-purple-500/20 border border-fuchsia-400/30 p-3 flex flex-col items-center gap-1.5 active:scale-95 transition col-span-3"
+              >
+                <div className="w-10 h-10 rounded-full bg-fuchsia-500/30 flex items-center justify-center">
+                  <ImageIcon size={18} className="text-fuchsia-300" />
+                </div>
+                <span className="text-white text-[10px] font-black">الأصول والصور</span>
+              </button>
+            </div>
+          )}
+
         <div className="flex-1 overflow-y-auto">
 
           {/* ============ VERIFICATIONS ============ */}
