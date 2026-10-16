@@ -4,16 +4,14 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { getDeviceId } from "../lib/device";
 import { dialog } from "../lib/dialog";
-import { X, Gift, Loader2, Check, Star } from "lucide-react";
+import { X, Gift, Loader2, Check } from "lucide-react";
 
 interface Props { onClose: () => void; }
-
-const REWARDS = [50, 75, 100, 150, 200, 300, 1000];
-const DAY_LABELS = ["الأول", "الثاني", "الثالث", "الرابع", "الخامس", "السادس", "السابع"];
 
 export default function DailyLoginModal({ onClose }: Props) {
   const deviceId = getDeviceId();
   const data = useQuery(api.missions.myProgress, { tokenOverride: deviceId });
+  const config = useQuery(api.dailyLogin.list, {});
   const claim = useMutation(api.missions.claimDailyLogin);
   const [busy, setBusy] = useState(false);
 
@@ -61,56 +59,64 @@ export default function DailyLoginModal({ onClose }: Props) {
           سجّل دخولك لمدة 7 أيام متتالية للحصول على 1000 عملة في اليوم السابع!
         </p>
 
-        {/* 7 days grid */}
+                {/* 7 days grid */}
         <div className="grid grid-cols-4 gap-2 mb-5">
-          {DAY_LABELS.map((label, i) => {
+          {(config ?? []).map((day: any, i: number) => {
             const isPast = i < dayIndex;
             const isCurrent = i === dayIndex;
             const isFuture = i > dayIndex;
-            const reward = REWARDS[i];
             const isJackpot = i === 6;
 
             return (
               <div
-                key={i}
-                className={`relative rounded-2xl border p-2 flex flex-col items-center gap-1 ${
-                  isCurrent && canClaim ? "bg-amber-500/30 border-amber-400/70 ring-2 ring-amber-400/50" :
-                  isPast ? "bg-emerald-500/20 border-emerald-400/40" :
-                  isJackpot ? "bg-pink-500/15 border-pink-400/40 col-span-1" :
-                  "bg-white/5 border-white/10"
+                key={day._id}
+                className={`relative rounded-2xl border p-2 flex flex-col items-center gap-1.5 overflow-hidden ${
+                  isCurrent && canClaim
+                    ? "bg-amber-500/25 border-amber-400/70 ring-2 ring-amber-400/50 shadow-[0_0_20px_rgba(251,191,36,0.4)]"
+                    : isPast
+                    ? "bg-emerald-500/20 border-emerald-400/40"
+                    : isJackpot
+                    ? "bg-pink-500/15 border-pink-400/40"
+                    : "bg-white/5 border-white/10"
                 }`}
               >
-                <span className="text-white/60 text-[9px]">اليوم</span>
-                <span className={`text-[10px] font-black ${isCurrent && canClaim ? "text-amber-200" : "text-white/70"}`}>
-                  {label}
-                </span>
-                <div className="flex items-center gap-0.5">
-                  <Star size={10} className={
-                    isPast ? "text-emerald-400" :
-                    isCurrent && canClaim ? "text-amber-300" :
-                    isJackpot ? "text-pink-300" :
-                    "text-white/30"
-                  } fill="currentColor" />
-                  <span className={`text-[10px] font-black tabular-nums ${
-                    isPast ? "text-emerald-300" :
-                    isCurrent && canClaim ? "text-amber-200" :
-                    isJackpot ? "text-pink-300" :
-                    "text-white/40"
-                  }`} dir="ltr">
-                    {reward}
-                  </span>
+                {/* صورة اليوم من الأصول */}
+                <div className="w-12 h-12 flex items-center justify-center">
+                  <img
+                    src={day.imageUrl}
+                    alt={day.label}
+                    className={`w-full h-full object-contain ${isFuture ? "opacity-40 grayscale" : ""} ${isCurrent && canClaim ? "animate-pulse" : ""}`}
+                  />
                 </div>
+
+                <span className={`text-[9px] font-black ${isCurrent && canClaim ? "text-amber-200" : "text-white/60"}`}>
+                  {day.label}
+                </span>
+
+                <span className={`text-[11px] font-black tabular-nums ${
+                  isPast ? "text-emerald-300" :
+                  isCurrent && canClaim ? "text-amber-200" :
+                  isJackpot ? "text-pink-300" :
+                  "text-white/70"
+                }`} dir="ltr">
+                  {day.coins.toLocaleString()}
+                </span>
+
                 {isPast && (
-                  <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center border-2 border-slate-900">
-                    <Check size={8} className="text-white" strokeWidth={3} />
+                  <div className="absolute top-1 right-1 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center border-2 border-slate-900">
+                    <Check size={10} className="text-white" strokeWidth={3} />
                   </div>
+                )}
+
+                {isJackpot && !isPast && (
+                  <span className="absolute top-1 left-1 px-1 py-0.5 rounded text-[7px] font-black bg-pink-500 text-white">جاكبوت</span>
                 )}
               </div>
             );
           })}
         </div>
 
-        {/* Streak info */}
+{/* Streak info */}
         <div className="rounded-2xl bg-black/30 border border-white/10 p-3 mb-4 flex items-center justify-between">
           <span className="text-white/60 text-xs">سلسلتك الحالية</span>
           <div className="flex items-center gap-1">
@@ -127,7 +133,7 @@ export default function DailyLoginModal({ onClose }: Props) {
             className="w-full rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-600 py-4 text-white font-black text-base flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
           >
             {busy ? <Loader2 size={20} className="animate-spin" /> : <Gift size={20} />}
-            استلام {data.nextReward} عملة
+            استلام {config?.find((d: any, i: number) => i === dayIndex)?.coins?.toLocaleString() ?? data.nextReward} عملة
           </button>
         ) : (
           <div className="rounded-2xl bg-emerald-500/15 border border-emerald-400/40 py-3 flex items-center justify-center gap-2">

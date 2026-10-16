@@ -1214,4 +1214,23 @@ export default defineSchema({
     .index("by_agent_and_createdAt", ["agentId", "createdAt"])
     .index("by_target_and_createdAt", ["targetUserId", "createdAt"]),
 
+  // [ezo-daily-login] إعدادات المكافأة اليومية (7 أيام)
+  dailyLoginConfig: defineTable({
+    dayIndex: v.number(),          // 0..6
+    coins: v.number(),
+    imageUrl: v.string(),          // مسار صورة من الأصول
+    label: v.string(),             // اسم اليوم
+    bonusType: v.optional(v.union(
+      v.literal("none"),
+      v.literal("vip"),
+      v.literal("frame"),
+      v.literal("vehicle"),
+      v.literal("gift"),
+    )),
+    bonusRef: v.optional(v.string()),
+    active: v.boolean(),
+    updatedAt: v.number(),
+  })
+    .index("by_dayIndex", ["dayIndex"]),
+
 });
