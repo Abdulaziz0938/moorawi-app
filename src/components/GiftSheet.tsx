@@ -28,6 +28,9 @@ const QUANTITY_PRESETS = [1, 5, 10, 33, 66, 99];
 export default function GiftSheet({
   // استعلام VIP للمستخدم الحالي
  roomId, onClose, preSelectedUserId }: Props) {
+  // [VIP] جلب حالة VIP الحالية لتحديد الإتاحة وقفل الهدايا الحصرية
+  const myVipData = useQuery(api.vip.myVip, {});
+  const myVipLevel = myVipData?.level ?? 0;
   const deviceId = getDeviceId();
   const gifts = useQuery(api.gifts.listActive);
   const balance = useQuery(api.gifts.myBalance, { tokenOverride: deviceId });
