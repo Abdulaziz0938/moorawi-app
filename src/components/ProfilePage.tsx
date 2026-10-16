@@ -8,7 +8,7 @@ import { getActiveToken } from "../lib/session";
 import { uploadToCloudinary } from "../lib/cloudinary";
 import { smartUpload } from "../lib/uploadAssets";
 import { dialog } from "../lib/dialog";
-import {
+import { Radio,
   ChevronLeft, ChevronRight, Home, Gift, MessageCircle, UserPlus, Crown, Loader2,
   Pencil, Camera, Eye, Trash2, ImageIcon, Copy, Check, Send, Inbox, Coins,
   Users, Heart, Award, Star, MoreHorizontal, ArrowRight, Zap, Gem,
@@ -69,6 +69,7 @@ export default function ProfilePage({
   const isMe = !!isMeOwn && viewUserId === userIdProp;
   const [listMode, setListMode] = useState<"followers" | "following" | "fans" | null>(null);
   const profile = useQuery(api.profileFull.getFull, { userId: userId as Id<"users"> });
+  const activeRoom = useQuery(api.rooms.getUserActiveRoom, { userId: userId as Id<"users"> });
   const updateName = useMutation(api.users.updateName);
   const saveAvatar = useMutation(api.profiles.saveAvatar);
   const saveCover = useMutation(api.profiles.saveCover);
@@ -269,6 +270,23 @@ export default function ProfilePage({
             <div className={`w-full h-full bg-gradient-to-b ${bgGradient}`} />
           )}
           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/80" />
+
+          {/* [ezo-room-pill] زر "في الغرفة" العائم */}
+          {activeRoom && onEnterRoom && (
+            <button
+              onClick={() => onEnterRoom(activeRoom.roomId as any)}
+              className="absolute top-3 left-3 z-20 flex items-center gap-1.5 pl-1.5 pr-3 py-1.5 rounded-full bg-gradient-to-r from-cyan-500/90 to-blue-600/90 backdrop-blur-md shadow-lg active:scale-95 transition"
+            >
+              <span className="w-7 h-7 rounded-full overflow-hidden bg-white/15 flex items-center justify-center flex-shrink-0">
+                {activeRoom.roomCoverUrl ? (
+                  <img src={activeRoom.roomCoverUrl} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <Radio size={14} className="text-white" />
+                )}
+              </span>
+              <span className="text-white text-[11px] font-black whitespace-nowrap">في الغرفة</span>
+            </button>
+          )}
 
           {/* [ezo-top] القمة المزخرفة على الخط الفاصل */}
           {vipTopUrl && (

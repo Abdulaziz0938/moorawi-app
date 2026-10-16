@@ -1120,3 +1120,32 @@ export const toggleMiniChat = mutation({
     return { ok: true };
   },
 });
+
+// ═══════════════════════════════════════════════════════════
+// [ezo-room-presence] الغرفة النشطة للمستخدم الآن (آخر 90 ثانية)
+// ═══════════════════════════════════════════════════════════
+export const getUserActiveRoom = query({
+  args: { userId: v.id("users") },
+  handler: async (ctx, args) => {
+    const threshold = Date.now() - 90_000;
+    const memberships = await ctx.db
+      .query("roomMembers")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .collect();
+    const active = memberships.find(
+      (m) => (m.lastSeenAt ?? 0) > threshold
+    );
+    if (!active) return null;
+    const room = await ctx.db.get("rooms", active.roomId);
+    if (!room) return null;
+    const coverUrl =
+      room.coverUrl ??
+      (room.coverImageId ? await ctx.storage.getUrl(room.coverImageId) : null);
+    return {
+      roomId: room._id,
+      roomName: room.name,
+      roomCoverUrl: coverUrl,
+      memberCount: room.memberCount ?? 0,
+    };
+  },
+});
