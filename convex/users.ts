@@ -75,3 +75,58 @@ export const changeOwnerId = mutation({
   },
 });
 
+// ═══════════════════════════════════════════════════════════
+// [ezo-uid] البحث بالـ UID (مستخدم + غرفته)
+// ═══════════════════════════════════════════════════════════
+export const searchByUid = query({
+  args: { uid: v.string() },
+  handler: async (ctx, args) => {
+    const uid = args.uid.trim();
+    if (!uid) return null;
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_uid", (q) => q.eq("uid", uid))
+      .unique();
+    if (!user) return null;
+    return {
+      userId: user._id,
+      uid: user.uid ?? null,
+      userNumber: user.userNumber ?? null,
+      name: user.name ?? null,
+      username: user.username ?? null,
+      avatarUrl: user.avatarUrl ?? null,
+      gender: user.gender ?? null,
+      country: user.country ?? null,
+      bio: user.bio ?? null,
+      vipLevel: (user as any).vipLevel ?? 0,
+      banned: user.banned ?? false,
+    };
+  },
+});
+
+// بحث حر: اسم أو UID أو username (يعيد أول 20)
+export const search = query({
+  args: { q: v.string(), limit: v.optional(v.number()) },
+  handler: async (ctx, args) => {
+    const q = args.q.trim().toLowerCase();
+    if (q.length < 2) return [];
+    const limit = Math.min(args.limit ?? 20, 50);
+    const all = await ctx.db.query("users").take(2000);
+    const hits = all.filter((u) => {
+      const uid = (u.uid ?? "").toLowerCase();
+      const name = (u.name ?? "").toLowerCase();
+      const uname = (u.username ?? "").toLowerCase();
+      return uid.includes(q) || name.includes(q) || uname.includes(q);
+    }).slice(0, limit);
+    return hits.map((u) => ({
+      userId: u._id,
+      uid: u.uid ?? null,
+      userNumber: u.userNumber ?? null,
+      name: u.name ?? null,
+      username: u.username ?? null,
+      avatarUrl: u.avatarUrl ?? null,
+      gender: u.gender ?? null,
+      vipLevel: (u as any).vipLevel ?? 0,
+    }));
+  },
+});

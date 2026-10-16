@@ -1181,4 +1181,36 @@ export default defineSchema({
     .index("by_status_and_createdAt", ["status", "createdAt"])
     .index("by_uid", ["uid"]),
 
+  // [ezo-agents] وكلاء شحن — أدمن فقط ينشئهم ويشحنهم
+  agents: defineTable({
+    userId: v.id("users"),           // صاحب وكالة الشحن
+    name: v.string(),                // اسم ظاهر
+    balance: v.number(),             // رصيد الوكيل من العملات
+    totalRecharged: v.number(),      // مجموع ما شحنه
+    commissionPct: v.number(),       // نسبة عمولة 0-100
+    active: v.boolean(),
+    createdBy: v.id("users"),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_active", ["active"]),
+
+  // [ezo-agents] سجل عمليات الوكلاء (تدقيق)
+  agentTransactions: defineTable({
+    agentId: v.id("agents"),
+    targetUserId: v.id("users"),
+    targetUid: v.string(),
+    coins: v.number(),
+    type: v.union(
+      v.literal("topup"),     // أدمن شحن الوكيل
+      v.literal("recharge"),  // الوكيل شحن مستخدماً
+    ),
+    actorId: v.id("users"),
+    note: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_agent_and_createdAt", ["agentId", "createdAt"])
+    .index("by_target_and_createdAt", ["targetUserId", "createdAt"]),
+
 });
