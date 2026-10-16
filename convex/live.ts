@@ -25,6 +25,10 @@ async function canGoLive(
     return { ok: false, reason: "البث المباشر متاح للإناث فقط" };
   if (user.verificationStatus !== "approved")
     return { ok: false, reason: "يجب توثيق حسابك للبث المباشر" };
+  // [ezo-agents] وكلاء الشحن لا يمكنهم البث
+  const { isRechargeAgent } = await import("./lib/agents");
+  if (await isRechargeAgent(ctx, user._id))
+    return { ok: false, reason: "حسابات وكلاء الشحن لا يمكنها البث المباشر" };
   return { ok: true };
 }
 

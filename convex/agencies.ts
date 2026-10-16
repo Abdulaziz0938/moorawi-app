@@ -2,6 +2,7 @@
 import { v } from "convex/values";
 import { mutation, query, internalMutation } from "./_generated/server";
 import { requireUser, isFullAdmin, isAssetManager } from "./lib/auth";
+import { isRechargeAgent } from "./lib/agents";
 import { activeVipLevel } from "./lib/vip";
 
 // ============================================================
@@ -329,6 +330,9 @@ export const requestJoin = mutation({
   handler: async (ctx, args) => {
     const me = await requireUser(ctx, args.tokenOverride);
     if (me.agencyId) throw new Error("أنت في وكالة بالفعل");
+    if (await isRechargeAgent(ctx, me._id)) {
+      throw new Error("حساب وكيل شحن لا يمكنه الانضمام لوكالة");
+    }
 
     const agency = await ctx.db.get("agencies", args.agencyId);
     if (!agency) throw new Error("الوكالة غير موجودة");
@@ -535,6 +539,9 @@ export const submitCreateRequest = mutation({
   handler: async (ctx, args) => {
     const me = await requireUser(ctx, args.tokenOverride);
     if (me.agencyId) throw new Error("أنت في وكالة بالفعل");
+    if (await isRechargeAgent(ctx, me._id)) {
+      throw new Error("حساب وكيل شحن لا يمكنه إنشاء وكالة مضيفين");
+    }
 
     // ===== شروط إلزامية =====
     if (me.verificationStatus !== "approved") {

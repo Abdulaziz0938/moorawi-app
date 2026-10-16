@@ -275,6 +275,17 @@ export const agentRecharge = mutation({
       me._id,
     );
 
+    // [ezo-agents] إشعار نظامي للمستهدف — يُحسب كإعادة تعبئة
+    await ctx.db.insert("systemNotifications", {
+      userId: target._id,
+      type: "reward",
+      title: "تم شحن حسابك",
+      body: `تمت إضافة ${args.coins.toLocaleString()} عملة إلى حسابك`,
+      actionType: "open_wallet",
+      actionPayload: String(args.coins),
+      createdAt: Date.now(),
+    });
+
     return {
       ok: true,
       newAgentBalance: agent.balance - args.coins,
