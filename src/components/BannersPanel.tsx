@@ -13,6 +13,8 @@ type Banner = {
   _id: string;
   imageUrl: string;
   title?: string;
+  actionType?: "none" | "open_room" | "open_live" | "open_url" | "open_shop" | "open_vip";
+  actionPayload?: string;
   order: number;
   active: boolean;
 };
@@ -23,13 +25,13 @@ export default function BannersPanel({ token }: Props) {
   const removeBanner = useMutation(api.banners.remove);
 
   const [editing, setEditing] = useState<Banner | null>(null);
-  const [form, setForm] = useState({ imageUrl: "", title: "", order: 0 });
+  const [form, setForm] = useState({ imageUrl: "", title: "", order: 0, actionType: "none" as "none" | "open_room" | "open_live" | "open_url" | "open_shop" | "open_vip", actionPayload: "" });
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
 
   const reset = () => {
     setEditing(null);
-    setForm({ imageUrl: "", title: "", order: (banners?.length ?? 0) });
+    setForm({ imageUrl: "", title: "", order: (banners?.length ?? 0), actionType: "none", actionPayload: "" });
   };
 
   const handleUpload = async (file: File) => {
@@ -52,6 +54,8 @@ export default function BannersPanel({ token }: Props) {
         id: editing?._id as any,
         imageUrl: form.imageUrl,
         title: form.title.trim() || undefined,
+        actionType: form.actionType,
+        actionPayload: form.actionPayload.trim() || undefined,
         order: form.order,
         active: true,
         tokenOverride: token ?? undefined,
@@ -160,6 +164,37 @@ export default function BannersPanel({ token }: Props) {
             className="flex-1 bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-white text-sm tabular-nums"
           />
         </div>
+          {/* Action Type */}
+          <div className="mt-3">
+            <label className="block text-white/70 text-xs font-black mb-1.5">الإجراء عند الضغط</label>
+            <select
+              value={form.actionType}
+              onChange={(e) => setForm({ ...form, actionType: e.target.value as any })}
+              className="w-full bg-white/5 border border-white/15 rounded-xl px-3 py-2.5 text-white text-sm outline-none"
+            >
+              <option value="none">بدون إجراء</option>
+              <option value="open_room">فتح غرفة</option>
+              <option value="open_live">فتح بث مباشر</option>
+              <option value="open_url">فتح رابط</option>
+              <option value="open_shop">فتح المتجر</option>
+              <option value="open_vip">فتح VIP</option>
+            </select>
+          </div>
+          {form.actionType !== "none" && (
+            <div className="mt-2">
+              <label className="block text-white/70 text-xs font-black mb-1.5">
+                {form.actionType === "open_url" ? "الرابط" : form.actionType === "open_room" || form.actionType === "open_live" ? "معرّف الغرفة/البث" : "القيمة (اختياري)"}
+              </label>
+              <input
+                value={form.actionPayload}
+                onChange={(e) => setForm({ ...form, actionPayload: e.target.value })}
+                placeholder={form.actionType === "open_url" ? "https://..." : "room id"}
+                className="w-full bg-white/5 border border-white/15 rounded-xl px-3 py-2.5 text-white text-sm outline-none"
+                dir="ltr"
+              />
+            </div>
+          )}
+
 
         <button
           onClick={handleSave}
@@ -209,7 +244,7 @@ export default function BannersPanel({ token }: Props) {
                 <button onClick={() => handleToggleActive(b)} className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white/70">
                   {b.active ? <Eye size={12} /> : <EyeOff size={12} />}
                 </button>
-                <button onClick={() => { setEditing(b); setForm({ imageUrl: b.imageUrl, title: b.title || "", order: b.order }); }} className="p-1.5 rounded-lg bg-blue-500/25 border border-blue-400/40 text-blue-200">
+                <button onClick={() => { setEditing(b); setForm({ imageUrl: b.imageUrl, title: b.title || "", order: b.order, actionType: ((b as any).actionType ?? "none") as any, actionPayload: ((b as any).actionPayload ?? "") }); }} className="p-1.5 rounded-lg bg-blue-500/25 border border-blue-400/40 text-blue-200">
                   <Upload size={12} />
                 </button>
                 <button onClick={() => handleDelete(b)} className="p-1.5 rounded-lg bg-red-500/25 border border-red-400/40 text-red-200">

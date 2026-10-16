@@ -724,6 +724,16 @@ export default defineSchema({
     imageUrl: v.string(),
     title: v.optional(v.string()),
     linkRoomId: v.optional(v.id("rooms")),
+    // [ezo-banners] الإجراء عند الضغط
+    actionType: v.optional(v.union(
+      v.literal("none"),
+      v.literal("open_room"),
+      v.literal("open_live"),
+      v.literal("open_url"),
+      v.literal("open_shop"),
+      v.literal("open_vip"),
+    )),
+    actionPayload: v.optional(v.string()),  // roomId أو url
     order: v.number(),
     active: v.boolean(),
     updatedAt: v.number(),
