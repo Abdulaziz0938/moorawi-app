@@ -628,3 +628,59 @@ export const clearPKResult = internalMutation({
     }
   },
 });
+
+// ═══════════════════════════════════════════════════════════
+// [ezo-live-pk] إنهاء PK المنتهية تلقائياً — يُستدعى من cron
+// ═══════════════════════════════════════════════════════════
+export const autoEndExpiredPKs = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const now = Date.now();
+    const streams = await ctx.db
+      .query("liveStreams")
+      .withIndex("by_status_started", (q) => q.eq("status", "live"))
+      .collect();
+    
+    let ended = 0;
+    for (const stream of streams) {
+      if (!stream.pkActive) continue;
+      if (!stream.pkStartedAt || !stream.pkDurationSec) continue;
+      const endsAt = stream.pkStartedAt + stream.pkDurationSec * 1000;
+      if (now < endsAt) continue;
+
+      // الوقت انتهى → أنهِ PK + سجّل الفائز
+      const hostWon = stream.hostScore >= stream.coHostScore;
+      await ctx.db.patch("liveStreams", stream._id, {
+        pkActive: false,
+        pkStartedAt: undefined,
+        pkDurationSec: undefined,
+        updatedAt: now,
+      });
+
+      // احتفظ بالنتيجة في حقل مؤقت للإعلام
+      await ctx.db.insert("systemNotifications", {
+        userId: stream.hostId,
+        type: "system",
+        title: "انتهت PK",
+        body: hostWon
+          ? `فزتِ! ${stream.hostScore} - ${stream.coHostScore}`
+          : `خسرتِ — ${stream.hostScore} - ${stream.coHostScore}`,
+        createdAt: now,
+      });
+      if (stream.coHostId) {
+        await ctx.db.insert("systemNotifications", {
+          userId: stream.coHostId,
+          type: "system",
+          title: "انتهت PK",
+          body: !hostWon
+            ? `فزتِ! ${stream.coHostScore} - ${stream.hostScore}`
+            : `خسرتِ — ${stream.coHostScore} - ${stream.hostScore}`,
+          createdAt: now,
+        });
+      }
+
+      ended += 1;
+    }
+    return { ended };
+  },
+});

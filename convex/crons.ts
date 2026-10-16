@@ -11,4 +11,11 @@ crons.interval(
   {}
 );
 
+crons.interval(
+  "live-pk-auto-end",
+  { seconds: 30 },
+  internal.live.autoEndExpiredPKs,
+  {}
+);
+
 export default crons;

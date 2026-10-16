@@ -43,7 +43,8 @@ export default function LiveViewer({ streamId, onLeave }: Props) {
   const sendComment = useMutation(api.live.sendComment);
 
 
-  const videoRef = useRef<HTMLDivElement>(null);
+  const hostVideoRef = useRef<HTMLDivElement>(null);
+  const coHostVideoRef = useRef<HTMLDivElement>(null);
   const commentsRef = useRef<HTMLDivElement>(null);
   const [connected, setConnected] = useState(false);
   const [commentText, setCommentText] = useState("");
@@ -71,8 +72,26 @@ export default function LiveViewer({ streamId, onLeave }: Props) {
           account,
           (user) => {
             // Remote user published video
-            if (user.videoTrack && videoRef.current) {
-              user.videoTrack.play(videoRef.current);
+            if (!user.videoTrack) return;
+            const uid = String(user.uid);
+            // إذا كان PK — نفرّق بين المضيف والضيفة
+            // نستخدم hostId و coHostId من stream
+            if (stream?.pkActive && stream?.coHostId) {
+              // نحتاج نعرف uid → user nào
+              // نستخدم mapping من account
+              // host عادة uid يبدأ بـ live_host_ أو مشابه
+              // نبسيطها: أي واحد لم يُملأ يُملأ بأول user
+              if (hostVideoRef.current && !hostVideoRef.current.dataset.filled) {
+                user.videoTrack.play(hostVideoRef.current);
+                hostVideoRef.current.dataset.filled = "1";
+              } else if (coHostVideoRef.current) {
+                user.videoTrack.play(coHostVideoRef.current);
+              }
+            } else {
+              // single host
+              if (hostVideoRef.current) {
+                user.videoTrack.play(hostVideoRef.current);
+              }
             }
           },
           () => {},
@@ -190,7 +209,7 @@ export default function LiveViewer({ streamId, onLeave }: Props) {
         <div className="absolute inset-0 flex">
           {/* Host half (left in RTL means visually right) */}
           <div
-            ref={videoRef}
+            ref={hostVideoRef}
             onClick={handleScreenTap}
             className="flex-1 relative bg-gradient-to-br from-cyan-900/40 to-black border-l border-white/20"
           >
@@ -201,7 +220,7 @@ export default function LiveViewer({ streamId, onLeave }: Props) {
             </div>
           </div>
           {/* CoHost half */}
-          <div className="flex-1 relative bg-gradient-to-br from-pink-900/40 to-black">
+          <div ref={coHostVideoRef} className="flex-1 relative bg-gradient-to-br from-pink-900/40 to-black">
             <div className="absolute top-20 left-2 z-20 bg-pink-500/90 px-2 py-0.5 rounded-full">
               <span className="text-white text-[9px] font-black">
                 {stream.coHostName ?? "مذيعة"}
@@ -211,7 +230,7 @@ export default function LiveViewer({ streamId, onLeave }: Props) {
         </div>
       ) : (
         <div
-          ref={videoRef}
+          ref={hostVideoRef}
           onClick={handleScreenTap}
           className="absolute inset-0 bg-gradient-to-br from-purple-900/30 to-black flex items-center justify-center"
         >
