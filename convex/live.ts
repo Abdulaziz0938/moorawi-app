@@ -684,3 +684,107 @@ export const autoEndExpiredPKs = internalMutation({
     return { ended };
   },
 });
+
+// ═══════════════════════════════════════════════════════════
+// [ezo-live-pk] قبول دعوة PK — تُستدعى من الضيفة
+// ═══════════════════════════════════════════════════════════
+export const acceptPK = mutation({
+  args: {
+    streamId: v.id("liveStreams"),
+    tokenOverride: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
+    if (!me) throw new ConvexError({ code: "UNAUTHORIZED" });
+
+    const stream = await ctx.db.get("liveStreams", args.streamId);
+    if (!stream || stream.status !== "live") {
+      throw new ConvexError({ code: "NOT_FOUND", message: "البث غير متوفر" });
+    }
+    if (stream.hostId === me._id) {
+      throw new ConvexError({ code: "FORBIDDEN", message: "لا يمكنك قبول دعوتك" });
+    }
+    if (stream.pkActive) {
+      throw new ConvexError({ code: "CONFLICT", message: "PK نشط بالفعل" });
+    }
+
+    const notifs = await ctx.db
+      .query("systemNotifications")
+      .withIndex("by_user", (q) => q.eq("userId", me._id))
+      .collect();
+    const invite = notifs.find(
+      (n: any) =>
+        n.actionType === "pk_invite" &&
+        String(n.actionPayload) === String(args.streamId) &&
+        !n.readAt
+    );
+    if (!invite) {
+      throw new ConvexError({ code: "FORBIDDEN", message: "لا توجد دعوة صالحة" });
+    }
+
+    const check = await canGoLive(ctx, me);
+    if (!check.ok) {
+      throw new ConvexError({ code: "FORBIDDEN", message: check.reason ?? "غير مؤهلة" });
+    }
+
+    const myStream = await ctx.db
+      .query("liveStreams")
+      .filter((q) =>
+        q.and(q.eq(q.field("hostId"), me._id), q.eq(q.field("status"), "live"))
+      )
+      .first();
+    if (myStream) {
+      await ctx.db.patch("liveStreams", myStream._id, {
+        status: "ended",
+        updatedAt: Date.now(),
+      });
+    }
+
+    const now = Date.now();
+    const duration = 300;
+    await ctx.db.patch("liveStreams", args.streamId, {
+      coHostId: me._id,
+      coHostName: me.name ?? "ضيفة",
+      coHostAvatarUrl: me.avatarUrl,
+      coHostVipLevel: activeVipLevel(me),
+      pkActive: true,
+      pkStartedAt: now,
+      pkDurationSec: duration,
+      hostScore: 0,
+      coHostScore: 0,
+      updatedAt: now,
+    });
+
+    await ctx.db.patch("systemNotifications", invite._id, { readAt: now });
+
+    return { ok: true, endAt: now + duration * 1000 };
+  },
+});
+
+// ═══════════════════════════════════════════════════════════
+// [ezo-live-pk] رفض دعوة PK
+// ═══════════════════════════════════════════════════════════
+export const declinePK = mutation({
+  args: {
+    streamId: v.id("liveStreams"),
+    tokenOverride: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
+    if (!me) throw new ConvexError({ code: "UNAUTHORIZED" });
+    const notifs = await ctx.db
+      .query("systemNotifications")
+      .withIndex("by_user", (q) => q.eq("userId", me._id))
+      .collect();
+    const invite = notifs.find(
+      (n: any) =>
+        n.actionType === "pk_invite" &&
+        String(n.actionPayload) === String(args.streamId) &&
+        !n.readAt
+    );
+    if (invite) {
+      await ctx.db.patch("systemNotifications", invite._id, { readAt: Date.now() });
+    }
+    return { ok: true };
+  },
+});
