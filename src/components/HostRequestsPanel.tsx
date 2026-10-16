@@ -10,6 +10,7 @@ import {
   ChevronRight, Loader2, Check, X, User, Users, Clock,
   Eye, Briefcase, TrendingUp, Award, Heart,
 } from "lucide-react";
+import { getActiveToken } from "../lib/session";
 
 interface Props {
   onClose: () => void;
@@ -18,7 +19,7 @@ interface Props {
 
 export default function HostRequestsPanel({ onClose, onBack }: Props) {
   const deviceId = getDeviceId();
-  const requests = useQuery(api.agencies.hostRequests, { tokenOverride: deviceId });
+  const requests = useQuery(api.agencies.hostRequests, { tokenOverride: getActiveToken() ?? deviceId });
   const review = useMutation(api.agencies.reviewRequest);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [previewUser, setPreviewUser] = useState<any>(null);
@@ -32,7 +33,7 @@ export default function HostRequestsPanel({ onClose, onBack }: Props) {
           await review({
             requestId: req._id,
             approve: true,
-            tokenOverride: deviceId,
+            tokenOverride: getActiveToken() ?? deviceId,
           });
           dialog.alert(`تم قبول ${req.name}`);
         } catch (e: any) {
@@ -55,7 +56,7 @@ export default function HostRequestsPanel({ onClose, onBack }: Props) {
           await review({
             requestId: req._id,
             approve: false,
-            tokenOverride: deviceId,
+            tokenOverride: getActiveToken() ?? deviceId,
           });
         } catch (e: any) {
           dialog.alert(e?.message || "فشل");

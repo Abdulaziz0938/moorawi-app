@@ -10,6 +10,7 @@ import {
   ChevronRight, Loader2, Plus, Briefcase, Phone, MessageCircle,
   User, FileText, X, Check, AlertCircle, Home, Copy,
 } from "lucide-react";
+import { getActiveToken } from "../lib/session";
 
 interface Props {
   onClose: () => void;
@@ -18,7 +19,7 @@ interface Props {
 
 export default function AgencyCreateForm({ onClose, onEnterRoom }: Props) {
   const deviceId = getDeviceId();
-  const me = useQuery(api.profiles.me, { tokenOverride: deviceId });
+  const me = useQuery(api.profiles.me, { tokenOverride: getActiveToken() ?? deviceId });
   const config = useQuery(api.config.getAll);
 
   if (me === undefined) {
@@ -175,7 +176,7 @@ function Form({ onClose }: { onClose: () => void }) {
         phone: phone.trim(),
         bio: bio.trim(),
         logoUrl: logo || undefined,
-        tokenOverride: deviceId,
+        tokenOverride: getActiveToken() ?? deviceId,
       });
       dialog.alert("تم إرسال الطلب — سيتم مراجعته قريباً");
       onClose();

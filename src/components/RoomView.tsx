@@ -193,9 +193,9 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const roomWeekly = useQuery(api.rooms.weeklyTotal, { roomId });
   const seats = useQuery(api.mics.state, { roomId });
   const members = useQuery(api.rooms.members, { roomId });
-  const myInfo = useQuery(api.mics.myInfo, { roomId, tokenOverride: deviceId });
+  const myInfo = useQuery(api.mics.myInfo, { roomId, tokenOverride: getActiveToken() ?? deviceId });
   // [ezo-notif-badge] نفس استعلام SystemNotifSheet — Convex dedupe تلقائي
-  const _notifs = useQuery(api.notifications.listMine, { tokenOverride: deviceId });
+  const _notifs = useQuery(api.notifications.listMine, { tokenOverride: getActiveToken() ?? deviceId });
   const unreadNotifs = (_notifs ?? []).filter((n: any) => !n.readAt).length;
 
   // [ezo-rocket-launch] كشف إطلاق جديد — عرض Overlay في RoomView
@@ -217,7 +217,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const msgSinceRef = useRef(Date.now());
   const messages = useQuery(api.messages.list, { roomId, since: msgSinceRef.current });
   const listeners = useQuery(api.mics.listeners, { roomId });
-  const myInvite = useQuery(api.mics.myInvite, { roomId, tokenOverride: deviceId });
+  const myInvite = useQuery(api.mics.myInvite, { roomId, tokenOverride: getActiveToken() ?? deviceId });
 
   const takeSeat = useMutation(api.mics.takeSeat);
   const leaveSeat = useMutation(api.mics.leaveSeat);
@@ -287,7 +287,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
   // [moorawi] mic requests queries
   const micRequestsList = useQuery(api.mics.listRequests, { roomId });
   const micRequestsCount = micRequestsList?.length ?? 0;
-  const myMicRequest = useQuery(api.mics.myRequestStatus, { roomId, tokenOverride: deviceId });
+  const myMicRequest = useQuery(api.mics.myRequestStatus, { roomId, tokenOverride: getActiveToken() ?? deviceId });
   const requestMicMutation = useMutation(api.mics.requestMic);
   const cancelMyRequestMutation = useMutation(api.mics.cancelMyRequest);
   const [showGifts, setShowGifts] = useState(false);
@@ -352,7 +352,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
   useEffect(() => {
     return () => {
       if (myUserIdRef.current) {
-        clearMySeats({ roomId, tokenOverride: deviceId }).catch(() => {});
+        clearMySeats({ roomId, tokenOverride: getActiveToken() ?? deviceId }).catch(() => {});
       }
     };
   }, [roomId, deviceId, clearMySeats]);
@@ -390,7 +390,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
     let cancelled = false;
     (async () => {
       try {
-        const tokenData = await getToken({ roomId, tokenOverride: deviceId });
+        const tokenData = await getToken({ roomId, tokenOverride: getActiveToken() ?? deviceId });
         if (cancelled) return;
         await agoraManager.join(tokenData.appId, roomId, tokenData.token, tokenData.account,
           () => setRemoteCount((c) => c + 1),
@@ -442,10 +442,10 @@ export default function RoomView({ roomId, onLeave }: Props) {
       lastReqStatusRef.current = status;
       if (status === "accepted") {
         setMyRequestToast("✅ تم قبول طلب المايك");
-        cancelMyRequestMutation({ roomId, tokenOverride: deviceId }).catch(() => {});
+        cancelMyRequestMutation({ roomId, tokenOverride: getActiveToken() ?? deviceId }).catch(() => {});
       } else if (status === "rejected") {
         setMyRequestToast("تم رفض طلب المايك");
-        cancelMyRequestMutation({ roomId, tokenOverride: deviceId }).catch(() => {});
+        cancelMyRequestMutation({ roomId, tokenOverride: getActiveToken() ?? deviceId }).catch(() => {});
       }
     }
   }, [myMicRequest?.status, roomId, deviceId, cancelMyRequestMutation]);
@@ -672,11 +672,11 @@ export default function RoomView({ roomId, onLeave }: Props) {
         return;
       }
       if (room?.micRequestsEnabled) {
-        requestMicMutation({ roomId, tokenOverride: deviceId })
+        requestMicMutation({ roomId, tokenOverride: getActiveToken() ?? deviceId })
           .then(() => setMyRequestToast("⏳ تم إرسال طلبك"))
           .catch((e: any) => dialog.alert(e?.message || "خطأ"));
       } else {
-        takeSeat({ roomId, seatIndex, tokenOverride: deviceId }).catch((e: any) => dialog.alert(e?.message || "خطأ"));
+        takeSeat({ roomId, seatIndex, tokenOverride: getActiveToken() ?? deviceId }).catch((e: any) => dialog.alert(e?.message || "خطأ"));
       }
       return;
     }
@@ -701,7 +701,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
     const mySeat = seats?.find((s: any) => myInfo?.userId && s.userId === myInfo.userId);
     if (mySeat) {
       try {
-        await toggleMuteSeat({ roomId, seatIndex: mySeat.seatIndex, tokenOverride: deviceId });
+        await toggleMuteSeat({ roomId, seatIndex: mySeat.seatIndex, tokenOverride: getActiveToken() ?? deviceId });
       } catch (e: any) {
         // Rollback local state + Agora on server failure
         setIsMuted(!next);
@@ -713,8 +713,8 @@ export default function RoomView({ roomId, onLeave }: Props) {
 
   const handleLeave = async () => {
     // [ezo-presence] إبلاغ الـ server بالخروج فوراً
-    try { await leavePresence({ roomId, tokenOverride: deviceId }); } catch {}
-    try { await clearMySeats({ roomId, tokenOverride: deviceId }); } catch {}
+    try { await leavePresence({ roomId, tokenOverride: getActiveToken() ?? deviceId }); } catch {}
+    try { await clearMySeats({ roomId, tokenOverride: getActiveToken() ?? deviceId }); } catch {}
     await agoraManager.leave();
     publishedRef.current = false;
     joinedRef.current = false;
@@ -723,7 +723,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
 
   const handleSendMsg = async (text: string) => {
     setSending(true);
-    try { await sendMsg({ roomId, text, tokenOverride: deviceId }); }
+    try { await sendMsg({ roomId, text, tokenOverride: getActiveToken() ?? deviceId }); }
     catch (e: any) { dialog.alert(e?.message || "خطأ"); }
     finally { setSending(false); }
   };
@@ -732,7 +732,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
     setUploading(true);
     try {
       const result = await smartUpload(file, { allowVideo: false });
-      await sendMsg({ roomId, imageUrl: result.url, tokenOverride: deviceId });
+      await sendMsg({ roomId, imageUrl: result.url, tokenOverride: getActiveToken() ?? deviceId });
     } catch (e: any) { dialog.alert(e?.message || "فشل رفع الصورة"); }
     finally { setUploading(false); }
   };
@@ -993,7 +993,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
                   <>
                     <button
                       disabled={currentSeatMenuData.adminMuted === true}
-                      onClick={() => { toggleMuteSeat({ roomId, seatIndex: currentSeatMenuData.seatIndex, tokenOverride: deviceId }).catch((e: any) => dialog.alert(e?.message || "خطأ")); setOpenSeatMenu(null); setOpenSeatMenuPos(null); }}
+                      onClick={() => { toggleMuteSeat({ roomId, seatIndex: currentSeatMenuData.seatIndex, tokenOverride: getActiveToken() ?? deviceId }).catch((e: any) => dialog.alert(e?.message || "خطأ")); setOpenSeatMenu(null); setOpenSeatMenuPos(null); }}
                       className={`w-full flex items-center gap-2 px-3 py-2 text-xs ${currentSeatMenuData.adminMuted ? "text-red-400/60 cursor-not-allowed" : "text-white hover:bg-white/10"}`}
                     >
                       <MicOff size={14} />
@@ -1001,7 +1001,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
                         ? "مكتوم من الإدارة"
                         : currentSeatMenuData.muted ? "إلغاء الكتم" : "كتم"}
                     </button>
-                    <button onClick={() => { leaveSeat({ roomId, tokenOverride: deviceId }).then(() => agoraManager.unpublishMicrophone()); setOpenSeatMenu(null); setOpenSeatMenuPos(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-red-400 hover:bg-white/10 text-xs">
+                    <button onClick={() => { leaveSeat({ roomId, tokenOverride: getActiveToken() ?? deviceId }).then(() => agoraManager.unpublishMicrophone()); setOpenSeatMenu(null); setOpenSeatMenuPos(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-red-400 hover:bg-white/10 text-xs">
                       <LogOut size={14} /> انزل من المايك
                     </button>
                   </>
@@ -1014,11 +1014,11 @@ export default function RoomView({ roomId, onLeave }: Props) {
                     {isOwnerOrMod && (
                       <>
                         {/* فك/قفل المايك */}
-                        <button onClick={() => { toggleLock({ roomId, seatIndex: currentSeatMenuData.seatIndex, tokenOverride: deviceId }); setOpenSeatMenu(null); setOpenSeatMenuPos(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs">
+                        <button onClick={() => { toggleLock({ roomId, seatIndex: currentSeatMenuData.seatIndex, tokenOverride: getActiveToken() ?? deviceId }); setOpenSeatMenu(null); setOpenSeatMenuPos(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs">
                           {currentSeatMenuData.locked ? <Unlock size={14} /> : <Lock size={14} />} {currentSeatMenuData.locked ? "فك القفل" : "قفل المايك"}
                         </button>
                         {/* [moorawi] الكتم الإداري — يمنع المستخدم من إلغاء الكتم */}
-                        <button onClick={() => { toggleAdminMute({ roomId, seatIndex: currentSeatMenuData.seatIndex, tokenOverride: deviceId }); setOpenSeatMenu(null); setOpenSeatMenuPos(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs">
+                        <button onClick={() => { toggleAdminMute({ roomId, seatIndex: currentSeatMenuData.seatIndex, tokenOverride: getActiveToken() ?? deviceId }); setOpenSeatMenu(null); setOpenSeatMenuPos(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs">
                           <MicOff size={14} />
                           {currentSeatMenuData.adminMuted ? "إلغاء الكتم الإداري" : "كتم المايك (إداري)"}
                         </button>
@@ -1030,9 +1030,9 @@ export default function RoomView({ roomId, onLeave }: Props) {
                         onClick={async () => {
                           try {
                             if (currentSeatMenuData.locked) {
-                              await toggleLock({ roomId, seatIndex: currentSeatMenuData.seatIndex, tokenOverride: deviceId });
+                              await toggleLock({ roomId, seatIndex: currentSeatMenuData.seatIndex, tokenOverride: getActiveToken() ?? deviceId });
                             }
-                            await takeSeat({ roomId, seatIndex: currentSeatMenuData.seatIndex, tokenOverride: deviceId });
+                            await takeSeat({ roomId, seatIndex: currentSeatMenuData.seatIndex, tokenOverride: getActiveToken() ?? deviceId });
                           } catch (e: any) {
                             dialog.alert(e?.message || "خطأ");
                           }
@@ -1631,7 +1631,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
               alert("عذراً، هذا العضو يتمتع بحصانة ملكية (VIP 5+) ضد الطرد");
               return Promise.reject(new Error("VIP immunity"));
             }
-            return kickFromRoom({ roomId, toUserId: miniProfileUserId as any, tokenOverride: deviceId });
+            return kickFromRoom({ roomId, toUserId: miniProfileUserId as any, tokenOverride: getActiveToken() ?? deviceId });
           })()
               .then(() => {
                 setMiniProfileUserId(null);
@@ -1641,7 +1641,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
           }}
           onBan={() => {
             if (!miniProfileUserId) return;
-            toggleBanUser({ roomId, toUserId: miniProfileUserId as any, tokenOverride: deviceId })
+            toggleBanUser({ roomId, toUserId: miniProfileUserId as any, tokenOverride: getActiveToken() ?? deviceId })
               .then(() => {
                 setMiniProfileUserId(null);
                 setMySeatIndexForMiniProfile(null);
@@ -1653,7 +1653,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
               ? mySeatIndexForMiniProfile
               : seats?.find((s: any) => s.userId === miniProfileUserId)?.seatIndex;
             if (targetSeat === undefined || targetSeat === null) return;
-            toggleMuteSeat({ roomId, seatIndex: targetSeat, tokenOverride: deviceId }).then(() => {
+            toggleMuteSeat({ roomId, seatIndex: targetSeat, tokenOverride: getActiveToken() ?? deviceId }).then(() => {
               setMiniProfileUserId(null);
               setMySeatIndexForMiniProfile(null);
             }).catch(() => {});
@@ -1665,14 +1665,14 @@ export default function RoomView({ roomId, onLeave }: Props) {
             if (targetSeat === undefined || targetSeat === null) return;
             // إذا كان مايكي أنا → leaveSeat
             if (mySeatIndexForMiniProfile !== null) {
-              leaveSeat({ roomId, tokenOverride: deviceId })
+              leaveSeat({ roomId, tokenOverride: getActiveToken() ?? deviceId })
                 .then(() => agoraManager.unpublishMicrophone())
                 .then(() => { setMiniProfileUserId(null); setMySeatIndexForMiniProfile(null); })
                 .catch(() => {});
             } else {
               // إنزال شخص آخر
               if (!miniProfileUserId) return;
-              removeFromSeat({ roomId, toUserId: miniProfileUserId as any, tokenOverride: deviceId })
+              removeFromSeat({ roomId, toUserId: miniProfileUserId as any, tokenOverride: getActiveToken() ?? deviceId })
                 .then(() => {
                   setMiniProfileUserId(null);
                   setMySeatIndexForMiniProfile(null);
@@ -1682,7 +1682,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
           }}
           onPromote={() => {
             if (!miniProfileUserId) return;
-            promoteToMod({ roomId, toUserId: miniProfileUserId as any, tokenOverride: deviceId })
+            promoteToMod({ roomId, toUserId: miniProfileUserId as any, tokenOverride: getActiveToken() ?? deviceId })
               .then(() => {
                 setMiniProfileUserId(null);
                 setMySeatIndexForMiniProfile(null);
@@ -1691,7 +1691,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
           }}
           onDemote={() => {
             if (!miniProfileUserId) return;
-            demoteMod({ roomId, toUserId: miniProfileUserId as any, tokenOverride: deviceId })
+            demoteMod({ roomId, toUserId: miniProfileUserId as any, tokenOverride: getActiveToken() ?? deviceId })
               .then(() => {
                 setMiniProfileUserId(null);
                 setMySeatIndexForMiniProfile(null);
@@ -1718,7 +1718,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
             </div>
             <div className="flex-1 overflow-y-auto p-3 space-y-2">
               {listeners.length === 0 ? <p className="text-white/40 text-center py-8 text-sm">لا يوجد مستمعون</p> : listeners.map((l) => (
-                <button key={l._id} onClick={() => { inviteToSeat({ roomId, toUserId: l.userId, seatIndex: inviteSeatIndex, tokenOverride: deviceId }); setInviteSeatIndex(null); }} className="w-full flex items-center gap-3 p-2 bg-white/5 hover:bg-white/10 rounded-xl transition">
+                <button key={l._id} onClick={() => { inviteToSeat({ roomId, toUserId: l.userId, seatIndex: inviteSeatIndex, tokenOverride: getActiveToken() ?? deviceId }); setInviteSeatIndex(null); }} className="w-full flex items-center gap-3 p-2 bg-white/5 hover:bg-white/10 rounded-xl transition">
                   <div className="w-10 h-10 rounded-full overflow-hidden bg-purple-500 flex items-center justify-center text-sm font-bold text-white">
                     {true ? <img src={l?.avatarUrl || "/avatar.png"} alt="" className="w-full h-full object-cover" /> : (l.name?.[0] || "?")}
                   </div>
@@ -1739,8 +1739,8 @@ export default function RoomView({ roomId, onLeave }: Props) {
           <div className="flex items-center justify-between gap-3">
             <p className="text-white text-sm font-bold flex-1">{myInvite.fromName} يدعوك للمايك {myInvite.seatIndex + 1}</p>
             <div className="flex gap-2">
-              <button onClick={() => respondInvite({ inviteId: myInvite._id, accept: true, tokenOverride: deviceId })} className="bg-white text-purple-800 p-2 rounded-full"><Check size={16} /></button>
-              <button onClick={() => respondInvite({ inviteId: myInvite._id, accept: false, tokenOverride: deviceId })} className="bg-red-500 text-white p-2 rounded-full"><X size={16} /></button>
+              <button onClick={() => respondInvite({ inviteId: myInvite._id, accept: true, tokenOverride: getActiveToken() ?? deviceId })} className="bg-white text-purple-800 p-2 rounded-full"><Check size={16} /></button>
+              <button onClick={() => respondInvite({ inviteId: myInvite._id, accept: false, tokenOverride: getActiveToken() ?? deviceId })} className="bg-red-500 text-white p-2 rounded-full"><X size={16} /></button>
             </div>
           </div>
         </div>
@@ -1808,7 +1808,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
         <EmojiSheet
           onClose={() => setShowEmojiSheet(false)}
           onPick={(url: string) => {
-            sendEmoji({ roomId, emojiUrl: url, tokenOverride: deviceId });
+            sendEmoji({ roomId, emojiUrl: url, tokenOverride: getActiveToken() ?? deviceId });
           }}
         />
       )}

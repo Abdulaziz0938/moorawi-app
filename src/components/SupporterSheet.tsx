@@ -17,6 +17,7 @@ import { levelFromValue } from "../lib/levels";
 import {
   Crown, TrendingUp, Coins, Flame, Star, Trophy, User as UserIcon,
 } from "lucide-react";
+import { getActiveToken } from "../lib/session";
 
 interface Props {
   onClose: () => void;
@@ -51,7 +52,7 @@ export default function SupporterSheet({ onClose, onUserClick }: Props) {
   const [period, setPeriod] = useState<Period>("month");
 
   const top = useQuery(api.rooms.wealthRanking, { period, limit: 100 });
-  const myRank = useQuery(api.rooms.mySupporterRank, { tokenOverride: deviceId, period });
+  const myRank = useQuery(api.rooms.mySupporterRank, { tokenOverride: getActiveToken() ?? deviceId, period });
 
   const top3 = (top ?? []).slice(0, 3);
   const rest = (top ?? []).slice(3);

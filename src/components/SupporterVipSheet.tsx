@@ -5,6 +5,7 @@ import { getDeviceId } from "../lib/device";
 import { useBackButton } from "../lib/hooks/useBackButton";
 import { Header } from "./VisitsSheet";
 import { Crown, Sparkles, Star, TrendingUp, Lock } from "lucide-react";
+import { getActiveToken } from "../lib/session";
 
 interface Props { onClose: () => void; }
 
@@ -18,7 +19,7 @@ const TIERS = [
 export default function SupporterVipSheet({ onClose }: Props) {
   useBackButton(true, onClose);
   const deviceId = getDeviceId();
-  const me = useQuery(api.profiles.me, { tokenOverride: deviceId });
+  const me = useQuery(api.profiles.me, { tokenOverride: getActiveToken() ?? deviceId });
 
   const totalSent = (me as any)?.totalSent ?? 0;
   const myLevel = calcWealthLevel(totalSent);

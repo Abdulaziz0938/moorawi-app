@@ -10,6 +10,7 @@ import {
 import Card from "./ui/Card";
 import StatBadge from "./ui/StatBadge";
 import SectionTitle from "./ui/SectionTitle";
+import { getActiveToken } from "../lib/session";
 
 interface Props {
   onClose: () => void;
@@ -19,7 +20,7 @@ interface Props {
 
 export default function MyHostView({ onClose, onShowRequests, isOwner = false }: Props) {
   const deviceId = getDeviceId();
-  const status = useQuery(api.agencies.myStatus, { tokenOverride: deviceId });
+  const status = useQuery(api.agencies.myStatus, { tokenOverride: getActiveToken() ?? deviceId });
 
   if (status === undefined) {
     return (
@@ -158,7 +159,7 @@ function LeaveButton() {
       "هل أنت متأكد من مغادرة الوكالة؟",
       async () => {
         try {
-          await leaveAgency({ tokenOverride: deviceId });
+          await leaveAgency({ tokenOverride: getActiveToken() ?? deviceId });
           dialog.alert("تم مغادرة الوكالة");
         } catch (e: any) {
           dialog.alert(e?.message || "فشل");

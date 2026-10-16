@@ -14,6 +14,7 @@ import {
   Search, Loader2, MessageCircle, Bell, Heart, UserPlus,
   Check, ChevronLeft,
 } from "lucide-react";
+import { getActiveToken } from "../lib/session";
 
 type Tab = "messages" | "friends";
 
@@ -29,11 +30,11 @@ export default function MessagesTab({ onUserClick }: Props) {
   const [showNotifs, setShowNotifs] = useState(false);
   const [showFriendReqs, setShowFriendReqs] = useState(false);
 
-  const conversations = useQuery(api.directMessages.listConversations, { tokenOverride: deviceId });
-  const notifCount = useQuery(api.notifications.unreadCount, { tokenOverride: deviceId });
-  const pendingFriendReqs = useQuery(api.friends.pendingRequests, { tokenOverride: deviceId });
+  const conversations = useQuery(api.directMessages.listConversations, { tokenOverride: getActiveToken() ?? deviceId });
+  const notifCount = useQuery(api.notifications.unreadCount, { tokenOverride: getActiveToken() ?? deviceId });
+  const pendingFriendReqs = useQuery(api.friends.pendingRequests, { tokenOverride: getActiveToken() ?? deviceId });
   const pendingRelReqs = undefined;
-  const friends = useQuery(api.friends.listFriends, { tokenOverride: deviceId });
+  const friends = useQuery(api.friends.listFriends, { tokenOverride: getActiveToken() ?? deviceId });
 
   const friendReqCount = pendingFriendReqs?.length ?? 0;
   const relReqCount = (pendingRelReqs as any)?.length ?? 0;

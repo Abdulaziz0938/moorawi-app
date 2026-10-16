@@ -8,6 +8,7 @@ import { smartUpload } from "../lib/uploadAssets";
 import { dialog } from "../lib/dialog";
 import { useBackButton } from "../lib/hooks/useBackButton";
 import { X, Plus, Loader2, Send, Image as ImageIcon } from "lucide-react";
+import { getActiveToken } from "../lib/session";
 
 interface Props { onClose: () => void; }
 
@@ -42,7 +43,7 @@ export default function MomentCreateSheet({ onClose }: Props) {
     if (!text.trim() && images.length === 0) return dialog.alert("أضف نصاً أو صورة");
     setBusy(true);
     try {
-      await create({ text: text.trim() || undefined, imageUrls: images, tokenOverride: deviceId });
+      await create({ text: text.trim() || undefined, imageUrls: images, tokenOverride: getActiveToken() ?? deviceId });
       dialog.alert("تم نشر اللحظة ✅");
       onClose();
     } catch (e: any) {

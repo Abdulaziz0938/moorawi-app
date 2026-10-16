@@ -17,6 +17,7 @@ import {
   Users, Flame, Sparkles, Clock, Crown, Heart,
   ChevronLeft, ChevronRight,
 } from "lucide-react";
+import { getActiveToken } from "../lib/session";
 
 interface Props {
   onEnter: (roomId: Id<"rooms">) => void;
@@ -32,8 +33,8 @@ type MineSub = "recent" | "following";
 // ============================================================
 export default function RoomsTab({ onEnter, onEnterLive, onStartLive }: Props) {
   const deviceId = getDeviceId();
-  const me = useQuery(api.profiles.me, { tokenOverride: deviceId });
-  const myRoom = useQuery(api.rooms.myRoom, { tokenOverride: deviceId });
+  const me = useQuery(api.profiles.me, { tokenOverride: getActiveToken() ?? deviceId });
+  const myRoom = useQuery(api.rooms.myRoom, { tokenOverride: getActiveToken() ?? deviceId });
   const createRoom = useMutation(api.rooms.create);
   const joinRoom = useMutation(api.rooms.join);
 
@@ -42,16 +43,16 @@ export default function RoomsTab({ onEnter, onEnterLive, onStartLive }: Props) {
   const [showCreate, setShowCreate] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [showLiveSetup, setShowLiveSetup] = useState(false);
-  const myLive = useQuery(api.live.myLive, { tokenOverride: deviceId });
+  const myLive = useQuery(api.live.myLive, { tokenOverride: getActiveToken() ?? deviceId });
   const endMyStream = useMutation(api.live.endMyActiveStream);
   const [newName, setNewName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const recent = useQuery(api.rooms.listRecent,
-    mainTab === "mine" && mineSub === "recent" ? { tokenOverride: deviceId } : "skip" as any);
+    mainTab === "mine" && mineSub === "recent" ? { tokenOverride: getActiveToken() ?? deviceId } : "skip" as any);
   const following = useQuery(api.rooms.listFollowing,
-    mainTab === "mine" && mineSub === "following" ? { tokenOverride: deviceId } : "skip" as any);
+    mainTab === "mine" && mineSub === "following" ? { tokenOverride: getActiveToken() ?? deviceId } : "skip" as any);
 
   const handleCopyId = () => {
     if (!me?.userNumber) return;
@@ -61,7 +62,7 @@ export default function RoomsTab({ onEnter, onEnterLive, onStartLive }: Props) {
 
   const handleJoin = async (roomId: Id<"rooms">) => {
     try {
-      await joinRoom({ roomId, tokenOverride: deviceId });
+      await joinRoom({ roomId, tokenOverride: getActiveToken() ?? deviceId });
       onEnter(roomId);
     } catch (e: any) {
       dialog.alert(e?.message || "فشل الدخول");
@@ -72,7 +73,7 @@ export default function RoomsTab({ onEnter, onEnterLive, onStartLive }: Props) {
     if (!newName.trim()) return;
     setIsCreating(true);
     try {
-      const roomId = await createRoom({ name: newName.trim(), isPrivate: false, tokenOverride: deviceId });
+      const roomId = await createRoom({ name: newName.trim(), isPrivate: false, tokenOverride: getActiveToken() ?? deviceId });
       setShowCreate(false);
       setNewName("");
       onEnter(roomId);
@@ -143,7 +144,7 @@ export default function RoomsTab({ onEnter, onEnterLive, onStartLive }: Props) {
                 <button
                   onClick={async () => {
                     try {
-                      await endMyStream({ tokenOverride: deviceId });
+                      await endMyStream({ tokenOverride: getActiveToken() ?? deviceId });
                     } catch (e: any) {
                       dialog.alert(e?.message || "فشل");
                     }

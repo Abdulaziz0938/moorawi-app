@@ -6,6 +6,7 @@ import type { Id } from "../../convex/_generated/dataModel";
 import { getDeviceId } from "../lib/device";
 import { X, Coins, Loader2, Music, Heart, Globe, Mic, Users, Check, ChevronUp, Gift } from "lucide-react";
 import { dialog } from "../lib/dialog";
+import { getActiveToken } from "../lib/session";
 
 interface Props {
   roomId: Id<"rooms">;
@@ -33,7 +34,7 @@ export default function GiftSheet({
   const myVipLevel = myVipData?.level ?? 0;
   const deviceId = getDeviceId();
   const gifts = useQuery(api.gifts.listActive);
-  const balance = useQuery(api.gifts.myBalance, { tokenOverride: deviceId });
+  const balance = useQuery(api.gifts.myBalance, { tokenOverride: getActiveToken() ?? deviceId });
   const seats = useQuery(api.mics.state, { roomId });
   const members = useQuery(api.rooms.members, { roomId });
   const sendBatch = useMutation(api.gifts.sendBatch);
@@ -135,7 +136,7 @@ export default function GiftSheet({
         toUserIds: Array.from(selectedUserIds),
         giftId,
         quantity: selectedQuantity,
-        tokenOverride: deviceId,
+        tokenOverride: getActiveToken() ?? deviceId,
       });
     } catch (e: any) {
       const msg = typeof e?.data === "object" ? (e.data?.message || e?.message) : e?.message;

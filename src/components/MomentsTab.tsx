@@ -13,6 +13,7 @@ import {
   Plus, Heart, MessageCircle, Loader2, Image as ImageIcon,
   MoreVertical, Trash2, Check,
 } from "lucide-react";
+import { getActiveToken } from "../lib/session";
 
 interface Props {
   onUserClick?: (id: any) => void;
@@ -20,7 +21,7 @@ interface Props {
 
 export default function MomentsTab({ onUserClick }: Props) {
   const deviceId = getDeviceId();
-  const feed = useQuery(api.moments.feed, { tokenOverride: deviceId });
+  const feed = useQuery(api.moments.feed, { tokenOverride: getActiveToken() ?? deviceId });
   const toggleLike = useMutation(api.moments.toggleLike);
   const removeMoment = useMutation(api.moments.remove);
   const [showCreate, setShowCreate] = useState(false);
@@ -29,14 +30,14 @@ export default function MomentsTab({ onUserClick }: Props) {
 
   const handleLike = async (m: any) => {
     try {
-      await toggleLike({ momentId: m._id, tokenOverride: deviceId });
+      await toggleLike({ momentId: m._id, tokenOverride: getActiveToken() ?? deviceId });
     } catch (e: any) { dialog.alert(e?.message || "فشل"); }
   };
 
   const handleDelete = (m: any) => {
     dialog.confirm("حذف هذا المنشور؟", async () => {
       try {
-        await removeMoment({ momentId: m._id, tokenOverride: deviceId });
+        await removeMoment({ momentId: m._id, tokenOverride: getActiveToken() ?? deviceId });
         setMenuId(null);
       } catch (e: any) { dialog.alert(e?.message || "فشل"); }
     }, "حذف", "حذف");

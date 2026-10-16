@@ -8,6 +8,7 @@ import { dialog } from "../lib/dialog";
 import { useBackButton } from "../lib/hooks/useBackButton";
 import { Header } from "./VisitsSheet";
 import { Lock, Unlock, Loader2, KeyRound, Shield, Check } from "lucide-react";
+import { getActiveToken } from "../lib/session";
 
 interface Props {
   roomId: Id<"rooms">;
@@ -38,7 +39,7 @@ export default function RoomLockSheet({ roomId, onClose }: Props) {
       // فتح — بدون كلمة مرور
       setBusy(true);
       try {
-        await toggleLock({ roomId, locked: false, tokenOverride: deviceId });
+        await toggleLock({ roomId, locked: false, tokenOverride: getActiveToken() ?? deviceId });
         dialog.alert("تم فتح الغرفة ✅");
       } catch (e: any) {
         dialog.alert(e?.message || "فشل");
@@ -54,7 +55,7 @@ export default function RoomLockSheet({ roomId, onClose }: Props) {
       }
       setBusy(true);
       try {
-        await toggleLock({ roomId, locked: true, password: p, tokenOverride: deviceId });
+        await toggleLock({ roomId, locked: true, password: p, tokenOverride: getActiveToken() ?? deviceId });
         dialog.alert("تم قفل الغرفة 🔒");
         setPassword("");
       } catch (e: any) {

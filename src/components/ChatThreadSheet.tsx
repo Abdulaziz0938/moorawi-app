@@ -12,6 +12,7 @@ import UserAvatar from "./UserAvatar";
 import VipAvatar from "./ui/VipAvatar";
 import VipName from "./VipName";
 import { ChevronRight, Loader2, Send, Image as ImageIcon, Check } from "lucide-react";
+import { getActiveToken } from "../lib/session";
 
 interface Props {
   conversationId: string;
@@ -23,7 +24,7 @@ export default function ChatThreadSheet({ conversationId, onClose }: Props) {
   const deviceId = getDeviceId();
   const thread = useQuery(api.directMessages.getThread, {
     conversationId: conversationId as any,
-    tokenOverride: deviceId,
+    tokenOverride: getActiveToken() ?? deviceId,
   });
   const send = useMutation(api.directMessages.send);
   const markRead = useMutation(api.directMessages.markRead);
@@ -37,7 +38,7 @@ export default function ChatThreadSheet({ conversationId, onClose }: Props) {
   // mark as read when opened
   useEffect(() => {
     if (thread) {
-      markRead({ conversationId: conversationId as any, tokenOverride: deviceId }).catch(() => {});
+      markRead({ conversationId: conversationId as any, tokenOverride: getActiveToken() ?? deviceId }).catch(() => {});
     }
   }, [thread?.messages.length]);
 
@@ -53,7 +54,7 @@ export default function ChatThreadSheet({ conversationId, onClose }: Props) {
     if (!t) return;
     setBusy(true);
     try {
-      await send({ conversationId: conversationId as any, text: t, tokenOverride: deviceId });
+      await send({ conversationId: conversationId as any, text: t, tokenOverride: getActiveToken() ?? deviceId });
       setText("");
     } catch (e: any) {
       dialog.alert(e?.message || "فشل الإرسال");
@@ -66,7 +67,7 @@ export default function ChatThreadSheet({ conversationId, onClose }: Props) {
     setUploading(true);
     try {
       const res = await smartUpload(file, { allowVideo: false });
-      await send({ conversationId: conversationId as any, imageUrl: res.url, tokenOverride: deviceId });
+      await send({ conversationId: conversationId as any, imageUrl: res.url, tokenOverride: getActiveToken() ?? deviceId });
     } catch (e: any) {
       dialog.alert(e?.message || "فشل الرفع");
     } finally {

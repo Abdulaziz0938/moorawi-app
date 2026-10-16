@@ -7,13 +7,14 @@ import UserAvatar from "./UserAvatar";
 import VipAvatar from "./ui/VipAvatar";
 import { Header, Spinner, Empty } from "./VisitsSheet";
 import { Heart, Users, Star } from "lucide-react";
+import { getActiveToken } from "../lib/session";
 
 interface Props { onClose: () => void; onUserClick?: (id: any) => void; }
 
 export default function RelationsSheet({ onClose, onUserClick }: Props) {
   useBackButton(true, onClose);
   const deviceId = getDeviceId();
-  const relations = useQuery(api.relationships.myRelations, { tokenOverride: deviceId } as any);
+  const relations = useQuery(api.relationships.myRelations, { tokenOverride: getActiveToken() ?? deviceId } as any);
 
   return (
     <div className="fixed inset-0 z-[160] bg-gradient-to-b from-slate-900 to-black flex flex-col" dir="rtl">

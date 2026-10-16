@@ -5,13 +5,14 @@ import { getDeviceId } from "../lib/device";
 import { useBackButton } from "../lib/hooks/useBackButton";
 import { Header } from "./VisitsSheet";
 import { Loader2, Bell, Check, CheckCheck } from "lucide-react";
+import { getActiveToken } from "../lib/session";
 
 interface Props { onClose: () => void; }
 
 export default function SystemNotifSheet({ onClose }: Props) {
   useBackButton(true, onClose);
   const deviceId = getDeviceId();
-  const notifs = useQuery(api.notifications.listMine, { tokenOverride: deviceId });
+  const notifs = useQuery(api.notifications.listMine, { tokenOverride: getActiveToken() ?? deviceId });
   const markRead = useMutation(api.notifications.markRead);
 
   return (
@@ -31,7 +32,7 @@ export default function SystemNotifSheet({ onClose }: Props) {
             <button
               key={n._id}
               onClick={() => {
-                if (!n.readAt) markRead({ notificationId: n._id, tokenOverride: deviceId });
+                if (!n.readAt) markRead({ notificationId: n._id, tokenOverride: getActiveToken() ?? deviceId });
                 // Action handling
                 if (n.actionType === "open_rooms") window.location.hash = "#rooms";
               }}

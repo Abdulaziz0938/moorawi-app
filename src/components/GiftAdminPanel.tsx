@@ -11,10 +11,11 @@ import { smartUpload } from "../lib/uploadAssets";
 import { processImage } from "../lib/imageProcessor";
 import { dialog } from "../lib/dialog";
 import { X, Loader2, Globe, Music, Heart, Video, Gift, Coins } from "lucide-react";
+import { getActiveToken } from "../lib/session";
 
 export default function GiftsAdmin() {
   const deviceId = getDeviceId();
-  const gifts = useQuery(api.gifts.listAllAdmin, { tokenOverride: deviceId });
+  const gifts = useQuery(api.gifts.listAllAdmin, { tokenOverride: getActiveToken() ?? deviceId });
   const createGift = useMutation(api.gifts.createGift);
   const removeGift = useMutation(api.gifts.removeGift);
 
@@ -53,7 +54,7 @@ export default function GiftsAdmin() {
         mediaUrl: result.url,
         mediaType,
         forceGlobal,
-        tokenOverride: deviceId,
+        tokenOverride: getActiveToken() ?? deviceId,
       });
       setName(""); setPrice(100); setCategory("classic");
       setForceGlobal(false);
@@ -142,7 +143,7 @@ export default function GiftsAdmin() {
                   {g.isRelationship && <Heart size={10} className="text-pink-400 fill-pink-400" />}
                 </div>
               </div>
-              <button onClick={() => { dialog.confirm("حذف هذه الهدية؟", () => { removeGift({ giftId: g._id, tokenOverride: deviceId }).catch((e) => dialog.alert(e?.message)); }); }}
+              <button onClick={() => { dialog.confirm("حذف هذه الهدية؟", () => { removeGift({ giftId: g._id, tokenOverride: getActiveToken() ?? deviceId }).catch((e) => dialog.alert(e?.message)); }); }}
                 className="p-2 text-red-400 hover:bg-red-500/20 rounded-full">
                 <X size={16} />
               </button>

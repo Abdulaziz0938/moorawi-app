@@ -15,6 +15,7 @@ import {
   Wand2, Gift, Volume2, Mic2, ImageIcon, Monitor, VolumeX, Check, Loader2, Globe, Heart, Hand,
 } from "lucide-react";
 import SectionTitle from "./ui/SectionTitle";
+import { getActiveToken } from "../lib/session";
 
 export const LAYOUT_ROWS: Record<string, number[]> = {
   "m1":   [1],
@@ -84,7 +85,7 @@ export default function SettingsSheet({
     const next = !localMicReqEnabled;
     setMicReqSaving(true);
     try {
-      await setMicRequestsEnabledMutation({ roomId, enabled: next, tokenOverride: deviceId });
+      await setMicRequestsEnabledMutation({ roomId, enabled: next, tokenOverride: getActiveToken() ?? deviceId });
       setLocalMicReqEnabled(next);
     } catch (e: any) {
       dialog.alert(e?.message || "خطأ");
@@ -105,7 +106,7 @@ export default function SettingsSheet({
   const bgFileRef = useRef<HTMLInputElement>(null);
 
   const handleLayoutChange = async (layout: string) => {
-    try { await updateLayout({ roomId, micLayout: layout, tokenOverride: deviceId }); }
+    try { await updateLayout({ roomId, micLayout: layout, tokenOverride: getActiveToken() ?? deviceId }); }
     catch (e: any) { dialog.alert(e?.message || "خطأ"); }
   };
 
@@ -118,7 +119,7 @@ export default function SettingsSheet({
     setUploading(true);
     try {
       const result = await smartUpload(croppedFile, { allowVideo: false });
-      await updateRoomInfo({ roomId, coverUrl: result.url, tokenOverride: deviceId });
+      await updateRoomInfo({ roomId, coverUrl: result.url, tokenOverride: getActiveToken() ?? deviceId });
       setCoverUrl(result.url);
     } catch (e: any) { dialog.alert(e?.message || "فشل"); }
     finally { setUploading(false); }
@@ -133,7 +134,7 @@ export default function SettingsSheet({
     setUploading(true);
     try {
       const result = await smartUpload(croppedFile, { allowVideo: false });
-      await updateBackground({ roomId, backgroundUrl: result.url, tokenOverride: deviceId });
+      await updateBackground({ roomId, backgroundUrl: result.url, tokenOverride: getActiveToken() ?? deviceId });
       dialog.alert("تم تغيير الخلفية");
     } catch (e: any) { dialog.alert(e?.message || "فشل"); }
     finally { setUploading(false); }
@@ -141,7 +142,7 @@ export default function SettingsSheet({
 
   const handleSaveRoomInfo = async () => {
     setSaving(true);
-    try { await updateRoomInfo({ roomId, name, welcomeMessage: welcome, tokenOverride: deviceId }); dialog.alert("تم الحفظ"); }
+    try { await updateRoomInfo({ roomId, name, welcomeMessage: welcome, tokenOverride: getActiveToken() ?? deviceId }); dialog.alert("تم الحفظ"); }
     catch (e: any) { dialog.alert(e?.message || "خطأ"); }
     finally { setSaving(false); }
   };
@@ -352,7 +353,7 @@ export default function SettingsSheet({
                 <p className="text-white/50 text-[10px]">PNG / JPG</p>
               </div>
             </label>
-            <button onClick={() => updateBackground({ roomId, tokenOverride: deviceId })} disabled={!isOwnerOrMod} className="w-full bg-red-500/70 py-2 rounded-xl text-white text-sm font-bold disabled:opacity-50">
+            <button onClick={() => updateBackground({ roomId, tokenOverride: getActiveToken() ?? deviceId })} disabled={!isOwnerOrMod} className="w-full bg-red-500/70 py-2 rounded-xl text-white text-sm font-bold disabled:opacity-50">
               حذف الخلفية
             </button>
           </div>

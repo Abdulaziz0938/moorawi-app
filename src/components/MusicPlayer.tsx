@@ -8,6 +8,7 @@ import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { getDeviceId } from "../lib/device";
 import { Music, Volume2, VolumeX, Pause, Play, X, Loader2 } from "lucide-react";
+import { getActiveToken } from "../lib/session";
 
 interface Props {
   roomId: Id<"rooms">;
@@ -106,13 +107,13 @@ export default function MusicPlayer({ roomId, variant = "inline" }: Props) {
 
   const handlePause = () => {
     const pos = audioRef.current?.currentTime ?? 0;
-    pauseRoom({ roomId, positionSec: pos, tokenOverride: deviceId }).catch(() => {});
+    pauseRoom({ roomId, positionSec: pos, tokenOverride: getActiveToken() ?? deviceId }).catch(() => {});
   };
   const handleResume = () => {
-    resumeRoom({ roomId, tokenOverride: deviceId }).catch(() => {});
+    resumeRoom({ roomId, tokenOverride: getActiveToken() ?? deviceId }).catch(() => {});
   };
   const handleStop = () => {
-    stopRoom({ roomId, tokenOverride: deviceId }).catch(() => {});
+    stopRoom({ roomId, tokenOverride: getActiveToken() ?? deviceId }).catch(() => {});
   };
 
   return (

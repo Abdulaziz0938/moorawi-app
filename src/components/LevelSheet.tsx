@@ -5,13 +5,14 @@ import { getDeviceId } from "../lib/device";
 import { useBackButton } from "../lib/hooks/useBackButton";
 import { Header, Spinner } from "./VisitsSheet";
 import { Sparkles, Heart, Gem, TrendingUp, Zap } from "lucide-react";
+import { getActiveToken } from "../lib/session";
 
 interface Props { onClose: () => void; }
 
 export default function LevelSheet({ onClose }: Props) {
   useBackButton(true, onClose);
   const deviceId = getDeviceId();
-  const me = useQuery(api.profiles.me, { tokenOverride: deviceId });
+  const me = useQuery(api.profiles.me, { tokenOverride: getActiveToken() ?? deviceId });
 
   if (!me) return null;
 

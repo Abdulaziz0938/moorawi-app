@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { getDeviceId } from "../lib/device";
-import { clearSession } from "../lib/session";
+import { clearSession, getActiveToken } from "../lib/session";
 import { dialog } from "../lib/dialog";
 import { useBackButton } from "../lib/hooks/useBackButton";
 import { Header } from "./VisitsSheet";
@@ -26,7 +26,7 @@ export default function UserSettingsSheet({
 }: Props) {
   useBackButton(true, onClose);
   const deviceId = getDeviceId();
-  const me = useQuery(api.profiles.me, { tokenOverride: deviceId });
+  const me = useQuery(api.profiles.me, { tokenOverride: getActiveToken() ?? deviceId });
 
   const [notifOn, setNotifOn] = useState(
     () => localStorage.getItem("ezo_notif") !== "off"

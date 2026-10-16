@@ -9,13 +9,14 @@ import { dialog } from "../lib/dialog";
 import { useBackButton } from "../lib/hooks/useBackButton";
 import { Header, Spinner } from "./VisitsSheet";
 import { Camera, Upload, Loader2, Check, Clock, ShieldCheck, X, RotateCcw } from "lucide-react";
+import { getActiveToken } from "../lib/session";
 
 interface Props { onClose: () => void; }
 
 export default function VerificationSheet({ onClose }: Props) {
   useBackButton(true, onClose);
   const deviceId = getDeviceId();
-  const me = useQuery(api.profiles.me, { tokenOverride: deviceId });
+  const me = useQuery(api.profiles.me, { tokenOverride: getActiveToken() ?? deviceId });
   const submit = useMutation(api.verification.submit);
 
   const [preview, setPreview] = useState<string | null>(null);
@@ -98,7 +99,7 @@ export default function VerificationSheet({ onClose }: Props) {
       const file = new File([blob], `verify-${Date.now()}.jpg`, { type: "image/jpeg" });
 
       const res = await smartUpload(file, { allowVideo: false });
-      await submit({ imageUrl: res.url, tokenOverride: deviceId });
+      await submit({ imageUrl: res.url, tokenOverride: getActiveToken() ?? deviceId });
       dialog.alert("تم إرسال طلبك — سيتم المراجعة قريباً ✅");
       onClose();
     } catch (e: any) {

@@ -7,6 +7,7 @@ import {
   ChevronRight, Loader2, Download, Users, Building2,
   Search, Filter, TrendingUp, DollarSign, Award,
 } from "lucide-react";
+import { getActiveToken } from "../lib/session";
 
 interface Props {
   onClose: () => void;
@@ -22,12 +23,12 @@ export default function AgencyAdminReport({ onClose }: Props) {
 
   const agenciesData = useQuery(
     api.agencies.adminAgenciesReport,
-    tab === "agencies" ? { tokenOverride: deviceId } : "skip" as any
+    tab === "agencies" ? { tokenOverride: getActiveToken() ?? deviceId } : "skip" as any
   );
 
   const hostsData = useQuery(
     api.agencies.adminSalariesReport,
-    tab === "hosts" ? { tokenOverride: deviceId, month } : "skip" as any
+    tab === "hosts" ? { tokenOverride: getActiveToken() ?? deviceId, month } : "skip" as any
   );
 
   const loading = tab === "agencies" ? agenciesData === undefined : hostsData === undefined;

@@ -78,7 +78,7 @@ export default function ProfilePage({
   const toggleFollow = useMutation(api.follows.toggle);
   const isFollowing = useQuery(
     api.follows.isFollowing,
-    !isMe && userId ? { tokenOverride: deviceId, targetUserId: userId as Id<"users"> } : ("skip" as any)
+    !isMe && userId ? { tokenOverride: getActiveToken() ?? deviceId, targetUserId: userId as Id<"users"> } : ("skip" as any)
   );
 
   const [editingName, setEditingName] = useState(false);
@@ -109,7 +109,7 @@ export default function ProfilePage({
   const [showMyItems, setShowMyItems] = useState(false);
   const [myItemsCategory, setMyItemsCategory] = useState<"frame" | "vehicle" | "entryEffect" | "chatBubble" | "soundWave" | "profileCard">("frame");
 
-  const inventory = useQuery(api.shop.myInventory, { tokenOverride: deviceId });
+  const inventory = useQuery(api.shop.myInventory, { tokenOverride: getActiveToken() ?? deviceId });
   const equipped = useQuery(api.shop.getEquippedAssets, { userId: userId as Id<"users"> });
   const itemCounts = useQuery(api.shop.countUserItems, { userId: userId as Id<"users"> });
   const invCounts: Record<string, number> = {};
@@ -186,7 +186,7 @@ export default function ProfilePage({
     setUploading(true);
     try {
       const result = await smartUpload(croppedFile, { allowVideo: true });
-      await saveAvatar({ avatarUrl: result.url, tokenOverride: deviceId });
+      await saveAvatar({ avatarUrl: result.url, tokenOverride: getActiveToken() ?? deviceId });
       dialog.alert("تم تحديث الصورة");
     } catch (e: any) { dialog.alert(e?.message || "فشل الرفع"); }
     finally { setUploading(false); }
@@ -196,7 +196,7 @@ export default function ProfilePage({
     setUploading(true);
     try {
       const result = await smartUpload(croppedFile, { allowVideo: false });
-      await saveCover({ coverUrl: result.url, tokenOverride: deviceId });
+      await saveCover({ coverUrl: result.url, tokenOverride: getActiveToken() ?? deviceId });
       dialog.alert("تم تحديث الغلاف");
     } catch (e: any) { dialog.alert(e?.message || "فشل الرفع"); }
     finally { setUploading(false); }
@@ -205,7 +205,7 @@ export default function ProfilePage({
     const trimmed = newName.trim();
     if (!trimmed) return;
     try {
-      await updateName({ name: trimmed, tokenOverride: deviceId });
+      await updateName({ name: trimmed, tokenOverride: getActiveToken() ?? deviceId });
       setEditingName(false);
       dialog.alert("تم حفظ الاسم");
     } catch (e: any) { dialog.alert(e?.message || "فشل الحفظ"); }
@@ -217,7 +217,7 @@ export default function ProfilePage({
   const handleRemoveAvatar = async () => {
     setShowAvatarMenu(false);
     dialog.confirm("حذف الصورة؟", async () => {
-      try { await removeAvatar({ tokenOverride: deviceId }); dialog.alert("تم"); }
+      try { await removeAvatar({ tokenOverride: getActiveToken() ?? deviceId }); dialog.alert("تم"); }
       catch (e: any) { dialog.alert(e?.message || "فشل"); }
     }, "", "حذف", "إلغاء");
   };
@@ -399,7 +399,7 @@ export default function ProfilePage({
                   onClick={() => {
                     setShowCoverMenu(false);
                     dialog.confirm("حذف صورة الغلاف؟", async () => {
-                      try { await removeCover({ tokenOverride: deviceId }); dialog.alert("تم الحذف"); }
+                      try { await removeCover({ tokenOverride: getActiveToken() ?? deviceId }); dialog.alert("تم الحذف"); }
                       catch (e: any) { dialog.alert(e?.message || "فشل"); }
                     }, "حذف", "حذف");
                   }}

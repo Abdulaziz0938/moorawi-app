@@ -8,6 +8,7 @@ import { dialog } from "../lib/dialog";
 import { ChevronRight, Search, Loader2, Users, X, Home } from "lucide-react";
 import Card from "./ui/Card";
 import SectionTitle from "./ui/SectionTitle";
+import { getActiveToken } from "../lib/session";
 
 interface Props {
   onClose: () => void;
@@ -31,7 +32,7 @@ export default function RoomSearchScreen({ onClose, onEnter }: Props) {
 
   const handleEnter = async (roomId: Id<"rooms">) => {
     try {
-      await joinRoom({ roomId, tokenOverride: deviceId });
+      await joinRoom({ roomId, tokenOverride: getActiveToken() ?? deviceId });
       onEnter(roomId);
       onClose();
     } catch (e: any) {

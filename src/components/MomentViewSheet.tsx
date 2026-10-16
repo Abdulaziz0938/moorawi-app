@@ -7,6 +7,7 @@ import { dialog } from "../lib/dialog";
 import { useBackButton } from "../lib/hooks/useBackButton";
 import UserAvatar from "./UserAvatar";
 import { X, Heart, Send, Loader2, Check } from "lucide-react";
+import { getActiveToken } from "../lib/session";
 
 interface Props {
   momentId: string;
@@ -17,7 +18,7 @@ interface Props {
 export default function MomentViewSheet({ momentId, onClose, onUserClick }: Props) {
   useBackButton(true, onClose);
   const deviceId = getDeviceId();
-  const moment = useQuery(api.moments.getById, { momentId: momentId as any, tokenOverride: deviceId });
+  const moment = useQuery(api.moments.getById, { momentId: momentId as any, tokenOverride: getActiveToken() ?? deviceId });
   const toggleLike = useMutation(api.moments.toggleLike);
   const addComment = useMutation(api.moments.addComment);
   const [text, setText] = useState("");
@@ -28,7 +29,7 @@ export default function MomentViewSheet({ momentId, onClose, onUserClick }: Prop
     if (!t) return;
     setBusy(true);
     try {
-      await addComment({ momentId: momentId as any, text: t, tokenOverride: deviceId });
+      await addComment({ momentId: momentId as any, text: t, tokenOverride: getActiveToken() ?? deviceId });
       setText("");
     } catch (e: any) { dialog.alert(e?.message || "فشل"); }
     finally { setBusy(false); }
@@ -92,7 +93,7 @@ export default function MomentViewSheet({ momentId, onClose, onUserClick }: Prop
         {/* Like button */}
         <div className="px-4 py-3">
           <button
-            onClick={() => toggleLike({ momentId: momentId as any, tokenOverride: deviceId })}
+            onClick={() => toggleLike({ momentId: momentId as any, tokenOverride: getActiveToken() ?? deviceId })}
             className="flex items-center gap-2 px-4 py-2 rounded-full bg-pink-500/15 text-pink-300 active:scale-95"
           >
             <Heart size={16} fill="currentColor" />

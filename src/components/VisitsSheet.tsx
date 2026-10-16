@@ -7,13 +7,14 @@ import UserAvatar from "./UserAvatar";
 import VipAvatar from "./ui/VipAvatar";
 import { useAssets } from "../lib/assets";
 import { ChevronRight, Loader2, Clock, Eye, User, Crown, Lock, Sparkles } from "lucide-react";
+import { getActiveToken } from "../lib/session";
 
 interface Props { onClose: () => void; onUserClick?: (id: any) => void; mode?: "incoming" | "outgoing"; }
 
 export default function VisitsSheet({ onClose, onUserClick, mode = "incoming" }: Props) {
   // Back handled by parent (MeTab)
   const deviceId = getDeviceId();
-  const me = useQuery(api.profiles.me, { tokenOverride: deviceId });
+  const me = useQuery(api.profiles.me, { tokenOverride: getActiveToken() ?? deviceId });
   const visits = useQuery(
     mode === "incoming" ? api.visits.recent : api.visits.myRecent,
     me ? { userId: me._id } : ("skip" as any)

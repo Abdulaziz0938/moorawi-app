@@ -5,12 +5,13 @@ import { api } from "../../convex/_generated/api";
 import { getDeviceId } from "../lib/device";
 import { dialog } from "../lib/dialog";
 import { Loader2, Check, X } from "lucide-react";
+import { getActiveToken } from "../lib/session";
 
 interface Props { onClose: () => void; }
 
 export default function DailyLoginModal({ onClose }: Props) {
   const deviceId = getDeviceId();
-  const data = useQuery(api.missions.myProgress, { tokenOverride: deviceId });
+  const data = useQuery(api.missions.myProgress, { tokenOverride: getActiveToken() ?? deviceId });
   const config = useQuery(api.dailyLogin.list, {});
   const claim = useMutation(api.missions.claimDailyLogin);
   const [busy, setBusy] = useState(false);
@@ -24,7 +25,7 @@ export default function DailyLoginModal({ onClose }: Props) {
   const handleClaim = async () => {
     setBusy(true);
     try {
-      const res = await claim({ tokenOverride: deviceId });
+      const res = await claim({ tokenOverride: getActiveToken() ?? deviceId });
       dialog.alert(`مبروك! حصلت على ${res.reward} عملة`);
       setTimeout(() => onClose(), 500);
     } catch (e: any) {

@@ -7,6 +7,7 @@ import { dialog } from "../lib/dialog";
 import { useBackButton } from "../lib/hooks/useBackButton";
 import { Header, Spinner, Empty } from "./VisitsSheet";
 import { CheckSquare, Check, Loader2, Gift, Clock, Trophy, Coins } from "lucide-react";
+import { getActiveToken } from "../lib/session";
 
 interface Props { onClose: () => void; }
 
@@ -15,7 +16,7 @@ type Tab = "daily" | "weekly";
 export default function MissionsSheet({ onClose }: Props) {
   useBackButton(true, onClose);
   const deviceId = getDeviceId();
-  const data = useQuery(api.missions.myProgress, { tokenOverride: deviceId });
+  const data = useQuery(api.missions.myProgress, { tokenOverride: getActiveToken() ?? deviceId });
   const claim = useMutation(api.missions.claim);
   const [tab, setTab] = useState<Tab>("daily");
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -23,7 +24,7 @@ export default function MissionsSheet({ onClose }: Props) {
   const handleClaim = async (missionId: string, reward: number) => {
     setBusyId(missionId);
     try {
-      await claim({ missionId: missionId as any, tokenOverride: deviceId });
+      await claim({ missionId: missionId as any, tokenOverride: getActiveToken() ?? deviceId });
       dialog.alert(`تم استلام ${reward} عملة ✅`);
     } catch (e: any) {
       dialog.alert(e?.message || "فشل الاستلام");

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { getDeviceId } from "../lib/device";
-import { getSessionUsername } from "../lib/session";
+import { getSessionUsername, getActiveToken } from "../lib/session";
 import { uploadToCloudinary } from "../lib/cloudinary";
 import { smartUpload } from "../lib/uploadAssets";
 import ImageCropper from "./ImageCropper";
@@ -57,7 +57,7 @@ export default function Onboarding({ onComplete, onBackToAuth }: Props) {
     setError(null);
     try {
       const result = await smartUpload(croppedFile, { allowVideo: false });
-      const url = await saveAvatar({ avatarUrl: result.url, tokenOverride: deviceId });
+      const url = await saveAvatar({ avatarUrl: result.url, tokenOverride: getActiveToken() ?? deviceId });
       setAvatarPreview(url);
     } catch (e: any) {
       setError(e?.message || "فشل رفع الصورة");
@@ -84,7 +84,7 @@ export default function Onboarding({ onComplete, onBackToAuth }: Props) {
         name, username, age, gender, country,
         interests: selectedInterests,
         bio: bio || undefined,
-        tokenOverride: deviceId,
+        tokenOverride: getActiveToken() ?? deviceId,
       });
       onComplete();
     } catch (e: any) {

@@ -3,6 +3,7 @@ import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { getDeviceId } from "../lib/device";
 import { X, Check, Ban, Loader2, Mic } from "lucide-react";
+import { getActiveToken } from "../lib/session";
 
 interface Props {
   roomId: Id<"rooms">;
@@ -19,11 +20,11 @@ export default function MicRequestsSheet({ roomId, onClose }: Props) {
   const loading = requests === undefined;
 
   const handleApprove = (id: Id<"micRequests">) => {
-    approve({ requestId: id, tokenOverride: deviceId }).catch(() => {});
+    approve({ requestId: id, tokenOverride: getActiveToken() ?? deviceId }).catch(() => {});
   };
 
   const handleReject = (id: Id<"micRequests">) => {
-    reject({ requestId: id, tokenOverride: deviceId }).catch(() => {});
+    reject({ requestId: id, tokenOverride: getActiveToken() ?? deviceId }).catch(() => {});
   };
 
   return (

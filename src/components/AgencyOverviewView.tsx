@@ -10,6 +10,7 @@ import Card from "./ui/Card";
 import StatBadge from "./ui/StatBadge";
 import SectionTitle from "./ui/SectionTitle";
 import { ChevronRight, Loader2, Briefcase, Users, Award, Crown, Clock, TrendingUp, Heart, DollarSign, LogOut, Copy, Check, Building2, User, Gem, Gift } from "lucide-react";
+import { getActiveToken } from "../lib/session";
 
 interface Props {
   onClose: () => void;
@@ -21,10 +22,10 @@ type Tab = "info" | "hosts" | "review" | "members";
 
 export default function AgencyOverviewView({ onClose, onShowRequests, onUserClick }: Props) {
   const deviceId = getDeviceId();
-  const me = useQuery(api.profiles.me, { tokenOverride: deviceId });
+  const me = useQuery(api.profiles.me, { tokenOverride: getActiveToken() ?? deviceId });
   const agency = useQuery(
     api.agencies.myAgency,
-    me?.agencyId ? { tokenOverride: deviceId } : "skip" as any
+    me?.agencyId ? { tokenOverride: getActiveToken() ?? deviceId } : "skip" as any
   );
   const [tab, setTab] = useState<Tab>("info");
 
@@ -112,7 +113,7 @@ function AgencyInfo({ agency, isOwner }: any) {
       "هل أنت متأكد من مغادرة الوكالة؟",
       async () => {
         try {
-          await leaveAgency({ tokenOverride: deviceId });
+          await leaveAgency({ tokenOverride: getActiveToken() ?? deviceId });
           dialog.alert("تم مغادرة الوكالة");
         } catch (e: any) {
           dialog.alert(e?.message || "فشل");
@@ -183,7 +184,7 @@ function HostsList({ agencyId, onUserClick }: { agencyId: any; onUserClick?: (id
   const deviceId = getDeviceId();
   const hosts = useQuery(api.agencies.agencyHosts, {
     agencyId,
-    tokenOverride: deviceId,
+    tokenOverride: getActiveToken() ?? deviceId,
   } as any);
 
   if (hosts === undefined) {

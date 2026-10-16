@@ -4,7 +4,7 @@ import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { Mic, Users, Plus, X, Check, Home } from "lucide-react";
 import { getDeviceId } from "../lib/device";
-import { clearSession, hasSession } from "../lib/session";
+import { clearSession, hasSession, getActiveToken } from "../lib/session";
 import { LogOut } from "lucide-react";
 import { dialog } from "../lib/dialog";
 import { Spinner, Empty } from "./VisitsSheet";
@@ -23,8 +23,8 @@ export default function RoomList({ onEnter }: Props) {
     });
   };
   const rooms = useQuery(api.rooms.listPublic);
-  const myRoom = useQuery(api.rooms.myRoom, { tokenOverride: deviceId });
-  const me = useQuery(api.profiles.me, { tokenOverride: deviceId });
+  const myRoom = useQuery(api.rooms.myRoom, { tokenOverride: getActiveToken() ?? deviceId });
+  const me = useQuery(api.profiles.me, { tokenOverride: getActiveToken() ?? deviceId });
   const createRoom = useMutation(api.rooms.create);
   const joinRoom = useMutation(api.rooms.join);
 
@@ -37,7 +37,7 @@ export default function RoomList({ onEnter }: Props) {
     if (!newName.trim()) return;
     setIsCreating(true);
     try {
-      const roomId = await createRoom({ name: newName.trim(), isPrivate: false, tokenOverride: deviceId });
+      const roomId = await createRoom({ name: newName.trim(), isPrivate: false, tokenOverride: getActiveToken() ?? deviceId });
       setNewName(""); setShowCreate(false); onEnter(roomId);
     } catch (e: any) { dialog.alert(e.message || "خطأ"); }
     finally { setIsCreating(false); }
@@ -45,7 +45,7 @@ export default function RoomList({ onEnter }: Props) {
 
   const handleJoin = async (roomId: Id<"rooms">) => {
     try {
-      await joinRoom({ roomId, tokenOverride: deviceId });
+      await joinRoom({ roomId, tokenOverride: getActiveToken() ?? deviceId });
       onEnter(roomId);
     } catch (e: any) { dialog.alert(e.message || "خطأ"); }
   };

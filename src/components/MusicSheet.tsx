@@ -14,6 +14,7 @@ import {
   X, Music, Upload, Trash2, Play, Pause, Pencil, Save,
   Loader2, Volume2, VolumeX,
 } from "lucide-react";
+import { getActiveToken } from "../lib/session";
 
 interface Props {
   roomId: Id<"rooms">;
@@ -23,7 +24,7 @@ interface Props {
 
 export default function MusicSheet({ roomId, onClose, currentTrackId }: Props) {
   const deviceId = getDeviceId();
-  const tracks = useQuery(api.music.listMine, { tokenOverride: deviceId });
+  const tracks = useQuery(api.music.listMine, { tokenOverride: getActiveToken() ?? deviceId });
   const addTrack = useMutation(api.music.addTrack);
   const removeTrack = useMutation(api.music.removeTrack);
   const renameTrack = useMutation(api.music.renameTrack);
@@ -44,7 +45,7 @@ export default function MusicSheet({ roomId, onClose, currentTrackId }: Props) {
       await addTrack({
         name: defaultName || "مقطع",
         url: res.url,
-        tokenOverride: deviceId,
+        tokenOverride: getActiveToken() ?? deviceId,
       });
       dialog.alert("تم رفع المقطع");
     } catch (e: any) {
@@ -58,7 +59,7 @@ export default function MusicSheet({ roomId, onClose, currentTrackId }: Props) {
     dialog.confirm("حذف هذا المقطع؟", async () => {
       setBusy(true);
       try {
-        await removeTrack({ musicId: id, tokenOverride: deviceId });
+        await removeTrack({ musicId: id, tokenOverride: getActiveToken() ?? deviceId });
       } catch (e: any) {
         dialog.alert(e?.message || "فشل");
       } finally {
@@ -71,7 +72,7 @@ export default function MusicSheet({ roomId, onClose, currentTrackId }: Props) {
     if (!editId) return;
     setBusy(true);
     try {
-      await renameTrack({ musicId: editId as any, name: editName, tokenOverride: deviceId });
+      await renameTrack({ musicId: editId as any, name: editName, tokenOverride: getActiveToken() ?? deviceId });
       setEditId(null);
     } catch (e: any) {
       dialog.alert(e?.message || "فشل");
@@ -151,7 +152,7 @@ export default function MusicSheet({ roomId, onClose, currentTrackId }: Props) {
                   <button
                     onClick={async () => {
                       try {
-                        await playForRoom({ roomId, musicId: t._id, tokenOverride: deviceId });
+                        await playForRoom({ roomId, musicId: t._id, tokenOverride: getActiveToken() ?? deviceId });
                       } catch (e: any) {
                         dialog.alert(e?.message || "فشل التشغيل");
                       }

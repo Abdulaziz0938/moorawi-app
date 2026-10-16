@@ -16,6 +16,7 @@ import { Header, Spinner, Empty } from "./VisitsSheet";
 import {
   Gift, Send, Inbox, ChevronLeft, Coins, Home, Clock,
 } from "lucide-react";
+import { getActiveToken } from "../lib/session";
 
 interface Props {
   onClose: () => void;
@@ -49,9 +50,9 @@ export default function GiftHistorySheet({ onClose, onUserClick }: Props) {
   const deviceId = getDeviceId();
   const [tab, setTab] = useState<Tab>("sent");
 
-  const summary = useQuery(api.giftHistory.summary, { tokenOverride: deviceId });
-  const sent = useQuery(api.giftHistory.mySentGifts, { tokenOverride: deviceId, limit: 100 });
-  const received = useQuery(api.giftHistory.myReceivedGifts, { tokenOverride: deviceId, limit: 100 });
+  const summary = useQuery(api.giftHistory.summary, { tokenOverride: getActiveToken() ?? deviceId });
+  const sent = useQuery(api.giftHistory.mySentGifts, { tokenOverride: getActiveToken() ?? deviceId, limit: 100 });
+  const received = useQuery(api.giftHistory.myReceivedGifts, { tokenOverride: getActiveToken() ?? deviceId, limit: 100 });
 
   const list = tab === "sent" ? sent : received;
 

@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import Card from "./ui/Card";
 import SectionTitle from "./ui/SectionTitle";
+import { getActiveToken } from "../lib/session";
 
 type Tab = "host" | "agent";
 type View = "landing" | "joinSearch" | "myRequests" | "createRequest" | "createRequests" | "myAgency";
@@ -27,7 +28,7 @@ interface Props {
 
 export default function AgencyEntryScreen({ initialTab = "host", onClose }: Props) {
   const deviceId = getDeviceId();
-  const me = useQuery(api.profiles.me, { tokenOverride: deviceId });
+  const me = useQuery(api.profiles.me, { tokenOverride: getActiveToken() ?? deviceId });
   const [tab, setTab] = useState<Tab>(initialTab);
   const [view, setView] = useState<View>("landing");
   const [showPending, setShowPending] = useState(false);
@@ -258,7 +259,7 @@ function JoinSearch({ onClose }: { onClose: () => void }) {
   const handleJoin = async () => {
     if (!result) return;
     try {
-      await requestJoin({ agencyId: result._id, tokenOverride: deviceId });
+      await requestJoin({ agencyId: result._id, tokenOverride: getActiveToken() ?? deviceId });
       dialog.alert("تم إرسال طلب الانضمام — انتظر موافقة الوكيل");
       onClose();
     } catch (e: any) {
@@ -353,7 +354,7 @@ function JoinSearch({ onClose }: { onClose: () => void }) {
 // ============================================================
 function CreateRequestsView({ onClose, onBack }: { onClose: () => void; onBack: () => void }) {
   const deviceId = getDeviceId();
-  const reqs = useQuery(api.agencies.myCreateRequests, { tokenOverride: deviceId });
+  const reqs = useQuery(api.agencies.myCreateRequests, { tokenOverride: getActiveToken() ?? deviceId });
 
   return (
     <div className="fixed inset-0 z-[160] bg-gradient-to-b from-slate-900 via-slate-950 to-black flex flex-col" dir="rtl">
@@ -399,10 +400,10 @@ function CreateRequestsView({ onClose, onBack }: { onClose: () => void; onBack: 
 function MyAgencyView({ onClose, tab, onPreviewUser }: { onClose: () => void; tab: Tab; onPreviewUser: (id: any) => void }) {
   const [showRequests, setShowRequests] = useState(false);
   const deviceId = getDeviceId();
-  const me = useQuery(api.profiles.me, { tokenOverride: deviceId });
+  const me = useQuery(api.profiles.me, { tokenOverride: getActiveToken() ?? deviceId });
   const agency = useQuery(
     api.agencies.myAgency,
-    me?.agencyId ? { tokenOverride: deviceId } : "skip" as any
+    me?.agencyId ? { tokenOverride: getActiveToken() ?? deviceId } : "skip" as any
   );
 
   if (showRequests) {
@@ -437,8 +438,8 @@ function MyAgencyView({ onClose, tab, onPreviewUser }: { onClose: () => void; ta
 // ============================================================
 function PendingModal({ onClose }: { onClose: () => void }) {
   const deviceId = getDeviceId();
-  const agencyReqs = useQuery(api.agencies.myRequests, { tokenOverride: deviceId });
-  const createReqs = useQuery(api.agencies.myCreateRequests, { tokenOverride: deviceId });
+  const agencyReqs = useQuery(api.agencies.myRequests, { tokenOverride: getActiveToken() ?? deviceId });
+  const createReqs = useQuery(api.agencies.myCreateRequests, { tokenOverride: getActiveToken() ?? deviceId });
 
   return (
     <div className="fixed inset-0 z-[170] bg-black/80 backdrop-blur-sm flex items-end" onClick={onClose}>

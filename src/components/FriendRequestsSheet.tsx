@@ -9,20 +9,21 @@ import UserAvatar from "./UserAvatar";
 import VipAvatar from "./ui/VipAvatar";
 import { Header } from "./VisitsSheet";
 import { Loader2, Check, X, UserPlus } from "lucide-react";
+import { getActiveToken } from "../lib/session";
 
 interface Props { onClose: () => void; onUserClick?: (id: any) => void; }
 
 export default function FriendRequestsSheet({ onClose, onUserClick }: Props) {
   useBackButton(true, onClose);
   const deviceId = getDeviceId();
-  const requests = useQuery(api.friends.pendingRequests, { tokenOverride: deviceId });
+  const requests = useQuery(api.friends.pendingRequests, { tokenOverride: getActiveToken() ?? deviceId });
   const review = useMutation(api.friends.review);
   const [busyId, setBusyId] = useState<string | null>(null);
 
   const handle = async (req: any, accept: boolean) => {
     setBusyId(req._id);
     try {
-      await review({ requestId: req._id, accept, tokenOverride: deviceId });
+      await review({ requestId: req._id, accept, tokenOverride: getActiveToken() ?? deviceId });
     } catch (e: any) {
       dialog.alert(e?.message || "فشل");
     } finally {
