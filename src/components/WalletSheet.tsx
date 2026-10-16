@@ -3,7 +3,9 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { getActiveToken } from "../lib/session";
 import { dialog } from "../lib/dialog";
-import { X, ChevronRight, Loader2, Coins, Gem, History, CreditCard, ArrowLeftRight, Send, Receipt, Sparkles, Gift } from "lucide-react";
+import { X, ChevronRight, Loader2, Coins, Gem, History, CreditCard, ArrowLeftRight, Send, Receipt, Sparkles, Gift, Users, ShieldCheck } from "lucide-react";
+import AgentMarketSheet from "./AgentMarketSheet";
+import BecomeAgentSheet from "./BecomeAgentSheet";
 import Card from "./ui/Card";
 import StatBadge from "./ui/StatBadge";
 import SectionTitle from "./ui/SectionTitle";
@@ -51,6 +53,8 @@ export default function WalletSheet({ onClose }: Props) {
   const [view, setView] = useState<View>("main");
   const [exchangeInput, setExchangeInput] = useState("");
   const [busy, setBusy] = useState(false);
+  const [showAgentMarket, setShowAgentMarket] = useState(false);
+  const [showBecomeAgent, setShowBecomeAgent] = useState(false);
 
   const coins = balance?.coins ?? 0;
   const diamonds = balance?.diamonds ?? 0;
@@ -96,6 +100,16 @@ export default function WalletSheet({ onClose }: Props) {
 
   return (
     <div className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm flex items-end justify-center" dir="rtl" onClick={onClose}>
+      {showAgentMarket && (
+        <div onClick={(e) => e.stopPropagation()}>
+          <AgentMarketSheet onClose={() => setShowAgentMarket(false)} />
+        </div>
+      )}
+      {showBecomeAgent && (
+        <div onClick={(e) => e.stopPropagation()}>
+          <BecomeAgentSheet onClose={() => setShowBecomeAgent(false)} />
+        </div>
+      )}
       <div
         className="w-full max-w-md bg-gradient-to-b from-slate-900 to-black rounded-t-3xl h-[88dvh] flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
@@ -173,6 +187,26 @@ export default function WalletSheet({ onClose }: Props) {
                         <ArrowLeftRight size={20} className="text-white" />
                       </div>
                       <span className="text-white text-sm font-black">استبدال الماس</span>
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 mt-3">
+                    <button
+                      onClick={() => setShowAgentMarket(true)}
+                      className="rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 p-4 flex flex-col items-center gap-2 active:scale-95 transition shadow-lg"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+                        <Users size={20} className="text-white" />
+                      </div>
+                      <span className="text-white text-sm font-black">شحن عبر وكيل</span>
+                    </button>
+                    <button
+                      onClick={() => setShowBecomeAgent(true)}
+                      className="rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 p-4 flex flex-col items-center gap-2 active:scale-95 transition shadow-lg"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+                        <ShieldCheck size={20} className="text-white" />
+                      </div>
+                      <span className="text-white text-sm font-black">كن وكيلاً</span>
                     </button>
                   </div>
                 </div>

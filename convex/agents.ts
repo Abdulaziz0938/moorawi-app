@@ -295,3 +295,32 @@ export const agentRecharge = mutation({
     };
   },
 });
+
+// ═══════════════════════════════════════════════════════════
+// [ezo-agents] قائمة الوكلاء العامة — للمستخدمين العاديين
+// ═══════════════════════════════════════════════════════════
+export const listPublicAgents = query({
+  args: {},
+  handler: async (ctx) => {
+    const agents = await ctx.db
+      .query("agents")
+      .withIndex("by_active", (q) => q.eq("active", true))
+      .collect();
+    // جلب بيانات المستخدم لكل وكيل
+    const out = [];
+    for (const a of agents) {
+      const user = await ctx.db.get("users", a.userId);
+      if (!user || user.banned) continue;
+      out.push({
+        agentId: a._id,
+        userId: a.userId,
+        name: a.name || user.name || "وكيل",
+        uid: user.uid ?? null,
+        avatarUrl: user.avatarUrl ?? null,
+        vipLevel: (user as any).vipLevel ?? 0,
+        createdAt: a.createdAt,
+      });
+    }
+    return out.sort((x, y) => y.createdAt - x.createdAt);
+  },
+});
