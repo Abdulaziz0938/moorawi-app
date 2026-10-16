@@ -1,5 +1,8 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
+
+// [ezo-sham] عنوان محفظة شام كاش الرسمية
+const SHAM_WALLET = "702c4e686c4f23cb5cf92874427aeb4b";
 import { api } from "../../convex/_generated/api";
 import { getActiveToken } from "../lib/session";
 import { dialog } from "../lib/dialog";
@@ -14,18 +17,8 @@ interface Props {
   onClose: () => void;
 }
 
-type View = "main" | "recharge" | "exchange" | "history";
+type View = "main" | "recharge" | "exchange" | "history" | "requests";
 
-// Ezo recharge packages
-const PACKAGES = [
-  { coins: 1000,   usdCents: 49,    bonus: 0,     label: "USD 0.49" },
-  { coins: 2000,   usdCents: 99,    bonus: 0,     label: "USD 0.99", highlight: true, tag: "مرة واحدة" },
-  { coins: 10000,  usdCents: 499,   bonus: 0,     label: "USD 4.99" },
-  { coins: 20000,  usdCents: 999,   bonus: 0,     label: "USD 9.99" },
-  { coins: 100000, usdCents: 4999,  bonus: 1300,  label: "USD 49.99" },
-  { coins: 200000, usdCents: 9999,  bonus: 4500,  label: "USD 99.99" },
-  { coins: 400000, usdCents: 19999, bonus: 13000, label: "USD 199.99" },
-];
 
 function formatNum(n: number): string {
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(2) + "M";
@@ -46,33 +39,63 @@ export default function WalletSheet({ onClose }: Props) {
   const token = getActiveToken();
   const balance = useQuery(api.wallet.balance, { tokenOverride: token });
   const history = useQuery(api.wallet.transactions, { tokenOverride: token, limit: 50 });
+  const packages = useQuery(api.wallet.listPackages, {});
+  const myRequests = useQuery(api.wallet.myRechargeRequests, { tokenOverride: token, limit: 30 });
 
-  const recharge = useMutation(api.wallet.recharge);
+  const requestRecharge = useMutation(api.wallet.requestRecharge);
   const exchange = useMutation(api.wallet.exchangeDiamonds);
 
   const [view, setView] = useState<View>("main");
   const [exchangeInput, setExchangeInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [showAgentMarket, setShowAgentMarket] = useState(false);
+  const [selectedPkg, setSelectedPkg] = useState<any>(null);
+  const [txnRef, setTxnRef] = useState("");
   const [showBecomeAgent, setShowBecomeAgent] = useState(false);
 
   const coins = balance?.coins ?? 0;
   const diamonds = balance?.diamonds ?? 0;
 
-  const handleRecharge = async (pkg: typeof PACKAGES[number]) => {
+  // يفتح نافذة التأكيد
+  const handleSelectPackage = (pkg: any) => {
+    setSelectedPkg(pkg);
+    setTxnRef("");
+  };
+
+  // يُنفَّذ عند الضغط على "إرسال طلب"
+  const handleSubmitRequest = async () => {
+    if (!selectedPkg) return;
+    const ref = txnRef.trim();
+    if (ref.length < 4) {
+      dialog.alert("أدخل رقم عملية التحويل");
+      return;
+    }
     setBusy(true);
     try {
-      await recharge({
-        amount: pkg.coins + (pkg.bonus ?? 0),
-        usdCents: pkg.usdCents,
-        meta: `شحن ${pkg.coins.toLocaleString()} 💰 (${pkg.label})`,
+      await requestRecharge({
+        packageCode: selectedPkg.code,
+        method: "sham_cash",
+        txnRef: ref,
         tokenOverride: token,
       });
-      dialog.alert(`تم شحن ${pkg.coins.toLocaleString()} عملة ذهبية ✅`);
+      dialog.alert("تم إرسال طلب الشحن. سيتم التحقق خلال دقائق.");
+      setSelectedPkg(null);
+      setTxnRef("");
+      setView("requests");
     } catch (e: any) {
-      dialog.alert(e?.message || "فشل الشحن");
+      dialog.alert(e?.message || "فشل إرسال الطلب");
     } finally {
       setBusy(false);
+    }
+  };
+
+  // نسخ عنوان المحفظة
+  const copyWallet = async () => {
+    try {
+      await navigator.clipboard.writeText(SHAM_WALLET);
+      dialog.alert("تم نسخ العنوان");
+    } catch {
+      dialog.alert(SHAM_WALLET);
     }
   };
 
@@ -100,7 +123,37 @@ export default function WalletSheet({ onClose }: Props) {
 
   return (
     <div className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm flex items-end justify-center" dir="rtl" onClick={onClose}>
-      {showAgentMarket && (
+            {selectedPkg && (
+        <div className="fixed inset-0 z-[110] bg-black/85 backdrop-blur-md flex items-end" dir="rtl" onClick={() => !busy && setSelectedPkg(null)}>
+          <div className="w-full max-w-md mx-auto bg-gradient-to-b from-slate-900 to-black rounded-t-3xl border-t border-emerald-400/40 max-h-[90dvh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-4 border-b border-white/10">
+              <h3 className="text-white text-base font-black">تأكيد طلب الشحن</h3>
+              <button onClick={() => !busy && setSelectedPkg(null)} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white">
+                <X size={16} />
+              </button>
+            </div>
+            <div className="p-4 space-y-4">
+              <div className="rounded-2xl bg-amber-500/15 border border-amber-400/40 p-4 flex items-center gap-3">
+                <Coins size={22} className="text-amber-300" />
+                <span className="text-white font-black tabular-nums" dir="ltr">{selectedPkg.coins.toLocaleString()}</span>
+                <span className="text-emerald-300 font-black ml-auto tabular-nums" dir="ltr">{selectedPkg.label}</span>
+              </div>
+              <button onClick={copyWallet} className="w-full rounded-xl bg-black/40 border border-emerald-400/30 px-3 py-3 flex items-center gap-2">
+                <span className="text-emerald-300 text-[10px] font-black">العنوان:</span>
+                <span className="text-white text-[10px] font-mono flex-1 truncate text-left" dir="ltr">{SHAM_WALLET}</span>
+              </button>
+              <input value={txnRef} onChange={(e) => setTxnRef(e.target.value)} placeholder="رقم عملية التحويل..." className="w-full bg-white/5 border border-white/15 rounded-2xl px-4 py-3 text-white text-sm outline-none" dir="ltr" />
+            </div>
+            <div className="p-4 border-t border-white/10">
+              <button onClick={handleSubmitRequest} disabled={busy || txnRef.trim().length < 4} className="w-full h-14 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black text-sm active:scale-95 disabled:opacity-40 flex items-center justify-center gap-2">
+                {busy ? <Loader2 size={18} className="animate-spin" /> : (<><Send size={18} />إرسال طلب الشحن</>)}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+{showAgentMarket && (
         <div onClick={(e) => e.stopPropagation()}>
           <AgentMarketSheet onClose={() => setShowAgentMarket(false)} />
         </div>
@@ -131,6 +184,7 @@ export default function WalletSheet({ onClose }: Props) {
               {view === "recharge" && "شحن العملات"}
               {view === "exchange" && "استبدال الماس"}
               {view === "history" && "سجل العمليات"}
+              {view === "requests" && "طلبات الشحن"}
             </h2>
           </div>
           <button onClick={onClose} className="p-2 rounded-full hover:bg-white/10 text-white">
@@ -240,6 +294,22 @@ export default function WalletSheet({ onClose }: Props) {
                     <ChevronRight size={18} className="text-white/40 rotate-180" />
                   </div>
                 </Card>
+                {/* Requests entry */}
+                <Card
+                  interactive
+                  onClick={() => setView("requests")}
+                  padding="md"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                        <Receipt size={16} className="text-emerald-300" />
+                      </div>
+                      <span className="text-white text-sm font-bold">طلبات الشحن</span>
+                    </div>
+                    <ChevronRight size={18} className="text-white/40 rotate-180" />
+                  </div>
+                </Card>
               </div>
             )}
 
@@ -247,47 +317,138 @@ export default function WalletSheet({ onClose }: Props) {
           {view === "recharge" && (
               <div className="p-4">
                 <SectionTitle icon={CreditCard} title="الباقات المتاحة" tone="emerald" />
-                <div className="grid grid-cols-2 gap-3">
-                  {PACKAGES.map((pkg, i) => (
-                    <button
-                      key={i}
-                      disabled={busy}
-                      onClick={() => handleRecharge(pkg)}
-                      className={`relative rounded-2xl border p-3 flex flex-col items-center gap-1.5 active:scale-95 transition disabled:opacity-50 ${
-                        pkg.highlight
-                          ? "bg-emerald-500/15 border-emerald-400/50"
-                          : "bg-white/5 border-white/15 hover:bg-white/10"
-                      }`}
-                    >
-                      {pkg.tag && (
-                        <span className="absolute -top-2 right-2 px-2 py-0.5 rounded-full bg-gradient-to-r from-pink-500 to-purple-600 text-white text-[9px] font-black">
-                          {pkg.tag}
-                        </span>
-                      )}
-                      {pkg.bonus > 0 && (
-                        <span className="absolute -top-2 left-2 px-2 py-0.5 rounded-full bg-orange-500 text-white text-[9px] font-black">
-                          +{pkg.bonus}
-                        </span>
-                      )}
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-yellow-600 flex items-center justify-center mt-2">
-                        <Coins size={24} className="text-white" />
-                      </div>
-                      <p className="text-white text-base font-black tabular-nums" dir="ltr">
-                        {pkg.coins.toLocaleString()}
-                      </p>
-                      <p className="text-white/50 text-[10px]">{pkg.label}</p>
-                    </button>
-                  ))}
+
+                {/* تعليمات شام كاش */}
+                <div className="rounded-2xl bg-emerald-500/10 border border-emerald-400/30 p-3 mb-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-7 h-7 rounded-full bg-emerald-500/30 flex items-center justify-center flex-shrink-0">
+                      <Receipt size={14} className="text-emerald-300" />
+                    </div>
+                    <p className="text-emerald-200 text-xs font-black">شحن عبر شام كاش</p>
+                  </div>
+                  <p className="text-white/70 text-[11px] leading-relaxed mb-2">
+                    1) حوّل المبلغ إلى المحفظة التالية<br />
+                    2) احتفظ برقم العملية<br />
+                    3) اختر الباقة وأدخل رقم العملية
+                  </p>
+                  <button
+                    onClick={copyWallet}
+                    className="w-full rounded-xl bg-black/40 border border-emerald-400/30 px-3 py-2 flex items-center gap-2 active:scale-95"
+                  >
+                    <span className="text-emerald-300 text-[10px] font-black flex-shrink-0">العنوان:</span>
+                    <span className="text-white/90 text-[10px] font-mono truncate flex-1 text-left" dir="ltr">
+                      {SHAM_WALLET}
+                    </span>
+                    <span className="text-emerald-300 text-[10px] font-black flex-shrink-0">نسخ</span>
+                  </button>
                 </div>
+
+                {packages === undefined ? (
+                  <div className="flex justify-center py-10">
+                    <Loader2 size={22} className="animate-spin text-white/40" />
+                  </div>
+                ) : packages.length === 0 ? (
+                  <Card tone="default" padding="md">
+                    <p className="text-white/60 text-xs text-center">لا توجد باقات متاحة حالياً</p>
+                  </Card>
+                ) : (
+                  <div className="grid grid-cols-2 gap-3">
+                    {packages.map((pkg: any) => (
+                      <button
+                        key={pkg._id}
+                        disabled={busy}
+                        onClick={() => handleSelectPackage(pkg)}
+                        className={`relative rounded-2xl border p-3 flex flex-col items-center gap-1.5 active:scale-95 transition disabled:opacity-50 ${
+                          pkg.highlight
+                            ? "bg-emerald-500/15 border-emerald-400/50"
+                            : "bg-white/5 border-white/15 hover:bg-white/10"
+                        }`}
+                      >
+                        {pkg.tag && (
+                          <span className="absolute -top-2 right-2 px-2 py-0.5 rounded-full bg-gradient-to-r from-pink-500 to-purple-600 text-white text-[9px] font-black">
+                            {pkg.tag}
+                          </span>
+                        )}
+                        {pkg.bonus > 0 && (
+                          <span className="absolute -top-2 left-2 px-2 py-0.5 rounded-full bg-orange-500 text-white text-[9px] font-black">
+                            +{pkg.bonus.toLocaleString()}
+                          </span>
+                        )}
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-yellow-600 flex items-center justify-center mt-2">
+                          <Coins size={24} className="text-white" />
+                        </div>
+                        <p className="text-white text-base font-black tabular-nums" dir="ltr">
+                          {pkg.coins.toLocaleString()}
+                        </p>
+                        <p className="text-emerald-300 text-sm font-black tabular-nums" dir="ltr">
+                          {pkg.label}
+                        </p>
+                      </button>
+                    ))}
+                  </div>
+                )}
                 <div className="mt-4">
                   <Card tone="emerald" padding="md">
-                    <p className="text-emerald-200 text-[11px] text-center font-bold">
-                      <span className="inline-flex items-center gap-1"><Gift size={14} /> اشحن 0.99$ واحصل على هدايا مجانية</span>
+                    <p className="text-emerald-200 text-[11px] text-center font-bold leading-relaxed">
+                      أرسل طلب الشحن وسيتم مراجعته من الإدارة خلال دقائق
                     </p>
                   </Card>
                 </div>
               </div>
             )}
+
+            {/* ============ MY REQUESTS ============ */}
+          {view === "requests" && (
+            <div className="p-4 space-y-2">
+              {myRequests === undefined ? (
+                <div className="flex justify-center py-10">
+                  <Loader2 size={22} className="animate-spin text-white/40" />
+                </div>
+              ) : myRequests.length === 0 ? (
+                <div className="text-center py-12 text-white/40">
+                  <Receipt size={40} className="mx-auto mb-3 opacity-30" />
+                  <p className="text-sm font-black">لا توجد طلبات بعد</p>
+                  <p className="text-[11px] mt-1">اذهب إلى "شحن العملات" لإرسال طلب</p>
+                </div>
+              ) : (
+                myRequests.map((r: any) => {
+                  const statusMap: any = {
+                    pending: { label: "قيد المراجعة", color: "text-amber-300", bg: "bg-amber-500/15 border-amber-400/30" },
+                    approved: { label: "مقبول", color: "text-emerald-300", bg: "bg-emerald-500/15 border-emerald-400/30" },
+                    rejected: { label: "مرفوض", color: "text-red-300", bg: "bg-red-500/15 border-red-400/30" },
+                  };
+                  const st = statusMap[r.status] ?? statusMap.pending;
+                  return (
+                    <div key={r._id} className={`rounded-2xl border p-3 ${st.bg}`}>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className={`text-[11px] font-black ${st.color}`}>{st.label}</span>
+                        <span className="text-white/40 text-[10px] tabular-nums" dir="ltr">
+                          {new Date(r.createdAt).toLocaleString("ar-SY")}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Coins size={16} className="text-amber-400" />
+                        <span className="text-white font-black text-sm tabular-nums" dir="ltr">
+                          {r.totalCoins.toLocaleString()}
+                        </span>
+                        <span className="text-white/50 text-[11px]">عملة</span>
+                        {r.priceSYP > 0 && (
+                          <span className="text-white/40 text-[10px] ml-auto tabular-nums" dir="ltr">
+                            {r.priceSYP.toLocaleString()} SYP
+                          </span>
+                        )}
+                      </div>
+                      {r.adminNote && (
+                        <p className="text-white/60 text-[10px] mt-2 pt-2 border-t border-white/10">
+                          {r.adminNote}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          )}
 
             {/* ============ EXCHANGE ============ */}
           {view === "exchange" && (

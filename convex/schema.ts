@@ -1165,6 +1165,7 @@ export default defineSchema({
     priceSYP: v.number(),
     priceUSD: v.optional(v.number()),
     method: v.string(),
+    txnRef: v.optional(v.string()),     // [ezo-sham] رقم عملية التحويل
     receiptUrl: v.optional(v.string()),
     note: v.optional(v.string()),
     status: v.union(

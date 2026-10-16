@@ -218,6 +218,7 @@ export const requestRecharge = mutation({
     priceSYP: v.optional(v.number()),
     priceUSD: v.optional(v.number()),
     method: v.optional(v.string()),
+    txnRef: v.optional(v.string()),
     receiptUrl: v.optional(v.string()),
     note: v.optional(v.string()),
     tokenOverride: v.optional(v.string()),
@@ -249,6 +250,17 @@ export const requestRecharge = mutation({
       throw new ConvexError({ code: "BAD_REQUEST", message: "حدد باقة أو قيمة" });
     }
 
+    const method = args.method ?? "sham_cash";
+    if (method === "sham_cash") {
+      const ref = (args.txnRef ?? "").trim();
+      if (ref.length < 4) {
+        throw new ConvexError({
+          code: "BAD_REQUEST",
+          message: "أدخل رقم عملية التحويل (4 أحرف على الأقل)",
+        });
+      }
+    }
+
     const now = Date.now();
     const id = await ctx.db.insert("rechargeRequests", {
       userId: me._id,
@@ -260,7 +272,8 @@ export const requestRecharge = mutation({
       totalCoins: coins + bonus,
       priceSYP,
       priceUSD,
-      method: args.method ?? "sham_cash",
+      method,
+      txnRef: args.txnRef?.trim() || undefined,
       receiptUrl: args.receiptUrl,
       note: args.note,
       status: "pending",
