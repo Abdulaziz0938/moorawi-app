@@ -7,9 +7,10 @@ import { clearSession, getActiveToken } from "../lib/session";
 import { dialog } from "../lib/dialog";
 import { useBackButton } from "../lib/hooks/useBackButton";
 import { Header } from "./VisitsSheet";
+import BlockListSheet from "./BlockListSheet";
 import {
   User, Globe, Bell, Shield, Info, LogOut, ChevronLeft,
-  Camera, Pencil, Lock, MessageSquare, BookOpen,
+  Camera, Pencil, Lock, MessageSquare, BookOpen, Ban,
 } from "lucide-react";
 
 interface Props {
@@ -31,6 +32,7 @@ export default function UserSettingsSheet({
   const [notifOn, setNotifOn] = useState(
     () => localStorage.getItem("ezo_notif") !== "off"
   );
+  const [showBlockList, setShowBlockList] = useState(false);
 
   const toggleNotif = () => {
     const next = !notifOn;
@@ -53,6 +55,12 @@ export default function UserSettingsSheet({
             label="تعديل الملف الشخصي"
             sub="الصورة، الاسم، النبذة"
             onClick={() => { onClose(); onOpenProfile(); }}
+          />
+          <Row
+            icon={Ban}
+            label="قائمة الحظر"
+            sub="إدارة المستخدمين المحظورين"
+            onClick={() => setShowBlockList(true)}
           />
           <Row
             icon={Shield}
@@ -122,6 +130,10 @@ export default function UserSettingsSheet({
           Ezo Group Voice Chat Rooms © 2026
         </p>
       </div>
+
+      {showBlockList && (
+        <BlockListSheet onClose={() => setShowBlockList(false)} />
+      )}
     </div>
   );
 }
@@ -179,6 +191,7 @@ function ToggleRow({ icon: Icon, label, sub, value, onToggle }: any) {
         <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white transition-all ${
           value ? "right-0.5" : "right-[22px]"
         }`} />
+
       </div>
     </button>
   );
