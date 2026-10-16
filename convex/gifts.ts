@@ -286,29 +286,41 @@ export const sendBatch = mutation({
       throw new ConvexError({ code: "BAD_REQUEST", message: "رصيدك غير كافٍ" });
     }
 
-    // خصم مرة واحدة من المرسل
-    await ctx.db.patch("users", user._id, {
-      coins: myCoins - totalPrice,
-      totalSent: (user.totalSent ?? 0) + totalPrice,
-    });
-
     // batchId موحد لكل معاملات الدفعة (للتجميع في الواجهة)
     const batchId = `b_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
-    // لكل مستلم: زيادة charms + totalReceived + insert transaction
+    // التحقق مما إذا كان المرسل يهدي نفسه ضمن الدفعة
+    const isSelfIncluded = targets.some((t) => t._id === user._id);
+    const perTarget = gift.price * args.quantity;
+
+    // خصم مرة واحدة من المرسل مع دمج حصته إن كان ضمن المستلمين (Self-Gift Safe)
+    const selfDiamondRatio = user.agencyId ? 0.3 : 0.7;
+    await ctx.db.patch("users", user._id, {
+      coins: myCoins - totalPrice,
+      totalSent: (user.totalSent ?? 0) + totalPrice,
+      ...(isSelfIncluded ? {
+        charms: (user.charms ?? 0) + perTarget,
+        totalReceived: (user.totalReceived ?? 0) + perTarget,
+        diamonds: (user.diamonds ?? 0) + Math.floor(perTarget * selfDiamondRatio),
+        ...(user.agencyId ? { hostIncomeMonth: (user.hostIncomeMonth ?? 0) + perTarget } : {}),
+      } : {}),
+    });
+
+    // لكل مستلم آخر: زيادة charms + totalReceived + insert transaction
     for (const target of targets) {
-      const perTarget = gift.price * args.quantity;
-      await ctx.db.patch("users", target._id, {
-        charms: (target.charms ?? 0) + perTarget,
-        totalReceived: (target.totalReceived ?? 0) + perTarget,
-        // [moorawi-agency] 30% ماس للمضيف، 70% لعضو عادي
-        ...(target.agencyId ? {
-          diamonds: (target.diamonds ?? 0) + Math.floor(perTarget * 0.3),
-          hostIncomeMonth: (target.hostIncomeMonth ?? 0) + perTarget,
-        } : {
-          diamonds: (target.diamonds ?? 0) + Math.floor(perTarget * 0.7),
-        }),
-      });
+      if (target._id !== user._id) {
+        await ctx.db.patch("users", target._id, {
+          charms: (target.charms ?? 0) + perTarget,
+          totalReceived: (target.totalReceived ?? 0) + perTarget,
+          // [moorawi-agency] 30% ماس للمضيف، 70% لعضو عادي
+          ...(target.agencyId ? {
+            diamonds: (target.diamonds ?? 0) + Math.floor(perTarget * 0.3),
+            hostIncomeMonth: (target.hostIncomeMonth ?? 0) + perTarget,
+          } : {
+            diamonds: (target.diamonds ?? 0) + Math.floor(perTarget * 0.7),
+          }),
+        });
+      }
       // [ezo-charms] زيادة عدّاد الجلسة على المايك
       await bumpSeatCharms(ctx, args.roomId, target._id, perTarget);
       await ctx.db.insert("giftTransactions", {
