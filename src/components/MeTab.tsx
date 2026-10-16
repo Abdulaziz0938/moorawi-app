@@ -25,6 +25,8 @@ import LanguageSheet from "./LanguageSheet";
 import UserSettingsSheet from "./UserSettingsSheet";
 import ProfilePage from "./ProfilePage";
 import AdminPanelSheet from "./AdminPanelSheet";
+import AgentPanelSheet from "./AgentPanelSheet";
+import AgentRechargeSheet from "./AgentRechargeSheet";
 import MedalsSheet from "./MedalsSheet";
 import Card from "./ui/Card";
 import StatBadge from "./ui/StatBadge";
@@ -47,6 +49,8 @@ export default function MeTab({ onEnterRoom }: Props) {
   const [showGiftHistory, setShowGiftHistory] = useState(false);
   const [showShop, setShowShop] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
+  const [showAgentPanel, setShowAgentPanel] = useState(false);
+  const [showAgentRecharge, setShowAgentRecharge] = useState(false);
   const [showMedals, setShowMedals] = useState(false);
   const [showVip, setShowVip] = useState(false);
   const [showAgency, setShowAgency] = useState<null | "host" | "agent">(null);
@@ -66,7 +70,11 @@ export default function MeTab({ onEnterRoom }: Props) {
   // [moorawi-global] ربط زر الشحن من GiftSheet
   useEffect(() => {
     (window as any).__ezo_openWallet = () => setShowWallet(true);
-    return () => { delete (window as any).__ezo_openWallet; };
+    (window as any).__ezo_openAgentRecharge = () => setShowAgentRecharge(true);
+    return () => {
+      delete (window as any).__ezo_openWallet;
+      delete (window as any).__ezo_openAgentRecharge;
+    };
   }, []);
 
   // [moorawi-nav] Back button closes each overlay
@@ -74,6 +82,8 @@ export default function MeTab({ onEnterRoom }: Props) {
   useBackButton(showWallet, () => setShowWallet(false));
   useBackButton(showShop, () => setShowShop(false));
   useBackButton(showAdmin, () => setShowAdmin(false));
+  useBackButton(showAgentPanel, () => setShowAgentPanel(false));
+  useBackButton(showAgentRecharge, () => setShowAgentRecharge(false));
   useBackButton(showMedals, () => setShowMedals(false));
   useBackButton(showVip, () => setShowVip(false));
   useBackButton(showAgency !== null, () => setShowAgency(null));
@@ -88,6 +98,11 @@ export default function MeTab({ onEnterRoom }: Props) {
   useBackButton(showSupporterVip, () => setShowSupporterVip(false));
   useBackButton(showLanguage, () => setShowLanguage(false));
   useBackButton(showUserSettings, () => setShowUserSettings(false));
+
+  const myAgent = useQuery(
+    api.agents.myAgent,
+    me?._id ? { tokenOverride: token } : "skip" as any,
+  );
 
   if (!me) {
     return (
@@ -189,6 +204,8 @@ export default function MeTab({ onEnterRoom }: Props) {
           }}
           isOwner={me.userNumber === 1 || me.adminRole === "super"}
           onOpenAdmin={() => setShowAdmin(true)}
+          onOpenAgentPanel={myAgent ? () => setShowAgentPanel(true) : undefined}
+          isRechargeAgent={!!myAgent}
         />
 
         <div className="h-24" />
@@ -199,6 +216,8 @@ export default function MeTab({ onEnterRoom }: Props) {
       {showGiftHistory && <GiftHistorySheet onClose={() => setShowGiftHistory(false)} />}
       {showShop && <ShopSheet onClose={() => setShowShop(false)} />}
       {showAdmin && <AdminPanelSheet onClose={() => setShowAdmin(false)} />}
+      {showAgentPanel && <AgentPanelSheet onClose={() => setShowAgentPanel(false)} />}
+      {showAgentRecharge && <AgentRechargeSheet onClose={() => setShowAgentRecharge(false)} />}
       {showMedals && <MedalsSheet onClose={() => setShowMedals(false)} />}
       {showVip && <VipShopSheet onClose={() => setShowVip(false)} />}
       {showAgency && <AgencyEntryScreen initialTab={showAgency} onClose={() => setShowAgency(null)} />}

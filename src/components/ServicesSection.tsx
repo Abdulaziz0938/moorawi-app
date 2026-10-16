@@ -27,6 +27,8 @@ interface Props {
   onOpenLanguage?: () => void;
   onLogout?: () => void;
   onOpenMedals?: () => void;
+  onOpenAgentPanel?: () => void;
+  isRechargeAgent?: boolean;
   isOwner?: boolean;
 }
 
@@ -51,6 +53,8 @@ export default function ServicesSection({
   onOpenLanguage,
   onLogout,
   onOpenMedals,
+  onOpenAgentPanel,
+  isRechargeAgent,
   isOwner,
 }: Props) {
   const soon = (name: string) => dialog.alert(`${name} — قريباً`);
@@ -194,6 +198,23 @@ export default function ServicesSection({
           تسجيل الخروج
         </button>
       )}
-    </div>
+          {/* [ezo-agents] زر لوحة وكيل الشحن — يظهر فقط للوكلاء */}
+      {isRechargeAgent && onOpenAgentPanel && (
+        <button
+          onClick={onOpenAgentPanel}
+          className="w-full mt-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 p-4 flex items-center gap-3 text-right active:scale-95 transition shadow-lg"
+        >
+          <div className="w-11 h-11 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+            <ShieldCheck size={22} className="text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-white text-sm font-black">لوحة وكيل الشحن</p>
+            <p className="text-white/70 text-[10px] mt-0.5">أرسل عملات، راقب الرصيد والسجل</p>
+          </div>
+          <ChevronLeft size={18} className="text-white/70" />
+        </button>
+      )}
+
+</div>
   );
 }
