@@ -193,6 +193,11 @@ export const endStream = mutation({
       endedAt: Date.now(),
       updatedAt: Date.now(),
     });
+
+    // جدولة تنظيف النتيجة بعد 8 ثوانٍ لضمان إغلاق المودال لدى الجميع
+    await ctx.scheduler.runAfter(8000, internal.live.clearPKResult, {
+      streamId: args.streamId,
+    });
     return { ok: true };
   },
 });
@@ -604,5 +609,22 @@ export const latestGift = query({
       totalValue: recent.totalValue,
       createdAt: recent.createdAt,
     };
+  },
+});
+
+// دالة تنظيف نتائج الـ PK بعد انتهاء فترة العرض (8 ثوانٍ)
+export const clearPKResult = internalMutation({
+  args: { streamId: v.id("liveStreams") },
+  handler: async (ctx, args) => {
+    const stream = await ctx.db.get("liveStreams", args.streamId);
+    if (!stream || !stream.pkResult) return;
+    // مسح النتيجة فقط إذا مضى عليها أكثر من 6 ثوانٍ ولم تبدأ جولة جديدة
+    if (!stream.pkActive && Date.now() - (stream.pkResult.endedAt || 0) >= 6000) {
+      await ctx.db.patch("liveStreams", args.streamId, {
+        pkResult: undefined,
+        hostScore: 0,
+        coHostScore: 0,
+      });
+    }
   },
 });
