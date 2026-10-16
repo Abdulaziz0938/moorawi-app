@@ -83,9 +83,16 @@ export default function ProfilePage({
 
   const [editingName, setEditingName] = useState(false);
   const [dmConversationId, setDmConversationId] = useState<string | null>(null);
-  const [friendSent, setFriendSent] = useState(false);
+  const [friendSentLocal, setFriendSentLocal] = useState(false);
+  const friendStatus = useQuery(
+    api.friends.isFriend,
+    !isMe && userId ? { otherUserId: userId as Id<"users">, tokenOverride: getActiveToken() ?? deviceId } : ("skip" as any)
+  );
+  const friendSent = friendSentLocal || friendStatus?.status === "sent" || friendStatus?.status === "friends";
+  const setFriendSent = setFriendSentLocal;
   const openWith = useMutation(api.directMessages.openWith);
   const sendFriendRequest = useMutation(api.friends.sendRequest);
+
   const assets = useAssets();
   const assetsFull = useAssetsFull();
   const [newName, setNewName] = useState("");
@@ -112,7 +119,8 @@ export default function ProfilePage({
 
   useEffect(() => {
     if (!isMe && userId) {
-      recordVisit({ visitedUserId: userId as Id<"users">, source: "profile", tokenOverride: getActiveToken() ?? deviceId }).catch(() => {});
+      recordVisit({ visitedUserId: userId as Id<"users">, source: "profile", tokenOverride: getActiveToken() ?? deviceId })
+        .catch((e) => console.warn("[visit] record failed:", e));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, isMe]);
@@ -806,7 +814,7 @@ export default function ProfilePage({
                 try {
                   const res = await openWith({
                     otherUserId: userId as Id<"users">,
-                    tokenOverride: deviceId,
+                    tokenOverride: getActiveToken() ?? deviceId,
                   });
                   setDmConversationId(res.conversationId);
                 } catch (e: any) {
@@ -827,7 +835,7 @@ export default function ProfilePage({
                   }
                   await sendFriendRequest({
                     targetUserId: userId as Id<"users">,
-                    tokenOverride: deviceId,
+                    tokenOverride: getActiveToken() ?? deviceId,
                   });
                   setFriendSent(true);
                   dialog.alert("✅ تم إرسال طلب الصداقة");
