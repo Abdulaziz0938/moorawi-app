@@ -385,17 +385,15 @@ export default function MiniProfileSheet({
                 {roomId && !isTargetOnMic && (
                   <ActionBtn icon={<Mic size={22} />} onClick={onInviteToMic} />
                 )}
-                {(canKick || canBan || canPromoteOrDemote) && (
-                  <ActionBtn
-                    icon={<MoreVertical size={22} />}
-                    onClick={() => setShowMore((v) => !v)}
-                  />
-                )}
+                <ActionBtn
+                  icon={<MoreVertical size={22} />}
+                  onClick={() => setShowMore((v) => !v)}
+                />
               </div>
             )}
 
             {/* More actions drawer (kicks, bans, promotions) */}
-            {showMore && roomId && !isMeViewer && (
+            {showMore && !isMeViewer && (
               <div className="mx-4 mb-4 p-2 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center gap-2 flex-wrap">
                 {canKick && isTargetOnMic && (
                   <SmallAction icon={<MicOff size={18} />} label="كتم" onClick={onMute} />
