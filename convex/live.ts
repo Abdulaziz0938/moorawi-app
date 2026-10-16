@@ -304,6 +304,7 @@ export const invitePK = mutation({
   args: {
     streamId: v.id("liveStreams"),
     coHostId: v.id("users"),
+    mode: v.optional(v.union(v.literal("casual"), v.literal("pk"))),
     tokenOverride: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
@@ -323,12 +324,16 @@ export const invitePK = mutation({
     }
     // ملاحظة: التكامل الحقيقي يحتاج قناة إشعارات أو قبول فوري
     // هنا نضعها كدعوة معطّلة حتى يقبل الطرف الآخر
+    const mode = args.mode ?? "pk";
+    const isPK = mode === "pk";
     await ctx.db.insert("systemNotifications", {
       userId: args.coHostId,
       type: "system",
-      title: "دعوة PK",
-      body: `${me.name ?? "مذيعة"} تدعوك لمنافسة PK`,
-      actionType: "pk_invite",
+      title: isPK ? "دعوة منافسة PK" : "دعوة للجلوس",
+      body: isPK
+        ? `${me.name ?? "مذيعة"} تدعوك لمنافسة PK`
+        : `${me.name ?? "مذيعة"} تدعوك للجلوس معها في بثها`,
+      actionType: isPK ? "pk_invite" : "cohost_invite",
       actionPayload: stream._id,
       createdAt: Date.now(),
     });
@@ -704,8 +709,8 @@ export const acceptPK = mutation({
     if (stream.hostId === me._id) {
       throw new ConvexError({ code: "FORBIDDEN", message: "لا يمكنك قبول دعوتك" });
     }
-    if (stream.pkActive) {
-      throw new ConvexError({ code: "CONFLICT", message: "PK نشط بالفعل" });
+    if (stream.coHostId) {
+      throw new ConvexError({ code: "CONFLICT", message: "البث مشغول بالفعل" });
     }
 
     const notifs = await ctx.db
@@ -714,7 +719,7 @@ export const acceptPK = mutation({
       .collect();
     const invite = notifs.find(
       (n: any) =>
-        n.actionType === "pk_invite" &&
+        (n.actionType === "pk_invite" || n.actionType === "cohost_invite") &&
         String(n.actionPayload) === String(args.streamId) &&
         !n.readAt
     );
@@ -741,23 +746,32 @@ export const acceptPK = mutation({
     }
 
     const now = Date.now();
-    const duration = 300;
-    await ctx.db.patch("liveStreams", args.streamId, {
+    const isPK = invite.actionType === "pk_invite";
+    const duration = isPK ? 300 : 0;
+
+    const patch: any = {
       coHostId: me._id,
       coHostName: me.name ?? "ضيفة",
       coHostAvatarUrl: me.avatarUrl,
       coHostVipLevel: activeVipLevel(me),
-      pkActive: true,
-      pkStartedAt: now,
-      pkDurationSec: duration,
-      hostScore: 0,
-      coHostScore: 0,
       updatedAt: now,
-    });
+    };
+    if (isPK) {
+      patch.pkActive = true;
+      patch.pkStartedAt = now;
+      patch.pkDurationSec = duration;
+      patch.hostScore = 0;
+      patch.coHostScore = 0;
+    } else {
+      patch.pkActive = false;
+      patch.pkStartedAt = undefined;
+      patch.pkDurationSec = undefined;
+    }
+    await ctx.db.patch("liveStreams", args.streamId, patch);
 
     await ctx.db.patch("systemNotifications", invite._id, { readAt: now });
 
-    return { ok: true, endAt: now + duration * 1000 };
+    return { ok: true, endAt: isPK ? now + duration * 1000 : 0 };
   },
 });
 
@@ -785,6 +799,36 @@ export const declinePK = mutation({
     if (invite) {
       await ctx.db.patch("systemNotifications", invite._id, { readAt: Date.now() });
     }
+    return { ok: true };
+  },
+});
+
+// ═══════════════════════════════════════════════════════════
+// [ezo-live-binmo] إنهاء جلسة الجلوس العادي (بدون PK)
+// ═══════════════════════════════════════════════════════════
+export const endCoHost = mutation({
+  args: {
+    streamId: v.id("liveStreams"),
+    tokenOverride: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
+    if (!me) throw new ConvexError({ code: "UNAUTHORIZED" });
+    const stream = await ctx.db.get("liveStreams", args.streamId);
+    if (!stream) throw new ConvexError({ code: "NOT_FOUND" });
+    if (stream.hostId !== me._id && stream.coHostId !== me._id) {
+      throw new ConvexError({ code: "FORBIDDEN" });
+    }
+    if (stream.pkActive) {
+      throw new ConvexError({ code: "CONFLICT", message: "أنهِ PK أولاً" });
+    }
+    await ctx.db.patch("liveStreams", args.streamId, {
+      coHostId: undefined,
+      coHostName: undefined,
+      coHostAvatarUrl: undefined,
+      coHostVipLevel: undefined,
+      updatedAt: Date.now(),
+    });
     return { ok: true };
   },
 });
