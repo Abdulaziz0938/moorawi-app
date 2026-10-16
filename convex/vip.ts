@@ -409,3 +409,52 @@ export const seedBenefits = internalMutation({
     return { ok: true, created, skipped };
   },
 });
+
+
+
+import { mutation, query } from "./_generated/server";
+import { v } from "convex/values";
+
+/**
+ * عملية شحن رصيد المستخدم وتحديث مستوى الـ VIP تلقائياً (طريقة Binmo)
+ */
+export const rechargeAndUpgradeUser = mutation({
+  args: {
+    userId: v.id("users"),
+    addedCoins: v.number(),
+    usdAmount: v.optional(v.number()), // القيمة بالدولار إن وجدت
+  },
+  handler: async (ctx, args) => {
+    const user = await ctx.db.get(args.userId);
+    if (!user) throw new Error("المستخدم غير موجود");
+
+    const currentRecharged = user.totalRecharged || 0;
+    const newTotalRecharged = currentRecharged + args.addedCoins;
+    
+    const currentCoins = user.coins || 0;
+    const newCoins = currentCoins + args.addedCoins;
+
+    const currentPurchased = user.totalPurchased || 0;
+    const addedCents = args.usdAmount ? Math.round(args.usdAmount * 100) : Math.round((args.addedCoins / 700) * 100);
+    const newTotalPurchased = currentPurchased + addedCents;
+
+    // حساب مستوى الـ VIP الجديد بناءً على العتبات التراكمية
+    const newVipLevel = calculateBinmoVipLevel(newTotalRecharged);
+
+    // تحديث بيانات المستخدم في قاعدة البيانات
+    await ctx.db.patch(args.userId, {
+      coins: newCoins,
+      totalRecharged: newTotalRecharged,
+      totalPurchased: newTotalPurchased,
+      vipLevel: newVipLevel,
+    });
+
+    return {
+      success: true,
+      previousLevel: user.vipLevel || 0,
+      newVipLevel,
+      newTotalRecharged,
+      newCoins,
+    };
+  },
+});
