@@ -6,6 +6,7 @@ import Dashboard from "./components/Dashboard";
 import LiveBroadcaster from "./components/live/LiveBroadcaster";
 import LiveViewer from "./components/live/LiveViewer";
 import BannerPopup from "./components/BannerPopup";
+import BgRemovalPrompt from "./components/BgRemovalPrompt";
 import PKAcceptModal from "./components/live/PKAcceptModal";
 import RoomView from "./components/RoomView";
 import Onboarding from "./components/Onboarding";
@@ -163,6 +164,7 @@ function App() {
       )}
       {showDailyLogin && <DailyLoginModal onClose={() => setShowDailyLogin(false)} />}
       {me.profileComplete && <InstallBanner />}
+      <BgRemovalPrompt />
       {me.profileComplete && (
         <BannerPopup
           onOpenRoom={(roomId) => setCurrentRoomId(roomId)}

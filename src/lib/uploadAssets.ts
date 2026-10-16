@@ -1,6 +1,7 @@
 // [ezo-upload] معالج موحد — يكتشف النوع + يحسّن + يرفع
 import { processImage } from "./imageProcessor";
 import { uploadToCloudinary } from "./cloudinary";
+import { askBgRemoval, getRememberedChoice } from "./bgRemovalPrompt";
 
 export interface SmartUploadOptions {
   /** الفئة (vehicle, frame, ...) — تُستخدم لضبط القواعد */
@@ -30,7 +31,7 @@ export async function smartUpload(
 ): Promise<SmartUploadResult> {
   const {
     allowVideo = true,
-    skipBgRemoval = false,
+    skipBgRemoval: skipBgRemovalExplicit,
     maxVideoBytes = 100 * 1024 * 1024,
   } = options;
 
@@ -67,7 +68,20 @@ export async function smartUpload(
   }
 
   // ═══ صورة ═══
-  // معالجة: إزالة خلفية سوداء + تحويل WebP + تصغير
+  // قرار الإزالة: صريح من الـ caller → استخدمه. وإلا: تذكر/اسأل
+  let skipBgRemoval: boolean;
+  if (skipBgRemovalExplicit !== undefined) {
+    skipBgRemoval = skipBgRemovalExplicit;
+  } else {
+    const remembered = getRememberedChoice();
+    if (remembered !== null) {
+      skipBgRemoval = !remembered;
+    } else {
+      const wantsRemove = await askBgRemoval(file);
+      skipBgRemoval = !wantsRemove;
+    }
+  }
+  // معالجة: إزالة الخلفية (اختياري) + تحويل WebP + تصغير
   const processed = await processImage(file, { skipBgRemoval });
 
   console.log(
