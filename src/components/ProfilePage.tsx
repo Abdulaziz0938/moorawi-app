@@ -241,7 +241,7 @@ export default function ProfilePage({
   ];
 
   return (
-    <div className="fixed inset-0 z-[200] flex flex-col" dir="rtl">
+    <div className="fixed inset-0 z-[200] flex flex-col bg-black" dir="rtl">
       {vipBgUrl ? (
         <div
           className="absolute inset-0 bg-cover bg-center"
@@ -250,7 +250,7 @@ export default function ProfilePage({
       ) : (
         <div className={`absolute inset-0 bg-gradient-to-b ${bgGradient}`} />
       )}
-      <div className="absolute inset-0 bg-black/55" />
+      <div className="absolute inset-0 bg-black/75" />
 
       <div
         className="relative z-10 flex flex-col h-full overflow-y-auto"
@@ -982,7 +982,7 @@ export default function ProfilePage({
           onClose={() => setListMode(null)}
           onUserClick={(id) => {
             setListMode(null);
-            dialog.alert("فتح ملف " + id + " قريباً");
+            setViewUserId(id);
           }}
         />
       )}
