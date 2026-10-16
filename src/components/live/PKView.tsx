@@ -40,7 +40,9 @@ export default function PKView({
   }, [pkStartedAt, pkDurationSec]);
 
   const total = hostScore + coHostScore;
-  const hostPct = total === 0 ? 50 : (hostScore / total) * 100;
+  const rawHostPct = total === 0 ? 50 : (hostScore / total) * 100;
+  // تثبيت النسبة بين 8% و 92% لمنع اختفاء أي طرف
+  const hostPct = total === 0 ? 50 : Math.min(Math.max(rawHostPct, 8), 92);
   const coHostPct = 100 - hostPct;
 
   const mins = Math.floor(remaining / 60);
@@ -110,15 +112,38 @@ export default function PKView({
           </div>
         </div>
 
-        {/* Progress bar */}
-        <div className="flex h-2">
+        {/* Progress bar — 60fps GPU with clash hit spark */}
+        <div className="relative flex h-2.5 overflow-hidden rounded-b-xl bg-black/40">
           <div
-            className="bg-gradient-to-r from-cyan-400 to-blue-500 transition-all duration-500"
-            style={{ width: `${hostPct}%`, boxShadow: "0 0 12px rgba(34,211,238,0.6)" }}
+            className="h-full bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-500"
+            style={{
+              width: `${hostPct}%`,
+              transition: "width 350ms cubic-bezier(0.22, 1, 0.36, 1)",
+              willChange: "width",
+              transform: "translateZ(0)",
+              boxShadow: "0 0 14px rgba(34,211,238,0.8)",
+            }}
           />
           <div
-            className="bg-gradient-to-l from-pink-400 to-rose-500 transition-all duration-500"
-            style={{ width: `${coHostPct}%`, boxShadow: "0 0 12px rgba(236,72,153,0.6)" }}
+            className="h-full bg-gradient-to-l from-pink-400 via-rose-500 to-purple-600"
+            style={{
+              width: `${coHostPct}%`,
+              transition: "width 350ms cubic-bezier(0.22, 1, 0.36, 1)",
+              willChange: "width",
+              transform: "translateZ(0)",
+              boxShadow: "0 0 14px rgba(244,63,94,0.8)",
+            }}
+          />
+
+          {/* Clash Spark Indicator (نقطة التماس المضيئة) */}
+          <div
+            className="absolute top-0 bottom-0 w-1.5 -ml-[3px] bg-white rounded-full pointer-events-none"
+            style={{
+              left: `${hostPct}%`,
+              transition: "left 350ms cubic-bezier(0.22, 1, 0.36, 1)",
+              boxShadow: "0 0 8px #ffffff, 0 0 16px rgba(255,255,255,0.9)",
+              willChange: "left",
+            }}
           />
         </div>
       </div>
