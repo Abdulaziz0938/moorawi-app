@@ -15,6 +15,7 @@ import AgencyRequestsPanel from "./AgencyRequestsPanel";
 import VerificationPanel from "./VerificationPanel";
 import AgencyAdminReport from "./AgencyAdminReport";
 import AdminAgentsSheet from "./AdminAgentsSheet";
+import AdminRechargeSheet from "./AdminRechargeSheet";
 
 interface Props {
   onClose: () => void;
@@ -49,6 +50,7 @@ export default function AdminPanelSheet({ onClose }: Props) {
   const [showAdminReport, setShowAdminReport] = useState(false);
   const [showVerifications, setShowVerifications] = useState(false);
   const [showAgentAdmin, setShowAgentAdmin] = useState(false);
+  const [showRechargeAdmin, setShowRechargeAdmin] = useState(false);
 
   const [grantAmount, setGrantAmount] = useState("10000");
 
@@ -204,11 +206,11 @@ export default function AdminPanelSheet({ onClose }: Props) {
               </div>
             )}
             <h2 className="text-white text-lg font-black">
-              {showAgentAdmin ? "إدارة وكلاء الشحن" : showVerifications ? "طلبات التوثيق" : showAdminReport ? "تقارير الوكالات" : showAgencyRequests ? "طلبات الوكالات" : showAssets ? "الأصول والصور" : editUser ? `تعديل: ${editUser.username}` : "لوحة المالك"}
+              {showRechargeAdmin ? "طلبات الشحن" : showAgentAdmin ? "إدارة وكلاء الشحن" : showVerifications ? "طلبات التوثيق" : showAdminReport ? "تقارير الوكالات" : showAgencyRequests ? "طلبات الوكالات" : showAssets ? "الأصول والصور" : editUser ? `تعديل: ${editUser.username}` : "لوحة المالك"}
             </h2>
           </div>
           <div className="flex items-center gap-1">
-            {!editUser && !showAssets && !showAgencyRequests && !showAdminReport && !showVerifications && !showAgentAdmin && (
+            {!editUser && !showAssets && !showAgencyRequests && !showAdminReport && !showVerifications && !showAgentAdmin && !showRechargeAdmin && (
               <>
                 <button
                   onClick={() => setShowVerifications(true)}
@@ -226,6 +228,16 @@ export default function AdminPanelSheet({ onClose }: Props) {
                     <ShieldCheck size={18} className="text-emerald-300" />
                   </div>
                   <span className="text-white text-[11px] font-black">وكلاء الشحن</span>
+                </button>
+
+                <button
+                  onClick={() => setShowRechargeAdmin(true)}
+                  className="flex-1 min-w-0 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-400/30 p-3 flex flex-col items-center gap-1.5 active:scale-95 transition"
+                >
+                  <div className="w-10 h-10 rounded-full bg-cyan-500/30 flex items-center justify-center">
+                    <Coins size={18} className="text-cyan-300" />
+                  </div>
+                  <span className="text-white text-[11px] font-black">طلبات الشحن</span>
                 </button>
                 <button
                   onClick={() => setShowAdminReport(true)}
@@ -260,7 +272,9 @@ export default function AdminPanelSheet({ onClose }: Props) {
         <div className="flex-1 overflow-y-auto">
 
           {/* ============ VERIFICATIONS ============ */}
-          {showAgentAdmin ? (
+          {showRechargeAdmin ? (
+            <AdminRechargeSheet onClose={() => setShowRechargeAdmin(false)} />
+          ) : showAgentAdmin ? (
             <AdminAgentsSheet onClose={() => setShowAgentAdmin(false)} />
           ) : showVerifications ? (
             <VerificationPanel token={token} />
