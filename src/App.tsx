@@ -5,6 +5,7 @@ import type { Id } from "../convex/_generated/dataModel";
 import Dashboard from "./components/Dashboard";
 import LiveBroadcaster from "./components/live/LiveBroadcaster";
 import LiveViewer from "./components/live/LiveViewer";
+import PKAcceptModal from "./components/live/PKAcceptModal";
 import RoomView from "./components/RoomView";
 import Onboarding from "./components/Onboarding";
 import AuthScreen from "./components/AuthScreen";
@@ -20,6 +21,7 @@ function App() {
   const [currentRoomId, setCurrentRoomId] = useState<Id<"rooms"> | null>(null);
   const [currentLiveId, setCurrentLiveId] = useState<string | null>(null);
   const [isLiveHost, setIsLiveHost] = useState(false);
+  const [isLiveCoHost, setIsLiveCoHost] = useState(false);
   const [showDailyLogin, setShowDailyLogin] = useState(false);
 
   // Back button → leave room
@@ -27,6 +29,13 @@ function App() {
   const [refreshKey, setRefreshKey] = useState(0);
 
   const me = useQuery(api.auth.me, { tokenOverride: token });
+  const notifs = useQuery(
+    api.notifications.listMine,
+    me ? { tokenOverride: token } : "skip" as any
+  );
+  const pkInvite = !currentLiveId && !currentRoomId
+    ? (notifs ?? []).find((n: any) => n.actionType === "pk_invite" && !n.readAt)
+    : null;
 
   // [moorawi-missions] Daily login check — once per 24h
   const dailyStatus = useQuery(
@@ -102,6 +111,17 @@ function App() {
             onEnd={() => {
               setCurrentLiveId(null);
               setIsLiveHost(false);
+              setIsLiveCoHost(false);
+            }}
+          />
+        ) : isLiveCoHost ? (
+          <LiveBroadcaster
+            streamId={currentLiveId}
+            asCoHost
+            onEnd={() => {
+              setCurrentLiveId(null);
+              setIsLiveHost(false);
+              setIsLiveCoHost(false);
             }}
           />
         ) : (
@@ -122,6 +142,17 @@ function App() {
           onStartLive={(id) => {
             setIsLiveHost(true);
             setCurrentLiveId(id);
+          }}
+        />
+      )}
+      {pkInvite && (
+        <PKAcceptModal
+          streamId={String(pkInvite.actionPayload)}
+          onDecline={() => {}}
+          onAccepted={(sid) => {
+            setIsLiveHost(false);
+            setIsLiveCoHost(true);
+            setCurrentLiveId(sid);
           }}
         />
       )}

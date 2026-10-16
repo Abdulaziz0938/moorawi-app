@@ -12,16 +12,16 @@ import { X, Swords, Loader2, Search } from "lucide-react";
 interface Props {
   streamId: string;
   onClose: () => void;
-  onPKStarted: () => void;
+  onInviteSent: (coHostName: string) => void;
 }
 
-export default function PKInviteSheet({ streamId, onClose, onPKStarted }: Props) {
+export default function PKInviteSheet({ streamId, onClose, onInviteSent }: Props) {
   const deviceId = getDeviceId();
   const token = getActiveToken() ?? deviceId;
 
   // قائمة المذيعات النشطات (لبث PK)
   const liveStreams = useQuery(api.live.listLive, { limit: 30 });
-  const startPK = useMutation(api.live.startPK);
+  const invitePK = useMutation(api.live.invitePK);
 
   const [selectedHostId, setSelectedHostId] = useState<Id<"users"> | null>(null);
   const [selectedHostName, setSelectedHostName] = useState("");
@@ -43,15 +43,14 @@ export default function PKInviteSheet({ streamId, onClose, onPKStarted }: Props)
     }
     setBusy(true);
     try {
-      await startPK({
+      await invitePK({
         streamId: streamId as Id<"liveStreams">,
         coHostId: selectedHostId,
-        durationSec: 300, // 5 دقائق
         tokenOverride: token,
       });
-      onPKStarted();
+      onInviteSent(selectedHostName);
     } catch (e: any) {
-      dialog.alert(e?.message || "فشل بدء PK");
+      dialog.alert(e?.message || "فشل إرسال الدعوة");
     } finally {
       setBusy(false);
     }
@@ -75,7 +74,7 @@ export default function PKInviteSheet({ streamId, onClose, onPKStarted }: Props)
             </div>
             <div>
               <h2 className="text-white text-base font-black">منافسة PK</h2>
-              <p className="text-white/50 text-[10px]">5 دقائق — الهدايا تحدد الفائزة</p>
+              <p className="text-white/50 text-[10px]">5 دقائق — سيتم إرسال دعوة للطرف الآخر</p>
             </div>
           </div>
           <button
@@ -161,7 +160,7 @@ export default function PKInviteSheet({ streamId, onClose, onPKStarted }: Props)
               ) : (
                 <>
                   <Swords size={18} />
-                  ابدأ المنافسة ضد {selectedHostName}
+                  أرسل دعوة إلى {selectedHostName}
                 </>
               )}
             </button>

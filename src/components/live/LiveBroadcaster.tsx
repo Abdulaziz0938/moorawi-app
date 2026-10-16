@@ -20,6 +20,7 @@ import {
 interface Props {
   streamId: string;
   onEnd: () => void;
+  asCoHost?: boolean;
 }
 
 interface Comment {
@@ -31,7 +32,7 @@ interface Comment {
   createdAt: number;
 }
 
-export default function LiveBroadcaster({ streamId, onEnd }: Props) {
+export default function LiveBroadcaster({ streamId, onEnd, asCoHost = false }: Props) {
   const deviceId = getDeviceId();
   const token = getActiveToken() ?? deviceId;
 
@@ -50,6 +51,9 @@ export default function LiveBroadcaster({ streamId, onEnd }: Props) {
   const coHostVideoRef = useRef<HTMLDivElement>(null);
   const coHostUidRef = useRef<string | null>(null);
   const pkActiveRef = useRef<boolean>(false);
+  const wasPkActiveRef = useRef<boolean>(false);
+  const localRef = asCoHost ? coHostVideoRef : videoRef;
+  const remoteRef = asCoHost ? videoRef : coHostVideoRef;
   const [agoraReady, setAgoraReady] = useState(false);
   const [cameraOn, setCameraOn] = useState(false);
   const [micOn, setMicOn] = useState(true);
@@ -76,17 +80,22 @@ export default function LiveBroadcaster({ streamId, onEnd }: Props) {
   }, [stream?.pkActive]);
 
   useEffect(() => {
+    const wasActive = wasPkActiveRef.current;
+    wasPkActiveRef.current = !!stream?.pkActive;
     pkActiveRef.current = !!stream?.pkActive;
     if (!stream?.pkActive) {
-      if (coHostVideoRef.current) coHostVideoRef.current.innerHTML = "";
+      if (remoteRef.current) remoteRef.current.innerHTML = "";
       coHostUidRef.current = null;
+      if (asCoHost && wasActive) {
+        onEnd();
+      }
       return;
     }
     const t = setTimeout(() => {
       const remotes = agoraManager.getRemoteUsers();
       for (const u of remotes) {
-        if (u.videoTrack && coHostVideoRef.current) {
-          u.videoTrack.play(coHostVideoRef.current);
+        if (u.videoTrack && remoteRef.current) {
+          u.videoTrack.play(remoteRef.current);
           coHostUidRef.current = String(u.uid);
           break;
         }
@@ -117,7 +126,7 @@ export default function LiveBroadcaster({ streamId, onEnd }: Props) {
             if (!pkActiveRef.current) return;
             const uid = String(user.uid);
             if (coHostUidRef.current && coHostUidRef.current !== uid) return;
-            const el = coHostVideoRef.current;
+            const el = remoteRef.current;
             if (!el) return;
             user.videoTrack.play(el);
             coHostUidRef.current = uid;
@@ -125,13 +134,24 @@ export default function LiveBroadcaster({ streamId, onEnd }: Props) {
           (user: any, mediaType?: "audio" | "video" | "datachannel") => {
             if (coHostUidRef.current !== String(user.uid)) return;
             if (mediaType === "audio") return;
-            if (coHostVideoRef.current) coHostVideoRef.current.innerHTML = "";
+            if (remoteRef.current) remoteRef.current.innerHTML = "";
             coHostUidRef.current = null;
           },
           { asHost: true }
         );
         // Publish mic by default
         await agoraManager.publishMicrophone();
+        if (asCoHost) {
+          try {
+            const track = await agoraManager.publishCamera("720p");
+            if (track && localRef.current) {
+              track.play(localRef.current, { mirror: true });
+              if (mounted) setCameraOn(true);
+            }
+          } catch (e) {
+            console.warn("[live] coHost auto-camera failed:", e);
+          }
+        }
         if (mounted) setAgoraReady(true);
       } catch (e: any) {
         console.error("[live] join error:", e);
@@ -148,8 +168,8 @@ export default function LiveBroadcaster({ streamId, onEnd }: Props) {
   const handleToggleCamera = async () => {
     try {
       const track = await agoraManager.toggleCamera(!cameraOn, "720p");
-      if (track && videoRef.current) {
-        track.play(videoRef.current, { mirror: frontCamera });
+      if (track && localRef.current) {
+        track.play(localRef.current, { mirror: frontCamera });
         setCameraOn(true);
       } else {
         setCameraOn(false);
@@ -171,8 +191,8 @@ export default function LiveBroadcaster({ streamId, onEnd }: Props) {
     try {
       await agoraManager.unpublishCamera();
       const track = await agoraManager.publishCamera("720p");
-      if (track && videoRef.current) {
-        track.play(videoRef.current, { mirror: !frontCamera });
+      if (track && localRef.current) {
+        track.play(localRef.current, { mirror: !frontCamera });
       }
       setFrontCamera(!frontCamera);
     } catch (e) {
@@ -182,6 +202,11 @@ export default function LiveBroadcaster({ streamId, onEnd }: Props) {
 
   // ═══ End stream ═══
   const handleEnd = async () => {
+    if (asCoHost) {
+      await agoraManager.leave();
+      onEnd();
+      return;
+    }
     dialog.confirm("إنهاء البث؟", async () => {
       try {
         await endStream({ streamId: streamId as Id<"liveStreams">, tokenOverride: token });
@@ -301,7 +326,7 @@ export default function LiveBroadcaster({ streamId, onEnd }: Props) {
         <div className="flex-1" />
 
         {/* PK invite button — يظهر فقط عندما لا يوجد PK نشط */}
-        {!stream.pkActive && (
+        {!stream.pkActive && !asCoHost && (
           <button
             onClick={() => setShowPKInvite(true)}
             className="w-9 h-9 rounded-full bg-black/60 backdrop-blur border border-amber-400/40 flex items-center justify-center text-amber-300 active:scale-95"
@@ -451,9 +476,9 @@ export default function LiveBroadcaster({ streamId, onEnd }: Props) {
         <PKInviteSheet
           streamId={streamId}
           onClose={() => setShowPKInvite(false)}
-          onPKStarted={() => {
+          onInviteSent={(name: string) => {
             setShowPKInvite(false);
-            dialog.alert("⚔️ بدأت المنافسة!");
+            dialog.alert(`تم إرسال الدعوة إلى ${name}`);
           }}
         />
       )}
