@@ -5,7 +5,7 @@ import { getActiveToken } from "../lib/session";
 import { useAssets, useAssetsFull } from "../lib/assets";
 import type { Id } from "../../convex/_generated/dataModel";
 import { dialog } from "../lib/dialog";
-import {
+import { AlertTriangle,
   Gift, MessageCircle, UserPlus, Mic, MicOff, ArrowDown,
   Ban, Crown, Loader2, Shield, Copy, Check, Car, Frame,
   ChevronLeft, MoreVertical,
@@ -16,6 +16,7 @@ import MedalsRow from "./MedalsRow";
 import { levelFromValue } from "../lib/levels";
 import VipAvatar from "./ui/VipAvatar";
 import VipTopOrnament from "./ui/VipTopOrnament";
+import ReportSheet from "./ReportSheet";
 
 interface Props {
   userId: string;
@@ -94,6 +95,7 @@ export default function MiniProfileSheet({
   const [showMore, setShowMore] = useState(false);
   const [dmConversationId, setDmConversationId] = useState<string | null>(null);
   const [friendBusy, setFriendBusy] = useState(false);
+  const [showReport, setShowReport] = useState(false);
   const assets = useAssets();
   const assetsFull = useAssetsFull();
 
@@ -413,6 +415,12 @@ export default function MiniProfileSheet({
                 {canBan && (
                   <SmallAction icon={<Ban size={18} />} label="حظر" onClick={onBan} tone="danger" />
                 )}
+                <SmallAction
+                  icon={<AlertTriangle size={18} />}
+                  label="إبلاغ"
+                  onClick={() => setShowReport(true)}
+                  tone="danger"
+                />
               </div>
             )}
 
@@ -420,6 +428,15 @@ export default function MiniProfileSheet({
           </div>
         </div>
       </div>
+
+      {showReport && (
+        <ReportSheet
+          userId={userId as any}
+          userName={profile?.name ?? "مستخدم"}
+          roomId={roomId}
+          onClose={() => setShowReport(false)}
+        />
+      )}
     </div>
   );
 }
