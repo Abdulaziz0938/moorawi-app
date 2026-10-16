@@ -378,6 +378,7 @@ export const updateItem = mutation({
     frameOffsetY: v.optional(v.number()),
     imageUrl: v.optional(v.string()),
     previewUrl: v.optional(v.string()),
+    previewType: v.optional(v.union(v.literal("image"), v.literal("video"))),
     price: v.optional(v.number()),
     active: v.optional(v.boolean()),
     tokenOverride: v.optional(v.string()),
@@ -398,6 +399,8 @@ export const updateItem = mutation({
     }
     if (args.nameEn !== undefined) patch.nameEn = args.nameEn;
     if (args.imageUrl !== undefined) patch.imageUrl = args.imageUrl;
+    if (args.previewUrl !== undefined) patch.previewUrl = args.previewUrl;
+    if (args.previewType !== undefined) patch.previewType = args.previewType;
     if (args.previewUrl !== undefined) patch.previewUrl = args.previewUrl;
     if (args.frameScale !== undefined) patch.frameScale = args.frameScale;
     if (args.frameOffsetX !== undefined) patch.frameOffsetX = args.frameOffsetX;
@@ -423,6 +426,8 @@ export const createItem = mutation({
     price: v.number(),
     rarity: v.string(),
     imageUrl: v.optional(v.string()),
+    previewUrl: v.optional(v.string()),
+    previewType: v.optional(v.union(v.literal("image"), v.literal("video"))),
     durationDays: v.optional(v.number()),
     active: v.optional(v.boolean()),
     frameScale: v.optional(v.number()),
@@ -449,6 +454,8 @@ export const createItem = mutation({
       name,
       nameEn: args.nameEn,
       imageUrl: args.imageUrl ?? "",
+      previewUrl: args.previewUrl ?? args.imageUrl,
+      previewType: args.previewType ?? "image",
       price: args.price,
       rarity: args.rarity as any,
       durationDays: args.durationDays,
@@ -515,6 +522,7 @@ export const updateItemAssets = mutation({
     nameEn: v.optional(v.string()),
     imageUrl: v.optional(v.string()),
     previewUrl: v.optional(v.string()),
+    previewType: v.optional(v.union(v.literal("image"), v.literal("video"))),
     frameScale: v.optional(v.number()),
     frameOffsetX: v.optional(v.number()),
     frameOffsetY: v.optional(v.number()),
@@ -541,6 +549,8 @@ export const updateItemAssets = mutation({
     }
     if (args.nameEn !== undefined) patch.nameEn = args.nameEn;
     if (args.imageUrl !== undefined) patch.imageUrl = args.imageUrl;
+    if (args.previewUrl !== undefined) patch.previewUrl = args.previewUrl;
+    if (args.previewType !== undefined) patch.previewType = args.previewType;
     if (args.previewUrl !== undefined) patch.previewUrl = args.previewUrl;
     if (args.frameScale !== undefined) patch.frameScale = args.frameScale;
     if (args.frameOffsetX !== undefined) patch.frameOffsetX = args.frameOffsetX;

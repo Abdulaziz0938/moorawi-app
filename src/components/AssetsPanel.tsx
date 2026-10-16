@@ -361,7 +361,13 @@ function ShopTab({ token }: { token: string | null }) {
     setBusyId(itemId);
     try {
       const res = await smartUpload(file, { allowVideo: true });
-      await updateItem({ itemId, imageUrl: res.url, tokenOverride: token ?? undefined });
+      await updateItem({
+        itemId,
+        imageUrl: res.url,
+        previewUrl: res.url,
+        previewType: res.mediaType,
+        tokenOverride: token ?? undefined,
+      });
       dialog.alert("تم الرفع");
     } catch (e: any) { dialog.alert(e?.message || "فشل"); }
     finally { setBusyId(null); }
@@ -432,7 +438,7 @@ function ShopTab({ token }: { token: string | null }) {
             <div key={it._id} className="rounded-2xl border border-white/10 bg-white/5 p-3 flex items-center gap-3">
               <div className="w-12 h-12 rounded-lg overflow-hidden bg-black/40 flex items-center justify-center flex-shrink-0">
                 {isBusy ? <Loader2 size={16} className="animate-spin text-white/50" /> :
-                  it.imageUrl ? <img src={it.imageUrl} alt="" className="w-full h-full object-contain" /> :
+                  it.previewType === "video" || (it.imageUrl ?? "").match(/\.(mp4|webm|mov)$/i) ? <video src={it.previewUrl ?? it.imageUrl} className="w-full h-full object-contain" muted autoPlay loop playsInline /> : it.imageUrl ? <img src={it.imageUrl} alt="" className="w-full h-full object-contain" /> :
                   <ShoppingBag size={20} className="text-white/40" />}
               </div>
               <div className="flex-1 min-w-0">
