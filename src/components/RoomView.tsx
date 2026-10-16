@@ -176,6 +176,19 @@ function bubbleClass(vip: number): string {
   return g[Math.min(vip - 1, g.length - 1)];
 }
 
+// [ezo-mention] يلوّن @name بلون ذهبي
+function renderTextWithMentions(text: string | null | undefined) {
+  if (!text) return null;
+  const parts = text.split(/(@\S+)/g);
+  return parts.map((part, i) =>
+    part.startsWith("@") ? (
+      <span key={i} className="text-amber-300 font-black">{part}</span>
+    ) : (
+      <span key={i}>{part}</span>
+    )
+  );
+}
+
 export default function RoomView({ roomId, onLeave }: Props) {
   const recordRoomEntry = useMutation(api.visits.recordRoomEntry);
   useEffect(() => {
@@ -1096,7 +1109,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
                       }`}>
                         {isAnnouncement && <span className="text-amber-200 text-[10px]">📢</span>}
                         <span className={`text-[10px] font-bold ${isAnnouncement ? "text-amber-200" : "text-white/60"}`}>
-                          {m.text ?? ""}
+                          {renderTextWithMentions(m.text)}
                         </span>
                       </div>
                     </div>
@@ -1141,7 +1154,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
                       </div>
                       {(m.text || m.imageUrl) && (
                         <div className="inline-block max-w-[85%] rounded-2xl rounded-tr-sm bg-white/5 border border-white/10 px-2.5 py-1.5">
-                          {m.text && <p className="text-white text-xs break-words whitespace-pre-wrap leading-relaxed">{m.text}</p>}
+                          {m.text && <p className="text-white text-xs break-words whitespace-pre-wrap leading-relaxed">{renderTextWithMentions(m.text)}</p>}
                           {m.imageUrl && <img src={m.imageUrl} alt="" className="mt-1 rounded-lg max-w-[160px] max-h-[160px] object-cover" />}
                         </div>
                       )}
