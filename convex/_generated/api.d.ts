@@ -10,6 +10,7 @@
 
 import type * as adminPanel from "../adminPanel.js";
 import type * as agencies from "../agencies.js";
+import type * as agents from "../agents.js";
 import type * as assets from "../assets.js";
 import type * as auth from "../auth.js";
 import type * as banners from "../banners.js";
@@ -22,6 +23,7 @@ import type * as follows from "../follows.js";
 import type * as friends from "../friends.js";
 import type * as giftHistory from "../giftHistory.js";
 import type * as gifts from "../gifts.js";
+import type * as lib_agents from "../lib/agents.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_levels from "../lib/levels.js";
 import type * as lib_vip from "../lib/vip.js";
@@ -30,6 +32,7 @@ import type * as live from "../live.js";
 import type * as medals from "../medals.js";
 import type * as messages from "../messages.js";
 import type * as mics from "../mics.js";
+import type * as migrations from "../migrations.js";
 import type * as missions from "../missions.js";
 import type * as moments from "../moments.js";
 import type * as music from "../music.js";
@@ -63,6 +66,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   adminPanel: typeof adminPanel;
   agencies: typeof agencies;
+  agents: typeof agents;
   assets: typeof assets;
   auth: typeof auth;
   banners: typeof banners;
@@ -75,6 +79,7 @@ declare const fullApi: ApiFromModules<{
   friends: typeof friends;
   giftHistory: typeof giftHistory;
   gifts: typeof gifts;
+  "lib/agents": typeof lib_agents;
   "lib/auth": typeof lib_auth;
   "lib/levels": typeof lib_levels;
   "lib/vip": typeof lib_vip;
@@ -83,6 +88,7 @@ declare const fullApi: ApiFromModules<{
   medals: typeof medals;
   messages: typeof messages;
   mics: typeof mics;
+  migrations: typeof migrations;
   missions: typeof missions;
   moments: typeof moments;
   music: typeof music;
