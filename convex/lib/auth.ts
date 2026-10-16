@@ -3,6 +3,21 @@ import type { MutationCtx, QueryCtx } from "../_generated/server";
 import type { Doc, Id } from "../_generated/dataModel";
 
 const FIRST_USER_NUMBER = 1000;
+const FIRST_UID = 100000;  // [ezo-uid] first 6-digit UID
+
+export async function getNextUid(ctx: MutationCtx): Promise<string> {
+  const counter = await ctx.db
+    .query("counters")
+    .withIndex("by_name", (q) => q.eq("name", "uid"))
+    .unique();
+  if (!counter) {
+    await ctx.db.insert("counters", { name: "uid", value: FIRST_UID + 1 });
+    return String(FIRST_UID);
+  }
+  const current = counter.value;
+  await ctx.db.patch("counters", counter._id, { value: current + 1 });
+  return String(current);
+}
 
 async function getNextUserNumber(ctx: MutationCtx): Promise<number> {
   const counter = await ctx.db
@@ -32,9 +47,11 @@ export async function requireUser(
     if ("insert" in ctx.db) {
       const mCtx = ctx as MutationCtx;
       const userNumber = await getNextUserNumber(mCtx);
+      const uid = await getNextUid(mCtx);
       const id = await mCtx.db.insert("users", {
         tokenIdentifier,
         userNumber,
+        uid,
         profileComplete: false,
       });
       user = await mCtx.db.get(id);
@@ -45,6 +62,12 @@ export async function requireUser(
     const mCtx = ctx as MutationCtx;
     const userNumber = await getNextUserNumber(mCtx);
     await mCtx.db.patch("users", user._id, { userNumber });
+    user = await mCtx.db.get(user._id);
+  }
+  if (user && !user.uid && "insert" in ctx.db) {
+    const mCtx = ctx as MutationCtx;
+    const uid = await getNextUid(mCtx);
+    await mCtx.db.patch("users", user._id, { uid });
     user = await mCtx.db.get(user._id);
   }
 

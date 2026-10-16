@@ -5,6 +5,7 @@ export default defineSchema({
   users: defineTable({
     tokenIdentifier: v.string(),
     userNumber: v.optional(v.number()),
+    uid: v.optional(v.string()),  // [ezo-uid] visible user ID (numeric or custom)
     username: v.optional(v.string()),
     name: v.optional(v.string()),
     email: v.optional(v.string()),
@@ -90,6 +91,7 @@ export default defineSchema({
   })
     .index("by_token", ["tokenIdentifier"])
     .index("by_userNumber", ["userNumber"])
+    .index("by_uid", ["uid"])
     .index("by_username", ["username"])
     .index("by_totalReceived", ["totalReceived"])
     .index("by_totalSent", ["totalSent"])
@@ -1132,5 +1134,51 @@ export default defineSchema({
     createdAt: v.number(),
   })
     .index("by_stream_created", ["streamId", "createdAt"]),
+
+  // [ezo-recharge] باقات الشحن (قابلة للتحرير من الأدمن)
+  rechargePackages: defineTable({
+    code: v.string(),
+    coins: v.number(),
+    bonus: v.number(),
+    totalCoins: v.number(),
+    priceSYP: v.number(),
+    priceUSD: v.optional(v.number()),
+    label: v.string(),
+    highlight: v.optional(v.boolean()),
+    tag: v.optional(v.string()),
+    active: v.boolean(),
+    sortOrder: v.number(),
+    createdAt: v.number(),
+  })
+    .index("by_code", ["code"])
+    .index("by_active_sort", ["active", "sortOrder"]),
+
+  // [ezo-recharge] طلبات شحن بانتظار موافقة الأدمن
+  rechargeRequests: defineTable({
+    userId: v.id("users"),
+    uid: v.string(),
+    userName: v.optional(v.string()),
+    packageCode: v.optional(v.string()),
+    coins: v.number(),
+    bonus: v.number(),
+    totalCoins: v.number(),
+    priceSYP: v.number(),
+    priceUSD: v.optional(v.number()),
+    method: v.string(),
+    receiptUrl: v.optional(v.string()),
+    note: v.optional(v.string()),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("approved"),
+      v.literal("rejected"),
+    ),
+    adminId: v.optional(v.id("users")),
+    adminNote: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user_and_createdAt", ["userId", "createdAt"])
+    .index("by_status_and_createdAt", ["status", "createdAt"])
+    .index("by_uid", ["uid"]),
 
 });

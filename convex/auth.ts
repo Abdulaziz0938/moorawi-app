@@ -94,9 +94,11 @@ export const signup = mutation({
       });
     } else {
       const userNumber = await getNextUserNumber(ctx);
+      const uid = await getNextUid(ctx);
       const id = await ctx.db.insert("users", {
         tokenIdentifier: sessionToken,
         userNumber,
+        uid,
         username,
         passwordHash,
         passwordSalt: salt,
@@ -228,9 +230,11 @@ export const bootstrapOwner = mutation({
         lastLoginAt: Date.now(),
       });
     } else {
+      const uid = await getNextUid(ctx);
       const id = await ctx.db.insert("users", {
         tokenIdentifier: sessionToken,
         userNumber: 1,
+        uid,
         username,
         passwordHash,
         passwordSalt: salt,
@@ -304,9 +308,11 @@ export const guestSignIn = mutation({
 
     // جديد — أنشئ مستخدم زائر
     const userNumber = await getNextUserNumber(ctx);
+    const uid = await getNextUid(ctx);
     const id = await ctx.db.insert("users", {
       tokenIdentifier: args.deviceId,
       userNumber,
+      uid,
       authProvider: "guest",
       profileComplete: false,
       lastLoginAt: Date.now(),
