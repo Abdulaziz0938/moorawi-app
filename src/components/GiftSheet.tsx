@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import { Lock } from "lucide-react";
 import type { Id } from "../../convex/_generated/dataModel";
 import { getDeviceId } from "../lib/device";
 import { X, Coins, Loader2, Music, Heart, Globe, Mic, Users, Check, ChevronUp, Gift } from "lucide-react";
@@ -24,7 +25,9 @@ type RecipientMode = "mic" | "room" | "individual";
 
 const QUANTITY_PRESETS = [1, 5, 10, 33, 66, 99];
 
-export default function GiftSheet({ roomId, onClose, preSelectedUserId }: Props) {
+export default function GiftSheet({
+  // استعلام VIP للمستخدم الحالي
+ roomId, onClose, preSelectedUserId }: Props) {
   const deviceId = getDeviceId();
   const gifts = useQuery(api.gifts.listActive);
   const balance = useQuery(api.gifts.myBalance, { tokenOverride: deviceId });
