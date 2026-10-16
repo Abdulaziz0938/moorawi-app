@@ -599,6 +599,13 @@ export default function RoomView({ roomId, onLeave }: Props) {
   // (mic target position now handled via targetCoordsRef in queue processor)
 
     const finishActiveGift = () => {
+    if (videoRef.current) {
+      try {
+        videoRef.current.pause();
+        videoRef.current.removeAttribute('src');
+        videoRef.current.load();
+      } catch (e) {}
+    }
     setActiveGift(null);
     targetCoordsRef.current = null;
     setFlyingTargets([]);
