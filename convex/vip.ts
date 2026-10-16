@@ -458,3 +458,19 @@ export const rechargeAndUpgradeUser = mutation({
     };
   },
 });
+
+
+
+/**
+ * التحقق مما إذا كان المستخدم يمتلك حصانة ضد الطرد (VIP 5 فما فوق على طريقة Binmo)
+ */
+export function hasAntiKickImmunity(vipLevel: number = 0): boolean {
+  return vipLevel >= 5;
+}
+
+/**
+ * التحقق مما إذا كان المستخدم يمتلك ميزة التخفي (VIP 6 فما فوق)
+ */
+export function hasInvisibleEntry(vipLevel: number = 0): boolean {
+  return vipLevel >= 6;
+}
