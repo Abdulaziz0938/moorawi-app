@@ -174,6 +174,17 @@ export const send = mutation({
     const gift = await ctx.db.get("gifts", args.giftId);
     if (!gift) throw new ConvexError({ code: "NOT_FOUND", message: "الهدية غير موجودة" });
 
+    // [VIP-Lock] فحص حصرية هدايا VIP
+    if (gift.category === "vip") {
+      const senderVip = activeVipLevel(user);
+      if (senderVip <= 0) {
+        throw new ConvexError({
+          code: "FORBIDDEN",
+          message: "هذه الهدية حصرية لأعضاء VIP فقط! اشترك في VIP لإرسالها.",
+        });
+      }
+    }
+
     const target = await ctx.db.get("users", args.toUserId);
     if (!target) throw new ConvexError({ code: "NOT_FOUND", message: "المستلم غير موجود" });
     
