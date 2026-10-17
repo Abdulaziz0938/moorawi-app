@@ -91,7 +91,7 @@ export default function RoomsTab({ onEnter, onEnterLive, onStartLive }: Props) {
         <div 
           className="relative w-full"
           style={{
-            aspectRatio: "1080 / 300",
+            aspectRatio: "1080 / 220",
             backgroundImage: "url(/ui/rooms1.png)",
             backgroundSize: "100% 100%",
             backgroundPosition: "center top",

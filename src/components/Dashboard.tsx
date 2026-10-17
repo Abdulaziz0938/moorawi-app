@@ -42,7 +42,7 @@ export default function Dashboard({ onEnterRoom, onEnterLive, onStartLive }: Pro
   return (
     <div className="h-[100dvh] w-full flex flex-col app-bg overflow-hidden" dir="rtl">
       {/* ============ Content ============ */}
-      <PullToRefresh onRefresh={() => setRefreshKey((k) => k + 1)} className="flex-1 pb-24">
+      <PullToRefresh onRefresh={() => setRefreshKey((k) => k + 1)} className="flex-1 pb-20">
         <div key={refreshKey}>
         {tab === "rooms" && (
           <RoomsTab
