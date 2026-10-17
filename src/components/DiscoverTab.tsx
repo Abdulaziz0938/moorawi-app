@@ -16,7 +16,7 @@ export default function DiscoverTab({ onEnterRoom }: DiscoverTabProps) {
   const [selectedCountry, setSelectedCountry] = useState<string>("SA");
 
   // جلب الغرف والبيانات الحقيقية من قاعدة البيانات
-  const rooms = useQuery(api.rooms.list, { tab: "trend" }) || [];
+  const rooms = useQuery(api.rooms.listPublic, { tab: "trend" }) || [];
 
   // قائمة الألعاب التفاعلية العلوية (مطابقة لبينمو)
   const gameCategories = [
