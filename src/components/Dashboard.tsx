@@ -40,8 +40,20 @@ export default function Dashboard({ onEnterRoom, onEnterLive, onStartLive }: Pro
   ];
 
   return (
-    <div className="h-[100dvh] w-full flex flex-col app-bg overflow-hidden" dir="rtl">
-      {/* ============ Content ============ */}
+    <div className="h-[100dvh] w-full flex flex-col app-bg overflow-hidden relative" dir="rtl">
+      {/* ═══ LAYER 1: Top Banner (fixed, behind all tabs) ═══ */}
+      <div
+        className="fixed top-0 left-0 right-0 z-0 pointer-events-none"
+        style={{
+          height: "160px",
+          backgroundImage: "url(/ui/top-banner-purple.png)",
+          backgroundSize: "100% 100%",
+          backgroundRepeat: "no-repeat",
+        }}
+      />
+
+      {/* ═══ LAYER 2: Content (below banner) ═══ */}
+      <div className="relative z-10 flex-1 flex flex-col" style={{ paddingTop: "160px" }}>
       <PullToRefresh onRefresh={() => setRefreshKey((k) => k + 1)} className="flex-1 pb-28">
         <div key={refreshKey}>
         {tab === "rooms" && (
@@ -68,6 +80,7 @@ export default function Dashboard({ onEnterRoom, onEnterLive, onStartLive }: Pro
         )}
         </div>
       </PullToRefresh>
+      </div>
 
       {/* ============ TabBar ============ */}
       <nav
