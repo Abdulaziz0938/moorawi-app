@@ -43,33 +43,21 @@ export default function Dashboard({ onEnterRoom, onEnterLive, onStartLive }: Pro
     <div className="h-[100dvh] w-full flex flex-col app-bg overflow-hidden" dir="rtl">
       {/* ============ Content ============ */}
       <PullToRefresh onRefresh={() => setRefreshKey((k) => k + 1)} className="flex-1 pb-20">
-                <div key={refreshKey} className="relative">
-        {/* خلفية الهيدر الملكية المدمجة لصفحات (لحظات - رسائل - أنا) */}
-        {(tab === "moments" || tab === "messages" || tab === "me") && (
+                        <div key={refreshKey} className="relative min-h-full">
+        {tab !== "rooms" && (
           <div
-            className="pointer-events-none select-none w-full sticky top-0 z-0"
+            className="sticky top-0 z-30 w-full pointer-events-none select-none"
             style={{
-              height: "115px",
-              marginBottom: "-95px",
-              background: "radial-gradient(120% 100% at 80% 0%, rgba(147, 51, 234, 0.38) 0%, rgba(88, 28, 135, 0.22) 45%, rgba(11, 14, 20, 0) 100%)",
-              borderBottom: "1px solid rgba(168, 85, 247, 0.25)",
-              boxShadow: "0 8px 32px rgba(88, 28, 135, 0.25)",
+              aspectRatio: "1080 / 300",
+              marginBottom: "-52px",
+              backgroundImage: "url(/ui/top-banner-purple.png)",
+              backgroundSize: "100% 100%",
+              backgroundPosition: "center top",
+              backgroundRepeat: "no-repeat",
+              filter: "drop-shadow(0 6px 14px rgba(5, 2, 12, 0.8))",
             }}
-          >
-            {/* موجات نيون وشعار EZO GROUP الخفيف في الخلفية مثل بينمو */}
-            <div className="w-full h-full flex items-start justify-end px-4 pt-2 opacity-35" dir="ltr">
-              <div className="flex flex-col items-center leading-none">
-                <span className="text-xl font-black tracking-wider bg-gradient-to-b from-white via-purple-200 to-amber-300 bg-clip-text text-transparent drop-shadow-[0_2px_10px_rgba(168,85,247,0.8)]">
-                  EZO
-                </span>
-                <span className="text-[9px] font-extrabold text-amber-400 tracking-widest">
-                  GROUP
-                </span>
-              </div>
-            </div>
-          </div>
-        )}
-        {tab === "rooms" && (
+          />
+        )}{tab === "rooms" && (
           <RoomsTab
             onEnter={onEnterRoom}
             onEnterLive={onEnterLive}
@@ -95,61 +83,30 @@ export default function Dashboard({ onEnterRoom, onEnterLive, onStartLive }: Pro
       </PullToRefresh>
 
       {/* ============ TabBar ============ */}
-            {/* ============ Binmo Custom Image Bottom Navigation ============ */}
-      <nav 
-        className="fixed bottom-0 left-0 right-0 z-40 select-none"
+                  {/* ============ Binmo Custom Image Bottom Navigation ============ */}
+      <nav
+        className="fixed bottom-0 left-0 right-0 z-50 select-none bg-transparent pointer-events-none"
         style={{
-          height: "calc(74px + env(safe-area-inset-bottom, 0px))",
+          height: "calc(78px + env(safe-area-inset-bottom, 0px))",
           paddingBottom: "env(safe-area-inset-bottom, 0px)",
+          filter: "drop-shadow(0 -6px 16px rgba(5, 2, 12, 0.9))",
         }}
       >
-        <div 
-          className="relative w-full h-full"
+        <div
+          className="relative w-full h-full pointer-events-auto"
           style={{
-            backgroundImage: "url(/ui/bottom-nav-trans.png)",
+            backgroundImage: "url(/ui/bottom-nav.png)",
             backgroundSize: "100% 100%",
             backgroundPosition: "bottom center",
             backgroundRepeat: "no-repeat",
           }}
         >
-          {/* مناطق النقر الشفافة للتبويبات الـ 5 (مرتبة من اليمين لليسار حسب الصورة: الغرف، اكتشاف، لحظات، رسائل، أنا) */}
           <div className="absolute inset-0 flex items-center justify-between px-1" dir="rtl">
-            
-            {/* 1. الغرف (أقصى اليمين) */}
-            <div 
-              onClick={() => setTab("rooms")} 
-              className="w-[20%] h-full cursor-pointer active:opacity-60 transition" 
-              title="الغرف" 
-            />
-
-            {/* 2. اكتشاف */}
-            <div 
-              onClick={() => setTab("discover")} 
-              className="w-[20%] h-full cursor-pointer active:opacity-60 transition" 
-              title="اكتشاف" 
-            />
-
-            {/* 3. لحظات */}
-            <div 
-              onClick={() => setTab("moments")} 
-              className="w-[20%] h-full cursor-pointer active:opacity-60 transition" 
-              title="لحظات" 
-            />
-
-            {/* 4. رسائل */}
-            <div 
-              onClick={() => setTab("messages")} 
-              className="w-[20%] h-full cursor-pointer active:opacity-60 transition" 
-              title="رسائل" 
-            />
-
-            {/* 5. أنا (أقصى اليسار) */}
-            <div 
-              onClick={() => setTab("me")} 
-              className="w-[20%] h-full cursor-pointer active:opacity-60 transition" 
-              title="أنا" 
-            />
-
+            <div onClick={() => setTab("rooms")} className="w-[20%] h-full cursor-pointer active:scale-95 transition" title="الغرف" />
+            <div onClick={() => setTab("discover")} className="w-[20%] h-full cursor-pointer active:scale-95 transition" title="اكتشاف" />
+            <div onClick={() => setTab("moments")} className="w-[20%] h-full cursor-pointer active:scale-95 transition" title="لحظات" />
+            <div onClick={() => setTab("messages")} className="w-[20%] h-full cursor-pointer active:scale-95 transition" title="رسائل" />
+            <div onClick={() => setTab("me")} className="w-[20%] h-full cursor-pointer active:scale-95 transition" title="أنا" />
           </div>
         </div>
       </nav>

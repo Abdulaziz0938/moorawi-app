@@ -57,7 +57,7 @@ export default function MessagesTab({ onUserClick }: Props) {
   );
 
   return (
-    <div className="max-w-md mx-auto pb-24 min-h-screen" dir="rtl">
+    <div className="relative z-30 max-w-md mx-auto pb-24 min-h-screen" dir="rtl">
       {/* ===== Header ===== */}
       <div className="px-4 pt-4 pb-2">
         <div className="flex items-center justify-between mb-3">

@@ -24,7 +24,7 @@ export default function DiscoverTab({ onEnterRoom }: DiscoverTabProps) {
   ];
 
   return (
-    <div className="w-full flex flex-col pb-32 text-white select-none" dir="rtl">
+    <div className="relative z-30 w-full flex flex-col pb-32 text-white select-none" dir="rtl">
       
       {/* 1. البانر العلوي الفاخر */}
       <div className="relative w-full px-4 pt-3">

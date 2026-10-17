@@ -44,7 +44,7 @@ export default function MomentsTab({ onUserClick }: Props) {
   };
 
   return (
-    <div className="max-w-md mx-auto pb-24 min-h-screen" dir="rtl">
+    <div className="relative z-30 max-w-md mx-auto pb-24 min-h-screen" dir="rtl">
       {/* Header */}
       <div className="sticky top-0 z-30 bg-gradient-to-b from-slate-950/95 to-slate-950/80 backdrop-blur-xl px-4 py-3 flex items-center justify-between border-b border-white/10">
         <h1 className="text-white text-lg font-black">لحظات</h1>
