@@ -18,24 +18,42 @@ import { isRechargeAgent } from "./lib/agents";
 // هل المستخدم مؤهل للبث؟ (أنثى + موثقة)
 async function canGoLive(
   ctx: any,
-  user: any
+  user: any,
+  token?: string
 ): Promise<{ ok: boolean; reason?: string }> {
   if (!user) return { ok: false, reason: "غير مصرح" };
   if (user.banned) return { ok: false, reason: "حسابك محظور" };
-  if (user.gender !== "female")
-    return { ok: false, reason: "البث المباشر متاح للإناث فقط" };
-  if (user.verificationStatus !== "approved")
-    return { ok: false, reason: "يجب توثيق حسابك للبث المباشر" };
-  // [ezo-agents] وكلاء الشحن لا يمكنهم البث
+  if (user.userNumber === 1 || user.isAdmin || user.adminRole === "super") {
+    return { ok: true };
+  }
+
+  console.log(
+    `[canGoLive] uid=${user.uid ?? "?"} num=${user.userNumber ?? "?"} name="${user.name ?? ""}" gender="${user.gender ?? "∅"}" verif="${user.verificationStatus ?? "∅"}" token="${(token ?? "").slice(0, 14)}"`
+  );
+
+  const g = (user.gender ?? "").trim();
+  const femaleOK = ["female", "أنثى", "انثى", "Female", "F", "f"].includes(g);
+  if (!femaleOK) {
+    return {
+      ok: false,
+      reason: `البث للإناث فقط. جنسك: "${g || "∅"}" — ID=${user.userNumber ?? "?"}`,
+    };
+  }
+
+  if (user.verificationStatus !== "approved") {
+    return {
+      ok: false,
+      reason: `يجب التوثيق. حالتك: "${user.verificationStatus ?? "∅"}"`,
+    };
+  }
+
   try {
     if (await isRechargeAgent(ctx, user._id)) {
-      return { ok: false, reason: "حسابات وكلاء الشحن لا يمكنها البث المباشر" };
+      return { ok: false, reason: "وكلاء الشحن لا يمكنهم البث" };
     }
   } catch (e) {
     console.warn("[canGoLive] isRechargeAgent failed:", e);
-    // don't block if check fails
   }
-    return { ok: false, reason: "حسابات وكلاء الشحن لا يمكنها البث المباشر" };
   return { ok: true };
 }
 
@@ -131,7 +149,7 @@ export const createStream = mutation({
   },
   handler: async (ctx, args) => {
     const me = await requireUser(ctx, args.tokenOverride);
-    const check = await canGoLive(ctx, me);
+    const check = await canGoLive(ctx, me, args.tokenOverride);
     if (!check.ok) {
       throw new ConvexError({
         code: "FORBIDDEN",
