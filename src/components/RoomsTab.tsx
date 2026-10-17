@@ -88,30 +88,32 @@ export default function RoomsTab({ onEnter, onEnterLive, onStartLive }: Props) {
     <div className="max-w-md mx-auto">
       {/* ============ Top Header with banner bg ============ */}
       <div
-        className="sticky top-0 z-30 w-full flex items-end px-4 pb-3"
+        className="sticky top-0 z-30 w-full flex flex-col justify-end px-3 pb-2 shadow-lg"
         style={{
-          height: "95px",
+          minHeight: "125px",
           backgroundImage: "url(/ui/top-banner-purple.png)",
-          backgroundSize: "100% 100%",
-          backgroundPosition: "center bottom",
+          backgroundSize: "cover",
+          backgroundPosition: "center top",
           backgroundRepeat: "no-repeat",
         }}
       >
-        <div className="w-full flex items-center justify-between">
+        <div className="w-full flex items-center justify-between mt-auto pt-10">
           <button
             onClick={() => setShowSearch(true)}
-            className="w-9 h-9 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white active:scale-95 transition"
+            className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-md border border-purple-400/30 flex items-center justify-center text-white active:scale-95 transition shadow"
           >
             <Search size={16} />
           </button>
-          <div className="flex items-center gap-5" dir="rtl">
+
+          <div className="flex items-center gap-6" dir="rtl">
             <TopTabBtn active={mainTab === "mine"}  onClick={() => setMainTab("mine")}  label="الخاص بي" />
             <TopTabBtn active={mainTab === "trend"} onClick={() => setMainTab("trend")} label="ترند" />
             <TopTabBtn active={mainTab === "live"}  onClick={() => setMainTab("live")}  label="لايف" />
           </div>
+
           <button
             onClick={() => myRoom ? onEnter(myRoom._id) : setShowCreate(true)}
-            className="w-9 h-9 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white active:scale-95 transition"
+            className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-md border border-purple-400/30 flex items-center justify-center text-white active:scale-95 transition shadow"
           >
             <Home size={16} />
           </button>

@@ -21,9 +21,8 @@ html, body {
 
 /* Animated gradient background for the app */
 .app-bg {
-  background: linear-gradient(-45deg, #1a0b3d, #2d1b69, #4c1d95, #701a75, #831843);
-  background-size: 400% 400%;
-  animation: gradientShift 20s ease infinite;
+  background: radial-gradient(circle at 50% 0%, #1e1035 0%, #0d0618 55%, #05020a 100%) !important;
+  min-height: 100vh;
 }
 
 @keyframes gradientShift {
