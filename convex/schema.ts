@@ -1282,4 +1282,13 @@ export default defineSchema({
     .index("by_pair", ["blockerId", "blockedId"])
     .index("by_blocked", ["blockedId"]),
 
+  // [ezo-life-photos] صور الحياة (9 صور كحد أقصى للملف الشخصي)
+  lifePhotos: defineTable({
+    userId: v.id("users"),
+    imageUrl: v.string(),
+    order: v.number(),
+    createdAt: v.number(),
+  })
+    .index("by_user_and_order", ["userId", "order"]),
+
 });

@@ -12,7 +12,7 @@ import { Radio,
   ChevronLeft, ChevronRight, Home, Gift, MessageCircle, UserPlus, Crown, Loader2,
   Pencil, Camera, Eye, Trash2, ImageIcon, Copy, Check, Send, Inbox, Coins,
   Users, Heart, Award, Star, MoreHorizontal, ArrowRight, Zap, Gem,
-  Car, Frame} from "lucide-react";
+  Car, Frame, Plus} from "lucide-react";
 import { UserName } from "./UserBadges";
 import LevelBadge from "./LevelBadge";
 import VipAvatar from "./ui/VipAvatar";
@@ -82,6 +82,13 @@ export default function ProfilePage({
     api.giftHistory.myReceivedGifts,
     userId ? { userId: userId as Id<"users">, limit: 20, tokenOverride: getActiveToken() ?? deviceId } : ("skip" as any)
   );
+
+  const lifePhotos = useQuery(
+    api.lifePhotos.listByUser,
+    userId ? { userId: userId as Id<"users"> } : ("skip" as any)
+  );
+  const addLifePhoto = useMutation(api.lifePhotos.add);
+  const removeLifePhoto = useMutation(api.lifePhotos.remove);
   const updateName = useMutation(api.users.updateName);
   const saveAvatar = useMutation(api.profiles.saveAvatar);
   const saveCover = useMutation(api.profiles.saveCover);
@@ -673,22 +680,75 @@ export default function ProfilePage({
           {tab === "info" && (
             <div className="space-y-3">
               <Card padding="md">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-white/60 text-xs font-black" dir="ltr">0/9</span>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-white/60 text-xs font-black" dir="ltr">
+                    {lifePhotos?.length ?? 0}/9
+                  </span>
                   <div className="flex items-center gap-1.5">
                     <span className="text-white/60 text-xs font-black">صور الحياة</span>
                     <ImageIcon size={14} className="text-white/60" />
                   </div>
                 </div>
-                <div className="flex gap-2 overflow-x-auto scrollbar-hide">
-                  {isMe ? (
-                    <div className="w-20 h-20 rounded-xl bg-white/5 border border-dashed border-white/20 flex items-center justify-center flex-shrink-0">
-                      <UserPlus size={20} className="text-white/40" />
+
+                <div className="grid grid-cols-3 gap-2">
+                  {(lifePhotos ?? []).map((photo: any) => (
+                    <div key={photo._id} className="aspect-square rounded-xl overflow-hidden bg-black/40 border border-white/10 relative group">
+                      <img
+                        src={photo.imageUrl}
+                        alt=""
+                        className="w-full h-full object-cover"
+                        draggable={false}
+                      />
+                      {isMe && (
+                        <button
+                          onClick={async () => {
+                            if (!confirm("حذف هذه الصورة؟")) return;
+                            try {
+                              await removeLifePhoto({
+                                photoId: photo._id,
+                                tokenOverride: getActiveToken() ?? deviceId,
+                              });
+                            } catch (e: any) {
+                              dialog.alert(e?.message || "فشل الحذف");
+                            }
+                          }}
+                          className="absolute top-1 left-1 w-6 h-6 rounded-full bg-red-500/80 backdrop-blur flex items-center justify-center text-white active:scale-95"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      )}
                     </div>
-                  ) : (
-                    <p className="text-white/40 text-xs py-4">لا توجد صور</p>
+                  ))}
+
+                  {isMe && (lifePhotos?.length ?? 0) < 9 && (
+                    <label className="aspect-square rounded-xl bg-white/5 border border-dashed border-white/20 flex items-center justify-center cursor-pointer active:scale-95 transition">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={async (e) => {
+                          const f = e.target.files?.[0];
+                          if (!f) return;
+                          try {
+                            const res = await smartUpload(f, { allowVideo: false });
+                            await addLifePhoto({
+                              imageUrl: res.url,
+                              tokenOverride: getActiveToken() ?? deviceId,
+                            });
+                          } catch (err: any) {
+                            dialog.alert(err?.message || "فشل الرفع");
+                          }
+                          if (e.target) e.target.value = "";
+                        }}
+                      />
+                      <Plus size={24} className="text-white/40" />
+                    </label>
                   )}
                 </div>
+
+                {!isMe && (lifePhotos?.length ?? 0) === 0 && (
+                  <p className="text-white/30 text-[11px] text-center py-2">لا توجد صور بعد</p>
+                )}
               </Card>
 
               <Card padding="md">
