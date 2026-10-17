@@ -86,35 +86,76 @@ export default function RoomsTab({ onEnter, onEnterLive, onStartLive }: Props) {
 
   return (
     <div className="max-w-md mx-auto">
-                        {/* ============ EZO Full Banner Image ============ */}
-      <div className="sticky top-0 z-40 w-full overflow-hidden bg-transparent select-none">
-        <div className="relative w-full">
-          <img 
-            src="/ui/top-banner-purple.png" 
-            alt="EZO Header" 
-            className="w-full h-auto block object-cover"
-            style={{ maxHeight: "140px" }}
-          />
+                              {/* ============ EZO Custom Image Header with Precision Click Zones ============ */}
+      <div className="sticky top-0 z-40 w-full overflow-hidden select-none bg-[#090412]">
+        <div 
+          className="relative w-full"
+          style={{
+            aspectRatio: "1080 / 300",
+            backgroundImage: "url(/ui/rooms1.png)",
+            backgroundSize: "100% 100%",
+            backgroundPosition: "center top",
+            backgroundRepeat: "no-repeat",
+          }}
+        >
+          {/* طبقة تفاعلية شفافة للأزرار */}
+          <div className="absolute inset-0 flex items-end pb-3 px-1" dir="ltr">
+            <div className="w-full flex items-center h-16">
+              
+              {/* 1. أقصى اليسار: شعار EZO GROUP */}
+              <div 
+                onClick={() => myRoom ? onEnter(myRoom._id) : setShowCreate(true)}
+                className="w-[28%] h-full cursor-pointer active:opacity-70 transition"
+                title="EZO GROUP"
+              />
 
-          {/* مناطق لمس شفافة فوق الأزرار الموجودة بالصورة */}
-          <div className="absolute inset-0 flex items-end pb-2 px-2">
-            <div className="w-full flex items-center justify-between h-12">
-              {/* لمس الشعار أو الرجوع */}
+              {/* 2. زر البحث (عدسة) */}
               <div 
-                onClick={() => myRoom ? onEnter(myRoom._id) : setShowCreate(true)} 
-                className="w-1/3 h-full cursor-pointer active:opacity-60" 
+                onClick={() => setShowSearch(true)}
+                className="w-[10%] h-full flex items-center justify-center cursor-pointer active:scale-90 transition rounded-full"
+                title="بحث"
               />
-              {/* لمس زر البحث المطبوع بالصورة */}
+
+              {/* 3. زر الغرفة (منزل) */}
               <div 
-                onClick={() => setShowSearch(true)} 
-                className="w-12 h-12 cursor-pointer active:opacity-60 rounded-full" 
+                onClick={() => myRoom ? onEnter(myRoom._id) : setShowCreate(true)}
+                className="w-[10%] h-full flex items-center justify-center cursor-pointer active:scale-90 transition rounded-full"
+                title="غرفتي"
               />
-              {/* لمس التبويبات المطبوعة بالصورة (لايف - ترند - الخاص بي) */}
-              <div className="flex-1 flex items-center justify-end h-full gap-2">
-                <div onClick={() => setMainTab("live")} className="w-12 h-full cursor-pointer active:opacity-60" />
-                <div onClick={() => setMainTab("trend")} className="w-12 h-full cursor-pointer active:opacity-60" />
-                <div onClick={() => setMainTab("mine")} className="w-16 h-full cursor-pointer active:opacity-60" />
+
+              {/* 4. تبويب لايف */}
+              <div 
+                onClick={() => setMainTab("live")}
+                className="w-[15%] h-full flex flex-col items-center justify-center cursor-pointer active:opacity-70 transition relative"
+                title="لايف"
+              >
+                {mainTab === "live" && (
+                  <span className="absolute bottom-1 w-8 h-1 bg-amber-300 rounded-full shadow-[0_0_8px_#fde047]" />
+                )}
               </div>
+
+              {/* 5. تبويب ترند */}
+              <div 
+                onClick={() => setMainTab("trend")}
+                className="w-[16%] h-full flex flex-col items-center justify-center cursor-pointer active:opacity-70 transition relative"
+                title="ترند"
+              >
+                {mainTab === "trend" && (
+                  <span className="absolute bottom-1 w-8 h-1 bg-purple-300 rounded-full shadow-[0_0_8px_#c084fc]" />
+                )}
+              </div>
+
+              {/* 6. تبويب الخاص بي (أقصى اليمين) */}
+              <div 
+                onClick={() => setMainTab("mine")}
+                className="w-[21%] h-full flex flex-col items-center justify-center cursor-pointer active:opacity-70 transition relative"
+                title="الخاص بي"
+              >
+                {mainTab === "mine" && (
+                  <span className="absolute bottom-1 w-10 h-1 bg-purple-200 rounded-full shadow-[0_0_10px_#e9d5ff]" />
+                )}
+              </div>
+
             </div>
           </div>
         </div>
