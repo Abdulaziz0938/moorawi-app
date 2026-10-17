@@ -12,7 +12,7 @@ import { Radio,
   ChevronLeft, ChevronRight, Home, Gift, MessageCircle, UserPlus, Crown, Loader2,
   Pencil, Camera, Eye, Trash2, ImageIcon, Copy, Check, Send, Inbox, Coins,
   Users, Heart, Award, Star, MoreHorizontal, ArrowRight, Zap, Gem,
-} from "lucide-react";
+  Car, Frame} from "lucide-react";
 import { UserName } from "./UserBadges";
 import LevelBadge from "./LevelBadge";
 import VipAvatar from "./ui/VipAvatar";
@@ -21,6 +21,8 @@ import MedalsRow from "./MedalsRow";
 import ImageCropper from "./ImageCropper";
 import Card from "./ui/Card";
 import MyItemsSheet from "./MyItemsSheet";
+import GiftHistorySheet from "./GiftHistorySheet";
+import MedalsSheet from "./MedalsSheet";
 import UserListSheet from "./UserListSheet";
 import ChatThreadSheet from "./ChatThreadSheet";
 import { levelFromValue } from "../lib/levels";
@@ -108,6 +110,8 @@ export default function ProfilePage({
   const [copied, setCopied] = useState(false);
   const [tab, setTab] = useState<Tab>("info");
   const [showMyItems, setShowMyItems] = useState(false);
+  const [showGiftHistory, setShowGiftHistory] = useState(false);
+  const [showMedals, setShowMedals] = useState(false);
   const [myItemsCategory, setMyItemsCategory] = useState<"frame" | "vehicle" | "entryEffect" | "chatBubble" | "soundWave" | "profileCard">("frame");
 
   const inventory = useQuery(api.shop.myInventory, { tokenOverride: getActiveToken() ?? deviceId });
@@ -740,54 +744,81 @@ export default function ProfilePage({
           )}
 
           {tab === "assets" && (
-            <div className="space-y-3">
-              <AssetRow
+            <div className="px-4 space-y-4">
+              {/* هدية */}
+              <AssetSection
                 label="هدية"
                 count={giftStats.received.count + giftStats.sent.count}
                 tone="purple"
-                onOpen={isMe ? () => dialog.alert("قريباً") : undefined}
+                onOpen={() => setShowGiftHistory(true)}
+                items={giftStats.received.count > 0 ? [] : []}
               />
-              <AssetRow
+
+              {/* أوسمة */}
+              <AssetSection
                 label="أوسمة"
                 count={medals.length}
                 tone="gold"
-                onOpen={isMe ? () => dialog.alert("قريباً") : undefined}
+                onOpen={() => setShowMedals(true)}
+                items={medals.slice(0, 8).map((m: any) => ({
+                  imageUrl: m.medal?.imageUrl,
+                  name: m.medal?.name ?? "وسام",
+                  count: 1,
+                }))}
               />
-              <AssetRow
+
+              {/* إطار */}
+              <AssetSection
                 label="إطار"
                 count={itemCounts?.frame ?? 0}
                 tone="emerald"
                 onOpen={isMe ? () => { setMyItemsCategory("frame"); setShowMyItems(true); } : undefined}
+                items={[]}
               />
-              <AssetRow
+
+              {/* مركبة */}
+              <AssetSection
                 label="مركبة"
                 count={itemCounts?.vehicle ?? 0}
                 tone="default"
                 onOpen={isMe ? () => { setMyItemsCategory("vehicle"); setShowMyItems(true); } : undefined}
+                items={[]}
               />
-              <AssetRow
+
+              {/* فقاعة دردشة */}
+              <AssetSection
                 label="فقاعة دردشة"
                 count={itemCounts?.chatBubble ?? 0}
                 tone="pink"
                 onOpen={isMe ? () => { setMyItemsCategory("chatBubble"); setShowMyItems(true); } : undefined}
+                items={[]}
               />
-              <AssetRow
+
+              {/* دخولية */}
+              <AssetSection
                 label="دخولية"
                 count={itemCounts?.entryEffect ?? 0}
                 tone="purple"
                 onOpen={isMe ? () => { setMyItemsCategory("entryEffect"); setShowMyItems(true); } : undefined}
+                items={[]}
               />
-              <AssetRow
+
+              {/* موجات صوتية */}
+              <AssetSection
                 label="موجات صوتية"
                 count={itemCounts?.soundWave ?? 0}
                 tone="default"
                 onOpen={isMe ? () => { setMyItemsCategory("soundWave"); setShowMyItems(true); } : undefined}
+                items={[]}
               />
-              <AssetRow
+
+              {/* بطاقة الملف */}
+              <AssetSection
                 label="بطاقة الملف"
                 count={itemCounts?.profileCard ?? 0}
                 tone="gold"
                 onOpen={isMe ? () => { setMyItemsCategory("profileCard"); setShowMyItems(true); } : undefined}
+                items={[]}
               />
             </div>
           )}
@@ -1005,6 +1036,21 @@ export default function ProfilePage({
         />
       )}
 
+      {showGiftHistory && (
+        <GiftHistorySheet
+          onClose={() => setShowGiftHistory(false)}
+          onUserClick={(id) => setViewUserId(id)}
+          userId={userId as Id<"users">}
+        />
+      )}
+
+      {showMedals && (
+        <MedalsSheet
+          onClose={() => setShowMedals(false)}
+          userId={userId as Id<"users">}
+        />
+      )}
+
       {showMyItems && (
         <MyItemsSheet
           onClose={() => setShowMyItems(false)}
@@ -1087,6 +1133,78 @@ function CountryFlag({ code }: { code: string }) {
 }
 
 // ============ Asset Row ============
+function AssetSection({
+  label, count, tone, onOpen, items,
+}: {
+  label: string;
+  count: number;
+  tone: "purple" | "gold" | "emerald" | "default" | "pink";
+  onOpen?: () => void;
+  items: { imageUrl?: string; name: string; count: number }[];
+}) {
+  const t = {
+    purple:  { bg: "from-purple-900/40 to-purple-950/60",   border: "border-purple-500/30",  text: "text-purple-200" },
+    gold:    { bg: "from-amber-900/40 to-amber-950/60",     border: "border-amber-500/30",   text: "text-amber-200" },
+    emerald: { bg: "from-emerald-900/40 to-emerald-950/60", border: "border-emerald-500/30", text: "text-emerald-200" },
+    pink:    { bg: "from-pink-900/40 to-pink-950/60",       border: "border-pink-500/30",    text: "text-pink-200" },
+    default: { bg: "from-slate-800/40 to-slate-950/60",     border: "border-white/20",       text: "text-white/80" },
+  }[tone];
+
+  return (
+    <div>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-2">
+        <span className={`px-2 py-0.5 rounded-full bg-white/5 border ${t.border} text-[10px] font-black ${t.text}`}>
+          +{count}
+        </span>
+        <button
+          onClick={onOpen}
+          disabled={!onOpen}
+          className="flex items-center gap-1 text-white text-sm font-black active:scale-95 disabled:opacity-70"
+        >
+          <span>{label}</span>
+          {onOpen && <ChevronRight size={16} className="text-white/40 rotate-180" />}
+        </button>
+      </div>
+
+      {/* Grid 4 cols */}
+      {items.length > 0 ? (
+        <div className="grid grid-cols-4 gap-2">
+          {items.slice(0, 8).map((item, i) => (
+            <div
+              key={i}
+              className="rounded-2xl bg-black/40 border border-white/10 p-2 flex flex-col items-center gap-1 aspect-square overflow-hidden"
+            >
+              <div className="w-full flex-1 flex items-center justify-center">
+                {item.imageUrl ? (
+                  <img src={item.imageUrl} alt={item.name} className="w-full h-full object-contain" />
+                ) : (
+                  <Star size={24} className="text-white/20" />
+                )}
+              </div>
+              <span className="text-white/70 text-[8px] font-black truncate w-full text-center">
+                {item.name}
+              </span>
+              <span className="text-white/40 text-[8px] tabular-nums">x{item.count}</span>
+            </div>
+          ))}
+          {items.length < 8 && Array.from({ length: 8 - items.length }).map((_, i) => (
+            <div key={`empty-${i}`} className="rounded-2xl bg-white/5 border border-white/5 aspect-square" />
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-4 gap-2">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="rounded-2xl bg-white/5 border border-white/5 aspect-square flex items-center justify-center">
+              <Star size={18} className="text-white/10" />
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function AssetRow({
   label, count, tone, onOpen,
 }: {
