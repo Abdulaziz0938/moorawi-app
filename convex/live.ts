@@ -9,6 +9,7 @@ import {
 import { internal } from "./_generated/api";
 import { requireUser } from "./lib/auth";
 import { activeVipLevel } from "./lib/vip";
+import { isRechargeAgent } from "./lib/agents";
 
 // ═══════════════════════════════════════════════════════════
 // Helpers
@@ -26,8 +27,14 @@ async function canGoLive(
   if (user.verificationStatus !== "approved")
     return { ok: false, reason: "يجب توثيق حسابك للبث المباشر" };
   // [ezo-agents] وكلاء الشحن لا يمكنهم البث
-  const { isRechargeAgent } = await import("./lib/agents");
-  if (await isRechargeAgent(ctx, user._id))
+  try {
+    if (await isRechargeAgent(ctx, user._id)) {
+      return { ok: false, reason: "حسابات وكلاء الشحن لا يمكنها البث المباشر" };
+    }
+  } catch (e) {
+    console.warn("[canGoLive] isRechargeAgent failed:", e);
+    // don't block if check fails
+  }
     return { ok: false, reason: "حسابات وكلاء الشحن لا يمكنها البث المباشر" };
   return { ok: true };
 }
@@ -148,9 +155,11 @@ export const createStream = mutation({
 
     const now = Date.now();
     const channelName = `live_${me!._id}_${now}`;
-    const vipLevel = activeVipLevel(me);
+    const vipLevel = Number(activeVipLevel(me)) || 0;
 
-    const id = await ctx.db.insert("liveStreams", {
+    let id;
+    try {
+      id = await ctx.db.insert("liveStreams", {
       hostId: me!._id,
       hostName: me!.name ?? "مذيعة",
       hostAvatarUrl: me!.avatarUrl,
@@ -170,9 +179,15 @@ export const createStream = mutation({
       totalLikes: 0,
       totalGiftValue: 0,
 
-      startedAt: now,
-      updatedAt: now,
-    });
+        startedAt: now,
+        updatedAt: now,
+      });
+    } catch (e: any) {
+      throw new ConvexError({
+        code: "INTERNAL",
+        message: `فشل بدء البث: ${e?.message ?? String(e)}`,
+      });
+    }
 
     return { ok: true, streamId: id, channelName };
   },
