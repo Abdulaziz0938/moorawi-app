@@ -56,7 +56,9 @@ export default function LiveViewer({ streamId, onLeave }: Props) {
   const [hearts, setHearts] = useState<{ id: number; x: number; color: string }[]>([]);
   const [lastTap, setLastTap] = useState(0);
   const [showGiftSheet, setShowGiftSheet] = useState(false);
+  const [chatVisible, setChatVisible] = useState(true);
   const [profileUserId, setProfileUserId] = useState<string | null>(null);
+  const tapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const toggleFollow = useMutation(api.follows.toggle);
   const followStatus = useQuery(
     api.follows.isFollowing,
@@ -170,7 +172,11 @@ export default function LiveViewer({ streamId, onLeave }: Props) {
   const handleScreenTap = () => {
     const now = Date.now();
     if (now - lastTap < 300) {
-      // Double tap → send heart
+      // Double tap → heart
+      if (tapTimerRef.current) {
+        clearTimeout(tapTimerRef.current);
+        tapTimerRef.current = null;
+      }
       spawnHeart();
       sendLikes({
         streamId: streamId as Id<"liveStreams">,
@@ -180,6 +186,10 @@ export default function LiveViewer({ streamId, onLeave }: Props) {
       setLastTap(0);
     } else {
       setLastTap(now);
+      if (tapTimerRef.current) clearTimeout(tapTimerRef.current);
+      tapTimerRef.current = setTimeout(() => {
+        setChatVisible((v) => !v);
+      }, 300);
     }
   };
 
@@ -245,7 +255,9 @@ export default function LiveViewer({ streamId, onLeave }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 z-[300] bg-black overflow-hidden" dir="rtl">
+    <div className="fixed inset-0 z-[300] bg-black overflow-hidden flex flex-col" dir="rtl">
+      {/* ═══ VIDEO AREA (65% or 100%) ═══ */}
+      <div className={`relative overflow-hidden transition-all duration-300 ${chatVisible ? "flex-[65]" : "flex-1"}`}>
       {/* Video area — split عندما PK نشط */}
       {stream.coHostId ? (
         <div className="absolute inset-0 flex">
@@ -367,7 +379,7 @@ export default function LiveViewer({ streamId, onLeave }: Props) {
       </div>
 
       {/* ═══ Floating hearts ═══ */}
-      <div className="absolute inset-x-0 bottom-24 h-40 pointer-events-none overflow-hidden z-20">
+      <div className="absolute inset-x-0 bottom-0 h-40 pointer-events-none overflow-hidden z-20">
         {hearts.map((h) => (
           <div
             key={h.id}
@@ -379,10 +391,13 @@ export default function LiveViewer({ streamId, onLeave }: Props) {
         ))}
       </div>
 
-      {/* ═══ COMMENTS — قابل للسحب ═══ */}
+      </div>
+      {/* ═══ CHAT AREA (35%) ═══ */}
+      {chatVisible && (
+        <div className="flex-[35] bg-black flex flex-col border-t border-white/10 min-h-0">
       <div
         ref={commentsRef}
-        className="absolute bottom-24 left-3 right-3 z-20 max-h-[40dvh] overflow-y-auto thin-scroll flex flex-col gap-1 pb-1"
+        className="flex-1 overflow-y-auto px-3 py-2 thin-scroll flex flex-col gap-1 min-h-0"
         style={{ WebkitOverflowScrolling: "touch" }}
       >
         {(comments ?? []).map((c: any, idx: number, arr: any[]) => {
@@ -420,7 +435,7 @@ export default function LiveViewer({ streamId, onLeave }: Props) {
       </div>
 
       {/* ═══ BOTTOM ACTIONS ═══ */}
-      <div className="absolute bottom-0 left-0 right-0 z-30 p-3 pb-5 bg-gradient-to-t from-black/85 to-transparent">
+      <div className="p-3 border-t border-white/10 bg-black">
         <div className="flex items-center gap-2">
           {/* Comment input */}
           <div className="flex-1 flex items-center gap-2 bg-black/60 backdrop-blur border border-white/20 rounded-full pl-3 pr-2 py-1.5">
@@ -462,6 +477,8 @@ export default function LiveViewer({ streamId, onLeave }: Props) {
           </button>
         </div>
       </div>
+        </div>
+      )}
 
       {/* Gift value badge */}
       {stream.totalGiftValue > 0 && (
