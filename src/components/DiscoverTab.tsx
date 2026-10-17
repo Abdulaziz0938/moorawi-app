@@ -1,81 +1,63 @@
 import React, { useState } from "react";
-import { ChevronLeft, RefreshCw, Trophy, Gamepad2, Star, Calendar } from "lucide-react";
+import { useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import { 
+  Gamepad2, Trophy, Flame, Compass, RefreshCw, 
+  Users, Globe, Sparkles, ChevronLeft, Dices, Play, Award 
+} from "lucide-react";
 
 interface DiscoverTabProps {
-  onEnterRoom?: (roomId: string) => void;
+  onEnterRoom: (roomId: any) => void;
 }
 
 export default function DiscoverTab({ onEnterRoom }: DiscoverTabProps) {
-  const [subTab, setSubTab] = useState<"official" | "games" | "activities">("activities");
+  const [activeTab, setActiveTab] = useState<"official" | "games" | "activities">("activities");
+  const [selectedGame, setSelectedGame] = useState<string>("all");
+  const [selectedCountry, setSelectedCountry] = useState<string>("SA");
 
-  // بيانات وهمية للفعاليات والأنشطة مطابقة لصورة بينمو
-  const events = [
-    {
-      id: "1",
-      title: "النوم 😂",
-      tag: "قريباً",
-      time: "10-18 01:55",
-      image: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=500&auto=format&fit=crop",
-      agency: "حرفي..",
-    },
-    {
-      id: "2",
-      title: "عالم المطاعم",
-      tag: "قريباً",
-      time: "10-17 22:00",
-      image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?q=80&w=500&auto=format&fit=crop",
-      agency: "وكاله بي...",
-    },
-    {
-      id: "3",
-      title: "عنجد كل الناس مصالح",
-      tag: "قريباً",
-      time: "10-22 02:02",
-      image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=500&auto=format&fit=crop",
-      agency: "نبض قل..",
-    },
-    {
-      id: "4",
-      title: "مذظ",
-      tag: "قريباً",
-      time: "10-20 14:05",
-      image: "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?q=80&w=500&auto=format&fit=crop",
-      agency: "مجيل..",
-    },
+  // جلب الغرف والبيانات الحقيقية من قاعدة البيانات
+  const rooms = useQuery(api.rooms.list, { tab: "trend" }) || [];
+
+  // قائمة الألعاب التفاعلية العلوية (مطابقة لبينمو)
+  const gameCategories = [
+    { id: "all", name: "الكل", icon: Sparkles, color: "from-purple-600 to-indigo-600" },
+    { id: "guess", name: "Guess", icon: Play, color: "from-blue-500 to-cyan-500" },
+    { id: "uno", name: "UNO", icon: Gamepad2, color: "from-red-500 to-orange-500" },
+    { id: "baloot", name: "Baloot", icon: Trophy, color: "from-amber-500 to-yellow-600" },
+    { id: "jackaroo", name: "Jackaroo", icon: Dices, color: "from-emerald-500 to-teal-600" },
   ];
 
   return (
     <div className="w-full flex flex-col pb-32 text-white select-none" dir="rtl">
       
-      {/* 1. البانر العلوي المتحرك (Carousel Banner) */}
+      {/* 1. البانر العلوي المتحرك (Carousel Banner) الفاخر */}
       <div className="relative w-full px-4 pt-3">
         <div 
-          className="relative w-full rounded-2xl overflow-hidden shadow-2xl flex flex-col justify-end p-4 border border-amber-500/30"
+          className="relative w-full rounded-2xl overflow-hidden shadow-2xl flex flex-col justify-end p-5 border border-amber-500/40"
           style={{
             aspectRatio: "16 / 7",
-            background: "linear-gradient(135deg, #1e103f 0%, #0d0618 100%)",
+            background: "linear-gradient(135deg, #2a1558 0%, #0d0618 100%)",
           }}
         >
-          {/* خلفية جمالية تخيلية للبانر */}
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-500/20 via-transparent to-transparent pointer-events-none" />
           
           <div className="relative z-10 flex items-center justify-between">
             <div>
-              <span className="text-[10px] bg-amber-500/30 text-amber-300 px-2 py-0.5 rounded-full font-bold border border-amber-500/40">
-                مسابقة تصنيف الوكالات
+              <span className="text-[10px] bg-amber-500/30 text-amber-300 px-2.5 py-0.5 rounded-full font-bold border border-amber-500/40 shadow">
+                مسابقة تصنيف الوكالات النشطة
               </span>
-              <h2 className="text-lg font-black text-amber-200 mt-1 drop-shadow-md">
-                تهانينا على الوصول إلى مستوى S
+              <h2 className="text-base font-black text-amber-200 mt-1.5 drop-shadow-md">
+                تهانينا على الوصول إلى مستوى النخبة S
               </h2>
             </div>
-            <div className="w-12 h-12 rounded-full bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-300 font-black text-xl shadow-lg">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 border border-amber-200/60 flex items-center justify-center text-black font-black text-xl shadow-[0_0_15px_rgba(245,158,11,0.5)]">
               S
             </div>
           </div>
 
-          {/* نقاط التمرير (Dots) */}
-          <div className="flex items-center justify-center gap-1.5 mt-3 relative z-10">
-            <span className="w-5 h-1.5 bg-amber-400 rounded-full shadow-[0_0_6px_#f59e0b]" />
+          {/* نقاط التمرير التفاعلية */}
+          <div className="flex items-center justify-center gap-1.5 mt-4 relative z-10">
+            <span className="w-6 h-1.5 bg-amber-400 rounded-full shadow-[0_0_8px_#f59e0b]" />
             <span className="w-1.5 h-1.5 bg-white/30 rounded-full" />
             <span className="w-1.5 h-1.5 bg-white/30 rounded-full" />
             <span className="w-1.5 h-1.5 bg-white/30 rounded-full" />
@@ -83,73 +65,127 @@ export default function DiscoverTab({ onEnterRoom }: DiscoverTabProps) {
         </div>
       </div>
 
-      {/* 2. شريط التصنيفات (Tabs: رسمى، الألعاب، الأنشطة) */}
-      <div className="flex items-center justify-between px-4 mt-5 mb-3 border-b border-white/5 pb-2">
-        <div className="flex items-center gap-6">
+      {/* 2. شريط التبويبات الرئيسية (رسمي، الألعاب، الأنشطة) */}
+      <div className="flex items-center justify-between px-4 mt-5 mb-3 border-b border-white/10 pb-2.5">
+        <div className="flex items-center gap-8">
           <button 
-            onClick={() => setSubTab("official")}
-            className={`text-sm font-bold transition ${subTab === "official" ? "text-white scale-105 border-b-2 border-emerald-400 pb-1" : "text-white/40 hover:text-white/70"}`}
+            onClick={() => setActiveTab("official")}
+            className={`text-sm font-bold transition ${activeTab === "official" ? "text-amber-300 scale-105 border-b-2 border-amber-400 pb-1" : "text-white/40 hover:text-white/70"}`}
           >
             رسمي
           </button>
           <button 
-            onClick={() => setSubTab("games")}
-            className={`text-sm font-bold transition ${subTab === "games" ? "text-white scale-105 border-b-2 border-emerald-400 pb-1" : "text-white/40 hover:text-white/70"}`}
+            onClick={() => setActiveTab("games")}
+            className={`text-sm font-bold transition ${activeTab === "games" ? "text-amber-300 scale-105 border-b-2 border-amber-400 pb-1" : "text-white/40 hover:text-white/70"}`}
           >
             الألعاب
           </button>
           <button 
-            onClick={() => setSubTab("activities")}
-            className={`text-sm font-bold transition ${subTab === "activities" ? "text-white scale-105 border-b-2 border-emerald-400 pb-1" : "text-white/40 hover:text-white/70"}`}
+            onClick={() => setActiveTab("activities")}
+            className={`text-sm font-bold transition ${activeTab === "activities" ? "text-amber-300 scale-105 border-b-2 border-amber-400 pb-1" : "text-white/40 hover:text-white/70"}`}
           >
             الأنشطة
           </button>
         </div>
 
-        <button className="text-xs text-white/50 hover:text-white flex items-center gap-1">
+        <button className="text-xs text-amber-400/80 hover:text-amber-300 flex items-center gap-1 font-semibold">
           أكثر <ChevronLeft size={14} />
         </button>
       </div>
 
-      {/* 3. شبكة الكروت (Grid Cards) للأنشطة */}
-      <div className="grid grid-cols-2 gap-3 px-4">
-        {events.map((item) => (
-          <div 
-            key={item.id}
-            className="flex flex-col rounded-2xl bg-[#161c26] border border-white/10 overflow-hidden shadow-lg hover:border-purple-500/40 transition"
-          >
-            {/* صورة الكرت مع شارة "قريباً" */}
-            <div className="relative w-full h-32 bg-black/40">
-              <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#161c26] via-transparent to-transparent opacity-80" />
-              
-              {/* شارة قريباً */}
-              <span className="absolute top-2 right-2 text-[10px] bg-emerald-500/90 text-white font-bold px-2 py-0.5 rounded-md shadow">
-                {item.tag}
-              </span>
+      {/* 3. شريط الألعاب التفاعلي السريع (أيقونات أفقية مطابقة لصورة بينمو) */}
+      <div className="px-4 mb-4">
+        <div className="flex items-center gap-3 overflow-x-auto no-scrollbar py-1">
+          {gameCategories.map((cat) => {
+            const Icon = cat.icon;
+            const isSelected = selectedGame === cat.id;
+            return (
+              <button
+                key={cat.id}
+                onClick={() => setSelectedGame(cat.id)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-2xl border transition whitespace-nowrap shadow-lg ${
+                  isSelected 
+                    ? "bg-gradient-to-r from-purple-600 to-indigo-600 border-amber-400/50 text-white shadow-purple-500/30" 
+                    : "bg-[#161c26] border-white/10 text-white/70 hover:bg-[#1f293d]"
+                }`}
+              >
+                <Icon size={16} className={isSelected ? "text-amber-300" : "text-purple-400"} />
+                <span className="text-xs font-bold">{cat.name}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
-              {/* الوقت والوكالة */}
-              <div className="absolute bottom-2 right-2 left-2 flex items-center justify-between text-[10px] text-white/80">
-                <span className="truncate">{item.agency}</span>
-                <span className="flex items-center gap-1"><Calendar size={10} /> {item.time}</span>
-              </div>
-            </div>
+      {/* شريط الفلاتر الفرعية (الدولة والعالم) */}
+      <div className="flex items-center gap-2 px-4 mb-4">
+        <button 
+          onClick={() => setSelectedCountry("SA")}
+          className={`px-3 py-1 rounded-xl text-xs font-bold border transition flex items-center gap-1.5 ${selectedCountry === "SA" ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40" : "bg-white/5 text-white/50 border-white/5"}`}
+        >
+          🇸🇦 السعودية
+        </button>
+        <button 
+          onClick={() => setSelectedCountry("ALL")}
+          className={`px-3 py-1 rounded-xl text-xs font-bold border transition flex items-center gap-1.5 ${selectedCountry === "ALL" ? "bg-purple-500/20 text-purple-300 border-purple-500/40" : "bg-white/5 text-white/50 border-white/5"}`}
+        >
+          <Globe size={12} /> العالم
+        </button>
+      </div>
 
-            {/* تفاصيل الكرت وزر الاشتراك */}
-            <div className="p-3 flex flex-col gap-2">
-              <h3 className="text-sm font-bold text-white truncate">{item.title}</h3>
-              
-              <div className="flex items-center gap-2 mt-1">
-                <button className="flex-1 bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30 py-1.5 rounded-xl text-xs font-bold transition text-center shadow">
-                  + الاشتراك
-                </button>
-                <button className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/70 transition">
-                  <RefreshCw size={14} />
-                </button>
-              </div>
-            </div>
+      {/* 4. قائمة الغرف والأنشطة الحقيقية المستخرجة من قاعدة البيانات */}
+      <div className="flex flex-col gap-3 px-4">
+        {rooms.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-white/40 gap-2">
+            <Trophy size={32} className="text-amber-500/50 animate-pulse" />
+            <p className="text-xs">لا توجد غرف أو فعاليات نشطة حالياً</p>
           </div>
-        ))}
+        ) : (
+          rooms.map((room: any) => (
+            <div 
+              key={room._id}
+              onClick={() => onEnterRoom(room._id)}
+              className="flex items-center justify-between p-3.5 rounded-2xl bg-[#161c26] border border-white/10 hover:border-purple-500/40 transition cursor-pointer shadow-lg"
+            >
+              {/* معلومات الغرفة والوكالة */}
+              <div className="flex items-center gap-3">
+                <div className="relative w-14 h-14 rounded-2xl overflow-hidden border border-amber-500/30 bg-black/40 flex-shrink-0">
+                  <img 
+                    src={room.image || "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=200"} 
+                    alt={room.title} 
+                    className="w-full h-full object-cover"
+                  />
+                  <span className="absolute bottom-0 inset-x-0 bg-black/60 text-[9px] text-center text-amber-300 font-bold py-0.5">
+                    LIVE
+                  </span>
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-white line-clamp-1">{room.title}</h3>
+                    <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-500/30">
+                      SA 🇸🇦
+                    </span>
+                  </div>
+                  <p className="text-xs text-white/50 flex items-center gap-1">
+                    <Users size={12} className="text-purple-400" /> {room.participantsCount || 1} متصل الآن
+                  </p>
+                </div>
+              </div>
+
+              {/* زر الدخول / الاشتراك الحقيقي */}
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEnterRoom(room._id);
+                }}
+                className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-[0_0_10px_rgba(16,185,129,0.3)] transition active:scale-95"
+              >
+                + الاشتراك
+              </button>
+            </div>
+          ))
+        )}
       </div>
 
     </div>
