@@ -43,7 +43,32 @@ export default function Dashboard({ onEnterRoom, onEnterLive, onStartLive }: Pro
     <div className="h-[100dvh] w-full flex flex-col app-bg overflow-hidden" dir="rtl">
       {/* ============ Content ============ */}
       <PullToRefresh onRefresh={() => setRefreshKey((k) => k + 1)} className="flex-1 pb-20">
-        <div key={refreshKey}>
+                <div key={refreshKey} className="relative">
+        {/* خلفية الهيدر الملكية المدمجة لصفحات (لحظات - رسائل - أنا) */}
+        {(tab === "moments" || tab === "messages" || tab === "me") && (
+          <div
+            className="pointer-events-none select-none w-full sticky top-0 z-0"
+            style={{
+              height: "115px",
+              marginBottom: "-95px",
+              background: "radial-gradient(120% 100% at 80% 0%, rgba(147, 51, 234, 0.38) 0%, rgba(88, 28, 135, 0.22) 45%, rgba(11, 14, 20, 0) 100%)",
+              borderBottom: "1px solid rgba(168, 85, 247, 0.25)",
+              boxShadow: "0 8px 32px rgba(88, 28, 135, 0.25)",
+            }}
+          >
+            {/* موجات نيون وشعار EZO GROUP الخفيف في الخلفية مثل بينمو */}
+            <div className="w-full h-full flex items-start justify-end px-4 pt-2 opacity-35" dir="ltr">
+              <div className="flex flex-col items-center leading-none">
+                <span className="text-xl font-black tracking-wider bg-gradient-to-b from-white via-purple-200 to-amber-300 bg-clip-text text-transparent drop-shadow-[0_2px_10px_rgba(168,85,247,0.8)]">
+                  EZO
+                </span>
+                <span className="text-[9px] font-extrabold text-amber-400 tracking-widest">
+                  GROUP
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
         {tab === "rooms" && (
           <RoomsTab
             onEnter={onEnterRoom}
@@ -81,7 +106,7 @@ export default function Dashboard({ onEnterRoom, onEnterLive, onStartLive }: Pro
         <div 
           className="relative w-full h-full"
           style={{
-            backgroundImage: "url(/ui/bottom-nav.png)",
+            backgroundImage: "url(/ui/bottom-nav-trans.png)",
             backgroundSize: "100% 100%",
             backgroundPosition: "bottom center",
             backgroundRepeat: "no-repeat",

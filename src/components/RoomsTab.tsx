@@ -86,83 +86,73 @@ export default function RoomsTab({ onEnter, onEnterLive, onStartLive }: Props) {
 
   return (
     <div className="max-w-md mx-auto">
-                              {/* ============ EZO Custom Image Header with Precision Click Zones ============ */}
-      <div className="sticky top-0 z-40 w-full overflow-hidden select-none bg-[#090412]">
-        <div 
-          className="relative w-full"
+                                    {/* ============ EZO Transparent Overlapping Header ============ */}
+      <div className="sticky top-0 z-40 w-full select-none pointer-events-none" style={{ marginBottom: "-18px" }}>
+        <div
+          className="relative w-full pointer-events-auto"
           style={{
-            width: "100%",
-            height: "90px",
-            backgroundImage: "url(/ui/rooms1.png)",
+            aspectRatio: "1080 / 300",
+            backgroundImage: "url(/ui/rooms1-trans.png)",
             backgroundSize: "100% 100%",
-            backgroundPosition: "center",
+            backgroundPosition: "center top",
             backgroundRepeat: "no-repeat",
+            filter: "drop-shadow(0 6px 14px rgba(10, 4, 20, 0.85))",
           }}
         >
-          {/* طبقة تفاعلية شفافة للأزرار */}
+          {/* طبقة اللمس الدقيقة فوق عناصر الصورة */}
           <div className="absolute inset-0 flex items-end pb-3 px-1" dir="ltr">
             <div className="w-full flex items-center h-16">
-              
-              {/* 1. أقصى اليسار: شعار EZO GROUP */}
-              <div 
+              {/* 1. شعار EZO GROUP */}
+              <div
                 onClick={() => myRoom ? onEnter(myRoom._id) : setShowCreate(true)}
                 className="w-[28%] h-full cursor-pointer active:opacity-70 transition"
                 title="EZO GROUP"
               />
-
-              {/* 2. زر البحث (عدسة) */}
-              <div 
+              {/* 2. زر البحث */}
+              <div
                 onClick={() => setShowSearch(true)}
                 className="w-[10%] h-full flex items-center justify-center cursor-pointer active:scale-90 transition rounded-full"
                 title="بحث"
               />
-
-              {/* 3. زر الغرفة (منزل) */}
-              <div 
+              {/* 3. زر غرفتي (المنزل) */}
+              <div
                 onClick={() => myRoom ? onEnter(myRoom._id) : setShowCreate(true)}
                 className="w-[10%] h-full flex items-center justify-center cursor-pointer active:scale-90 transition rounded-full"
                 title="غرفتي"
               />
-
               {/* 4. تبويب لايف */}
-              <div 
+              <div
                 onClick={() => setMainTab("live")}
                 className="w-[15%] h-full flex flex-col items-center justify-center cursor-pointer active:opacity-70 transition relative"
-                title="لايف"
               >
                 {mainTab === "live" && (
-                  <span className="absolute bottom-1 w-8 h-1 bg-amber-300 rounded-full shadow-[0_0_8px_#fde047]" />
+                  <span className="absolute bottom-1.5 w-8 h-1 bg-amber-300 rounded-full shadow-[0_0_10px_#fde047]" />
                 )}
               </div>
-
               {/* 5. تبويب ترند */}
-              <div 
+              <div
                 onClick={() => setMainTab("trend")}
                 className="w-[16%] h-full flex flex-col items-center justify-center cursor-pointer active:opacity-70 transition relative"
-                title="ترند"
               >
                 {mainTab === "trend" && (
-                  <span className="absolute bottom-1 w-8 h-1 bg-purple-300 rounded-full shadow-[0_0_8px_#c084fc]" />
+                  <span className="absolute bottom-1.5 w-8 h-1 bg-purple-300 rounded-full shadow-[0_0_10px_#c084fc]" />
                 )}
               </div>
-
-              {/* 6. تبويب الخاص بي (أقصى اليمين) */}
-              <div 
+              {/* 6. تبويب الخاص بي */}
+              <div
                 onClick={() => setMainTab("mine")}
                 className="w-[21%] h-full flex flex-col items-center justify-center cursor-pointer active:opacity-70 transition relative"
-                title="الخاص بي"
               >
                 {mainTab === "mine" && (
-                  <span className="absolute bottom-1 w-10 h-1 bg-purple-200 rounded-full shadow-[0_0_10px_#e9d5ff]" />
+                  <span className="absolute bottom-1.5 w-10 h-1 bg-amber-200 rounded-full shadow-[0_0_12px_#fde68a]" />
                 )}
               </div>
-
             </div>
           </div>
         </div>
       </div>
 {/* ============ Content ============ */}
-      <div className="px-4 py-3">
+      <div className="px-4 pt-5 pb-3 relative z-10">
         {mainTab === "mine" && (
           <MineTab
             mineSub={mineSub}

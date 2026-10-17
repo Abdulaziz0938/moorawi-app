@@ -969,3 +969,13 @@ html, body {
   border: 1px solid rgba(255, 255, 255, 0.06) !important;
   border-radius: 14px !important;
 }
+
+
+/* تراكب الشاشات والخلفيات بنمط بينمو + EZO البنفسجي */
+.app-bg {
+  background-color: #090514 !important;
+  background-image: 
+    radial-gradient(circle at 85% 5%, rgba(126, 34, 206, 0.18) 0%, transparent 40%),
+    radial-gradient(circle at 15% 15%, rgba(88, 28, 135, 0.15) 0%, transparent 45%),
+    linear-gradient(180deg, #0f0720 0%, #090514 35%, #07040e 100%) !important;
+}
