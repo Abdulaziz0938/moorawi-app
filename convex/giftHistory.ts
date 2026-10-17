@@ -18,14 +18,16 @@ export const mySentGifts = query({
   args: {
     limit: v.optional(v.number()),
     tokenOverride: v.optional(v.string()),
+    userId: v.optional(v.id("users")),
   },
   handler: async (ctx, args) => {
     const me = await requireUser(ctx, args.tokenOverride);
+    const targetId = args.userId ?? me._id;
     const limit = Math.min(args.limit ?? 50, 200);
 
     const txs = await ctx.db
       .query("giftTransactions")
-      .withIndex("by_from", (q) => q.eq("fromUserId", me._id))
+      .withIndex("by_from", (q) => q.eq("fromUserId", targetId))
       .order("desc")
       .take(limit);
 
@@ -68,14 +70,16 @@ export const myReceivedGifts = query({
   args: {
     limit: v.optional(v.number()),
     tokenOverride: v.optional(v.string()),
+    userId: v.optional(v.id("users")),
   },
   handler: async (ctx, args) => {
     const me = await requireUser(ctx, args.tokenOverride);
+    const targetId = args.userId ?? me._id;
     const limit = Math.min(args.limit ?? 50, 200);
 
     const txs = await ctx.db
       .query("giftTransactions")
-      .withIndex("by_to", (q) => q.eq("toUserId", me._id))
+      .withIndex("by_to", (q) => q.eq("toUserId", targetId))
       .order("desc")
       .take(limit);
 
@@ -115,18 +119,22 @@ export const myReceivedGifts = query({
 // summary — إجماليات (للـ header)
 // ============================================================
 export const summary = query({
-  args: { tokenOverride: v.optional(v.string()) },
+  args: {
+    tokenOverride: v.optional(v.string()),
+    userId: v.optional(v.id("users")),
+  },
   handler: async (ctx, args) => {
     const me = await requireUser(ctx, args.tokenOverride);
+    const targetId = args.userId ?? me._id;
 
     const sent = await ctx.db
       .query("giftTransactions")
-      .withIndex("by_from", (q) => q.eq("fromUserId", me._id))
+      .withIndex("by_from", (q) => q.eq("fromUserId", targetId))
       .take(1000);
 
     const received = await ctx.db
       .query("giftTransactions")
-      .withIndex("by_to", (q) => q.eq("toUserId", me._id))
+      .withIndex("by_to", (q) => q.eq("toUserId", targetId))
       .take(1000);
 
     let sentTotal = 0;
