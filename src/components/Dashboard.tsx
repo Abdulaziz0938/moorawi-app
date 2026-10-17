@@ -40,21 +40,9 @@ export default function Dashboard({ onEnterRoom, onEnterLive, onStartLive }: Pro
   ];
 
   return (
-    <div className="h-[100dvh] w-full flex flex-col app-bg overflow-hidden relative" dir="rtl">
-      {/* ═══ LAYER 1: Top Banner (fixed, behind all tabs) ═══ */}
-      <div
-        className="fixed top-0 left-0 right-0 z-0 pointer-events-none"
-        style={{
-          height: "160px",
-          backgroundImage: "url(/ui/top-banner-purple.png)",
-          backgroundSize: "100% 100%",
-          backgroundRepeat: "no-repeat",
-        }}
-      />
-
-      {/* ═══ LAYER 2: Content (below banner) ═══ */}
-      <div className="relative z-10 flex-1 flex flex-col" style={{ paddingTop: "160px" }}>
-      <PullToRefresh onRefresh={() => setRefreshKey((k) => k + 1)} className="flex-1 pb-28">
+    <div className="h-[100dvh] w-full flex flex-col app-bg overflow-hidden" dir="rtl">
+      {/* ============ Content ============ */}
+      <PullToRefresh onRefresh={() => setRefreshKey((k) => k + 1)} className="flex-1 pb-24">
         <div key={refreshKey}>
         {tab === "rooms" && (
           <RoomsTab
@@ -80,25 +68,20 @@ export default function Dashboard({ onEnterRoom, onEnterLive, onStartLive }: Pro
         )}
         </div>
       </PullToRefresh>
-      </div>
 
       {/* ============ TabBar ============ */}
       <nav
         className="fixed bottom-0 left-0 right-0 z-40"
         style={{
+          height: "calc(78px + env(safe-area-inset-bottom, 0px))",
           paddingBottom: "env(safe-area-inset-bottom, 0px)",
-          height: "100px",
+          backgroundImage: "url(/ui/bottom-nav-purple.png)",
+          backgroundSize: "100% 100%",
+          backgroundRepeat: "no-repeat",
+          backgroundPosition: "bottom center",
         }}
       >
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            backgroundImage: "url(/ui/bottom-nav-purple.png)",
-            backgroundSize: "100% 100%",
-            backgroundRepeat: "no-repeat",
-          }}
-        />
-        <div className="relative max-w-md mx-auto h-full flex items-end justify-around px-2 pb-2">
+        <div className="max-w-md mx-auto h-full flex items-center justify-around px-1">
           {tabs.map((t) => {
             const active = tab === t.key;
             const Icon = t.icon;
@@ -106,29 +89,19 @@ export default function Dashboard({ onEnterRoom, onEnterLive, onStartLive }: Pro
               <button
                 key={t.key}
                 onClick={() => setTab(t.key)}
-                className="relative flex-1 flex flex-col items-center justify-end gap-0.5"
+                className={`relative flex flex-col items-center justify-center gap-0.5 transition ${active ? "text-purple-200 -translate-y-0.5" : "text-white/55"}`}
               >
-                <div className="relative w-10 h-10 flex items-center justify-center">
-                  <IconOrImage
-                    assetKey={t.assetKey}
-                    Icon={Icon}
-                    size={24}
-                    imgSize={36}
-                    strokeWidth={active ? 2.5 : 2}
-                    imgClassName={active ? "" : "opacity-60"}
-                  />
+                <div className="relative w-8 h-8 flex items-center justify-center">
+                  <IconOrImage assetKey={t.assetKey} Icon={Icon} size={24} imgSize={32} strokeWidth={active ? 2.5 : 2} imgClassName={active ? "" : "opacity-75"} />
                   {t.badge && t.badge > 0 ? (
-                    <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] px-1 rounded-full bg-red-500 text-white text-[9px] font-black flex items-center justify-center">
+                    <span className="absolute -top-1 -left-1 min-w-[16px] h-[16px] px-1 rounded-full bg-red-500 text-white text-[9px] font-black flex items-center justify-center border border-purple-900">
                       {t.badge > 99 ? "99+" : t.badge}
                     </span>
                   ) : null}
                 </div>
-                <span className={`text-[10px] font-black transition ${active ? "text-white" : "text-white/50"}`}>
+                <span className={`text-[11px] ${active ? "font-bold" : "font-medium"}`}>
                   {t.label}
                 </span>
-                {active && (
-                  <span className="absolute -top-1 left-1/2 -translate-x-1/2 w-8 h-[3px] rounded-full bg-gradient-to-r from-pink-500 via-purple-500 to-pink-500 shadow-lg shadow-pink-500/60" />
-                )}
               </button>
             );
           })}
