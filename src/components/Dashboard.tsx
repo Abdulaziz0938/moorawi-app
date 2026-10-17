@@ -42,7 +42,7 @@ export default function Dashboard({ onEnterRoom, onEnterLive, onStartLive }: Pro
   return (
     <div className="h-[100dvh] w-full flex flex-col app-bg overflow-hidden" dir="rtl">
       {/* ============ Content ============ */}
-      <PullToRefresh onRefresh={() => setRefreshKey((k) => k + 1)} className="flex-1 pb-20">
+      <PullToRefresh onRefresh={() => setRefreshKey((k) => k + 1)} className="flex-1 pb-28">
         <div key={refreshKey}>
         {tab === "rooms" && (
           <RoomsTab
@@ -74,13 +74,18 @@ export default function Dashboard({ onEnterRoom, onEnterLive, onStartLive }: Pro
         className="fixed bottom-0 left-0 right-0 z-40"
         style={{
           paddingBottom: "env(safe-area-inset-bottom, 0px)",
-          backgroundImage: "url(/ui/bottom-nav-purple.png)",
-          backgroundSize: "100% 100%",
-          backgroundRepeat: "no-repeat",
-          backgroundPosition: "bottom center",
+          height: "100px",
         }}
       >
-        <div className="max-w-md mx-auto flex items-center justify-around px-1">
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            backgroundImage: "url(/ui/bottom-nav-purple.png)",
+            backgroundSize: "100% 100%",
+            backgroundRepeat: "no-repeat",
+          }}
+        />
+        <div className="relative max-w-md mx-auto h-full flex items-end justify-around px-2 pb-2">
           {tabs.map((t) => {
             const active = tab === t.key;
             const Icon = t.icon;
@@ -88,21 +93,29 @@ export default function Dashboard({ onEnterRoom, onEnterLive, onStartLive }: Pro
               <button
                 key={t.key}
                 onClick={() => setTab(t.key)}
-                className={`relative flex-1 flex flex-col items-center justify-center gap-0.5 py-2 transition overflow-visible ${active ? "text-white" : "text-white/45 hover:text-white/70"}`}
+                className="relative flex-1 flex flex-col items-center justify-end gap-0.5"
               >
-                <div className="relative w-8 h-8 flex items-center justify-center">
-                  <div className="absolute -inset-3 flex items-center justify-center">
-                    <IconOrImage assetKey={t.assetKey} Icon={Icon} size={28} imgSize={40} fillParent strokeWidth={active ? 2.5 : 2} imgClassName={active ? "" : "opacity-75"} />
-                  </div>
+                <div className="relative w-10 h-10 flex items-center justify-center">
+                  <IconOrImage
+                    assetKey={t.assetKey}
+                    Icon={Icon}
+                    size={24}
+                    imgSize={36}
+                    strokeWidth={active ? 2.5 : 2}
+                    imgClassName={active ? "" : "opacity-60"}
+                  />
+                  {t.badge && t.badge > 0 ? (
+                    <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] px-1 rounded-full bg-red-500 text-white text-[9px] font-black flex items-center justify-center">
+                      {t.badge > 99 ? "99+" : t.badge}
+                    </span>
+                  ) : null}
                 </div>
+                <span className={`text-[10px] font-black transition ${active ? "text-white" : "text-white/50"}`}>
+                  {t.label}
+                </span>
                 {active && (
-                  <span className="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-0.5 rounded-full bg-gradient-to-r from-pink-500 to-purple-500" />
+                  <span className="absolute -top-1 left-1/2 -translate-x-1/2 w-8 h-[3px] rounded-full bg-gradient-to-r from-pink-500 via-purple-500 to-pink-500 shadow-lg shadow-pink-500/60" />
                 )}
-                {t.badge && t.badge > 0 ? (
-                  <span className="absolute top-1 right-1/4 min-w-[16px] h-[16px] px-1 rounded-full bg-red-500 text-white text-[9px] font-black flex items-center justify-center">
-                    {t.badge > 99 ? "99+" : t.badge}
-                  </span>
-                ) : null}
               </button>
             );
           })}
