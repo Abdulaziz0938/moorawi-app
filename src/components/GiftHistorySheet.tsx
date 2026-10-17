@@ -8,6 +8,7 @@
 import { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import type { Id } from "../../convex/_generated/dataModel";
 import { getDeviceId } from "../lib/device";
 import { useBackButton } from "../lib/hooks/useBackButton";
 import UserAvatar from "./UserAvatar";
@@ -21,6 +22,7 @@ import { getActiveToken } from "../lib/session";
 interface Props {
   onClose: () => void;
   onUserClick?: (userId: string) => void;
+  userId?: Id<"users">;
 }
 
 type Tab = "sent" | "received";
@@ -45,14 +47,14 @@ function fmtNum(n: number): string {
   return n.toLocaleString();
 }
 
-export default function GiftHistorySheet({ onClose, onUserClick }: Props) {
+export default function GiftHistorySheet({ onClose, onUserClick, userId }: Props) {
   useBackButton(true, onClose);
   const deviceId = getDeviceId();
   const [tab, setTab] = useState<Tab>("sent");
 
-  const summary = useQuery(api.giftHistory.summary, { tokenOverride: getActiveToken() ?? deviceId });
-  const sent = useQuery(api.giftHistory.mySentGifts, { tokenOverride: getActiveToken() ?? deviceId, limit: 100 });
-  const received = useQuery(api.giftHistory.myReceivedGifts, { tokenOverride: getActiveToken() ?? deviceId, limit: 100 });
+  const summary = useQuery(api.giftHistory.summary, { tokenOverride: getActiveToken() ?? deviceId, userId });
+  const sent = useQuery(api.giftHistory.mySentGifts, { tokenOverride: getActiveToken() ?? deviceId, limit: 100, userId });
+  const received = useQuery(api.giftHistory.myReceivedGifts, { tokenOverride: getActiveToken() ?? deviceId, limit: 100, userId });
 
   const list = tab === "sent" ? sent : received;
 

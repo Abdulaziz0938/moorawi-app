@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import type { Id } from "../../convex/_generated/dataModel";
 import { getActiveToken } from "../lib/session";
 import { dialog } from "../lib/dialog";
 import { X, Loader2, Award, Check, ChevronLeft, Lock } from "lucide-react";
@@ -9,6 +10,7 @@ import { tierDesign, MEDAL_TIERS } from "../lib/medalDesign";
 
 interface Props {
   onClose: () => void;
+  userId?: Id<"users">;
 }
 
 type Category = "all" | "activity" | "wealth" | "charm" | "monthly" | "weekly" | "special";
@@ -27,7 +29,7 @@ const CATEGORIES: { key: Category; label: string }[] = [
 
 type View = "list" | "mine";
 
-export default function MedalsSheet({ onClose }: Props) {
+export default function MedalsSheet({ onClose, userId }: Props) {
   const token = getActiveToken();
   const [view, setView] = useState<View>("list");
   const [category, setCategory] = useState<Category>("all");
@@ -35,7 +37,10 @@ export default function MedalsSheet({ onClose }: Props) {
   const allMedals = useQuery(api.medals.listAll, {
     category: category === "all" ? undefined : category,
   });
-  const myMedals = useQuery(api.medals.myMedals, { tokenOverride: token });
+  const myMedals = useQuery(
+    userId ? api.medals.userMedals : api.medals.myMedals,
+    userId ? { userId } : { tokenOverride: token }
+  );
 
   const equipMedal = useMutation(api.medals.equipMedal);
   const unequipMedal = useMutation(api.medals.unequipMedal);

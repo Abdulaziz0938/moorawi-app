@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import type { Id } from "../../convex/_generated/dataModel";
 import { getActiveToken } from "../lib/session";
 import { useAssetsFull } from "../lib/assets";
 import { dialog } from "../lib/dialog";
@@ -34,14 +35,15 @@ interface Props {
   onClose: () => void;
   initialCategory?: Category;
   onOpenStore?: () => void;
+  userId?: Id<"users">;
 }
 
-export default function MyItemsSheet({ onClose, initialCategory = "frame", onOpenStore }: Props) {
+export default function MyItemsSheet({ onClose, initialCategory = "frame", onOpenStore, userId }: Props) {
   const token = getActiveToken();
   const [category, setCategory] = useState<Category>(initialCategory);
   const [busy, setBusy] = useState<string | null>(null);
 
-  const inventory = useQuery(api.shop.myInventory, { tokenOverride: token });
+  const inventory = useQuery(api.shop.myInventory, { tokenOverride: token, userId });
   const me = useQuery(api.profiles.me, { tokenOverride: token });
   const assetsFull = useAssetsFull();
 
