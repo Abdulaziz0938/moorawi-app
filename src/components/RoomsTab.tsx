@@ -86,41 +86,68 @@ export default function RoomsTab({ onEnter, onEnterLive, onStartLive }: Props) {
 
   return (
     <div className="max-w-md mx-auto">
-      {/* ============ Top Header with banner bg ============ */}
-      <div
-        className="sticky top-0 z-30 w-full flex flex-col justify-end px-3 pb-2 shadow-lg"
-        style={{
-          minHeight: "125px",
-          backgroundImage: "url(/ui/top-banner-purple.png)",
-          backgroundSize: "cover",
-          backgroundPosition: "center top",
-          backgroundRepeat: "no-repeat",
-        }}
-      >
-        <div className="w-full flex items-center justify-between mt-auto pt-10">
-          <button
-            onClick={() => setShowSearch(true)}
-            className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-md border border-purple-400/30 flex items-center justify-center text-white active:scale-95 transition shadow"
-          >
-            <Search size={16} />
-          </button>
+            {/* ============ Luxury Fixed Banner with Integrated Click Zones ============ */}
+      <div className="sticky top-0 z-40 w-full select-none" dir="ltr">
+        <div 
+          className="relative w-full overflow-hidden shadow-2xl"
+          style={{
+            aspectRatio: "1080 / 300",
+            backgroundImage: "url(/ui/top-banner-purple.png)",
+            backgroundSize: "100% 100%",
+            backgroundPosition: "center top",
+            backgroundRepeat: "no-repeat",
+          }}
+        >
+          {/* شريط الأزرار التفاعلية الشفافة المركبة بدقة فوق محتوى الصورة */}
+          <div className="absolute inset-0 flex items-end pb-3 px-2">
+            <div className="w-full flex items-center justify-between h-14">
+              
+              {/* 1. شعار EZO (على اليسار) وزر غرفتي */}
+              <div 
+                onClick={() => myRoom ? onEnter(myRoom._id) : setShowCreate(true)}
+                className="w-1/3 h-full cursor-pointer active:opacity-75 transition"
+                title="غرفتي"
+              />
 
-          <div className="flex items-center gap-6" dir="rtl">
-            <TopTabBtn active={mainTab === "mine"}  onClick={() => setMainTab("mine")}  label="الخاص بي" />
-            <TopTabBtn active={mainTab === "trend"} onClick={() => setMainTab("trend")} label="ترند" />
-            <TopTabBtn active={mainTab === "live"}  onClick={() => setMainTab("live")}  label="لايف" />
+              {/* 2. زر البحث الدائري الشفاف */}
+              <div 
+                onClick={() => setShowSearch(true)}
+                className="w-11 h-11 rounded-full cursor-pointer active:scale-90 transition mx-1"
+                title="بحث"
+              />
+
+              {/* 3. تصنيفات التبويبات (لايف - ترند - الخاص بي) */}
+              <div className="flex-1 flex items-center justify-end gap-1 h-full pr-2 text-transparent select-none font-bold">
+                <button 
+                  onClick={() => setMainTab("live")}
+                  className={`h-full px-3 flex items-center justify-center cursor-pointer transition ${mainTab === "live" ? "scale-105" : "opacity-60"}`}
+                >
+                  <span className="sr-only">لايف</span>
+                  <div className={`w-8 h-1 rounded-full ${mainTab === "live" ? "bg-purple-300 shadow-[0_0_10px_#c084fc]" : "bg-transparent"} mt-auto`} />
+                </button>
+
+                <button 
+                  onClick={() => setMainTab("trend")}
+                  className={`h-full px-3 flex items-center justify-center cursor-pointer transition ${mainTab === "trend" ? "scale-105" : "opacity-60"}`}
+                >
+                  <span className="sr-only">ترند</span>
+                  <div className={`w-8 h-1 rounded-full ${mainTab === "trend" ? "bg-purple-300 shadow-[0_0_10px_#c084fc]" : "bg-transparent"} mt-auto`} />
+                </button>
+
+                <button 
+                  onClick={() => setMainTab("mine")}
+                  className={`h-full px-3 flex items-center justify-center cursor-pointer transition ${mainTab === "mine" ? "scale-105" : "opacity-60"}`}
+                >
+                  <span className="sr-only">الخاص بي</span>
+                  <div className={`w-10 h-1 rounded-full ${mainTab === "mine" ? "bg-purple-300 shadow-[0_0_10px_#c084fc]" : "bg-transparent"} mt-auto`} />
+                </button>
+              </div>
+
+            </div>
           </div>
-
-          <button
-            onClick={() => myRoom ? onEnter(myRoom._id) : setShowCreate(true)}
-            className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-md border border-purple-400/30 flex items-center justify-center text-white active:scale-95 transition shadow"
-          >
-            <Home size={16} />
-          </button>
         </div>
       </div>
-
-      {/* ============ Content ============ */}
+{/* ============ Content ============ */}
       <div className="px-4 py-3">
         {mainTab === "mine" && (
           <MineTab
