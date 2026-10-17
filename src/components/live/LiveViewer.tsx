@@ -12,6 +12,7 @@ import LiveGiftSheet from "./LiveGiftSheet";
 import LiveGiftAnimation from "./LiveGiftAnimation";
 import PKView from "./PKView";
 import PKWinnerModal from "./PKWinnerModal";
+import ProfilePage from "../ProfilePage";
 import {
   X, Heart, Users, Send, Gift, Loader2, Share2, Eye,
 } from "lucide-react";
@@ -55,6 +56,12 @@ export default function LiveViewer({ streamId, onLeave }: Props) {
   const [hearts, setHearts] = useState<{ id: number; x: number; color: string }[]>([]);
   const [lastTap, setLastTap] = useState(0);
   const [showGiftSheet, setShowGiftSheet] = useState(false);
+  const [profileUserId, setProfileUserId] = useState<string | null>(null);
+  const toggleFollow = useMutation(api.follows.toggle);
+  const followStatus = useQuery(
+    api.follows.isFollowing,
+    stream && !isHost ? { tokenOverride: token, targetUserId: stream.hostId } : ("skip" as any)
+  );
 
   // ═══ Join as audience — ينتظر stream ═══
   useEffect(() => {
@@ -242,11 +249,11 @@ export default function LiveViewer({ streamId, onLeave }: Props) {
       {/* Video area — split عندما PK نشط */}
       {stream.coHostId ? (
         <div className="absolute inset-0 flex">
-          {/* Host half (left in RTL means visually right) */}
+          {/* Host half — top (TikTok-style horizontal split) */}
           <div
             ref={hostVideoRef}
             onClick={handleScreenTap}
-            className="flex-1 relative bg-gradient-to-br from-cyan-900/40 to-black border-l border-white/20"
+            className="flex-1 relative bg-gradient-to-br from-cyan-900/40 to-black border-b border-white/20"
           >
             <div className="absolute top-20 right-2 z-20 bg-cyan-500/90 px-2 py-0.5 rounded-full">
               <span className="text-white text-[9px] font-black">
@@ -254,9 +261,9 @@ export default function LiveViewer({ streamId, onLeave }: Props) {
               </span>
             </div>
           </div>
-          {/* CoHost half */}
+          {/* CoHost half — bottom */}
           <div ref={coHostVideoRef} className="flex-1 relative bg-gradient-to-br from-pink-900/40 to-black">
-            <div className="absolute top-20 left-2 z-20 bg-pink-500/90 px-2 py-0.5 rounded-full">
+            <div className="absolute bottom-2 left-2 z-20 bg-pink-500/90 px-2 py-0.5 rounded-full">
               <span className="text-white text-[9px] font-black">
                 {stream.coHostName ?? "مذيعة"}
               </span>
@@ -307,8 +314,11 @@ export default function LiveViewer({ streamId, onLeave }: Props) {
             </button>
           )}
 
-          {/* Host card */}
-          <div className="flex items-center gap-2 bg-black/50 backdrop-blur rounded-full pl-1 pr-3 py-1 border border-white/15">
+          {/* Host card — clickable to open profile */}
+          <button
+            onClick={() => setProfileUserId(String(stream.hostId))}
+            className="flex items-center gap-2 bg-black/50 backdrop-blur rounded-full pl-1 pr-3 py-1 border border-white/15 active:scale-95"
+          >
             <VipAvatar
               src={stream.hostAvatarUrl}
               name={stream.hostName}
@@ -316,7 +326,7 @@ export default function LiveViewer({ streamId, onLeave }: Props) {
               vip={stream.hostVipLevel}
               ring={stream.hostVipLevel === 0}
             />
-            <div className="flex flex-col">
+            <div className="flex flex-col text-right">
               <span className="text-white text-[11px] font-black">
                 {stream.hostName}
               </span>
@@ -324,7 +334,27 @@ export default function LiveViewer({ streamId, onLeave }: Props) {
                 {stream.viewerCount.toLocaleString()} مشاهد
               </span>
             </div>
-          </div>
+          </button>
+
+          {/* Follow button */}
+          {!isHost && (
+            <button
+              onClick={async () => {
+                try {
+                  await toggleFollow({ targetUserId: stream.hostId, tokenOverride: token });
+                } catch (e: any) {
+                  dialog.alert(e?.message || "فشل");
+                }
+              }}
+              className={`px-3 h-7 rounded-full text-[10px] font-black active:scale-95 ${
+                followStatus
+                  ? "bg-white/15 text-white border border-white/20"
+                  : "bg-rose-500 text-white"
+              }`}
+            >
+              {followStatus ? "متابع" : "+ متابعة"}
+            </button>
+          )}
 
           <div className="flex-1" />
 
@@ -442,6 +472,14 @@ export default function LiveViewer({ streamId, onLeave }: Props) {
           </span>
         </div>
       )}
+      {profileUserId && (
+        <ProfilePage
+          userId={profileUserId}
+          isMe={false}
+          onClose={() => setProfileUserId(null)}
+        />
+      )}
+
       {/* Gift Sheet */}
 
       {/* PK Score Bar */}
