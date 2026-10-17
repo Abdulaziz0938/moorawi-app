@@ -49,26 +49,33 @@ export const myInventory = query({
   args: {
     tokenOverride: v.optional(v.string()),
     category: v.optional(v.string()),
+    userId: v.optional(v.id("users")),
   },
   handler: async (ctx, args) => {
-    if (!args.tokenOverride) return [];
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_token", (q) => q.eq("tokenIdentifier", args.tokenOverride!))
-      .unique();
-    if (!user) return [];
+    let targetUserId: any;
+    if (args.userId) {
+      targetUserId = args.userId;
+    } else {
+      if (!args.tokenOverride) return [];
+      const user = await ctx.db
+        .query("users")
+        .withIndex("by_token", (q) => q.eq("tokenIdentifier", args.tokenOverride!))
+        .unique();
+      if (!user) return [];
+      targetUserId = user._id;
+    }
 
     if (args.category) {
       return await ctx.db
         .query("userInventory")
         .withIndex("by_user_and_category", (q) =>
-          q.eq("userId", user._id).eq("category", args.category!),
+          q.eq("userId", targetUserId).eq("category", args.category!),
         )
         .collect();
     }
     return await ctx.db
       .query("userInventory")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .withIndex("by_user", (q) => q.eq("userId", targetUserId))
       .collect();
   },
 });
