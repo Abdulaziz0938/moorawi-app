@@ -52,13 +52,13 @@ export default function Dashboard({ onEnterRoom, onEnterLive, onStartLive }: Pro
           />
         )}
 
-        {tab === "discover" && <DiscoverTab onEnterRoom={onEnterRoom} />}
+        {tab === "discover" && <DiscoverTab onEnterRoom={(id) => onEnterRoom(id as any)} />}
 
         {tab === "moments" && <MomentsTab />}
 
         {tab === "messages" && <MessagesTab />}
 
-        {tab === "me" && <MeTab onEnterRoom={onEnterRoom} />}
+        {tab === "me" && <MeTab onEnterRoom={(id) => onEnterRoom(id as any)} />}
 
         {tab === "me" && !me && (
           <div className="h-full flex flex-col items-center justify-center text-white/60 p-8">
