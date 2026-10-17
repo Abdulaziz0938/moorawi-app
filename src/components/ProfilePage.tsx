@@ -72,6 +72,16 @@ export default function ProfilePage({
   const [listMode, setListMode] = useState<"followers" | "following" | "fans" | null>(null);
   const profile = useQuery(api.profileFull.getFull, { userId: userId as Id<"users"> });
   const activeRoom = useQuery(api.rooms.getUserActiveRoom, { userId: userId as Id<"users"> });
+
+  const momentsFeed = useQuery(
+    api.moments.feed,
+    userId ? { userId: userId as Id<"users">, limit: 50, tokenOverride: getActiveToken() ?? deviceId } : ("skip" as any)
+  );
+
+  const receivedGifts = useQuery(
+    api.giftHistory.myReceivedGifts,
+    userId ? { userId: userId as Id<"users">, limit: 20, tokenOverride: getActiveToken() ?? deviceId } : ("skip" as any)
+  );
   const updateName = useMutation(api.users.updateName);
   const saveAvatar = useMutation(api.profiles.saveAvatar);
   const saveCover = useMutation(api.profiles.saveCover);
@@ -751,7 +761,11 @@ export default function ProfilePage({
                 count={giftStats.received.count + giftStats.sent.count}
                 tone="purple"
                 onOpen={() => setShowGiftHistory(true)}
-                items={giftStats.received.count > 0 ? [] : []}
+                items={(receivedGifts ?? []).map((g: any) => ({
+                  imageUrl: g.giftImageUrl,
+                  name: g.giftName,
+                  count: g.quantity,
+                }))}
               />
 
               {/* أوسمة */}
@@ -840,12 +854,49 @@ export default function ProfilePage({
           )}
 
           {tab === "moments" && (
-            <Card tone="default" padding="lg">
-              <div className="flex flex-col items-center justify-center py-8 text-white/40">
-                <ImageIcon size={40} className="mb-3 opacity-40" />
-                <p className="text-sm">لا توجد منشورات</p>
-              </div>
-            </Card>
+            <div>
+              {momentsFeed === undefined ? (
+                <div className="flex justify-center py-12">
+                  <Loader2 size={28} className="animate-spin text-white/40" />
+                </div>
+              ) : momentsFeed.length === 0 ? (
+                <Card tone="default" padding="lg">
+                  <div className="flex flex-col items-center justify-center py-8 text-white/40">
+                    <ImageIcon size={40} className="mb-3 opacity-40" />
+                    <p className="text-sm">لا توجد منشورات</p>
+                  </div>
+                </Card>
+              ) : (
+                <div className="grid grid-cols-3 gap-1">
+                  {momentsFeed.map((m: any) => (
+                    <div
+                      key={m._id}
+                      className="aspect-square rounded-lg overflow-hidden bg-white/5 border border-white/10 relative"
+                    >
+                      {m.imageUrls?.[0] ? (
+                        <img
+                          src={m.imageUrls[0]}
+                          alt=""
+                          className="w-full h-full object-cover"
+                          draggable={false}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center p-2">
+                          <p className="text-white/60 text-[9px] line-clamp-4 text-center">
+                            {m.text ?? "—"}
+                          </p>
+                        </div>
+                      )}
+                      {m.imageUrls?.length > 1 && (
+                        <span className="absolute top-1 left-1 bg-black/60 text-white text-[8px] font-black px-1.5 py-0.5 rounded">
+                          {m.imageUrls.length}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           )}
         </div>
 
