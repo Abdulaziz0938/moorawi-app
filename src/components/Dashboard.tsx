@@ -70,41 +70,62 @@ export default function Dashboard({ onEnterRoom, onEnterLive, onStartLive }: Pro
       </PullToRefresh>
 
       {/* ============ TabBar ============ */}
-      <nav
-        className="fixed bottom-0 left-0 right-0 z-40"
+            {/* ============ Binmo Custom Image Bottom Navigation ============ */}
+      <nav 
+        className="fixed bottom-0 left-0 right-0 z-40 select-none"
         style={{
-          height: "calc(70px + env(safe-area-inset-bottom, 0px))",
+          height: "calc(78px + env(safe-area-inset-bottom, 0px))",
           paddingBottom: "env(safe-area-inset-bottom, 0px)",
-          backgroundImage: "url(/ui/bottom-nav-purple.png)",
-          backgroundSize: "100% 100%",
-          backgroundRepeat: "no-repeat",
-          backgroundPosition: "bottom center",
         }}
       >
-        <div className="max-w-md mx-auto h-full flex items-center justify-around px-1">
-          {tabs.map((t) => {
-            const active = tab === t.key;
-            const Icon = t.icon;
-            return (
-              <button
-                key={t.key}
-                onClick={() => setTab(t.key)}
-                className={`relative flex flex-col items-center justify-center gap-0.5 transition ${active ? "text-purple-200 -translate-y-0.5" : "text-white/55"}`}
-              >
-                <div className="relative w-8 h-8 flex items-center justify-center">
-                  <IconOrImage assetKey={t.assetKey} Icon={Icon} size={24} imgSize={32} strokeWidth={active ? 2.5 : 2} imgClassName={active ? "" : "opacity-75"} />
-                  {t.badge && t.badge > 0 ? (
-                    <span className="absolute -top-1 -left-1 min-w-[16px] h-[16px] px-1 rounded-full bg-red-500 text-white text-[9px] font-black flex items-center justify-center border border-purple-900">
-                      {t.badge > 99 ? "99+" : t.badge}
-                    </span>
-                  ) : null}
-                </div>
-                <span className={`text-[11px] ${active ? "font-bold" : "font-medium"}`}>
-                  {t.label}
-                </span>
-              </button>
-            );
-          })}
+        <div 
+          className="relative w-full h-full"
+          style={{
+            backgroundImage: "url(/ui/bottom-nav.png)",
+            backgroundSize: "100% 100%",
+            backgroundPosition: "bottom center",
+            backgroundRepeat: "no-repeat",
+          }}
+        >
+          {/* مناطق النقر الشفافة للتبويبات الـ 5 (مرتبة من اليمين لليسار حسب الصورة: الغرف، اكتشاف، لحظات، رسائل، أنا) */}
+          <div className="absolute inset-0 flex items-center justify-between px-1" dir="rtl">
+            
+            {/* 1. الغرف (أقصى اليمين) */}
+            <div 
+              onClick={() => setTab("rooms")} 
+              className="w-[20%] h-full cursor-pointer active:opacity-60 transition" 
+              title="الغرف" 
+            />
+
+            {/* 2. اكتشاف */}
+            <div 
+              onClick={() => setTab("discover")} 
+              className="w-[20%] h-full cursor-pointer active:opacity-60 transition" 
+              title="اكتشاف" 
+            />
+
+            {/* 3. لحظات */}
+            <div 
+              onClick={() => setTab("moments")} 
+              className="w-[20%] h-full cursor-pointer active:opacity-60 transition" 
+              title="لحظات" 
+            />
+
+            {/* 4. رسائل */}
+            <div 
+              onClick={() => setTab("messages")} 
+              className="w-[20%] h-full cursor-pointer active:opacity-60 transition" 
+              title="رسائل" 
+            />
+
+            {/* 5. أنا (أقصى اليسار) */}
+            <div 
+              onClick={() => setTab("me")} 
+              className="w-[20%] h-full cursor-pointer active:opacity-60 transition" 
+              title="أنا" 
+            />
+
+          </div>
         </div>
       </nav>
     </div>
