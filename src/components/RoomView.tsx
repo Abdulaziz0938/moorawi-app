@@ -1497,7 +1497,62 @@ export default function RoomView({ roomId, onLeave }: Props) {
           {/* ============ [moorawi-waterfall] STACKED COMBO WAVES ============ */}
           <GiftWavesLayer ref={wavesRef} />
 
-          {/* ============ BOTTOM PILL (always visible) ============ */}
+          {/* ============ BOTTOM PILL (Binmo Exact Style) ============ */}
+        <div className="absolute bottom-0 left-0 right-0 z-30 px-3 pb-3 pt-2 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex items-center justify-between gap-2" dir="rtl">
+          {/* حقل الكتابة العريض (قل شيئا...) */}
+          <div 
+            onClick={() => setShowChatInput(true)}
+            className="flex-1 h-10 px-4 rounded-full bg-white/15 backdrop-blur-md border border-white/20 flex items-center text-white/70 text-xs cursor-pointer active:scale-[0.99] transition shadow-lg"
+          >
+            <span>قل شيئا...</span>
+          </div>
+
+          {/* الأزرار العائمة على اليسار */}
+          <div className="flex items-center gap-2 flex-shrink-0" dir="ltr">
+            {/* زر القوائم / المربعات الأربعة */}
+            <button
+              onClick={() => setShowSettings(true)}
+              className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md border border-white/15 flex items-center justify-center text-white active:scale-90 transition"
+              title="إعدادات الغرفة"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            </button>
+
+            {/* زر الرسائل */}
+            <button
+              onClick={() => setShowNotifSheet(true)}
+              className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md border border-white/15 flex items-center justify-center text-white active:scale-90 transition relative"
+              title="الرسائل"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              {unreadNotifs > 0 && (
+                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+              )}
+            </button>
+
+            {/* زر الألعاب */}
+            <button
+              onClick={() => setShowGamesSheet(true)}
+              className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md border border-white/15 flex items-center justify-center text-white active:scale-90 transition"
+              title="الألعاب"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="6 2 3 6 3 22 21 22 21 6 18 2 6 2"/><line x1="3" y1="10" x2="21" y2="10"/><path d="m12 14-3 3h6l-3-3z"/></svg>
+            </button>
+
+            {/* زر صندوق الهدايا البارز */}
+            <button
+              onClick={() => setShowGifts(true)}
+              className="w-11 h-11 rounded-full bg-gradient-to-tr from-purple-600 via-pink-500 to-amber-400 p-0.5 flex items-center justify-center shadow-[0_0_15px_rgba(236,72,153,0.5)] active:scale-90 transition"
+              title="الهدايا"
+            >
+              <div className="w-full h-full rounded-full bg-[#120724] flex items-center justify-center">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-pink-400"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+              </div>
+            </button>
+          </div>
+        </div>
+{/* End of Bottom Pill */} 
+
           {(
             <div className={`fixed left-3 z-[70] pointer-events-none flex items-center transition-transform duration-200 ${showComboPulse ? "scale-110" : "scale-100"}`} style={{ bottom: "42vh" }}>
               <div className="bg-black/70 backdrop-blur-md rounded-full pl-2 pr-3 py-1 border border-white/20 shadow-xl flex items-center gap-2">
