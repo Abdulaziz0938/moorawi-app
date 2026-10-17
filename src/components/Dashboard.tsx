@@ -74,7 +74,7 @@ export default function Dashboard({ onEnterRoom, onEnterLive, onStartLive }: Pro
       <nav 
         className="fixed bottom-0 left-0 right-0 z-40 select-none"
         style={{
-          height: "calc(78px + env(safe-area-inset-bottom, 0px))",
+          height: "calc(74px + env(safe-area-inset-bottom, 0px))",
           paddingBottom: "env(safe-area-inset-bottom, 0px)",
         }}
       >

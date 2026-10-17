@@ -91,11 +91,11 @@ export default function RoomsTab({ onEnter, onEnterLive, onStartLive }: Props) {
         <div 
           className="relative w-full"
           style={{
-            aspectRatio: "1080 / 220",
+            height: "105px",
             backgroundImage: "url(/ui/rooms1.png)",
-            backgroundSize: "100% 100%",
-            backgroundPosition: "center top",
-            backgroundRepeat: "no-repeat",
+            backgroundSize: "auto 100%",
+            backgroundPosition: "center",
+            backgroundRepeat: "repeat-x",
           }}
         >
           {/* طبقة تفاعلية شفافة للأزرار */}
