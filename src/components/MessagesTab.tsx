@@ -178,7 +178,7 @@ export default function MessagesTab({ onUserClick }: Props) {
                     <button
                       key={c._id}
                       onClick={() => setOpenThread(c)}
-                      className="w-full rounded-2xl bg-white/5 border border-white/10 p-3 flex items-center gap-3 active:bg-white/10"
+                      className="w-full rounded-2xl bg-[#161c24] border border-white/10 p-3 flex items-center gap-3 active:bg-white/10"
                     >
                       <div className="relative flex-shrink-0">
                         <div className="w-12 h-12 rounded-full overflow-hidden bg-purple-700 flex items-center justify-center">
@@ -229,7 +229,7 @@ export default function MessagesTab({ onUserClick }: Props) {
                   <button
                     key={f._id}
                     onClick={() => onUserClick?.(f.userId)}
-                    className="w-full rounded-2xl bg-white/5 border border-white/10 p-3 flex items-center gap-3 active:bg-white/10"
+                    className="w-full rounded-2xl bg-[#161c24] border border-white/10 p-3 flex items-center gap-3 active:bg-white/10"
                   >
                     <div className="w-12 h-12 rounded-full overflow-hidden bg-purple-700 flex items-center justify-center flex-shrink-0">
                       <UserAvatar avatarUrl={f.avatarUrl} name={f.name} className="w-full h-full" />

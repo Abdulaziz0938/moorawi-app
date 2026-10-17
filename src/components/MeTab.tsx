@@ -145,7 +145,7 @@ export default function MeTab({ onEnterRoom }: Props) {
         {/* ===== Top: user mini header ===== */}
         <button
           onClick={() => setShowFullProfile(true)}
-          className="w-full px-4 pt-4 pb-3 flex items-center gap-3 hover:bg-white/5 transition active:bg-white/10"
+          className="w-full px-4 pt-4 pb-3 flex items-center gap-3 hover:bg-[#161c24] transition active:bg-white/10"
         >
 <VipAvatar
               src={profile?.avatarUrl}
