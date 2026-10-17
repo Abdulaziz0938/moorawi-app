@@ -86,8 +86,17 @@ export default function RoomsTab({ onEnter, onEnterLive, onStartLive }: Props) {
 
   return (
     <div className="max-w-md mx-auto pb-24">
-      {/* ============ Top Bar: (search | tabs) ... home ============ */}
-      <div className="px-4 pt-3 pb-3 flex items-center justify-between">
+      {/* ============ Top Bar with purple banner bg ============ */}
+      <div
+        className="relative mx-2 mt-2 mb-2 rounded-2xl overflow-hidden"
+        style={{
+          backgroundImage: "url(/ui/top-banner-purple.png)",
+          backgroundSize: "cover",
+          backgroundPosition: "left center",
+          minHeight: "72px",
+        }}
+      >
+        <div className="relative z-10 px-3 py-2 flex items-center justify-between h-full" style={{ minHeight: "72px" }}>
         {/* Left: search + tabs */}
         <div className="flex items-center gap-3">
           <button
@@ -110,6 +119,7 @@ export default function RoomsTab({ onEnter, onEnterLive, onStartLive }: Props) {
         >
           <Home size={20} />
         </button>
+        </div>
       </div>
 
       {/* ============ Content ============ */}

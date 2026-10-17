@@ -71,8 +71,14 @@ export default function Dashboard({ onEnterRoom, onEnterLive, onStartLive }: Pro
 
       {/* ============ TabBar ============ */}
       <nav
-        className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 backdrop-blur-xl bg-black/60"
-        style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+        className="fixed bottom-0 left-0 right-0 z-40"
+        style={{
+          paddingBottom: "env(safe-area-inset-bottom, 0px)",
+          backgroundImage: "url(/ui/bottom-nav-purple.png)",
+          backgroundSize: "100% 100%",
+          backgroundRepeat: "no-repeat",
+          backgroundPosition: "bottom center",
+        }}
       >
         <div className="max-w-md mx-auto flex items-center justify-around px-1">
           {tabs.map((t) => {
