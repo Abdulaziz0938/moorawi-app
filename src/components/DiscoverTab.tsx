@@ -1,146 +1,157 @@
-// [ezo-discover] تبويب اكتشاف
-import { useQuery } from "convex/react";
-import { api } from "../../convex/_generated/api";
-import { getDeviceId } from "../lib/device";
-import UserAvatar from "./UserAvatar";
-import type { Id } from "../../convex/_generated/dataModel";
-import RankBadge from "./ui/RankBadge";
-import SectionTitle from "./ui/SectionTitle";
-import {
-  Loader2, Home, Users, TrendingUp, Heart, Crown, Sparkles,
-  Check, Flame, Eye,
-} from "lucide-react";
+import React, { useState } from "react";
+import { ChevronLeft, RefreshCw, Trophy, Gamepad2, Star, Calendar } from "lucide-react";
 
-interface Props {
-  onEnterRoom: (roomId: Id<"rooms">) => void;
-  onUserClick?: (id: any) => void;
+interface DiscoverTabProps {
+  onEnterRoom?: (roomId: string) => void;
 }
 
-export default function DiscoverTab({ onEnterRoom, onUserClick }: Props) {
-  const data = useQuery(api.discover.overview, {});
+export default function DiscoverTab({ onEnterRoom }: DiscoverTabProps) {
+  const [subTab, setSubTab] = useState<"official" | "games" | "activities">("activities");
 
-  if (data === undefined) {
-    return (
-      <div className="flex justify-center py-20 min-h-screen">
-        <Loader2 size={32} className="animate-spin text-white/40" />
-      </div>
-    );
-  }
+  // بيانات وهمية للفعاليات والأنشطة مطابقة لصورة بينمو
+  const events = [
+    {
+      id: "1",
+      title: "النوم 😂",
+      tag: "قريباً",
+      time: "10-18 01:55",
+      image: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=500&auto=format&fit=crop",
+      agency: "حرفي..",
+    },
+    {
+      id: "2",
+      title: "عالم المطاعم",
+      tag: "قريباً",
+      time: "10-17 22:00",
+      image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?q=80&w=500&auto=format&fit=crop",
+      agency: "وكاله بي...",
+    },
+    {
+      id: "3",
+      title: "عنجد كل الناس مصالح",
+      tag: "قريباً",
+      time: "10-22 02:02",
+      image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=500&auto=format&fit=crop",
+      agency: "نبض قل..",
+    },
+    {
+      id: "4",
+      title: "مذظ",
+      tag: "قريباً",
+      time: "10-20 14:05",
+      image: "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?q=80&w=500&auto=format&fit=crop",
+      agency: "مجيل..",
+    },
+  ];
 
   return (
-    <div className="max-w-md mx-auto pb-24 min-h-screen" dir="rtl">
-      {/* Header */}
-      <div className="sticky top-0 z-30 bg-gradient-to-b from-slate-950/95 to-slate-950/80 backdrop-blur-xl px-4 py-3 border-b border-white/10">
-        <h1 className="text-white text-lg font-black">اكتشاف</h1>
-        <p className="text-white/50 text-[11px] mt-0.5">أفضل الغرف والأعضاء في Ezo</p>
-      </div>
-
-      {/* ===== Top Rooms ===== */}
-      <Section
-        icon={Flame}
-        tone="gold"
-        title="الغرف الرائجة"
-        count={data.rooms.length}
-      >
-        <div className="grid grid-cols-2 gap-3">
-          {data.rooms.map((r: any, i: number) => (
-            <button
-              key={r._id}
-              onClick={() => onEnterRoom(r._id)}
-              className="relative rounded-2xl overflow-hidden aspect-square bg-gradient-to-br from-purple-900/40 to-indigo-900/40 border border-white/10 active:scale-95 transition"
-            >
-              {r.coverUrl ? (
-                <img src={r.coverUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
-              ) : (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <Home size={40} className="text-purple-300/40" />
-                </div>
-              )}
-              <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/95 via-black/60 to-transparent" />
-              {i < 3 && (
-                <div className="absolute top-1.5 left-1.5"><RankBadge rank={i + 1} size="sm" /></div>
-              )}
-              <div className="absolute inset-x-0 bottom-0 p-2 text-right">
-                <p className="text-white text-[11px] font-black truncate">{r.name}</p>
-                <div className="flex items-center gap-2 mt-0.5 justify-end">
-                  <span className="text-emerald-300 text-[9px] flex items-center gap-0.5">
-                    <Users size={8} /> {r.onlineCount}
-                  </span>
-                  <span className="text-white/50 text-[9px]">ID:{r.roomNumber ?? "—"}</span>
-                </div>
-              </div>
-            </button>
-          ))}
-        </div>
-      </Section>
-
-      {/* ===== Top Wealth ===== */}
-      <Section icon={TrendingUp} tone="gold" title="أعلى ثراء" count={data.topWealth.length}>
-        <div className="grid grid-cols-3 gap-2">
-          {data.topWealth.map((u: any, i: number) => (
-            <UserCard key={u.userId} user={u} rank={i + 1} onClick={() => onUserClick?.(u.userId)} color="text-amber-300" />
-          ))}
-        </div>
-      </Section>
-
-      {/* ===== Top Charm ===== */}
-      <Section icon={Heart} tone="pink" title="أعلى جاذبية" count={data.topCharm.length}>
-        <div className="grid grid-cols-3 gap-2">
-          {data.topCharm.map((u: any, i: number) => (
-            <UserCard key={u.userId} user={u} rank={i + 1} onClick={() => onUserClick?.(u.userId)} color="text-pink-300" />
-          ))}
-        </div>
-      </Section>
-
-      {/* ===== New Users ===== */}
-      <Section icon={Sparkles} tone="emerald" title="أعضاء جدد" count={data.newUsers.length}>
-        <div className="grid grid-cols-3 gap-2">
-          {data.newUsers.map((u: any) => (
-            <UserCard key={u.userId} user={u} onClick={() => onUserClick?.(u.userId)} color="text-emerald-300" />
-          ))}
-        </div>
-      </Section>
-    </div>
-  );
-}
-
-// ============================================================
-function Section({ icon: Icon, tone = "default", title, count, children }: any) {
-  return (
-    <div className="px-4 py-3">
-      <SectionTitle
-        icon={Icon}
-        title={title}
-        action={{ label: String(count), onClick: () => {} }}
-        tone={tone}
-      />
-      {children}
-    </div>
-  );
-}
-
-function UserCard({ user, rank, onClick, color }: any) {
-  return (
-    <button
-      onClick={onClick}
-      className="flex flex-col items-center gap-1.5 active:scale-95 transition"
-    >
-      <div className="relative">
-        <div className={`w-16 h-16 rounded-full overflow-hidden bg-purple-700 border-2 ${
-          rank === 1 ? "border-amber-400" : rank === 2 ? "border-slate-300" : rank === 3 ? "border-orange-500" : "border-white/15"
-        }`}>
-          <UserAvatar avatarUrl={user.avatarUrl} name={user.name} className="w-full h-full" />
-        </div>
-        {rank && rank <= 3 && (
-          <div className="absolute -top-1 -left-1"><RankBadge rank={rank} size="sm" /></div>
-        )}
-        {user.verified && (
-          <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center border-2 border-slate-900">
-            <Check size={10} className="text-white" strokeWidth={3} />
+    <div className="w-full flex flex-col pb-32 text-white select-none" dir="rtl">
+      
+      {/* 1. البانر العلوي المتحرك (Carousel Banner) */}
+      <div className="relative w-full px-4 pt-3">
+        <div 
+          className="relative w-full rounded-2xl overflow-hidden shadow-2xl flex flex-col justify-end p-4 border border-amber-500/30"
+          style={{
+            aspectRatio: "16 / 7",
+            background: "linear-gradient(135deg, #1e103f 0%, #0d0618 100%)",
+          }}
+        >
+          {/* خلفية جمالية تخيلية للبانر */}
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-500/20 via-transparent to-transparent pointer-events-none" />
+          
+          <div className="relative z-10 flex items-center justify-between">
+            <div>
+              <span className="text-[10px] bg-amber-500/30 text-amber-300 px-2 py-0.5 rounded-full font-bold border border-amber-500/40">
+                مسابقة تصنيف الوكالات
+              </span>
+              <h2 className="text-lg font-black text-amber-200 mt-1 drop-shadow-md">
+                تهانينا على الوصول إلى مستوى S
+              </h2>
+            </div>
+            <div className="w-12 h-12 rounded-full bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-300 font-black text-xl shadow-lg">
+              S
+            </div>
           </div>
-        )}
+
+          {/* نقاط التمرير (Dots) */}
+          <div className="flex items-center justify-center gap-1.5 mt-3 relative z-10">
+            <span className="w-5 h-1.5 bg-amber-400 rounded-full shadow-[0_0_6px_#f59e0b]" />
+            <span className="w-1.5 h-1.5 bg-white/30 rounded-full" />
+            <span className="w-1.5 h-1.5 bg-white/30 rounded-full" />
+            <span className="w-1.5 h-1.5 bg-white/30 rounded-full" />
+          </div>
+        </div>
       </div>
-      <p className="text-white text-[10px] font-black truncate max-w-[72px]">{user.name}</p>
-    </button>
+
+      {/* 2. شريط التصنيفات (Tabs: رسمى، الألعاب، الأنشطة) */}
+      <div className="flex items-center justify-between px-4 mt-5 mb-3 border-b border-white/5 pb-2">
+        <div className="flex items-center gap-6">
+          <button 
+            onClick={() => setSubTab("official")}
+            className={`text-sm font-bold transition ${subTab === "official" ? "text-white scale-105 border-b-2 border-emerald-400 pb-1" : "text-white/40 hover:text-white/70"}`}
+          >
+            رسمي
+          </button>
+          <button 
+            onClick={() => setSubTab("games")}
+            className={`text-sm font-bold transition ${subTab === "games" ? "text-white scale-105 border-b-2 border-emerald-400 pb-1" : "text-white/40 hover:text-white/70"}`}
+          >
+            الألعاب
+          </button>
+          <button 
+            onClick={() => setSubTab("activities")}
+            className={`text-sm font-bold transition ${subTab === "activities" ? "text-white scale-105 border-b-2 border-emerald-400 pb-1" : "text-white/40 hover:text-white/70"}`}
+          >
+            الأنشطة
+          </button>
+        </div>
+
+        <button className="text-xs text-white/50 hover:text-white flex items-center gap-1">
+          أكثر <ChevronLeft size={14} />
+        </button>
+      </div>
+
+      {/* 3. شبكة الكروت (Grid Cards) للأنشطة */}
+      <div className="grid grid-cols-2 gap-3 px-4">
+        {events.map((item) => (
+          <div 
+            key={item.id}
+            className="flex flex-col rounded-2xl bg-[#161c26] border border-white/10 overflow-hidden shadow-lg hover:border-purple-500/40 transition"
+          >
+            {/* صورة الكرت مع شارة "قريباً" */}
+            <div className="relative w-full h-32 bg-black/40">
+              <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#161c26] via-transparent to-transparent opacity-80" />
+              
+              {/* شارة قريباً */}
+              <span className="absolute top-2 right-2 text-[10px] bg-emerald-500/90 text-white font-bold px-2 py-0.5 rounded-md shadow">
+                {item.tag}
+              </span>
+
+              {/* الوقت والوكالة */}
+              <div className="absolute bottom-2 right-2 left-2 flex items-center justify-between text-[10px] text-white/80">
+                <span className="truncate">{item.agency}</span>
+                <span className="flex items-center gap-1"><Calendar size={10} /> {item.time}</span>
+              </div>
+            </div>
+
+            {/* تفاصيل الكرت وزر الاشتراك */}
+            <div className="p-3 flex flex-col gap-2">
+              <h3 className="text-sm font-bold text-white truncate">{item.title}</h3>
+              
+              <div className="flex items-center gap-2 mt-1">
+                <button className="flex-1 bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30 py-1.5 rounded-xl text-xs font-bold transition text-center shadow">
+                  + الاشتراك
+                </button>
+                <button className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/70 transition">
+                  <RefreshCw size={14} />
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+    </div>
   );
 }
