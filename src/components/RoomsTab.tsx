@@ -86,80 +86,36 @@ export default function RoomsTab({ onEnter, onEnterLive, onStartLive }: Props) {
 
   return (
     <div className="max-w-md mx-auto">
-                  {/* ============ Binmo Luxury Top Header ============ */}
-      <div className="sticky top-0 z-40 w-full overflow-hidden bg-[#0d0718] border-b border-purple-900/30">
-        {/* خلفية التدرج والتموجات البنفسجية الفاخرة */}
-        <div 
-          className="relative w-full px-4 pt-3 pb-3 flex flex-col justify-between"
-          style={{
-            minHeight: "110px",
-            background: "linear-gradient(180deg, #1f0d3d 0%, #120724 70%, #0a0414 100%)",
-          }}
-        >
-          {/* تأثير توهج ناعم في الخلفية */}
-          <div className="absolute top-0 right-0 left-0 h-24 bg-gradient-to-b from-purple-600/15 to-transparent pointer-events-none" />
+                        {/* ============ EZO Full Banner Image ============ */}
+      <div className="sticky top-0 z-40 w-full overflow-hidden bg-transparent select-none">
+        <div className="relative w-full">
+          <img 
+            src="/ui/top-banner-purple.png" 
+            alt="EZO Header" 
+            className="w-full h-auto block object-cover"
+            style={{ maxHeight: "140px" }}
+          />
 
-          {/* الصف العلوي: شعار EZO الصغير + الأيقونات */}
-          <div className="relative z-10 flex items-center justify-between w-full">
-            <div className="flex items-center gap-2">
-              <img 
-                src="/ui/ezo-logo.png" 
-                alt="EZO" 
-                className="h-8 object-contain drop-shadow-[0_2px_8px_rgba(168,85,247,0.5)]" 
-                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+          {/* مناطق لمس شفافة فوق الأزرار الموجودة بالصورة */}
+          <div className="absolute inset-0 flex items-end pb-2 px-2">
+            <div className="w-full flex items-center justify-between h-12">
+              {/* لمس الشعار أو الرجوع */}
+              <div 
+                onClick={() => myRoom ? onEnter(myRoom._id) : setShowCreate(true)} 
+                className="w-1/3 h-full cursor-pointer active:opacity-60" 
               />
-              <span className="text-white font-extrabold tracking-wider text-sm bg-gradient-to-r from-amber-200 via-purple-200 to-white bg-clip-text text-transparent">
-                EZO GROUP
-              </span>
+              {/* لمس زر البحث المطبوع بالصورة */}
+              <div 
+                onClick={() => setShowSearch(true)} 
+                className="w-12 h-12 cursor-pointer active:opacity-60 rounded-full" 
+              />
+              {/* لمس التبويبات المطبوعة بالصورة (لايف - ترند - الخاص بي) */}
+              <div className="flex-1 flex items-center justify-end h-full gap-2">
+                <div onClick={() => setMainTab("live")} className="w-12 h-full cursor-pointer active:opacity-60" />
+                <div onClick={() => setMainTab("trend")} className="w-12 h-full cursor-pointer active:opacity-60" />
+                <div onClick={() => setMainTab("mine")} className="w-16 h-full cursor-pointer active:opacity-60" />
+              </div>
             </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setShowSearch(true)}
-                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 transition flex items-center justify-center text-purple-200 border border-purple-500/20"
-              >
-                <Search size={15} />
-              </button>
-              <button
-                onClick={() => myRoom ? onEnter(myRoom._id) : setShowCreate(true)}
-                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 transition flex items-center justify-center text-purple-200 border border-purple-500/20"
-              >
-                <Home size={15} />
-              </button>
-            </div>
-          </div>
-
-          {/* الصف السفلي: التبويبات الفاخرة مثل بينمو (الخاص بي - ترند - لايف) */}
-          <div className="relative z-10 flex items-center justify-center gap-8 mt-2" dir="rtl">
-            <button
-              onClick={() => setMainTab("mine")}
-              className={`relative pb-1 text-sm font-bold transition ${mainTab === "mine" ? "text-white" : "text-white/50 hover:text-white/80"}`}
-            >
-              الخاص بي
-              {mainTab === "mine" && (
-                <span className="absolute bottom-0 right-0 left-0 h-[3px] bg-gradient-to-r from-purple-400 to-pink-400 rounded-full shadow-[0_0_8px_#c084fc]" />
-              )}
-            </button>
-
-            <button
-              onClick={() => setMainTab("trend")}
-              className={`relative pb-1 text-sm font-bold transition ${mainTab === "trend" ? "text-white" : "text-white/50 hover:text-white/80"}`}
-            >
-              ترند
-              {mainTab === "trend" && (
-                <span className="absolute bottom-0 right-0 left-0 h-[3px] bg-gradient-to-r from-purple-400 to-pink-400 rounded-full shadow-[0_0_8px_#c084fc]" />
-              )}
-            </button>
-
-            <button
-              onClick={() => setMainTab("live")}
-              className={`relative pb-1 text-sm font-bold transition ${mainTab === "live" ? "text-white" : "text-white/50 hover:text-white/80"}`}
-            >
-              لايف
-              {mainTab === "live" && (
-                <span className="absolute bottom-0 right-0 left-0 h-[3px] bg-gradient-to-r from-purple-400 to-pink-400 rounded-full shadow-[0_0_8px_#c084fc]" />
-              )}
-            </button>
           </div>
         </div>
       </div>
