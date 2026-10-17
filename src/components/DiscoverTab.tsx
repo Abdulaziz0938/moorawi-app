@@ -1,10 +1,7 @@
 import React, { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { 
-  Gamepad2, Trophy, Flame, Compass, RefreshCw, 
-  Users, Globe, Sparkles, ChevronLeft, Dices, Play, Award 
-} from "lucide-react";
+import { Trophy, Gamepad2, Users, Globe, Sparkles, ChevronLeft, Play, Dices } from "lucide-react";
 
 interface DiscoverTabProps {
   onEnterRoom: (roomId: any) => void;
@@ -15,22 +12,21 @@ export default function DiscoverTab({ onEnterRoom }: DiscoverTabProps) {
   const [selectedGame, setSelectedGame] = useState<string>("all");
   const [selectedCountry, setSelectedCountry] = useState<string>("SA");
 
-  // جلب الغرف والبيانات الحقيقية من قاعدة البيانات
+  // جلب الغرف الحقيقية من قاعدة البيانات مباشرة بدون أي بيانات وهمية
   const rooms = useQuery(api.rooms.listPublic) || [];
 
-  // قائمة الألعاب التفاعلية العلوية (مطابقة لبينمو)
   const gameCategories = [
-    { id: "all", name: "الكل", icon: Sparkles, color: "from-purple-600 to-indigo-600" },
-    { id: "guess", name: "Guess", icon: Play, color: "from-blue-500 to-cyan-500" },
-    { id: "uno", name: "UNO", icon: Gamepad2, color: "from-red-500 to-orange-500" },
-    { id: "baloot", name: "Baloot", icon: Trophy, color: "from-amber-500 to-yellow-600" },
-    { id: "jackaroo", name: "Jackaroo", icon: Dices, color: "from-emerald-500 to-teal-600" },
+    { id: "all", name: "الكل", icon: Sparkles },
+    { id: "guess", name: "Guess", icon: Play },
+    { id: "uno", name: "UNO", icon: Gamepad2 },
+    { id: "baloot", name: "Baloot", icon: Trophy },
+    { id: "jackaroo", name: "Jackaroo", icon: Dices },
   ];
 
   return (
     <div className="w-full flex flex-col pb-32 text-white select-none" dir="rtl">
       
-      {/* 1. البانر العلوي المتحرك (Carousel Banner) الفاخر */}
+      {/* 1. البانر العلوي الفاخر */}
       <div className="relative w-full px-4 pt-3">
         <div 
           className="relative w-full rounded-2xl overflow-hidden shadow-2xl flex flex-col justify-end p-5 border border-amber-500/40"
@@ -44,10 +40,10 @@ export default function DiscoverTab({ onEnterRoom }: DiscoverTabProps) {
           <div className="relative z-10 flex items-center justify-between">
             <div>
               <span className="text-[10px] bg-amber-500/30 text-amber-300 px-2.5 py-0.5 rounded-full font-bold border border-amber-500/40 shadow">
-                مسابقة تصنيف الوكالات النشطة
+                تصنيف الوكالات النشطة
               </span>
               <h2 className="text-base font-black text-amber-200 mt-1.5 drop-shadow-md">
-                تهانينا على الوصول إلى مستوى النخبة S
+                مستوى النخبة في الغرف الصوتية
               </h2>
             </div>
             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 border border-amber-200/60 flex items-center justify-center text-black font-black text-xl shadow-[0_0_15px_rgba(245,158,11,0.5)]">
@@ -55,17 +51,15 @@ export default function DiscoverTab({ onEnterRoom }: DiscoverTabProps) {
             </div>
           </div>
 
-          {/* نقاط التمرير التفاعلية */}
           <div className="flex items-center justify-center gap-1.5 mt-4 relative z-10">
             <span className="w-6 h-1.5 bg-amber-400 rounded-full shadow-[0_0_8px_#f59e0b]" />
-            <span className="w-1.5 h-1.5 bg-white/30 rounded-full" />
             <span className="w-1.5 h-1.5 bg-white/30 rounded-full" />
             <span className="w-1.5 h-1.5 bg-white/30 rounded-full" />
           </div>
         </div>
       </div>
 
-      {/* 2. شريط التبويبات الرئيسية (رسمي، الألعاب، الأنشطة) */}
+      {/* 2. شريط التبويبات */}
       <div className="flex items-center justify-between px-4 mt-5 mb-3 border-b border-white/10 pb-2.5">
         <div className="flex items-center gap-8">
           <button 
@@ -93,7 +87,7 @@ export default function DiscoverTab({ onEnterRoom }: DiscoverTabProps) {
         </button>
       </div>
 
-      {/* 3. شريط الألعاب التفاعلي السريع (أيقونات أفقية مطابقة لصورة بينمو) */}
+      {/* 3. فئات الألعاب الحقيقية */}
       <div className="px-4 mb-4">
         <div className="flex items-center gap-3 overflow-x-auto no-scrollbar py-1">
           {gameCategories.map((cat) => {
@@ -117,7 +111,7 @@ export default function DiscoverTab({ onEnterRoom }: DiscoverTabProps) {
         </div>
       </div>
 
-      {/* شريط الفلاتر الفرعية (الدولة والعالم) */}
+      {/* فلاتر الدول */}
       <div className="flex items-center gap-2 px-4 mb-4">
         <button 
           onClick={() => setSelectedCountry("SA")}
@@ -133,12 +127,12 @@ export default function DiscoverTab({ onEnterRoom }: DiscoverTabProps) {
         </button>
       </div>
 
-      {/* 4. قائمة الغرف والأنشطة الحقيقية المستخرجة من قاعدة البيانات */}
+      {/* 4. قائمة الغرف الحقيقية القادمة من قاعدة البيانات فقط */}
       <div className="flex flex-col gap-3 px-4">
         {rooms.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-white/40 gap-2">
             <Trophy size={32} className="text-amber-500/50 animate-pulse" />
-            <p className="text-xs">لا توجد غرف أو فعاليات نشطة حالياً</p>
+            <p className="text-xs">لا توجد غرف نشطة حالياً في النظام</p>
           </div>
         ) : (
           rooms.map((room: any) => (
@@ -147,11 +141,10 @@ export default function DiscoverTab({ onEnterRoom }: DiscoverTabProps) {
               onClick={() => onEnterRoom(room._id)}
               className="flex items-center justify-between p-3.5 rounded-2xl bg-[#161c26] border border-white/10 hover:border-purple-500/40 transition cursor-pointer shadow-lg"
             >
-              {/* معلومات الغرفة والوكالة */}
               <div className="flex items-center gap-3">
                 <div className="relative w-14 h-14 rounded-2xl overflow-hidden border border-amber-500/30 bg-black/40 flex-shrink-0">
                   <img 
-                    src={room.image || "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=200"} 
+                    src={room.coverUrl || room.image || "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=200"} 
                     alt={room.title} 
                     className="w-full h-full object-cover"
                   />
@@ -168,12 +161,11 @@ export default function DiscoverTab({ onEnterRoom }: DiscoverTabProps) {
                     </span>
                   </div>
                   <p className="text-xs text-white/50 flex items-center gap-1">
-                    <Users size={12} className="text-purple-400" /> {room.participantsCount || 1} متصل الآن
+                    <Users size={12} className="text-purple-400" /> {room.memberCount || 1} متصل الآن
                   </p>
                 </div>
               </div>
 
-              {/* زر الدخول / الاشتراك الحقيقي */}
               <button 
                 onClick={(e) => {
                   e.stopPropagation();
@@ -181,7 +173,7 @@ export default function DiscoverTab({ onEnterRoom }: DiscoverTabProps) {
                 }}
                 className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-[0_0_10px_rgba(16,185,129,0.3)] transition active:scale-95"
               >
-                + الاشتراك
+                + دخول
               </button>
             </div>
           ))
