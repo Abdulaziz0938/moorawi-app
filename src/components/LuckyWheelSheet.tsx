@@ -3,6 +3,7 @@ import imgApple from "../assets/wheel/apple.webp";
 import imgWatermelon from "../assets/wheel/watermelon.webp";
 import imgSeven from "../assets/wheel/seven.webp";
 import imgWheel from "../assets/wheel/wheel.webp";
+import imgCenterGem from "../assets/wheel/center_gem.webp";
 import imgPointer from "../assets/wheel/pointer.webp";
 import img100 from "../assets/wheel/100.webp";
 import img1k from "../assets/wheel/1k.webp";
@@ -311,8 +312,13 @@ const [activeRankTab, setActiveRankTab] = useState<string>("VI");
             <img src={imgWheel} alt="wheel" className="w-full h-full object-fill rounded-full" />
           </div>
 
-          {/* العداد المركزي (داخل الجوهرة) */}
+          {/* العداد المركزي الثابت مع الحلقة الذهبية والجوهرة لمنع أي رجفة */}
           <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
+            <img
+              src={imgCenterGem}
+              alt=""
+              className="absolute w-[25.5%] h-[25.5%] rounded-full object-fill shadow-[0_0_12px_rgba(0,0,0,0.6)]"
+            />
             <span
               className="text-3xl font-black text-white"
               style={{
