@@ -261,18 +261,31 @@ export default function LuckyWheelSheet({ isOpen, onClose, onOpenRecharge }: Luc
             className="w-full h-full rounded-full relative overflow-hidden flex items-center justify-center"
             style={{
               transform: `rotate(${rotation}deg)`,
+              transformOrigin: "center center",
               transition:
                 state?.status === "SPINNING"
                   ? "transform 4.2s cubic-bezier(0.12, 0.8, 0.18, 1)"
                   : "none",
+              willChange: "transform",
+              backfaceVisibility: "hidden",
             }}
           >
             <img src={imgWheel} alt="wheel" className="w-full h-full object-contain drop-shadow-2xl" />
           </div>
 
-          {/* العداد المركزي الشفاف */}
-          <div className="absolute z-20 flex items-center justify-center pointer-events-none">
-            <span className="text-5xl font-black text-white drop-shadow-[0_0_15px_rgba(0,0,0,0.9)]">
+          {/* العداد المركزي الذهبي (3D Gold) */}
+          <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
+            <span
+              className="text-6xl tracking-tighter"
+              style={{
+                fontFamily: "'Impact', 'Arial Black', sans-serif",
+                background: "linear-gradient(to bottom, #FDE047 0%, #F59E0B 45%, #B45309 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                filter: "drop-shadow(0px 4px 0px #78350F) drop-shadow(0px 6px 8px rgba(0,0,0,0.8))",
+                WebkitTextStroke: "1px #78350F",
+              }}
+            >
               {state?.status === "BETTING" ? timeLeft : ""}
             </span>
           </div>
