@@ -1,6 +1,7 @@
+import { getActiveToken } from '../lib/session';
 import React, { useEffect, useState, useRef } from "react";
 import { useQuery, useMutation } from "convex/react";
-import { auth } from '../lib/auth';
+
 import { api } from "../../convex/_generated/api";
 import { Volume2, VolumeX, HelpCircle, Trophy, FileText, Plus, X, Wifi } from "lucide-react";
 
