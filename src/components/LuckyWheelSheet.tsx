@@ -258,7 +258,7 @@ export default function LuckyWheelSheet({ isOpen, onClose, onOpenRecharge }: Luc
 
           {/* صورة العجلة الحقيقية المفرغة التي تدور */}
           <div
-            className="w-full h-full rounded-full relative overflow-hidden flex items-center justify-center"
+            className="w-full h-full aspect-square rounded-full relative flex items-center justify-center"
             style={{
               transform: `rotate(${rotation}deg)`,
               transformOrigin: "center center",
@@ -270,20 +270,16 @@ export default function LuckyWheelSheet({ isOpen, onClose, onOpenRecharge }: Luc
               backfaceVisibility: "hidden",
             }}
           >
-            <img src={imgWheel} alt="wheel" className="w-full h-full object-contain drop-shadow-2xl" />
+            <img src={imgWheel} alt="wheel" className="w-full h-full object-contain" />
           </div>
 
-          {/* العداد المركزي الذهبي (3D Gold) */}
+          {/* العداد المركزي (داخل الجوهرة) */}
           <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
             <span
-              className="text-6xl tracking-tighter"
+              className="text-3xl font-black text-white"
               style={{
-                fontFamily: "'Impact', 'Arial Black', sans-serif",
-                background: "linear-gradient(to bottom, #FDE047 0%, #F59E0B 45%, #B45309 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                filter: "drop-shadow(0px 4px 0px #78350F) drop-shadow(0px 6px 8px rgba(0,0,0,0.8))",
-                WebkitTextStroke: "1px #78350F",
+                fontFamily: "'Arial Black', sans-serif",
+                textShadow: "0 0 10px rgba(255,255,255,0.8), 0 2px 4px rgba(0,0,0,0.6)",
               }}
             >
               {state?.status === "BETTING" ? timeLeft : ""}
