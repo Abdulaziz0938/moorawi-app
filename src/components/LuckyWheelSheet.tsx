@@ -308,7 +308,7 @@ const [activeRankTab, setActiveRankTab] = useState<string>("VI");
               backfaceVisibility: "hidden",
             }}
           >
-            <img src={imgWheel} alt="wheel" className="w-full h-full object-contain" />
+            <img src={imgWheel} alt="wheel" className="w-full h-full object-fill rounded-full" />
           </div>
 
           {/* العداد المركزي (داخل الجوهرة) */}
