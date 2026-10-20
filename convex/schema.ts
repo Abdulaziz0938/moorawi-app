@@ -1316,6 +1316,12 @@ export default defineSchema({
 
 
   // [Lucky 77 Wheel Game]
+  wheelLiveBets: defineTable({
+    item: v.string(),
+    amount: v.number(),
+    createdAt: v.number(),
+  }).index("by_createdAt", ["createdAt"]),
+
   wheelState: defineTable({
     key: v.string(), // "global"
     roundNumber: v.number(),
@@ -1335,6 +1341,16 @@ export default defineSchema({
       })
     ),
   }).index("by_key", ["key"]),
+
+  wheelWins: defineTable({
+    userId: v.id("users"),
+    name: v.string(),
+    avatarUrl: v.optional(v.string()),
+    profit: v.number(),
+    createdAt: v.number(),
+  })
+    .index("by_createdAt", ["createdAt"])
+    .index("by_user", ["userId"]),
 
   wheelBets: defineTable({
     roundNumber: v.number(),

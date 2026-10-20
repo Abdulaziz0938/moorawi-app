@@ -38,7 +38,9 @@ const SECTORS = [
 export default function LuckyWheelSheet({ isOpen, onClose, onOpenRecharge }: LuckyWheelSheetProps) {
   const token = getActiveToken();
   const data = useQuery(api.wheelGame.getState, { tokenOverride: token ?? undefined });
-  const leaderboard = useQuery(api.wheelGame.getLeaderboard, {});
+  const leaderboardData = useQuery(api.wheelGame.getLeaderboard, { period: leaderboardTab, tokenOverride: getActiveToken() ?? undefined });
+  const leaderboard = leaderboardData?.top10 || [];
+  const myRank = leaderboardData?.myRank;
   const ensureRunning = useMutation(api.wheelGame.ensureGameRunning);
   const liveBets = useQuery(api.wheelGame.getLiveBets);
   const placeBetMut = useMutation(api.wheelGame.placeBet);
@@ -52,6 +54,7 @@ export default function LuckyWheelSheet({ isOpen, onClose, onOpenRecharge }: Luc
   const [muted, setMuted] = useState<boolean>(false);
   const [showLowBalance, setShowLowBalance] = useState<boolean>(false);
   const [showLeaderboard, setShowLeaderboard] = useState<boolean>(false);
+  const [leaderboardTab, setLeaderboardTab] = useState<"day" | "week" | "all">("day");
   const [activeRankTab, setActiveRankTab] = useState<string>("VI");
   const [lastRoundBets, setLastRoundBets] = useState<{ watermelon: number; "77": number; apple: number }>({
     watermelon: 0,
@@ -189,7 +192,6 @@ export default function LuckyWheelSheet({ isOpen, onClose, onOpenRecharge }: Luc
       return;
     }
 
-    addVisualCoin(item);
     try {
       await placeBetMut({ item, amount: selectedChip, tokenOverride: token ?? undefined });
     } catch (err: any) {
@@ -210,8 +212,7 @@ export default function LuckyWheelSheet({ isOpen, onClose, onOpenRecharge }: Luc
 
     for (const item of ["watermelon", "77", "apple"] as const) {
       if (lastRoundBets[item] > 0) {
-        addVisualCoin(item);
-        await placeBetMut({ item, amount: lastRoundBets[item], tokenOverride: token ?? undefined }).catch(() => {});
+            await placeBetMut({ item, amount: lastRoundBets[item], tokenOverride: token ?? undefined }).catch(() => {});
       }
     }
   };
@@ -261,7 +262,7 @@ export default function LuckyWheelSheet({ isOpen, onClose, onOpenRecharge }: Luc
             className="px-5 py-1 rounded-full bg-gradient-to-b from-amber-600 to-amber-900 border-2 border-yellow-300 shadow-[0_0_15px_rgba(253,224,71,0.5)] font-black text-sm tracking-wider"
             dir="ltr"
           >
-            Jackpot: <span className="text-yellow-300">{state?.jackpot ?? 715848}</span>
+            Jackpot: <span className="text-yellow-300">{state?.jackpot ?? 0}</span>
           </div>
 
           <div className="flex items-center gap-1.5 ml-8">
@@ -536,23 +537,61 @@ export default function LuckyWheelSheet({ isOpen, onClose, onOpenRecharge }: Luc
                 ))}
               </div>
 
-              <div className="grid grid-cols-4 text-[11px] font-bold text-yellow-200 bg-purple-950/90 py-1.5 px-2 text-center">
-                <span>الترتيب</span>
-                <span>اسم المستخدم</span>
-                <span>النقاط</span>
-                <span>مكافآت</span>
+              {/* تبويبات الفترات الزمنية */}
+              <div className="flex justify-center gap-2 p-2 bg-purple-950/50">
+                <button onClick={() => setLeaderboardTab("day")} className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition ${leaderboardTab === "day" ? "bg-yellow-500 text-black" : "bg-white/5 text-white/60"}`}>اليوم</button>
+                <button onClick={() => setLeaderboardTab("week")} className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition ${leaderboardTab === "week" ? "bg-yellow-500 text-black" : "bg-white/5 text-white/60"}`}>الأسبوع</button>
+                <button onClick={() => setLeaderboardTab("all")} className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition ${leaderboardTab === "all" ? "bg-yellow-500 text-black" : "bg-white/5 text-white/60"}`}>دائم</button>
               </div>
 
-              <div className="flex-1 overflow-y-auto divide-y divide-purple-800/50 text-xs">
-                {(leaderboard ?? []).map((u, i) => (
-                  <div key={u._id} className="grid grid-cols-4 items-center py-2 px-2 text-center">
-                    <span className="font-black text-yellow-400">#{i + 1}</span>
-                    <span className="truncate font-semibold">{u.name}</span>
-                    <span className="text-purple-200">{u.points}</span>
-                    <span className="text-yellow-300 font-bold">{u.reward}</span>
-                  </div>
-                ))}
+              <div className="bg-[#2a1b54] rounded-t-xl overflow-hidden">
+                <div className="grid grid-cols-4 text-[11px] font-bold text-white bg-[#1a0b36] py-2 px-2 text-center border-b border-purple-500/30">
+                  <span>الترتيب</span>
+                  <span className="text-right pr-2 col-span-2">اسم المستخدم</span>
+                  <span>مكافآت</span>
+                </div>
+
+                <div className="flex-1 overflow-y-auto divide-y divide-purple-800/50 text-xs min-h-[300px]">
+                  {(leaderboard ?? []).map((u: any, i: number) => {
+                    // تحديد ألوان المراكز الثلاثة الأولى
+                    const bgClass = i === 0 ? "bg-gradient-to-r from-[#8e6b16] to-[#5c4306]" : i === 1 ? "bg-gradient-to-r from-[#5f6773] to-[#3b4048]" : i === 2 ? "bg-gradient-to-r from-[#6e361e] to-[#442012]" : "bg-[#120724] hover:bg-white/5";
+                    const textClass = i < 3 ? "text-white" : "text-gray-300";
+
+                    return (
+                      <div key={u._id} className={`grid grid-cols-4 items-center py-2 px-2 text-center ${bgClass}`}>
+                        <div className="flex justify-center relative">
+                          {i === 0 ? <span className="text-yellow-300 font-black text-lg italic drop-shadow">1<sup>st</sup></span> :
+                           i === 1 ? <span className="text-gray-300 font-black text-lg italic drop-shadow">2<sup>nd</sup></span> :
+                           i === 2 ? <span className="text-amber-500 font-black text-lg italic drop-shadow">3<sup>rd</sup></span> :
+                           <span className="text-white/50 font-bold">{i + 1}</span>}
+                        </div>
+                        <div className="flex items-center gap-2 justify-end pr-1 col-span-2">
+                          <span className={`truncate font-bold ${textClass}`}>{u.name}</span>
+                          {u.avatarUrl ? <img src={u.avatarUrl} className="w-7 h-7 rounded-full object-cover border border-white/20" alt="" /> : <div className="w-7 h-7 rounded-full bg-purple-700" />}
+                        </div>
+                        <div className="flex items-center justify-center gap-1 font-black text-yellow-300">
+                          <img src={imgCoinsSmall || "/rewards/coins-small.png"} className="w-4 h-4" alt="" onError={(e) => (e.target as any).style.display='none'} />
+                          {u.reward?.toLocaleString() ?? 0}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {leaderboard.length === 0 && (
+                    <div className="text-center py-10 text-white/40">لا توجد أرباح مسجلة في هذه الفترة</div>
+                  )}
+                </div>
               </div>
+              
+              {/* ترتيبي */}
+              {myRank && (
+                <div className="p-2 bg-black/40 border-t border-yellow-500/30">
+                  <div className="grid grid-cols-3 items-center py-2 px-2 text-center rounded-xl bg-purple-500/20 border border-purple-400/40">
+                    <span className="font-black text-white text-sm">#{myRank.rank}</span>
+                    <span className="font-black text-yellow-300">أنت</span>
+                    <span className="text-green-400 font-bold">{myRank.points.toLocaleString()}</span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
