@@ -696,7 +696,7 @@ export default function ProfilePage({
 
                 <div className="grid grid-cols-3 gap-2">
                   {(lifePhotos ?? []).map((photo: any) => (
-                    <div key={photo._id} className="aspect-square rounded-xl overflow-hidden bg-black/40 border border-white/10 relative group">
+                    <div key={photo._id} className="aspect-square rounded-xl overflow-hidden border border-white/20 relative group">
                       <AssetVideo
                         url={photo.imageUrl}
                         type="auto"
@@ -821,7 +821,7 @@ export default function ProfilePage({
             <div className="px-4 space-y-4">
               {/* Equipped Vehicle Video */}
               {equipped?.vehicle && (
-                <div className="relative w-full rounded-2xl overflow-hidden bg-gradient-to-br from-slate-900 to-black border border-white/10 p-4 flex flex-col items-center justify-center min-h-[220px] shadow-xl">
+                <div className="relative w-full rounded-2xl overflow-hidden border border-white/20 p-4 flex flex-col items-center justify-center min-h-[220px]">
                   <span className="absolute top-3 right-3 bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full text-[10px] font-bold z-10">المركبة المفعلة</span>
                   <AssetVideo
                     url={equipped.vehicle.imageUrl}
@@ -834,7 +834,7 @@ export default function ProfilePage({
               
               {/* Equipped Entry Effect */}
               {equipped?.entryEffect && (
-                <div className="relative w-full rounded-2xl overflow-hidden bg-gradient-to-br from-slate-900 to-black border border-white/10 p-4 flex flex-col items-center justify-center min-h-[220px] shadow-xl">
+                <div className="relative w-full rounded-2xl overflow-hidden border border-white/20 p-4 flex flex-col items-center justify-center min-h-[220px]">
                   <span className="absolute top-3 right-3 bg-purple-500/20 text-purple-300 border border-purple-500/30 px-2 py-0.5 rounded-full text-[10px] font-bold z-10">تأثير الدخول</span>
                   <AssetVideo
                     url={equipped.entryEffect.imageUrl}

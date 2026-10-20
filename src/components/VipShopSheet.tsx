@@ -1,9 +1,10 @@
 // [ezo-vip] Ezo-Style Exact Replica VIP & Queen Shop
-import { useState, useMemo } from "react";
+import { Lock, useState, useMemo } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { getActiveToken } from "../lib/session";
 import { useAssets } from "../lib/assets";
+import AssetVideo from "./ui/AssetVideo";
 import { dialog } from "../lib/dialog";
 import {
   ArrowRight, HelpCircle, Crown, Coins, Loader2, Sparkles,
@@ -562,11 +563,86 @@ export default function VipShopSheet({ onClose, onOpenRecharge }: Props) {
             </div>
           </div>
         ) : mainTab === "special" ? (
-          /* ================= تبويب الخاص ================= */
-          <div className="p-8 text-center text-[#f5deb3]/70 flex flex-col items-center justify-center h-96 gap-3">
-            <Sparkles size={42} className="text-[#e5c17b]" />
-            <p className="text-base font-bold text-white">الامتيازات الخاصة</p>
-            <p className="text-xs text-white/50">تتوفر قريباً في الفعاليات الموسمية الخاصة</p>
+          /* ================= تبويب الخاص - مستوى VIP الخاص بك ================= */
+          <div className="pb-24">
+            {currentLevel > 0 && active ? (
+              <>
+                <div className="relative h-48 flex flex-col items-center justify-center overflow-hidden">
+                  <div
+                    className="absolute inset-0 opacity-30"
+                    style={{ background: `radial-gradient(circle at 50% 45%, ${EZO_VIP_THEMES[currentLevel]?.accent || "#eab308"} 0%, transparent 70%)` }}
+                  />
+                  <div className="relative z-10 flex flex-col items-center">
+                    <div
+                      className="w-32 h-32 rounded-full flex items-center justify-center"
+                      style={{
+                        background: `conic-gradient(from 0deg, ${EZO_VIP_THEMES[currentLevel]?.accent || "#eab308"}, #fde68a, ${EZO_VIP_THEMES[currentLevel]?.accent || "#eab308"})`,
+                        padding: 4,
+                        boxShadow: `0 0 40px ${EZO_VIP_THEMES[currentLevel]?.accent || "#eab308"}80`,
+                      }}
+                    >
+                      <div className="w-full h-full rounded-full bg-black/90 flex flex-col items-center justify-center">
+                        <Crown size={52} className="text-[#fde68a]" fill="rgba(253,230,138,0.3)" />
+                        <span className="font-black italic text-2xl text-[#fde68a] mt-1" dir="ltr">VIP {currentLevel}</span>
+                      </div>
+                    </div>
+                    <p className="text-white text-sm font-bold mt-3">أنت الآن VIP {currentLevel}</p>
+                    <p className="text-white/60 text-xs mt-1">
+                      ينتهي في: {data?.expiresAt ? new Date(data.expiresAt).toLocaleDateString("ar-SY") : "—"}
+                    </p>
+                  </div>
+                </div>
+
+                <EzoDivider title="مزاياك الحالية" />
+
+                <div className="mx-3 grid grid-cols-2 gap-2.5">
+                  {(benefitsByLevel[currentLevel] ?? []).map((b: any) => {
+                    const Icon = ICONS[b.icon] ?? Sparkles;
+                    return (
+                      <div
+                        key={b._id}
+                        className="rounded-xl p-3 flex items-center gap-2 border"
+                        style={{
+                          background: "rgba(0,0,0,0.5)",
+                          borderColor: (EZO_VIP_THEMES[currentLevel]?.accent || "#eab308") + "40"
+                        }}
+                      >
+                        <div
+                          className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                          style={{ background: `linear-gradient(135deg, ${EZO_VIP_THEMES[currentLevel]?.accent || "#eab308"}40, ${EZO_VIP_THEMES[currentLevel]?.accent || "#eab308"}15)` }}
+                        >
+                          <Icon size={16} className="text-[#fde68a]" />
+                        </div>
+                        <span className="text-white text-xs font-bold leading-tight">{b.textAr}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="mx-3 mt-6">
+                  <button
+                    onClick={() => { setSelected(currentLevel); setMainTab("vip"); }}
+                    className="w-full py-3 rounded-2xl bg-gradient-to-r from-[#f6d386] to-[#eab354] text-[#3b2306] font-black text-base active:scale-95 transition"
+                  >
+                    تجديد الاشتراك
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="p-8 text-center flex flex-col items-center justify-center h-96 gap-4">
+                <div className="w-24 h-24 rounded-full bg-[#38291e]/80 border border-[#e5c17b]/30 flex items-center justify-center">
+                  <Lock size={42} className="text-[#e5c17b]" />
+                </div>
+                <p className="text-base font-black text-white">لا تمتلك اشتراك VIP حالياً</p>
+                <p className="text-xs text-white/60 max-w-[250px]">اشترك الآن للاستفادة من جميع المزايا الحصرية</p>
+                <button
+                  onClick={() => setMainTab("vip")}
+                  className="mt-2 px-8 py-3 rounded-2xl bg-gradient-to-r from-[#f6d386] to-[#eab354] text-[#3b2306] font-black text-sm active:scale-95 transition"
+                >
+                  تصفح الباقات
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           /* ================= واجهة VIP الرئيسية (VIP 1 .. VIP 7) ================= */
@@ -574,11 +650,7 @@ export default function VipShopSheet({ onClose, onOpenRecharge }: Props) {
             {/* الشعار العلوي الغاطس في الخلفية (يظهر جزئياً كما في صور VIP 1-4) */}
             {assets[`vip.hero.${selected}`] && (
               <div className="relative h-24 overflow-hidden flex items-center justify-center pointer-events-none">
-                <img
-                  src={assets[`vip.hero.${selected}`]}
-                  alt=""
-                  className="w-44 object-contain opacity-85 -mt-6 drop-shadow-[0_8px_20px_rgba(0,0,0,0.8)]"
-                />
+                <AssetVideo url={assets[`vip.hero.${selected}`]} type="auto" className="w-44 object-contain opacity-85 -mt-6 drop-shadow-[0_8px_20px_rgba(0,0,0,0.8)]" />
               </div>
             )}
 
