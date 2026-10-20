@@ -65,15 +65,6 @@ const [activeRankTab, setActiveRankTab] = useState<string>("VI");
   // العملات الذهبية المتطايرة داخل الصناديق الثلاثة
   const [coinsPile, setCoinsPile] = useState<{
 
-  // حساب النسب المئوية للإحصائيات
-  const historyList = state?.history ?? [];
-  const totalHistory = historyList.length || 1;
-  const appleCount = historyList.filter((h: string) => h === "apple").length;
-  const melonCount = historyList.filter((h: string) => h === "watermelon").length;
-  const sevenCount = historyList.filter((h: string) => h === "77").length;
-  const applePct = Math.round((appleCount / totalHistory) * 100);
-  const melonPct = Math.round((melonCount / totalHistory) * 100);
-  const sevenPct = Math.round((sevenCount / totalHistory) * 100);
 
     watermelon: { id: number; x: number; y: number; img: string }[];
     "77": { id: number; x: number; y: number; img: string }[];
