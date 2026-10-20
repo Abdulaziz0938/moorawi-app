@@ -231,6 +231,16 @@ const [activeRankTab, setActiveRankTab] = useState<string>("VI");
     return <img src={imgApple} alt="apple" className="w-8 h-8 object-contain drop-shadow" />;
   };
 
+  // حساب النسب المئوية للإحصائيات
+  const historyList = data?.state?.history ?? [];
+  const totalHistory = historyList.length || 1;
+  const appleCount = historyList.filter((h: string) => h === "apple").length;
+  const melonCount = historyList.filter((h: string) => h === "watermelon").length;
+  const sevenCount = historyList.filter((h: string) => h === "77").length;
+  const applePct = Math.round((appleCount / totalHistory) * 100);
+  const melonPct = Math.round((melonCount / totalHistory) * 100);
+  const sevenPct = Math.round((sevenCount / totalHistory) * 100);
+
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-xs select-none" dir="rtl">
       <div className="relative w-full max-w-[430px] h-[85vh] rounded-t-3xl border-t-2 border-yellow-400 bg-gradient-to-b from-[#4c1d95] via-[#2e1065] to-[#170536] p-3 flex flex-col justify-between overflow-hidden shadow-2xl text-white">
