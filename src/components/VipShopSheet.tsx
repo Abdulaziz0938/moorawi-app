@@ -1,5 +1,5 @@
 // [ezo-vip] Ezo-Style Exact Replica VIP & Queen Shop
-import { Lock, useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { getActiveToken } from "../lib/session";
@@ -13,7 +13,7 @@ import {
   Megaphone, ShieldOff, BadgeCheck, Users, Mic, UserCircle,
   Car, Home, AudioLines, MicVocal, Bell, Music, Palette,
   LayoutGrid, Type, Gem, ScrollText, Shield, Trophy,
-} from "lucide-react";
+, Lock } from "lucide-react";
 
 interface Props {
   onClose: () => void;
@@ -169,6 +169,7 @@ export default function VipShopSheet({ onClose, onOpenRecharge }: Props) {
   const buyVip = useMutation(api.vip.buyVip);
 
   const [mainTab, setMainTab] = useState<"queen" | "vip" | "special">("vip");
+  const [specialTab, setSpecialTab] = useState<"collection" | "records" | "gifts">("collection");
   const [selected, setSelected] = useState<number>(6);
   const [busy, setBusy] = useState(false);
 
@@ -485,8 +486,8 @@ export default function VipShopSheet({ onClose, onOpenRecharge }: Props) {
               />
               {/* زر الداعمين في الزاوية اليسرى العلوية كما في الصورة */}
               <div className="absolute top-4 left-4 flex flex-col items-center">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-b from-rose-500/30 to-black/60 border border-rose-300/40 flex items-center justify-center shadow-lg">
-                  <Gift size={28} className="text-rose-200" />
+                <div className="w-14 h-14 rounded-2xl overflow-hidden border border-rose-300/40 flex items-center justify-center shadow-lg">
+                  {assets["vip.queen.supporter"] ? <img src={assets["vip.queen.supporter"]} alt="Supporter" className="w-full h-full object-cover" /> : <div className="w-full h-full bg-gradient-to-b from-rose-500/30 to-black/60 flex items-center justify-center"><Gift size={28} className="text-rose-200" /></div>}
                 </div>
                 <span className="text-[11px] font-black text-rose-100 -mt-1.5 drop-shadow">الداعمين</span>
               </div>
@@ -562,87 +563,74 @@ export default function VipShopSheet({ onClose, onOpenRecharge }: Props) {
               })}
             </div>
           </div>
-        ) : mainTab === "special" ? (
-          /* ================= تبويب الخاص - مستوى VIP الخاص بك ================= */
+                ) : mainTab === "special" ? (
+          /* ================= تبويب الخاص (Binmo Style) ================= */
           <div className="pb-24">
-            {currentLevel > 0 && active ? (
-              <>
-                <div className="relative h-48 flex flex-col items-center justify-center overflow-hidden">
-                  <div
-                    className="absolute inset-0 opacity-30"
-                    style={{ background: `radial-gradient(circle at 50% 45%, ${EZO_VIP_THEMES[currentLevel]?.accent || "#eab308"} 0%, transparent 70%)` }}
-                  />
-                  <div className="relative z-10 flex flex-col items-center">
-                    <div
-                      className="w-32 h-32 rounded-full flex items-center justify-center"
-                      style={{
-                        background: `conic-gradient(from 0deg, ${EZO_VIP_THEMES[currentLevel]?.accent || "#eab308"}, #fde68a, ${EZO_VIP_THEMES[currentLevel]?.accent || "#eab308"})`,
-                        padding: 4,
-                        boxShadow: `0 0 40px ${EZO_VIP_THEMES[currentLevel]?.accent || "#eab308"}80`,
-                      }}
-                    >
-                      <div className="w-full h-full rounded-full bg-black/90 flex flex-col items-center justify-center">
-                        <Crown size={52} className="text-[#fde68a]" fill="rgba(253,230,138,0.3)" />
-                        <span className="font-black italic text-2xl text-[#fde68a] mt-1" dir="ltr">VIP {currentLevel}</span>
-                      </div>
-                    </div>
-                    <p className="text-white text-sm font-bold mt-3">أنت الآن VIP {currentLevel}</p>
-                    <p className="text-white/60 text-xs mt-1">
-                      ينتهي في: {data?.expiresAt ? new Date(data.expiresAt).toLocaleDateString("ar-SY") : "—"}
-                    </p>
-                  </div>
+            {/* البانر العلوي */}
+            <div className="relative h-40 flex items-center justify-center overflow-hidden border-b border-[#e5c17b]/20">
+              <div className="absolute inset-0 opacity-30 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0c0a08] to-transparent" />
+              
+              <div className="absolute top-4 right-4 flex items-center gap-3 bg-black/40 border border-[#e5c17b]/30 rounded-full pl-1 pr-4 py-1 backdrop-blur-md">
+                <div className="text-right">
+                  <span className="text-white font-black text-sm block" dir="ltr">{data?.userId || "1831156"}</span>
                 </div>
-
-                <EzoDivider title="مزاياك الحالية" />
-
-                <div className="mx-3 grid grid-cols-2 gap-2.5">
-                  {(benefitsByLevel[currentLevel] ?? []).map((b: any) => {
-                    const Icon = ICONS[b.icon] ?? Sparkles;
-                    return (
-                      <div
-                        key={b._id}
-                        className="rounded-xl p-3 flex items-center gap-2 border"
-                        style={{
-                          background: "rgba(0,0,0,0.5)",
-                          borderColor: (EZO_VIP_THEMES[currentLevel]?.accent || "#eab308") + "40"
-                        }}
-                      >
-                        <div
-                          className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-                          style={{ background: `linear-gradient(135deg, ${EZO_VIP_THEMES[currentLevel]?.accent || "#eab308"}40, ${EZO_VIP_THEMES[currentLevel]?.accent || "#eab308"}15)` }}
-                        >
-                          <Icon size={16} className="text-[#fde68a]" />
-                        </div>
-                        <span className="text-white text-xs font-bold leading-tight">{b.textAr}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <div className="mx-3 mt-6">
-                  <button
-                    onClick={() => { setSelected(currentLevel); setMainTab("vip"); }}
-                    className="w-full py-3 rounded-2xl bg-gradient-to-r from-[#f6d386] to-[#eab354] text-[#3b2306] font-black text-base active:scale-95 transition"
-                  >
-                    تجديد الاشتراك
-                  </button>
-                </div>
-              </>
-            ) : (
-              <div className="p-8 text-center flex flex-col items-center justify-center h-96 gap-4">
-                <div className="w-24 h-24 rounded-full bg-[#38291e]/80 border border-[#e5c17b]/30 flex items-center justify-center">
-                  <Lock size={42} className="text-[#e5c17b]" />
-                </div>
-                <p className="text-base font-black text-white">لا تمتلك اشتراك VIP حالياً</p>
-                <p className="text-xs text-white/60 max-w-[250px]">اشترك الآن للاستفادة من جميع المزايا الحصرية</p>
-                <button
-                  onClick={() => setMainTab("vip")}
-                  className="mt-2 px-8 py-3 rounded-2xl bg-gradient-to-r from-[#f6d386] to-[#eab354] text-[#3b2306] font-black text-sm active:scale-95 transition"
-                >
-                  تصفح الباقات
-                </button>
+                <img src={data?.avatarUrl || "/avatar.png"} alt="" className="w-10 h-10 rounded-full border-2 border-[#e5c17b]" />
               </div>
-            )}
+
+              <div className="relative z-10 flex flex-col items-center mt-6">
+                <img 
+                  src={assets["vip.hero.special"] || "https://cdn-icons-png.flaticon.com/512/6491/6491618.png"} 
+                  alt="VIP" 
+                  className="h-16 object-contain drop-shadow-[0_4px_15px_rgba(234,179,8,0.5)]" 
+                />
+                <p className="text-[#fde68a] font-bold text-sm mt-2 text-center px-6">
+                  استمتع بأكثر من {benefitsByLevel[currentLevel]?.length || 14} امتيازاً!
+                </p>
+              </div>
+            </div>
+
+            {/* التبويبات الفرعية الثلاثة */}
+            <div className="flex border-b border-white/10 sticky top-0 bg-[#0c0a08]/95 backdrop-blur z-20">
+              <button 
+                onClick={() => setSpecialTab("collection")} 
+                className={`flex-1 py-3 text-sm font-bold transition relative ${specialTab === "collection" ? "text-white" : "text-white/50"}`}
+              >
+                تحصيل
+                {specialTab === "collection" && <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-[2px] bg-[#fde68a]" />}
+              </button>
+              <button 
+                onClick={() => setSpecialTab("records")} 
+                className={`flex-1 py-3 text-sm font-bold transition relative ${specialTab === "records" ? "text-white" : "text-white/50"}`}
+              >
+                تسجيلي
+                {specialTab === "records" && <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-[2px] bg-[#fde68a]" />}
+              </button>
+              <button 
+                onClick={() => setSpecialTab("gifts")} 
+                className={`flex-1 py-3 text-sm font-bold transition relative ${specialTab === "gifts" ? "text-white" : "text-white/50"}`}
+              >
+                الحصول والإهداء
+                {specialTab === "gifts" && <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-[2px] bg-[#fde68a]" />}
+              </button>
+            </div>
+
+            {/* محتوى التبويبات (فارغ حالياً كما في Binmo) */}
+            <div className="flex flex-col items-center justify-center h-[50vh] gap-4">
+              <div className="relative">
+                <img src="https://cdn-icons-png.flaticon.com/512/679/679720.png" alt="Empty Box" className="w-24 h-24 object-contain opacity-50 grayscale" />
+                <div className="absolute -top-2 -right-2 flex gap-1">
+                  <span className="w-1.5 h-4 bg-emerald-500 rounded-full" />
+                  <span className="w-1.5 h-3 bg-emerald-500 rounded-full" />
+                  <span className="w-1.5 h-2 bg-emerald-500 rounded-full" />
+                </div>
+              </div>
+              <p className="text-white/40 text-sm font-bold">لا يوجد شيء هنا</p>
+            </div>
+            
+            <p className="text-center text-white/30 text-[10px] absolute bottom-6 left-0 right-0">
+              اعرض فقط سجلات النصف الأخير من العام
+            </p>
           </div>
         ) : (
           /* ================= واجهة VIP الرئيسية (VIP 1 .. VIP 7) ================= */
