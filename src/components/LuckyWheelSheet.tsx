@@ -1,8 +1,15 @@
-import chip100 from "../assets/wheel/100.png";
-import chip1k from "../assets/wheel/1k.png";
-import chip5k from "../assets/wheel/5k.png";
-import chip10k from "../assets/wheel/10k.png";
-import chip50k from "../assets/wheel/50k.png";
+
+import imgApple from "../assets/wheel/apple.webp";
+import imgWatermelon from "../assets/wheel/watermelon.webp";
+import imgSeven from "../assets/wheel/seven.webp";
+import imgWheel from "../assets/wheel/wheel.webp";
+import imgPointer from "../assets/wheel/pointer.webp";
+import img100 from "../assets/wheel/100.webp";
+import img1k from "../assets/wheel/1k.webp";
+import img5k from "../assets/wheel/5k.webp";
+import img10k from "../assets/wheel/10k.webp";
+import img50k from "../assets/wheel/50k.webp";
+
 import { getActiveToken } from '../lib/session';
 import React, { useEffect, useState, useRef } from "react";
 import { useQuery, useMutation } from "convex/react";
@@ -192,9 +199,9 @@ export default function LuckyWheelSheet({ isOpen, onClose, onOpenRecharge }: Luc
   const isResultModal = state?.status === "RESULT";
 
   const renderIcon = (item: string) => {
-    if (item === "77") return <img src="/wheel/seven.png" alt="77" className="w-8 h-8 object-contain drop-shadow" />;
-    if (item === "watermelon") return <img src="/wheel/watermelon.png" alt="watermelon" className="w-8 h-8 object-contain drop-shadow" />;
-    return <img src="/wheel/apple.png" alt="apple" className="w-8 h-8 object-contain drop-shadow" />;
+    if (item === "77") return <img src={imgSeven} alt="77" className="w-8 h-8 object-contain drop-shadow" />;
+    if (item === "watermelon") return <img src={imgWatermelon} alt="watermelon" className="w-8 h-8 object-contain drop-shadow" />;
+    return <img src={imgApple} alt="apple" className="w-8 h-8 object-contain drop-shadow" />;
   };
 
   return (
@@ -244,7 +251,7 @@ export default function LuckyWheelSheet({ isOpen, onClose, onOpenRecharge }: Luc
         <div className="relative w-[265px] h-[265px] mx-auto my-1 flex items-center justify-center">
           {/* السهم العلوي الحقيقي المفرغ */}
           <img
-            src="/wheel/pointer.png"
+            src={imgPointer}
             alt="pointer"
             className="absolute -top-6 left-1/2 -translate-x-1/2 z-30 w-11 h-14 object-contain drop-shadow-[0_4px_6px_rgba(0,0,0,0.8)]"
           />
@@ -260,7 +267,7 @@ export default function LuckyWheelSheet({ isOpen, onClose, onOpenRecharge }: Luc
                   : "none",
             }}
           >
-            <img src="/wheel/wheel.png" alt="wheel" className="w-full h-full object-contain drop-shadow-2xl" />
+            <img src={imgWheel} alt="wheel" className="w-full h-full object-contain drop-shadow-2xl" />
           </div>
 
           {/* العداد المركزي الشفاف */}
@@ -296,9 +303,9 @@ export default function LuckyWheelSheet({ isOpen, onClose, onOpenRecharge }: Luc
         {/* صناديق المراهنة الثلاثة (بطيخ x2 | 77 x8 | تفاح x2) */}
         <div className="grid grid-cols-3 gap-2 my-1">
           {[
-            { key: "watermelon" as const, img: "/wheel/watermelon.png", mult: "x2" },
-            { key: "77" as const, img: "/wheel/seven.png", mult: "x8" },
-            { key: "apple" as const, img: "/wheel/apple.png", mult: "x2" },
+            { key: "watermelon" as const, img: imgWatermelon, mult: "x2" },
+            { key: "77" as const, img: imgSeven, mult: "x8" },
+            { key: "apple" as const, img: imgApple, mult: "x2" },
           ].map((box) => {
             const isWinner = state?.status !== "BETTING" && state?.winningItem === box.key;
             return (
@@ -341,11 +348,11 @@ export default function LuckyWheelSheet({ isOpen, onClose, onOpenRecharge }: Luc
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               {[
-                { val: 100, img: chip100, label: "100" },
-                { val: 1000, img: chip1k, label: "1K" },
-                { val: 5000, img: chip5k, label: "5K" },
-                { val: 10000, img: chip10k, label: "10K" },
-                { val: 50000, img: chip50k, label: "50K" },
+                { val: 100, img: img100, label: "100" },
+                { val: 1000, img: img1k, label: "1K" },
+                { val: 5000, img: img5k, label: "5K" },
+                { val: 10000, img: img10k, label: "10K" },
+                { val: 50000, img: img50k, label: "50K" },
               ].map((chip) => (
                 <button
                   key={chip.val}
