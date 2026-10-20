@@ -135,7 +135,7 @@ const [activeRankTab, setActiveRankTab] = useState<string>("VI");
       }
 
       // حساب الزاوية بحيث يتوقف السهم في منتصف القطاع بدقة
-      const sectorAngle = (state.winningIndex * 40) + 20; 
+      const sectorAngle = (state.winningIndex * (360 / 8)) + (360 / 16); 
       // إضافة إزاحة صغيرة للتأكد من أن السهم في القلب وليس على الحافة
       const targetStopAngle = 360 - sectorAngle; 
       const extraSpins = 360 * 6; // 6 دورات كاملة سريعة ثم تباطؤ
@@ -180,6 +180,7 @@ const [activeRankTab, setActiveRankTab] = useState<string>("VI");
             id: Date.now() + Math.random(),
             x: 15 + Math.random() * 68,
             y: 18 + Math.random() * 48,
+            img: img,
           },
         ],
       };
@@ -456,25 +457,19 @@ const [activeRankTab, setActiveRankTab] = useState<string>("VI");
               <div className="text-yellow-300 font-bold text-sm my-2">تهانينا للفائزين التاليين</div>
 
               <div className="grid grid-cols-3 gap-2 my-3">
-                {(state?.topWinners && state.topWinners.length > 0
-                  ? state.topWinners
-                  : [
-                      { name: "Sniper", bet: 35000, win: 70000, avatarUrl: "" },
-                      { name: "صقر", bet: 93000, win: 186000, avatarUrl: "" },
-                      { name: "شيماء", bet: 20000, win: 40000, avatarUrl: "" },
-                    ]
-                ).map((w, idx) => (
+                {(state?.topWinners ?? []).slice(0, 3).map((w: any, idx: number) => (
                   <div key={idx} className="bg-white/10 rounded-xl p-2 text-[11px] flex flex-col items-center">
                     <div className="w-10 h-10 rounded-full border-2 border-yellow-400 bg-purple-700 flex items-center justify-center font-bold mb-1 overflow-hidden">
-                      {w.avatarUrl ? (
-                        <img src={w.avatarUrl} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        "👑"
-                      )}
+                      <img 
+                        src={w.avatarUrl || "/avatar.png"} 
+                        alt="" 
+                        className="w-full h-full object-cover" 
+                        onError={(e) => { (e.target as HTMLImageElement).src = "/avatar.png"; }}
+                      />
                     </div>
-                    <div className="font-bold truncate w-full">{w.name}</div>
-                    <div className="text-slate-300">الرهان: {w.bet}</div>
-                    <div className="text-yellow-300 font-bold">فوز: {w.win}</div>
+                    <div className="font-bold truncate w-full text-center">{w.name || "مستخدم"}</div>
+                    <div className="text-slate-300">الرهان: {w.bet?.toLocaleString() ?? 0}</div>
+                    <div className="text-yellow-300 font-bold">فوز: {w.win?.toLocaleString() ?? 0}</div>
                   </div>
                 ))}
               </div>
