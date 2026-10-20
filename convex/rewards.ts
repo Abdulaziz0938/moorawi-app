@@ -4,7 +4,7 @@ import { requireUser } from "./lib/auth";
 import { weekKey } from "./lib/week";
 
 // ============================================================
-// [moorawi-trophy] Weekly reward tiers
+// [ezo-trophy] Weekly reward tiers
 // ============================================================
 const TIERS: Record<number, { coins: number; vip: number; vipCount: number }> = {
   1: { coins: 10_000, vip: 1, vipCount: 3 },

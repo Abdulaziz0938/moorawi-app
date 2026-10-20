@@ -1,4 +1,4 @@
-// [moorawi-services] المستوى
+// [ezo-services] المستوى
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { getDeviceId } from "../lib/device";

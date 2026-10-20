@@ -1,4 +1,4 @@
-// [moorawi-music] MusicPlayer — synced room music player
+// [ezo-music] MusicPlayer — synced room music player
 // Embedded inside MusicSheet (not floating).
 // Auto-plays when someone starts a track. Local mute + volume.
 

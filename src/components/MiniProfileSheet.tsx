@@ -352,7 +352,7 @@ export default function MiniProfileSheet({
               <PropertyBar label="مركبة" value={itemCounts?.vehicle ?? 0} tone="blue" />
             </div>
 
-            {/* Bottom actions — Binmo-style */}
+            {/* Bottom actions — Ezo-style */}
             {isMeViewer ? (
               isMySeat ? (
                 // أنا + على المايك: كتم + نزول

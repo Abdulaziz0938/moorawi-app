@@ -1,4 +1,4 @@
-// [ezo-daily-login] نافذة الدخول اليومي — بتصميم Binmo
+// [ezo-daily-login] نافذة الدخول اليومي — بتصميم Ezo
 import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";

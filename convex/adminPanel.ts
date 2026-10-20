@@ -4,7 +4,7 @@ import { requireUser } from "./lib/auth";
 import { randomHex, hashPassword } from "./auth";
 
 // ============================================================
-// [moorawi-admin] Admin Panel — للمالك فقط (adminRole === "super")
+// [ezo-admin] Admin Panel — للمالك فقط (adminRole === "super")
 // ============================================================
 
 async function requireSuperAdmin(ctx: any, tokenOverride?: string) {
@@ -217,7 +217,7 @@ export const updateShopItem = mutation({
   args: {
     tokenOverride: v.optional(v.string()),
     itemId: v.id("shopItems"),
-    // [moorawi-9patch] chat bubble slice
+    // [ezo-9patch] chat bubble slice
     sliceTop: v.optional(v.number()),
     sliceRight: v.optional(v.number()),
     sliceBottom: v.optional(v.number()),
@@ -239,7 +239,7 @@ export const updateShopItem = mutation({
     if (args.price !== undefined) patch.price = args.price;
     if (args.active !== undefined) patch.active = args.active;
     if (args.isHot !== undefined) patch.isHot = args.isHot;
-    // [moorawi-9patch] chat bubble slices
+    // [ezo-9patch] chat bubble slices
     if (args.sliceTop !== undefined) patch.sliceTop = args.sliceTop;
     if (args.sliceRight !== undefined) patch.sliceRight = args.sliceRight;
     if (args.sliceBottom !== undefined) patch.sliceBottom = args.sliceBottom;
@@ -275,7 +275,7 @@ export const listShopItems = query({
 });
 
 // ============================================================
-// [moorawi-admin] createStaffUser — internal, run via CLI
+// [ezo-admin] createStaffUser — internal, run via CLI
 // npx convex run adminPanel:createStaffUser '{"...":"..."}' --prod
 // ============================================================
 export const createStaffUser = internalMutation({
@@ -334,7 +334,7 @@ export const createStaffUser = internalMutation({
 });
 
 // ============================================================
-// [moorawi-admin] setAdminRole — internal (CLI only)
+// [ezo-admin] setAdminRole — internal (CLI only)
 // ============================================================
 export const setAdminRole = internalMutation({
   args: {
@@ -353,7 +353,7 @@ export const setAdminRole = internalMutation({
 });
 
 // ============================================================
-// [moorawi-admin] updateShopItemAssets — moderator can update images only
+// [ezo-admin] updateShopItemAssets — moderator can update images only
 // ============================================================
 export const updateShopItemAssets = mutation({
   args: {

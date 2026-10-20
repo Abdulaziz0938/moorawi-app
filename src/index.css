@@ -168,7 +168,7 @@ html, body {
   animation: comboFadeOut 0.4s ease-out forwards;
 }
 
-/* ============ Moorawi: هدايا جماعية متعددة (Batch) ============ */
+/* ============ Ezo: هدايا جماعية متعددة (Batch) ============ */
 
 /* طيران هدية واحدة من مركز الشاشة إلى هدف محدد — 3 مراحل */
 @keyframes multiGiftFly {
@@ -239,7 +239,7 @@ html, body {
   animation: aggregateBadgePulse 2.2s ease-out forwards;
 }
 
-/* ============ Moorawi: Leaderboard Podium Glow ============ */
+/* ============ Ezo: Leaderboard Podium Glow ============ */
 @keyframes podiumGlow {
   0%, 100% {
     filter: brightness(1) drop-shadow(0 0 0 rgba(255, 215, 0, 0));
@@ -263,7 +263,7 @@ html, body {
   animation-delay: 0.8s;
 }
 
-/* ============ Moorawi: Leaderboard composite glow ============ */
+/* ============ Ezo: Leaderboard composite glow ============ */
 @keyframes podiumGlowAll {
   0%, 100% {
     filter: brightness(1) drop-shadow(0 0 0 rgba(255, 215, 0, 0));
@@ -277,7 +277,7 @@ html, body {
   animation: podiumGlowAll 3s ease-in-out infinite;
 }
 
-/* ============ Moorawi: Dialog animations ============ */
+/* ============ Ezo: Dialog animations ============ */
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -596,7 +596,7 @@ html, body {
   to { transform: rotate(360deg); }
 }
 
-/* [ezo-emoji] Animated emoji on mic seat — Yalla/Binmo style */
+/* [ezo-emoji] Animated emoji on mic seat — Yalla/Ezo style */
 @keyframes emojiBurst {
   0%   { transform: scale(0)    translateY(0)     rotate(-12deg); opacity: 0; }
   12%  { transform: scale(1.35) translateY(-6px)  rotate(8deg);   opacity: 1; }
@@ -609,7 +609,7 @@ html, body {
   animation: emojiBurst 3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-/* [ezo-gift-banner] بانر عائم للهدايا — Yalla/Binmo style */
+/* [ezo-gift-banner] بانر عائم للهدايا — Yalla/Ezo style */
 @keyframes bannerFloating {
   0%   { transform: translateY(-140%); opacity: 0; }
   12%  { transform: translateY(0);     opacity: 1; }
@@ -627,7 +627,7 @@ html, body {
   backface-visibility: hidden;
 }
 
-/* [ezo-combo-pro] كومبو فخم — Yalla/Binmo style */
+/* [ezo-combo-pro] كومبو فخم — Yalla/Ezo style */
 @keyframes comboNumberPulse {
   0%   { transform: scale(1)    rotate(0deg); }
   20%  { transform: scale(1.45) rotate(-3deg); }
@@ -677,7 +677,7 @@ html, body {
   animation: fadeIn 0.2s ease-out forwards;
 }
 
-/* [ezo-rocket-launch] إطلاق الصاروخ — Binmo style */
+/* [ezo-rocket-launch] إطلاق الصاروخ — Ezo style */
 @keyframes rocketLaunchUp {
   0%   { transform: translateY(0)      scale(1);   opacity: 1; }
   15%  { transform: translateY(-8vh)   scale(1.1); opacity: 1; filter: brightness(1.4); }
@@ -714,7 +714,7 @@ html, body {
   animation: rocketTrail 0.15s ease-in-out infinite;
 }
 
-/* [ezo-explosion-binmo] انفجار الصاروخ — Binmo style */
+/* [ezo-explosion-ezo] انفجار الصاروخ — Ezo style */
 @keyframes flashBurst {
   0%   { opacity: 0; }
   15%  { opacity: 1; }
@@ -963,15 +963,15 @@ html, body {
   min-height: 100vh;
 }
 
-/* تنسيق كروت بينمو الفاخرة */
-.binmo-card {
+/* تنسيق كروت إيزو الفاخرة */
+.ezo-card {
   background-color: #151b24 !important;
   border: 1px solid rgba(255, 255, 255, 0.06) !important;
   border-radius: 14px !important;
 }
 
 
-/* تراكب الشاشات والخلفيات بنمط بينمو + EZO البنفسجي */
+/* تراكب الشاشات والخلفيات بنمط إيزو + EZO البنفسجي */
 .app-bg {
   background-color: #090514 !important;
   background-image: 
@@ -981,7 +981,7 @@ html, body {
 }
 
 
-/* === معمارية تراكب الشاشات والخلفيات (EZO x Binmo Theme) === */
+/* === معمارية تراكب الشاشات والخلفيات (EZO x Ezo Theme) === */
 .app-bg {
   background-color: #080411 !important;
   background-image:

@@ -1,4 +1,4 @@
-// [moorawi-verification] نظام المصادقة — كاميرا + مراجعة
+// [ezo-verification] نظام المصادقة — كاميرا + مراجعة
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { requireUser, isFullAdmin } from "./lib/auth";

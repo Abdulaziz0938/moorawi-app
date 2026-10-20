@@ -89,7 +89,7 @@ export default function RocketLaunchOverlay({ rocket, launcher, onComplete }: Pr
         </div>
       </div>
 
-      {/* ═══ Explosion (Binmo style) ═══ */}
+      {/* ═══ Explosion (Ezo style) ═══ */}
       {phase === "exploding" && (
         <>
           {/* 1. White flash */}

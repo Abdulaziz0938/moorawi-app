@@ -1,4 +1,4 @@
-// [moorawi-vip] Binmo-Style Exact Replica VIP & Queen Shop
+// [ezo-vip] Ezo-Style Exact Replica VIP & Queen Shop
 import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
@@ -27,7 +27,7 @@ const ICONS: Record<string, any> = {
   Type, Gem, ScrollText, Shield, Sparkles, Trophy, Crown,
 };
 
-// ثيمات الألوان المطابقة لصور Binmo بالبكسل لكل مستوى
+// ثيمات الألوان المطابقة لصور Ezo بالبكسل لكل مستوى
 const BINMO_THEMES: Record<number, {
   bgGrad: string;
   cardBg: string;
@@ -102,7 +102,7 @@ const BINMO_THEMES: Record<number, {
   },
 };
 
-// الميزات الحصرية الدائرية لكل مستوى (مطابقة لصور Binmo)
+// الميزات الحصرية الدائرية لكل مستوى (مطابقة لصور Ezo)
 const EXCLUSIVE_CIRCLES: Record<number, { icon: string; label: string }[]> = {
   1: [
     { icon: "Gift", label: "هدايا VIP الحصرية" },
@@ -146,8 +146,8 @@ const EXCLUSIVE_CIRCLES: Record<number, { icon: string; label: string }[]> = {
   ],
 };
 
-// فاصل Binmo الزخرفي مع النجمة الرباعية والخط الذهبي المتلاشي
-function BinmoDivider({ title }: { title: string }) {
+// فاصل Ezo الزخرفي مع النجمة الرباعية والخط الذهبي المتلاشي
+function EzoDivider({ title }: { title: string }) {
   return (
     <div className="flex items-center justify-center gap-2.5 my-4 px-6 select-none">
       <div className="h-[1px] flex-1 max-w-[75px] bg-gradient-to-l from-[#e5c17b] to-transparent opacity-80" />
@@ -243,7 +243,7 @@ export default function VipShopSheet({ onClose, onOpenRecharge }: Props) {
     );
   };
 
-  // البطاقات الـ 9 (أو 8 للمستويات 1-4 كما في Binmo)
+  // البطاقات الـ 9 (أو 8 للمستويات 1-4 كما في Ezo)
   const renderVipGrid = () => {
     const isHighTier = selected >= 5;
     // في المستويات 1-4 هناك 8 مربعات (الصف الثالث فيه مربعان عريضان: wave و bubble)
@@ -472,7 +472,7 @@ export default function VipShopSheet({ onClose, onOpenRecharge }: Props) {
       {/* ===== 3. المحتوى القابل للتمرير ===== */}
       <div className="flex-1 overflow-y-auto pb-28">
         {mainTab === "queen" ? (
-          /* ================= واجهة الملكة (Binmo Queen) ================= */
+          /* ================= واجهة الملكة (Ezo Queen) ================= */
           <div className="flex flex-col">
             {/* البانر العلوي للملكة */}
             <div className="relative h-64 flex flex-col items-center justify-center overflow-hidden">
@@ -509,7 +509,7 @@ export default function VipShopSheet({ onClose, onOpenRecharge }: Props) {
               )}
             </div>
 
-            <BinmoDivider title="28 امتيازات" />
+            <EzoDivider title="28 امتيازات" />
 
             {/* شبكة الـ 6 مربعات الخاصة بالملكة */}
             <div className="mx-3 grid grid-cols-3 gap-2.5" dir="ltr">
@@ -583,13 +583,13 @@ export default function VipShopSheet({ onClose, onOpenRecharge }: Props) {
             )}
 
             {/* فاصل عدد الامتيازات */}
-            <BinmoDivider title={`${theme.benefitCount} امتيازات`} />
+            <EzoDivider title={`${theme.benefitCount} امتيازات`} />
 
             {/* شبكة الـ 8 أو 9 مربعات */}
             {renderVipGrid()}
 
             {/* قسم: حصرياً لـ VIP X */}
-            <BinmoDivider title={`حصرياً لـ VIP${selected}`} />
+            <EzoDivider title={`حصرياً لـ VIP${selected}`} />
 
             <div className="flex items-start justify-center gap-4 px-3 my-2 flex-wrap">
               {(EXCLUSIVE_CIRCLES[selected] ?? EXCLUSIVE_CIRCLES[6]).map((item, idx) => {
@@ -612,7 +612,7 @@ export default function VipShopSheet({ onClose, onOpenRecharge }: Props) {
             </div>
 
             {/* قسم: جدول مقارنة امتيازات VIP الكامل (كما في الصور 8 و 9) */}
-            <BinmoDivider title="امتيازات VIP" />
+            <EzoDivider title="امتيازات VIP" />
 
             <div className="mx-3 mt-2 rounded-2xl overflow-hidden border border-[#e5c17b]/20 bg-black/40">
               {/* رأس الجدول */}
@@ -695,7 +695,7 @@ export default function VipShopSheet({ onClose, onOpenRecharge }: Props) {
         )}
       </div>
 
-      {/* ===== 4. الشريط السفلي الثابت (مطابق لـ Binmo) ===== */}
+      {/* ===== 4. الشريط السفلي الثابت (مطابق لـ Ezo) ===== */}
       <div className="fixed bottom-0 inset-x-0 z-30 bg-gradient-to-r from-[#24180b] via-[#33220f] to-[#1f150a] border-t border-[#e5c17b]/30 px-4 py-3 flex items-center justify-between shadow-[0_-8px_25px_rgba(0,0,0,0.8)]">
         {mainTab === "queen" ? (
           <>

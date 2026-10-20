@@ -1,4 +1,4 @@
-// [moorawi-agency] بياناتي كمضيف
+// [ezo-agency] بياناتي كمضيف
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { getDeviceId } from "../lib/device";

@@ -1,4 +1,4 @@
-// [moorawi-rooms] RoomsTab — Ezo room discovery
+// [ezo-rooms] RoomsTab — Ezo room discovery
 import { useState, useEffect } from "react";
 import AssetVideo from "./ui/AssetVideo";
 import { useQuery, useMutation } from "convex/react";

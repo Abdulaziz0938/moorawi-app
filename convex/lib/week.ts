@@ -1,4 +1,4 @@
-// [moorawi-trophy] ISO week key helper
+// [ezo-trophy] ISO week key helper
 export function weekKey(d: Date = new Date()): string {
   const date = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
   const dayNum = date.getUTCDay() || 7;

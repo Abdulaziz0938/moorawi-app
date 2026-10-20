@@ -1,4 +1,4 @@
-// [moorawi-assets] Admin-managed static asset overrides
+// [ezo-assets] Admin-managed static asset overrides
 //
 // Every static image in the app (VIP badges, admin badges, ...) has a
 // canonical key. If a row exists in this table, the app uses imageUrl;

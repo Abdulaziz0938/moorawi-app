@@ -1,4 +1,4 @@
-// [moorawi-ui] Unified icon renderer — shows uploaded image if present,
+// [ezo-ui] Unified icon renderer — shows uploaded image if present,
 // otherwise falls back to lucide icon.
 //
 // Uploaded images render LARGER than lucide icons by default

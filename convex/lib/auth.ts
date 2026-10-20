@@ -109,7 +109,7 @@ export async function requireModerator(
 }
 
 // ============================================================
-// [moorawi-perms] isFullAdmin — owner (ID 1) + super ONLY
+// [ezo-perms] isFullAdmin — owner (ID 1) + super ONLY
 // Full control: users, coins, VIP, roles, medal grant
 // ============================================================
 export function isFullAdmin(user: { adminRole?: string; userNumber?: number } | null | undefined): boolean {
@@ -120,7 +120,7 @@ export function isFullAdmin(user: { adminRole?: string; userNumber?: number } | 
 }
 
 // ============================================================
-// [moorawi-perms] isAssetManager — asset upload only
+// [ezo-perms] isAssetManager — asset upload only
 // Adds: ID 10 (abody0938) + moderator role
 // Allowed: image upload, medal image/name edit, bubble edit
 // ============================================================

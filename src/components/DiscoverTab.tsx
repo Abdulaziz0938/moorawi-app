@@ -59,7 +59,7 @@ export default function DiscoverTab({ onEnterRoom }: DiscoverTabProps) {
         </div>
       </div>
 
-      {/* 2. حاوية متراكبة بحواف دائرية فوق البانر مثل بينمو */}
+      {/* 2. حاوية متراكبة بحواف دائرية فوق البانر مثل إيزو */}
       <div className="relative z-10 -mt-3 pt-4 rounded-t-3xl bg-[#0b0e14]/95 border-t border-purple-500/20 shadow-[0_-8px_25px_rgba(0,0,0,0.7)] flex items-center justify-between px-4 mb-3 border-b border-white/10 pb-2.5">
         <div className="flex items-center gap-8">
           <button 

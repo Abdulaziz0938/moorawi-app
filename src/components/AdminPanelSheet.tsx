@@ -30,7 +30,7 @@ function formatNum(n: number): string {
 
 export default function AdminPanelSheet({ onClose }: Props) {
   const token = getActiveToken();
-  // [moorawi-perms] meData FIRST — determines access
+  // [ezo-perms] meData FIRST — determines access
   const meData = useQuery(api.auth.me, { tokenOverride: token });
   const isSuperAdmin = !!meData && (meData.adminRole === "super" || meData.userNumber === 1);
 

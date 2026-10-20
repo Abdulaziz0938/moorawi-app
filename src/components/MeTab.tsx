@@ -69,7 +69,7 @@ export default function MeTab({ onEnterRoom }: Props) {
   const [showUserSettings, setShowUserSettings] = useState(false);
   const [showBlockList, setShowBlockList] = useState(false);
 
-  // [moorawi-global] ربط زر الشحن من GiftSheet
+  // [ezo-global] ربط زر الشحن من GiftSheet
   useEffect(() => {
     (window as any).__ezo_openWallet = () => setShowWallet(true);
     (window as any).__ezo_openAgentRecharge = () => setShowAgentRecharge(true);
@@ -79,7 +79,7 @@ export default function MeTab({ onEnterRoom }: Props) {
     };
   }, []);
 
-  // [moorawi-nav] Back button closes each overlay
+  // [ezo-nav] Back button closes each overlay
   useBackButton(showFullProfile, () => setShowFullProfile(false));
   useBackButton(showWallet, () => setShowWallet(false));
   useBackButton(showShop, () => setShowShop(false));

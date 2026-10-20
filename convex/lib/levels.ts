@@ -1,4 +1,4 @@
-// [moorawi-levels] Backend mirror of src/lib/levels.ts
+// [ezo-levels] Backend mirror of src/lib/levels.ts
 // Only levelFromValue is needed server-side. Keep THRESHOLDS in sync.
 
 export const MAX_LEVEL = 100;

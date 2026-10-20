@@ -1,4 +1,4 @@
-// [moorawi-missions] المهام اليومية + الأسبوعية + مكافأة الدخول اليومي
+// [ezo-missions] المهام اليومية + الأسبوعية + مكافأة الدخول اليومي
 import { v } from "convex/values";
 import { mutation, query, internalMutation } from "./_generated/server";
 import { requireUser } from "./lib/auth";
@@ -265,7 +265,7 @@ export const claimDailyLogin = mutation({
       lastLoginRewardAt: now,
     } as any);
 
-    // [moorawi-missions] سجّل تقدم مهمة daily_login
+    // [ezo-missions] سجّل تقدم مهمة daily_login
     const dailyCycle = dayKey(new Date(now));
     const loginMission = await ctx.db
       .query("missions")

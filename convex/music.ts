@@ -1,4 +1,4 @@
-// [moorawi-music] Personal library + shared room playback
+// [ezo-music] Personal library + shared room playback
 //
 // - Every user has their own private library (upload/list/delete).
 // - Anyone can play a track from their library → everyone in the room

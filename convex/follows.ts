@@ -2,7 +2,7 @@ import { mutation, query } from "./_generated/server";
 import { ConvexError, v } from "convex/values";
 import { requireUser } from "./lib/auth";
 
-// [moorawi-follows] Follows + counters
+// [ezo-follows] Follows + counters
 export const stats = query({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {

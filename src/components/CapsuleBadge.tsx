@@ -1,4 +1,4 @@
-// [moorawi-ui] Compact capsule badge — Level number + icon only
+// [ezo-ui] Compact capsule badge — Level number + icon only
 // Style: [ N ❤️ ]  (رقم اللفل + أيقونة ملونة)
 import { Heart, Gem } from "lucide-react";
 import { levelInfo } from "../lib/levels";

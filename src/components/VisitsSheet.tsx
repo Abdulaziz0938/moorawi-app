@@ -1,5 +1,5 @@
 import { useState } from "react";
-// [moorawi-services] الزيارات الأخيرة
+// [ezo-services] الزيارات الأخيرة
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { getDeviceId } from "../lib/device";

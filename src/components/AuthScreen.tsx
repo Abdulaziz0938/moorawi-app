@@ -11,7 +11,7 @@ interface Props {
 
 type Mode = "welcome" | "signin" | "signup";
 
-// [moorawi-auth] Fixed video background for all auth screens
+// [ezo-auth] Fixed video background for all auth screens
 function VideoBackground() {
   return (
     <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
@@ -47,7 +47,7 @@ export default function AuthScreen({ onSuccess }: Props) {
   const deviceId =
     typeof localStorage !== "undefined"
       ? (() => {
-          const KEY = "moorawi_device_id";
+          const KEY = "ezo_device_id";
           let id = localStorage.getItem(KEY);
           if (!id) {
             id = "dev-" + Math.random().toString(36).slice(2, 10);

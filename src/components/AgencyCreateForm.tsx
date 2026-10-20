@@ -1,4 +1,4 @@
-// [moorawi-agency] نموذج طلب إنشاء وكالة + شروط + صفحة غير مسموح
+// [ezo-agency] نموذج طلب إنشاء وكالة + شروط + صفحة غير مسموح
 import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";

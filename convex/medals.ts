@@ -4,7 +4,7 @@ import { requireUser, isFullAdmin, isAssetManager } from "./lib/auth";
 
 
 // ============================================================
-// [moorawi-medals] Tier rank — for auto-equip on grant
+// [ezo-medals] Tier rank — for auto-equip on grant
 // ============================================================
 const TIER_RANK: Record<string, number> = {
   C: 1, B: 2, A: 3, S: 4, SS: 5, SSS: 6,
@@ -15,7 +15,7 @@ function tierRank(t: string): number {
 
 
 // ============================================================
-// [moorawi-medals] Medals queries + mutations
+// [ezo-medals] Medals queries + mutations
 // ============================================================
 
 // List all active medals (grouped by category)
@@ -213,7 +213,7 @@ export const unequipMedal = mutation({
 });
 
 // ============================================================
-// [moorawi-medals] Auto-grant medals based on thresholds
+// [ezo-medals] Auto-grant medals based on thresholds
 // ============================================================
 export async function checkAndGrantMedals(ctx: any, userId: any) {
   const user = await ctx.db.get("users", userId);
@@ -258,7 +258,7 @@ export async function checkAndGrantMedals(ctx: any, userId: any) {
 }
 
 // ============================================================
-// [moorawi-medals] updateMedal — admin can edit name/image
+// [ezo-medals] updateMedal — admin can edit name/image
 // ============================================================
 export const updateMedal = mutation({
   args: {
@@ -293,7 +293,7 @@ export const updateMedal = mutation({
 });
 
 // ============================================================
-// [moorawi-medals] migrateAutoEquip — one-time: equip top-tier
+// [ezo-medals] migrateAutoEquip — one-time: equip top-tier
 // medal for users who have userMedals but nothing equipped
 // ============================================================
 export const migrateAutoEquip = internalMutation({

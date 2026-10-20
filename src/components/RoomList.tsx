@@ -66,7 +66,7 @@ export default function RoomList({ onEnter }: Props) {
 
   return (
     <div className="max-w-md mx-auto p-4 relative">
-      {/* [moorawi-auth] Logout — يظهر فقط عند تسجيل دخول رسمي */}
+      {/* [ezo-auth] Logout — يظهر فقط عند تسجيل دخول رسمي */}
       {hasSession() && (
         <button
           onClick={handleLogout}
@@ -101,7 +101,7 @@ export default function RoomList({ onEnter }: Props) {
         )}
       </header>
 
-      {/* [moorawi-rooms] زر ديناميكي: Home + (+) إن لم توجد غرفة / Home فقط إن وُجدت */}
+      {/* [ezo-rooms] زر ديناميكي: Home + (+) إن لم توجد غرفة / Home فقط إن وُجدت */}
       {myRoom ? (
         <button
           onClick={() => onEnter(myRoom._id)}

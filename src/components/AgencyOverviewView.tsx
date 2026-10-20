@@ -1,4 +1,4 @@
-// [moorawi-agency] تبويب "وكالة" — لمالك الوكالة أو المضيف
+// [ezo-agency] تبويب "وكالة" — لمالك الوكالة أو المضيف
 import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";

@@ -32,7 +32,7 @@ async function bumpSeatCharms(
 
 
 
-// [moorawi-agency] حساب مستوى المضيف من دخله الشهري
+// [ezo-agency] حساب مستوى المضيف من دخله الشهري
 function levelFromAchieved(achieved: number): number {
   const T = [0, 20_000, 40_000, 80_000, 126_000, 220_000, 320_000,
     460_000, 580_000, 850_000, 1_250_000, 1_850_000, 3_500_000,
@@ -49,7 +49,7 @@ function levelFromAchieved(achieved: number): number {
 // (تم حذف generateGiftUploadUrl — نستخدم Cloudinary)
 
 // ============ ADMIN: Create gift ============
-// [moorawi-trophy] Update room weekly total (lazy reset)
+// [ezo-trophy] Update room weekly total (lazy reset)
 async function updateRoomWeekly(ctx: any, roomId: any, amount: number) {
   const room = await ctx.db.get("rooms", roomId);
   if (!room) return;
@@ -200,7 +200,7 @@ export const send = mutation({
       totalSent: (user.totalSent ?? 0) + totalPrice,
     });
     await recordMissionProgress(ctx, user._id, ["daily_send_gift", "daily_5_gifts", "weekly_50_gifts"]);
-    // [moorawi-levels] 1 coin received = 1 Charm XP
+    // [ezo-levels] 1 coin received = 1 Charm XP
     await ctx.db.patch("users", args.toUserId, {
       charms: (target.charms ?? 0) + totalPrice,
       totalReceived: (target.totalReceived ?? 0) + totalPrice,
@@ -232,10 +232,10 @@ export const send = mutation({
       totalPrice,
     });
 
-    // [moorawi-trophy] Add to room weekly total
+    // [ezo-trophy] Add to room weekly total
     await updateRoomWeekly(ctx, args.roomId, totalPrice);
 
-    // [moorawi-medals] Auto-grant medals for sender + receiver
+    // [ezo-medals] Auto-grant medals for sender + receiver
     await checkAndGrantMedals(ctx, user._id);
     await checkAndGrantMedals(ctx, args.toUserId);
 
@@ -333,7 +333,7 @@ export const sendBatch = mutation({
         await ctx.db.patch("users", target._id, {
           charms: (target.charms ?? 0) + perTarget,
           totalReceived: (target.totalReceived ?? 0) + perTarget,
-          // [moorawi-agency] 30% ماس للمضيف، 70% لعضو عادي
+          // [ezo-agency] 30% ماس للمضيف، 70% لعضو عادي
           ...(target.agencyId ? {
             diamonds: (target.diamonds ?? 0) + Math.floor(perTarget * 0.3),
             hostIncomeMonth: (target.hostIncomeMonth ?? 0) + perTarget,
@@ -359,10 +359,10 @@ export const sendBatch = mutation({
       });
     }
 
-    // [moorawi-trophy] Add to room weekly total (once per batch)
+    // [ezo-trophy] Add to room weekly total (once per batch)
     await updateRoomWeekly(ctx, args.roomId, totalPrice);
 
-    // [moorawi-medals] Auto-grant medals
+    // [ezo-medals] Auto-grant medals
     await checkAndGrantMedals(ctx, user._id);
     for (const target of targets) {
       await checkAndGrantMedals(ctx, target._id);
@@ -443,7 +443,7 @@ export const roomLeaderboard = query({
     const enriched = await Promise.all(
       sorted.map(async (item) => {
         const u = await ctx.db.get("users", item.userId);
-        // [moorawi-fix] prefer Cloudinary avatarUrl, fallback to legacy storage avatarId
+        // [ezo-fix] prefer Cloudinary avatarUrl, fallback to legacy storage avatarId
         const avatarUrl = u?.avatarUrl ?? (u?.avatarId ? await ctx.storage.getUrl(u.avatarId) : null);
         const vip = activeVipLevel(u);
         return {
@@ -623,7 +623,7 @@ export const latestGlobalBroadcast = query({
   },
 });
 
-// [moorawi-missions] Helper لتسجيل تقدم المهام
+// [ezo-missions] Helper لتسجيل تقدم المهام
 async function recordMissionProgress(ctx: any, userId: any, keys: string[], amount = 1) {
   const dailyCycle = new Date().toISOString().slice(0, 10);
   const onejan = new Date(new Date().getFullYear(), 0, 1);

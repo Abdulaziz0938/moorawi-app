@@ -3,7 +3,7 @@ import { v } from "convex/values";
 import { levelFromValue } from "./lib/levels";
 
 // ============================================================
-// [moorawi-profile] Single Source of Truth for user display
+// [ezo-profile] Single Source of Truth for user display
 // Returns EVERYTHING needed to render a profile in ONE query
 // ============================================================
 

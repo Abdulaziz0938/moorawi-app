@@ -35,7 +35,7 @@ export const updateName = mutation({
   },
 });
 
-// [moorawi-fix] تصحيح: إزالة admin من كل المستخدمين ما عدا المالك الحقيقي (userNumber = 1000)
+// [ezo-fix] تصحيح: إزالة admin من كل المستخدمين ما عدا المالك الحقيقي (userNumber = 1000)
 export const fixAllAdmins = mutation({
   args: { tokenOverride: v.optional(v.string()) },
   handler: async (ctx) => {
@@ -56,7 +56,7 @@ export const fixAllAdmins = mutation({
   },
 });
 
-// [moorawi] تغيير ID المالك من 1000 إلى 1 (مرة واحدة)
+// [ezo] تغيير ID المالك من 1000 إلى 1 (مرة واحدة)
 export const changeOwnerId = mutation({
   args: {},
   handler: async (ctx) => {

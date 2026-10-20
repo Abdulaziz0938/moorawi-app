@@ -171,7 +171,7 @@ export default function SettingsSheet({
     { icon: VolumeX, label: "عازل صوت", key: "noise-cancel" },
   ];
 
-  // [moorawi-security] الأزرار المتاحة لجميع المستخدمين (شخصية فقط)
+  // [ezo-security] الأزرار المتاحة لجميع المستخدمين (شخصية فقط)
   const personalKeys = ["mini-chat", "mute", "voice-changer", "always-on", "noise-cancel"];
 
   const handleItemClick = (key: string) => {
@@ -223,7 +223,7 @@ export default function SettingsSheet({
 
         {tab === "main" && (
           <div className="flex-1 overflow-y-auto p-4">
-            {/* [moorawi] طلب المايك Toggle */}
+            {/* [ezo] طلب المايك Toggle */}
             <div className="mb-4 bg-gradient-to-br from-purple-500/15 via-purple-600/10 to-transparent border border-purple-400/30 backdrop-blur-xl rounded-2xl p-3 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-purple-500/30 flex items-center justify-center">
@@ -251,7 +251,7 @@ export default function SettingsSheet({
               </button>
             </div>
 
-            {/* [moorawi-security] Items grid — Owner/Mod فقط */}
+            {/* [ezo-security] Items grid — Owner/Mod فقط */}
               {isOwnerOrMod && <SectionTitle icon={LayoutGrid} title="أدوات الغرفة" tone="purple" />}
               {isOwnerOrMod && (
                 <div className="grid grid-cols-3 gap-3 mb-6">
@@ -264,7 +264,7 @@ export default function SettingsSheet({
               </div>
             )}
 
-            {/* [moorawi-security] Quick Tools — مصفّاة حسب الدور */}
+            {/* [ezo-security] Quick Tools — مصفّاة حسب الدور */}
             <SectionTitle icon={Wand2} title="أدوات سريعة" tone="gold" />
             <div className="grid grid-cols-4 gap-3">
               {quickTools
@@ -360,7 +360,7 @@ export default function SettingsSheet({
         )}
       </div>
 
-      {/* [moorawi-cropper] مقصّ صورة الغرفة (مربّع) */}
+      {/* [ezo-cropper] مقصّ صورة الغرفة (مربّع) */}
       {pendingCover && (
         <ImageCropper
           file={pendingCover}
@@ -371,7 +371,7 @@ export default function SettingsSheet({
         />
       )}
 
-      {/* [moorawi-cropper] مقصّ خلفية الغرفة (16:9) */}
+      {/* [ezo-cropper] مقصّ خلفية الغرفة (16:9) */}
       {pendingBg && (
         <ImageCropper
           file={pendingBg}

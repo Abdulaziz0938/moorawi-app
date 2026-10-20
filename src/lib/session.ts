@@ -1,6 +1,6 @@
-// [moorawi-auth] Session token management
-const SESSION_KEY = "moorawi_session_token";
-const USERNAME_KEY = "moorawi_session_username";
+// [ezo-auth] Session token management
+const SESSION_KEY = "ezo_session_token";
+const USERNAME_KEY = "ezo_session_username";
 
 export function getSessionToken(): string | null {
   try {
@@ -43,7 +43,7 @@ export function getActiveToken(): string {
   const session = getSessionToken();
   if (session) return session;
   // fallback to device id
-  const KEY = "moorawi_device_id";
+  const KEY = "ezo_device_id";
   let id = localStorage.getItem(KEY);
   if (!id) {
     id = "dev-" + Math.random().toString(36).slice(2, 10);

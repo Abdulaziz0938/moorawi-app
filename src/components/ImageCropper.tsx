@@ -1,4 +1,4 @@
-// [moorawi-cropper] Image cropper with circle/square mask
+// [ezo-cropper] Image cropper with circle/square mask
 // Opens when user uploads a profile/gift image.
 // Outputs a fixed-size (512x512) blob to prevent overflow.
 

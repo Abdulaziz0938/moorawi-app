@@ -1,4 +1,4 @@
-// [moorawi-banners] Admin panel for promotional banners
+// [ezo-banners] Admin panel for promotional banners
 import { useState } from "react";
 import AssetVideo from "./ui/AssetVideo";
 import { useQuery, useMutation } from "convex/react";

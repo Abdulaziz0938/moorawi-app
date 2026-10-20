@@ -83,7 +83,7 @@ export default function Dashboard({ onEnterRoom, onEnterLive, onStartLive }: Pro
       </PullToRefresh>
 
       {/* ============ TabBar ============ */}
-                  {/* ============ Binmo Custom Image Bottom Navigation ============ */}
+                  {/* ============ Ezo Custom Image Bottom Navigation ============ */}
       <nav
         className="fixed bottom-0 left-0 right-0 z-50 select-none bg-transparent pointer-events-none"
         style={{

@@ -4,7 +4,7 @@ import { requireUser, isFullAdmin, isAssetManager } from "./lib/auth";
 
 
 // ============================================================
-// [moorawi-shop] Shop queries + mutations
+// [ezo-shop] Shop queries + mutations
 // ============================================================
 
 const CATEGORIES = [
@@ -373,7 +373,7 @@ export const unequipItem = mutation({
 });
 
 // ============================================================
-// [moorawi-shop] updateItem — admin can edit name/image/price
+// [ezo-shop] updateItem — admin can edit name/image/price
 // ============================================================
 export const updateItem = mutation({
   args: {
@@ -423,7 +423,7 @@ export const updateItem = mutation({
 });
 
 // ============================================================
-// [moorawi-shop] createItem — asset manager can add new item
+// [ezo-shop] createItem — asset manager can add new item
 // ============================================================
 export const createItem = mutation({
   args: {
@@ -482,7 +482,7 @@ export const createItem = mutation({
 });
 
 // ============================================================
-// [moorawi-shop] deleteItem — only if not owned
+// [ezo-shop] deleteItem — only if not owned
 // ============================================================
 export const deleteItem = mutation({
   args: {
@@ -519,7 +519,7 @@ export const listAllAdmin = query({
 });
 
 // ============================================================
-// [moorawi-shop] updateItemAssets — moderator can edit name/image only
+// [ezo-shop] updateItemAssets — moderator can edit name/image only
 // price + active remain super-admin only
 // ============================================================
 export const updateItemAssets = mutation({

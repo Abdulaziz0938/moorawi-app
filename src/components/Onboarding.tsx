@@ -35,7 +35,7 @@ export default function Onboarding({ onComplete, onBackToAuth }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // [moorawi-auth] هل هذا اسم المستخدم الخاص بالمستخدم المسجل حالياً؟
+  // [ezo-auth] هل هذا اسم المستخدم الخاص بالمستخدم المسجل حالياً؟
   const isOwnUsername = !!sessionUsername && username.toLowerCase() === sessionUsername.toLowerCase();
 
   // Username availability check (skip if it's own username)
@@ -334,7 +334,7 @@ export default function Onboarding({ onComplete, onBackToAuth }: Props) {
         )}
       </div>
 
-      {/* [moorawi-cropper] مقصّ صورة البروفايل */}
+      {/* [ezo-cropper] مقصّ صورة البروفايل */}
       {pendingFile && (
         <ImageCropper
           file={pendingFile}

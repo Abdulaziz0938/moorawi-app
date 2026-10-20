@@ -1,4 +1,4 @@
-// [moorawi-missions] المهام اليومية + الأسبوعية
+// [ezo-missions] المهام اليومية + الأسبوعية
 import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";

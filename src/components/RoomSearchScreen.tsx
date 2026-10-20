@@ -1,4 +1,4 @@
-// [moorawi-rooms] Full-screen room search
+// [ezo-rooms] Full-screen room search
 import { useState } from "react";
 import AssetVideo from "./ui/AssetVideo";
 import { useQuery, useMutation } from "convex/react";

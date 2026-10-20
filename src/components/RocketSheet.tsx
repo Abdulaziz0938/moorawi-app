@@ -1,4 +1,4 @@
-// [ezo-rockets] شيت الصاروخ — Binmo style (rocket hero + circular progress)
+// [ezo-rockets] شيت الصاروخ — Ezo style (rocket hero + circular progress)
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";

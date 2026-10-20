@@ -3,7 +3,7 @@ import { ConvexError, v } from "convex/values";
 import { requireUser } from "./lib/auth";
 
 // ============================================================
-// [moorawi-economy] Wallet helpers
+// [ezo-economy] Wallet helpers
 // ============================================================
 
 async function recordTx(

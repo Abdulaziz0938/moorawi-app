@@ -1,4 +1,4 @@
-// [moorawi-vip] Active VIP helper
+// [ezo-vip] Active VIP helper
 //
 // A user has active VIP only if:
 //   - vipLevel > 0

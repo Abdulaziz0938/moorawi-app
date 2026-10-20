@@ -1,4 +1,4 @@
-// [moorawi-bubbles] Chat bubble — corner-based rendering (handles large decorations)
+// [ezo-bubbles] Chat bubble — corner-based rendering (handles large decorations)
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useAssets } from "../lib/assets";

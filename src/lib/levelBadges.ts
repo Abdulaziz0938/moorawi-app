@@ -1,4 +1,4 @@
-// [moorawi-levels] Badge rules for Charm & Wealth (11 tiers each)
+// [ezo-levels] Badge rules for Charm & Wealth (11 tiers each)
 // Rendered as SVG by default; replaced by DB imageUrl when available.
 
 import type { LucideIcon } from "lucide-react";

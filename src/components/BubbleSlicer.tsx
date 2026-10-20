@@ -1,4 +1,4 @@
-// [moorawi-bubbles] 9-Patch Visual Slicer v2 — with auto-detect from image pixels
+// [ezo-bubbles] 9-Patch Visual Slicer v2 — with auto-detect from image pixels
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";

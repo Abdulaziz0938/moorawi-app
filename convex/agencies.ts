@@ -1,4 +1,4 @@
-// [moorawi-agency] Agency system — creation, joining, earnings, salary
+// [ezo-agency] Agency system — creation, joining, earnings, salary
 import { v } from "convex/values";
 import { mutation, query, internalMutation } from "./_generated/server";
 import { requireUser, isFullAdmin, isAssetManager } from "./lib/auth";
@@ -48,7 +48,7 @@ function levelFromAchieved(achieved: number): number {
 
 
 // ============================================================
-// [moorawi-agency] توليد رقم وكالة فريد (3 أرقام ثم 4 ثم 5...)
+// [ezo-agency] توليد رقم وكالة فريد (3 أرقام ثم 4 ثم 5...)
 // ============================================================
 async function getNextAgencyNumber(ctx: any): Promise<number> {
   const counter = await ctx.db
@@ -523,7 +523,7 @@ export const updateHostStats = mutation({
 });
 
 // ============================================================
-// [moorawi-agency] طلبات إنشاء وكالة
+// [ezo-agency] طلبات إنشاء وكالة
 // ============================================================
 export const submitCreateRequest = mutation({
   args: {
@@ -719,7 +719,7 @@ export const reviewCreateRequest = mutation({
 });
 
 // ============================================================
-// [moorawi-agency] البحث بالرقم
+// [ezo-agency] البحث بالرقم
 // ============================================================
 export const findByNumber = query({
   args: { number: v.number() },
@@ -744,7 +744,7 @@ export const findByNumber = query({
 });
 
 // ============================================================
-// [moorawi-agency] حذف وكالة (استخدام داخلي/تنظيف)
+// [ezo-agency] حذف وكالة (استخدام داخلي/تنظيف)
 // ============================================================
 export const deleteAgency = internalMutation({
   args: { agencyId: v.id("agencies") },
@@ -755,7 +755,7 @@ export const deleteAgency = internalMutation({
 });
 
 // ============================================================
-// [moorawi-agency] adminSalariesReport — جدول الرواتب الشامل
+// [ezo-agency] adminSalariesReport — جدول الرواتب الشامل
 // يعرض كل المضيفين مع بياناتهم الشهرية
 // ============================================================
 export const adminSalariesReport = query({
@@ -853,7 +853,7 @@ export const adminSalariesReport = query({
 });
 
 // ============================================================
-// [moorawi-agency] adminAgenciesReport — جدول الوكالات
+// [ezo-agency] adminAgenciesReport — جدول الوكالات
 // ============================================================
 export const adminAgenciesReport = query({
   args: { tokenOverride: v.optional(v.string()) },
@@ -922,7 +922,7 @@ export const adminAgenciesReport = query({
 });
 
 // ============================================================
-// [moorawi-agency] hostRequests — طلبات الانضمام لوكالة معينة
+// [ezo-agency] hostRequests — طلبات الانضمام لوكالة معينة
 // يعرض الملف الشخصي كامل + أزرار قبول/رفض
 // ============================================================
 export const hostRequests = query({
@@ -981,7 +981,7 @@ export const hostRequests = query({
 });
 
 // ============================================================
-// [moorawi-agency] directCreateAgency — إنشاء مباشر للمالك (CLI)
+// [ezo-agency] directCreateAgency — إنشاء مباشر للمالك (CLI)
 // ============================================================
 export const directCreateAgency = internalMutation({
   args: {
@@ -1032,7 +1032,7 @@ export const directCreateAgency = internalMutation({
 });
 
 // ============================================================
-// [moorawi-agency] approveVerification — توثيق مباشر (CLI)
+// [ezo-agency] approveVerification — توثيق مباشر (CLI)
 // ============================================================
 export const approveVerification = internalMutation({
   args: { userId: v.id("users") },

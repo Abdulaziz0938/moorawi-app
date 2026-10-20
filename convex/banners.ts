@@ -1,4 +1,4 @@
-// [moorawi-banners] Promotional banners for Trend tab
+// [ezo-banners] Promotional banners for Trend tab
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { requireUser, isAssetManager } from "./lib/auth";

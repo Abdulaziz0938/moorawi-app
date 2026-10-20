@@ -1,4 +1,4 @@
-// [moorawi-agency] Admin panel — review agency create requests
+// [ezo-agency] Admin panel — review agency create requests
 import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";

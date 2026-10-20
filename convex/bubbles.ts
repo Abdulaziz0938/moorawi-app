@@ -1,4 +1,4 @@
-// [moorawi-bubbles] 9-Patch chat bubbles — admin manages, users render
+// [ezo-bubbles] 9-Patch chat bubbles — admin manages, users render
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { requireUser } from "./lib/auth";

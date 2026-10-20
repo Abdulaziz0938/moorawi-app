@@ -48,7 +48,7 @@ export const listPublic = query({
   },
 });
 
-// [moorawi-rooms] Get current user's own room (max 1)
+// [ezo-rooms] Get current user's own room (max 1)
 export const myRoom = query({
   args: { tokenOverride: v.optional(v.string()) },
   handler: async (ctx, args) => {
@@ -85,7 +85,7 @@ export const create = mutation({
   handler: async (ctx, args) => {
     const user = await requireUser(ctx, args.tokenOverride);
 
-    // [moorawi-rooms] منع تعدد الغرف: إن كان للمستخدم غرفة → أعدها
+    // [ezo-rooms] منع تعدد الغرف: إن كان للمستخدم غرفة → أعدها
     const existing = await ctx.db
       .query("rooms")
       .withIndex("by_owner", (q) => q.eq("ownerId", user._id))
@@ -208,7 +208,7 @@ export const updateRoomBackground = mutation({
   },
 });
 
-// [moorawi-trophy] Get room's weekly spent coins (lazy reset)
+// [ezo-trophy] Get room's weekly spent coins (lazy reset)
 export const weeklyTotal = query({
   args: { roomId: v.id("rooms") },
   handler: async (ctx, args) => {
@@ -233,7 +233,7 @@ export const weeklyTotal = query({
   },
 });
 
-// [moorawi-staff] Get staff permissions for a room (owner/mod only)
+// [ezo-staff] Get staff permissions for a room (owner/mod only)
 export const getStaffPermissions = query({
   args: { roomId: v.id("rooms") },
   handler: async (ctx, args) => {
@@ -247,7 +247,7 @@ export const getStaffPermissions = query({
   },
 });
 
-// [moorawi-staff] Update staff permissions (owner only)
+// [ezo-staff] Update staff permissions (owner only)
 export const updateStaffPermissions = mutation({
   args: {
     roomId: v.id("rooms"),
@@ -279,7 +279,7 @@ export const updateStaffPermissions = mutation({
 });
 
 // ============================================================
-// [moorawi-rooms] Discovery queries — Ezo rooms tab
+// [ezo-rooms] Discovery queries — Ezo rooms tab
 // ============================================================
 
 // Recently visited rooms (from roomMembers — rooms user joined)
@@ -555,7 +555,7 @@ export const mySupporterRank = query({
 });
 
 // ============================================================
-// [moorawi-rankings] cpRanking — top CP pairs by loveScore
+// [ezo-rankings] cpRanking — top CP pairs by loveScore
 // ============================================================
 export const cpRanking = query({
   args: {},
@@ -595,7 +595,7 @@ export const cpRanking = query({
 });
 
 // ============================================================
-// [moorawi-rankings] publicRoomsWithStats — rooms sorted by activity
+// [ezo-rankings] publicRoomsWithStats — rooms sorted by activity
 // Each room enriched with onlineCount + top3 rank (if top 3)
 // ============================================================
 export const publicRoomsWithStats = query({
@@ -638,7 +638,7 @@ export const publicRoomsWithStats = query({
 });
 
 // ============================================================
-// [moorawi-rooms] search — by name or roomNumber
+// [ezo-rooms] search — by name or roomNumber
 // ============================================================
 export const search = query({
   args: { q: v.string() },
@@ -682,7 +682,7 @@ export const search = query({
 });
 
 // ============================================================
-// [moorawi-rankings] legendTop — أعلى 3 حسب الفئة
+// [ezo-rankings] legendTop — أعلى 3 حسب الفئة
 // ============================================================
 export const legendTop = query({
   args: { category: v.union(v.literal("wealth"), v.literal("charm"), v.literal("gifters")) },

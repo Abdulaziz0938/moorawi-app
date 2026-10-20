@@ -1,4 +1,4 @@
-// [moorawi-agency] Special admin page — Excel-style tables for agencies + hosts
+// [ezo-agency] Special admin page — Excel-style tables for agencies + hosts
 import { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";

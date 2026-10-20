@@ -43,7 +43,7 @@ export default function GiftSheet({
   const [selectedGiftId, setSelectedGiftId] = useState<Id<"gifts"> | null>(null);
   const [selectedUserIds, setSelectedUserIds] = useState<Set<Id<"users">>>(new Set());
 
-  // [moorawi] Auto-select preSelected user when opening from MiniProfile
+  // [ezo] Auto-select preSelected user when opening from MiniProfile
   useEffect(() => {
     if (preSelectedUserId) {
       setSelectedUserIds(new Set([preSelectedUserId as Id<"users">]));

@@ -1,4 +1,4 @@
-// [moorawi-music] MusicSheet — personal library + upload
+// [ezo-music] MusicSheet — personal library + upload
 // Accessible to all users. Each user sees only their own tracks.
 // Playback is LOCAL — the selected track plays on this device only.
 

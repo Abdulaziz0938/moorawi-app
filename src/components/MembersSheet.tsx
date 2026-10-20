@@ -1,4 +1,4 @@
-// [moorawi] Members Sheet — list of all room members
+// [ezo] Members Sheet — list of all room members
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";

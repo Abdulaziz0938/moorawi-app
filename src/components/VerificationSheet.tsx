@@ -1,4 +1,4 @@
-// [moorawi-services] المصادقة — كاميرا + صورة شخصية
+// [ezo-services] المصادقة — كاميرا + صورة شخصية
 import { useState, useRef } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";

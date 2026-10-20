@@ -1,4 +1,4 @@
-// [moorawi-levels] Charm/Wealth badge — pill-style
+// [ezo-levels] Charm/Wealth badge — pill-style
 // Renders as horizontal pill: [level] [icon/image]
 // Supports DB image override (when user uploads custom icons)
 

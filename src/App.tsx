@@ -75,13 +75,13 @@ function App() {
     return () => window.removeEventListener("enter-room", handleEnterRoom);
   }, []);
 
-  // [moorawi-missions] Daily login check — once per 24h
+  // [ezo-missions] Daily login check — once per 24h
   const dailyStatus = useQuery(
     api.missions.myProgress,
     me ? { tokenOverride: token } : "skip" as any
   );
 
-  // [moorawi-missions] فتح نافذة الدخول اليومي تلقائياً
+  // [ezo-missions] فتح نافذة الدخول اليومي تلقائياً
   useEffect(() => {
     if (dailyStatus?.canClaimDaily && me) {
       const t = setTimeout(() => setShowDailyLogin(true), 800);
@@ -89,7 +89,7 @@ function App() {
     }
   }, [dailyStatus?.canClaimDaily, me?._id]);
 
-  // [moorawi-auth] يُستدعى من AuthScreen مع session token الجديد مباشرة
+  // [ezo-auth] يُستدعى من AuthScreen مع session token الجديد مباشرة
   const handleAuthSuccess = (sessionToken: string) => {
     if (sessionToken) {
       setToken(sessionToken);

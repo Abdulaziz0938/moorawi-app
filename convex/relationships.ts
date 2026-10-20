@@ -4,7 +4,7 @@ import { requireUser } from "./lib/auth";
 import { activeVipLevel } from "./lib/vip";
 
 // ============================================================
-// [moorawi-relations] myRelations — علاقاتي النشطة
+// [ezo-relations] myRelations — علاقاتي النشطة
 // ============================================================
 export const myRelations = query({
   args: { tokenOverride: v.optional(v.string()) },

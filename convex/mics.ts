@@ -140,7 +140,7 @@ export const toggleMuteSeat = mutation({
     const member = await getMember(ctx, args.roomId, user._id);
     const isAdmin = member && (member.role === "owner" || member.role === "moderator");
 
-    // [moorawi] منع المستخدم من إلغاء الكتم الإداري
+    // [ezo] منع المستخدم من إلغاء الكتم الإداري
     if (isOwn && !isAdmin && seat.adminMuted === true) {
       throw new ConvexError({ code: "FORBIDDEN", message: "أنت مكتوم من الإدارة" });
     }
@@ -150,7 +150,7 @@ export const toggleMuteSeat = mutation({
   },
 });
 
-// [moorawi] الكتم الإداري — owner/mod فقط
+// [ezo] الكتم الإداري — owner/mod فقط
 export const toggleAdminMute = mutation({
   args: { roomId: v.id("rooms"), seatIndex: v.number(), tokenOverride: v.optional(v.string()) },
   handler: async (ctx, args) => {
@@ -180,7 +180,7 @@ export const listeners = query({
       listeners.map(async (m) => {
         const user = await ctx.db.get("users", m.userId);
         const avatarUrl = user?.avatarUrl ?? (user?.avatarId ? await ctx.storage.getUrl(user.avatarId) : null);
-        // [moorawi-levels] raw values for badges everywhere
+        // [ezo-levels] raw values for badges everywhere
         const vip = [1000, 5000, 20000, 50000, 100000, 250000, 500000].filter((x) => (user?.totalSent ?? 0) >= x).length;
         return {
           _id: m._id,
@@ -262,7 +262,7 @@ export const sendCharm = mutation({
   },
 });
 
-// ============ [moorawi] نظام طلب المايك ============
+// ============ [ezo] نظام طلب المايك ============
 
 // Owner/Mod يفعّل أو يعطّل نظام الطلبات
 export const setMicRequestsEnabled = mutation({
@@ -415,7 +415,7 @@ export const rejectRequest = mutation({
   },
 });
 
-// ============ [moorawi] Admin Actions ============
+// ============ [ezo] Admin Actions ============
 
 // طرد من الغرفة (يمكنه العودة)
 export const kickFromRoom = mutation({
@@ -538,7 +538,7 @@ export const removeFromSeat = mutation({
   },
 });
 
-// [moorawi] قائمة نشاط الغرفة
+// [ezo] قائمة نشاط الغرفة
 export const listActivity = query({
   args: { roomId: v.id("rooms"), limit: v.optional(v.number()) },
   handler: async (ctx, args) => {
@@ -553,7 +553,7 @@ export const listActivity = query({
 });
 
 // ============================================================
-// [moorawi-mics] clearMyMic — client calls on unmount/beforeunload
+// [ezo-mics] clearMyMic — client calls on unmount/beforeunload
 // to release the seat when user leaves the app abruptly
 // ============================================================
 export const clearMyMic = mutation({

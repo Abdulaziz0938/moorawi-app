@@ -1,4 +1,4 @@
-// [moorawi-nav] React hook for phone back button
+// [ezo-nav] React hook for phone back button
 import { useEffect, useRef } from "react";
 import { pushBackHandler } from "../historyStack";
 

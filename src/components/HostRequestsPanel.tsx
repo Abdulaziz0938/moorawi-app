@@ -1,4 +1,4 @@
-// [moorawi-agency] طلبات الانضمام الواردة للوكيل — عرض الملف + قبول/رفض
+// [ezo-agency] طلبات الانضمام الواردة للوكيل — عرض الملف + قبول/رفض
 import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";

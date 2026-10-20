@@ -1,6 +1,6 @@
 // Cloudinary upload helper (Unsigned upload)
 const CLOUD_NAME = "wdicx984";
-const UPLOAD_PRESET = "moorawi_unsigned";
+const UPLOAD_PRESET = "ezo_unsigned";
 
 export interface UploadResult {
   url: string;        // الرابط مع التحسينات (f_auto,q_auto)

@@ -1,4 +1,4 @@
-// [moorawi-services] الأسطورة — أعلى 3 في 3 فئات
+// [ezo-services] الأسطورة — أعلى 3 في 3 فئات
 import { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";

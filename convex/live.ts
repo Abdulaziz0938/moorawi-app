@@ -869,7 +869,7 @@ export const declinePK = mutation({
 });
 
 // ═══════════════════════════════════════════════════════════
-// [ezo-live-binmo] إنهاء جلسة الجلوس العادي (بدون PK)
+// [ezo-live-ezo] إنهاء جلسة الجلوس العادي (بدون PK)
 // ═══════════════════════════════════════════════════════════
 export const endCoHost = mutation({
   args: {
@@ -900,7 +900,7 @@ export const endCoHost = mutation({
 });
 
 // ═══════════════════════════════════════════════════════════
-// [ezo-live-binmo] بدء PK أثناء جلوس عادي (coHost موجود)
+// [ezo-live-ezo] بدء PK أثناء جلوس عادي (coHost موجود)
 // ═══════════════════════════════════════════════════════════
 export const startPKFromCoHost = mutation({
   args: {

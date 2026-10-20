@@ -1,4 +1,4 @@
-// [moorawi] Unified user badges + name — Single Source of Truth for display
+// [ezo] Unified user badges + name — Single Source of Truth for display
 // Used in: RoomView (chat), Leaderboard, Members, MiniProfile, ProfilePage, MeTab
 // Rule: only render what the user actually owns (DB-driven)
 

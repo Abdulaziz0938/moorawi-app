@@ -1,4 +1,4 @@
-// [moorawi-nav] Phone back button handler
+// [ezo-nav] Phone back button handler
 // Every open overlay/screen registers a handler; back pops the top one.
 
 type Handler = { id: string; onClose: () => void; active: boolean };

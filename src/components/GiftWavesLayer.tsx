@@ -1,4 +1,4 @@
-// [ezo-gifts-pro] Imperative wave spawner — Yalla/Binmo style
+// [ezo-gifts-pro] Imperative wave spawner — Yalla/Ezo style
 // كل هدية تُضاف كـ DOM node مباشر — لا React re-render — سلس لـ آلاف الهدايا
 import { forwardRef, useImperativeHandle, useRef } from "react";
 

@@ -1,6 +1,6 @@
 import { getOptimizedImageUrl } from "../lib/imageUtils";
 import AssetVideo from "./ui/AssetVideo";
-// [moorawi] Unified user avatar — Single Source of Truth
+// [ezo] Unified user avatar — Single Source of Truth
 // Uses /avatar.png (admin-managed default) when user has no image.
 
 interface Props {

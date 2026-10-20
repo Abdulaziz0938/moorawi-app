@@ -55,7 +55,7 @@ export const me = query({
   },
 });
 
-// [moorawi] Get public profile of any user by ID
+// [ezo] Get public profile of any user by ID
 export const getById = query({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
@@ -189,7 +189,7 @@ export const getOptions = query({
   },
 });
 
-// [moorawi] حذف صورة الأفاتار
+// [ezo] حذف صورة الأفاتار
 export const equipVipFrame = mutation({
   args: {
     level: v.number(),

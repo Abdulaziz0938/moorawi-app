@@ -1,4 +1,4 @@
-// [ezo-rockets] نظام الصاروخ — Binmo style energy system
+// [ezo-rockets] نظام الصاروخ — Ezo style energy system
 import { v } from "convex/values";
 import { mutation, query, internalMutation } from "./_generated/server";
 import { internal } from "./_generated/api";

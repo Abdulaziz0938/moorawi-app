@@ -1,4 +1,4 @@
-// [moorawi-config] Global configuration (admin editable)
+// [ezo-config] Global configuration (admin editable)
 import { v } from "convex/values";
 import { mutation, query, internalMutation } from "./_generated/server";
 import { requireUser, isFullAdmin } from "./lib/auth";

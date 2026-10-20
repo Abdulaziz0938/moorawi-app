@@ -1,4 +1,4 @@
-// [moorawi-agency] Agency entry — host/agent flow
+// [ezo-agency] Agency entry — host/agent flow
 import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";

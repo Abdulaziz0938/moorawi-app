@@ -134,7 +134,7 @@ export default function RoomInfoSheet({ roomId, onClose, onUserClick, onOpenStaf
             </button>
           </div>
 
-          {/* [moorawi-trophy] Reward Card (owner only) */}
+          {/* [ezo-trophy] Reward Card (owner only) */}
           {isOwner && rewardStatus && (
             <div className="mx-4 mb-4">
               <div className="rounded-2xl bg-gradient-to-r from-amber-500/20 via-yellow-500/20 to-amber-500/20 border border-amber-400/40 p-3">

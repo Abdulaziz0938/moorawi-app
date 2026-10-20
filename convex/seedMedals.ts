@@ -1,7 +1,7 @@
 import { mutation } from "./_generated/server";
 import { ConvexError, v } from "convex/values";
 
-// [moorawi-medals] Seed medals (idempotent)
+// [ezo-medals] Seed medals (idempotent)
 export const seedMedals = mutation({
   args: { confirm: v.string() },
   handler: async (ctx, args) => {

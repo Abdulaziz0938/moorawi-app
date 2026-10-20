@@ -1,4 +1,4 @@
-// [moorawi] Custom glassmorphism dialog system — replaces native alert()
+// [ezo] Custom glassmorphism dialog system — replaces native alert()
 import { useEffect, useState } from "react";
 
 type DialogState = {

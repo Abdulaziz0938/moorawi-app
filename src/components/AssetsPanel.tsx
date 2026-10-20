@@ -1,4 +1,4 @@
-// [moorawi-assets] AssetsPanel — unified admin panel for ALL assets
+// [ezo-assets] AssetsPanel — unified admin panel for ALL assets
 // Tabs: VIP | Medals | Gifts | Shop | Admin | UI
 
 import {useState, useEffect} from "react";

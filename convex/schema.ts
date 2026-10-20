@@ -25,19 +25,19 @@ export default defineSchema({
     isAdmin: v.optional(v.boolean()),
     banned: v.optional(v.boolean()),
     adminRole: v.optional(v.union(v.literal("super"), v.literal("moderator"))),
-    // [moorawi-auth] Authentication
+    // [ezo-auth] Authentication
     passwordHash: v.optional(v.string()),
     passwordSalt: v.optional(v.string()),
     authProvider: v.optional(v.union(v.literal("guest"), v.literal("password"))),
     lastLoginAt: v.optional(v.number()),
 
-    // [moorawi-economy] Economy
+    // [ezo-economy] Economy
     diamonds: v.optional(v.number()),                     // ماس (من استقبال الهدايا)
     totalPurchased: v.optional(v.number()),               // إجمالي الشحن (USD cents)
     totalRecharged: v.optional(v.number()),               // إجمالي العملات المشحونة
 
-    // [moorawi-vip] VIP
-    // [moorawi-agency] Host fields
+    // [ezo-vip] VIP
+    // [ezo-agency] Host fields
     agencyId: v.optional(v.id("agencies")),
     agencyNumber: v.optional(v.number()),
     isHost: v.optional(v.boolean()),
@@ -45,13 +45,13 @@ export default defineSchema({
     hostIncomeMonth: v.optional(v.number()),
     hostHoursMonth: v.optional(v.number()),
     hostDaysMonth: v.optional(v.number()),
-    // [moorawi-missions] Daily login streak
+    // [ezo-missions] Daily login streak
     loginStreak: v.optional(v.number()),
     lastLoginRewardAt: v.optional(v.number()),
     vipLevel: v.optional(v.number()),                     // 0-7
     vipExpiresAt: v.optional(v.number()),
 
-    // [moorawi-assets] Equipped items
+    // [ezo-assets] Equipped items
     titleId: v.optional(v.string()),                      // معرّف اللقب (نص)
     titleText: v.optional(v.string()),                    // النص المعروض
     equippedFrameId: v.optional(v.id("shopItems")),
@@ -63,7 +63,7 @@ export default defineSchema({
     equippedProfileCardId: v.optional(v.id("shopItems")),
     equippedMedalId: v.optional(v.id("medals")),
 
-    // [moorawi-social] Social counters
+    // [ezo-social] Social counters
     visitorCount: v.optional(v.number()),
     fanCount: v.optional(v.number()),
     followingCount: v.optional(v.number()),
@@ -71,12 +71,12 @@ export default defineSchema({
     friendCount: v.optional(v.number()),
     medalCount: v.optional(v.number()),                   // وسام +N
 
-    // [moorawi-relations] Partner/CP
+    // [ezo-relations] Partner/CP
     partnerId: v.optional(v.id("users")),
     partnerType: v.optional(v.string()),                  // "cp" | "trueLove" | ...
     partnerSince: v.optional(v.number()),
 
-    // [moorawi-verification] Verification
+    // [ezo-verification] Verification
     verificationStatus: v.optional(v.union(
       v.literal("none"),
       v.literal("pending"),
@@ -84,7 +84,7 @@ export default defineSchema({
       v.literal("rejected"),
     )),
 
-    // [moorawi-security] Privacy
+    // [ezo-security] Privacy
     hideVisits: v.optional(v.boolean()),
     incognito: v.optional(v.boolean()),
     hideFollowing: v.optional(v.boolean()),
@@ -97,7 +97,7 @@ export default defineSchema({
     .index("by_totalSent", ["totalSent"])
     .index("by_charms", ["charms"]),
 
-  // [moorawi-trophy] Weekly reward claims log
+  // [ezo-trophy] Weekly reward claims log
   roomWeeklyRewards: defineTable({
     roomId: v.id("rooms"),
     ownerId: v.id("users"),
@@ -131,9 +131,9 @@ export default defineSchema({
     backgroundImageId: v.optional(v.id("_storage")),   // legacy
     backgroundUrl: v.optional(v.string()),             // Cloudinary
     micRequestsEnabled: v.optional(v.boolean()),       // طلب المايك
-    // [moorawi-room-id] Public room number (numeric ID)
+    // [ezo-room-id] Public room number (numeric ID)
     roomNumber: v.optional(v.number()),
-    // [moorawi-staff] Staff permissions (toggles)
+    // [ezo-staff] Staff permissions (toggles)
     staffPermissions: v.optional(v.object({
       roomImage: v.boolean(),
       roomName: v.boolean(),
@@ -147,7 +147,7 @@ export default defineSchema({
       agencyMode: v.boolean(),
       screenClear: v.boolean(),
     },)),
-    // [moorawi-music] Shared room music — everyone in room hears it
+    // [ezo-music] Shared room music — everyone in room hears it
     // Each client can mute locally without affecting others.
     currentMusicId: v.optional(v.id("userMusic")),
     currentMusicUrl: v.optional(v.string()),
@@ -203,11 +203,11 @@ export default defineSchema({
       v.literal("echo"),
     )),
 
-    // [moorawi-trophy] Room Trophy (weekly coins spent)
+    // [ezo-trophy] Room Trophy (weekly coins spent)
     weeklyTotal: v.optional(v.number()),
     weeklyCycleKey: v.optional(v.string()),           // e.g. "2026-W42"
     weeklyResetAt: v.optional(v.number()),
-    // [moorawi-trophy] Reward claim state
+    // [ezo-trophy] Reward claim state
     weeklyRewardTier: v.optional(v.number()),         // 0/1/3/6 (million)
     weeklyRewardClaimed: v.optional(v.boolean()),
   })
@@ -265,7 +265,7 @@ export default defineSchema({
     .index("by_room", ["roomId"])
     .index("by_to_and_status", ["toUserId", "status"]),
 
-  // [moorawi] طلبات المايك — ephemeral (تُحذف بعد رؤية الإشعار)
+  // [ezo] طلبات المايك — ephemeral (تُحذف بعد رؤية الإشعار)
   micRequests: defineTable({
     roomId: v.id("rooms"),
     userId: v.id("users"),
@@ -277,7 +277,7 @@ export default defineSchema({
     .index("by_room_and_status", ["roomId", "status"])
     .index("by_user_and_room", ["userId", "roomId"]),
 
-  // [moorawi] Room actions log (activity feed)
+  // [ezo] Room actions log (activity feed)
   roomActions: defineTable({
     roomId: v.id("rooms"),
     actorId: v.id("users"),
@@ -334,7 +334,7 @@ export default defineSchema({
   }),
 
   // ================================================================
-  // [moorawi-economy] ECONOMY — wallet transactions
+  // [ezo-economy] ECONOMY — wallet transactions
   // ================================================================
   // [ezo-vip] VIP Entry animations — يظهر عند دخول VIP 3+ للغرفة
   roomEntries: defineTable({
@@ -368,7 +368,7 @@ export default defineSchema({
     .index("by_user_and_type", ["userId", "type"]),
 
   // ================================================================
-  // [moorawi-shop] SHOP ITEMS (frames, vehicles, effects, ...)
+  // [ezo-shop] SHOP ITEMS (frames, vehicles, effects, ...)
   // ================================================================
   shopItems: defineTable({
     category: v.union(
@@ -400,7 +400,7 @@ export default defineSchema({
     isNew: v.optional(v.boolean()),
     active: v.boolean(),
     sortOrder: v.optional(v.number()),
-    // [moorawi-9patch] Chat bubble 9-slice insets (CSS border-image)
+    // [ezo-9patch] Chat bubble 9-slice insets (CSS border-image)
     sliceTop: v.optional(v.number()),
     sliceRight: v.optional(v.number()),
     sliceBottom: v.optional(v.number()),
@@ -462,7 +462,7 @@ export default defineSchema({
     .index("by_expiresAt", ["expiresAt"]),
 
   // ================================================================
-  // [moorawi-vip] VIP SUBSCRIPTIONS
+  // [ezo-vip] VIP SUBSCRIPTIONS
   // ================================================================
   vipSubscriptions: defineTable({
     userId: v.id("users"),
@@ -482,7 +482,7 @@ export default defineSchema({
     .index("by_expiresAt", ["expiresAt"]),
 
   // ================================================================
-  // [moorawi-medals] MEDALS
+  // [ezo-medals] MEDALS
   // ================================================================
   medals: defineTable({
     name: v.string(),
@@ -521,7 +521,7 @@ export default defineSchema({
     .index("by_user_and_equipped", ["userId", "equipped"]),
 
   // ================================================================
-  // [moorawi-relations] RELATIONSHIPS (CP, true love, ...)
+  // [ezo-relations] RELATIONSHIPS (CP, true love, ...)
   // ================================================================
   relationships: defineTable({
     userId1: v.id("users"),
@@ -567,7 +567,7 @@ export default defineSchema({
     .index("by_from_and_status", ["fromUserId", "status"]),
 
   // ================================================================
-  // [moorawi-social] FOLLOWS + VISITS
+  // [ezo-social] FOLLOWS + VISITS
   // ================================================================
   follows: defineTable({
     followerId: v.id("users"),
@@ -591,7 +591,7 @@ export default defineSchema({
     .index("by_visitor", ["visitorId"]),
 
   // ================================================================
-  // [moorawi-missions] MISSIONS
+  // [ezo-missions] MISSIONS
   // ================================================================
   missions: defineTable({
     key: v.string(),
@@ -630,7 +630,7 @@ export default defineSchema({
 
 
   // ================================================================
-  // [moorawi-music] USER MUSIC LIBRARY (personal, private)
+  // [ezo-music] USER MUSIC LIBRARY (personal, private)
   // Each user uploads their own tracks. Only they can see/play them.
   // ================================================================
   userMusic: defineTable({
@@ -647,7 +647,7 @@ export default defineSchema({
     .index("by_public", ["isPublic", "uploadedAt"]),
 
   // ================================================================
-  // [moorawi-verification] VERIFICATION REQUESTS
+  // [ezo-verification] VERIFICATION REQUESTS
   // ================================================================
   verificationRequests: defineTable({
     userId: v.id("users"),
@@ -665,7 +665,7 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_status", ["status"]),
 
-  // [moorawi-assets] Static asset overrides — admin can upload images
+  // [ezo-assets] Static asset overrides — admin can upload images
   // Keys: "vip.pvip.1..7", "vip.banner.1..7", "admin.super", "admin.moderator"
   // Missing key → fallback to bundled /vip/*.png or /badges/*.png
   assets: defineTable({
@@ -688,7 +688,7 @@ export default defineSchema({
     updatedBy: v.optional(v.id("users")),
   }).index("by_key", ["key"]),
 
-  // [moorawi-vip] VIP BENEFITS — per-level features (from DB)
+  // [ezo-vip] VIP BENEFITS — per-level features (from DB)
   // Each level (1-7) has its own ordered list of benefits.
   // Admin can add/edit/remove/reorder.
   vipBenefits: defineTable({
@@ -700,7 +700,7 @@ export default defineSchema({
     active: v.boolean(),
   }).index("by_level", ["level", "order"]),
 
-  // [moorawi-bubbles] 9-Patch Chat Bubbles (admin-managed)
+  // [ezo-bubbles] 9-Patch Chat Bubbles (admin-managed)
   // Each bubble stores imageUrl + 4 slice insets for CSS border-image.
   // Key example: "bubble.vip4", "bubble.default", "bubble.gold"
   chatBubbles: defineTable({
@@ -711,7 +711,7 @@ export default defineSchema({
     sliceRight: v.number(),
     sliceBottom: v.number(),
     sliceLeft: v.number(),
-    // [moorawi-9patch] image natural dimensions for smart scaling
+    // [ezo-9patch] image natural dimensions for smart scaling
     imageWidth: v.optional(v.number()),
     imageHeight: v.optional(v.number()),
     active: v.boolean(),
@@ -719,7 +719,7 @@ export default defineSchema({
     .index("by_key", ["key"])
     .index("by_active", ["active"]),
 
-  // [moorawi-banners] Promotional banners (16:9 slideshow in Trend tab)
+  // [ezo-banners] Promotional banners (16:9 slideshow in Trend tab)
   banners: defineTable({
     imageUrl: v.string(),
     title: v.optional(v.string()),
@@ -741,7 +741,7 @@ export default defineSchema({
   }).index("by_active_order", ["active", "order"]),
 
   // ================================================================
-  // [moorawi-agency] AGENCY SYSTEM
+  // [ezo-agency] AGENCY SYSTEM
   // ================================================================
   agencies: defineTable({
     name: v.string(),
@@ -834,14 +834,14 @@ export default defineSchema({
 
 
   // ================================================================
-  // [moorawi-agency] طلبات إنشاء وكالة جديدة
+  // [ezo-agency] طلبات إنشاء وكالة جديدة
   // ================================================================
   agencyCreateRequests: defineTable({
     userId: v.id("users"),
     agencyName: v.string(),
     description: v.optional(v.string()),
     logoUrl: v.optional(v.string()),
-    // [moorawi-agency] حقول النموذج الجديدة
+    // [ezo-agency] حقول النموذج الجديدة
     fullName: v.optional(v.string()),
     idNumber: v.optional(v.string()),
     phone: v.optional(v.string()),
@@ -857,7 +857,7 @@ export default defineSchema({
 
 
   // ================================================================
-  // [moorawi-config] إعدادات عامة (قابلة للتعديل من لوحة الإدارة)
+  // [ezo-config] إعدادات عامة (قابلة للتعديل من لوحة الإدارة)
   // ================================================================
   config: defineTable({
     key: v.string(),
@@ -997,7 +997,7 @@ export default defineSchema({
     .index("by_room_expires", ["roomId", "expiresAt"])
     .index("by_user_room", ["userId", "roomId"]),
   // ================================================================
-  // [ezo-rockets] نظام الصاروخ (Binmo-style energy bar)
+  // [ezo-rockets] نظام الصاروخ (Ezo-style energy bar)
   // ================================================================
   roomRockets: defineTable({
     roomId: v.id("rooms"),

@@ -13,14 +13,14 @@ export const list = query({
     const raw = await ctx.db.query("messages").withIndex("by_room", (q) => q.eq("roomId", args.roomId)).order("desc").take(60);
     const rows = sinceTs > 0 ? raw.filter((m) => m._creationTime >= sinceTs) : raw;
 
-    // [moorawi] Prefetch room members for role lookup
+    // [ezo] Prefetch room members for role lookup
     const members = await ctx.db.query("roomMembers")
       .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
       .take(100);
     const roleByUser = new Map<string, string>();
     for (const mem of members) roleByUser.set(mem.userId as string, mem.role);
 
-    // [moorawi] Prefetch mic seats for mute lookup
+    // [ezo] Prefetch mic seats for mute lookup
     const seats = await ctx.db.query("micSeats")
       .withIndex("by_room_and_seatIndex", (q) => q.eq("roomId", args.roomId))
       .take(24);

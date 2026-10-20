@@ -1,4 +1,4 @@
-// [moorawi-admin] GiftsAdmin — EXTRACTED VERBATIM from SettingsSheet
+// [ezo-admin] GiftsAdmin — EXTRACTED VERBATIM from SettingsSheet
 // Moved here to be reused from AdminPanelSheet without modifying logic.
 // Zero changes to createGift/removeGift/listAllAdmin or DB schema.
 

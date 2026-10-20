@@ -1,4 +1,4 @@
-// [moorawi-assets] Frontend: admin-managed asset overrides
+// [ezo-assets] Frontend: admin-managed asset overrides
 //
 // Architecture: ONE query at the root, shared via Context.
 // Any component calls useAssets() → reads from Context (no extra queries).

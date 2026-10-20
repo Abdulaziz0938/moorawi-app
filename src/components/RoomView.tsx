@@ -44,7 +44,7 @@ import ProfilePage from "./ProfilePage";
 import { UserName } from "./UserBadges";
 import { dialog } from "../lib/dialog";
 
-// [moorawi-batch] Flying particle data for batch gifts
+// [ezo-batch] Flying particle data for batch gifts
 type FlyingTarget = {
   userId: string;
   targetX: number;
@@ -56,21 +56,21 @@ type FlyingTarget = {
   delay?: number;
 };
 
-// [moorawi-batch] Limits to keep animation smooth on all devices
+// [ezo-batch] Limits to keep animation smooth on all devices
 const MAX_MIC_PARTICLES = 24;
 const MAX_LISTENER_PARTICLES = 8;
 const MAX_TOTAL_PARTICLES = 80;
-// [moorawi-waterfall] Max stacked waves during combo (prevents runaway)
+// [ezo-waterfall] Max stacked waves during combo (prevents runaway)
 const MAX_STACKED_WAVES = 12;
 
-// [moorawi-waterfall] A single combo wave (part of the waterfall)
+// [ezo-waterfall] A single combo wave (part of the waterfall)
 type StackedWave = {
   id: number;
   particles: FlyingTarget[];
   gift: any;
 };
 
-// [moorawi-batch] Compute particle positions for batch gifts
+// [ezo-batch] Compute particle positions for batch gifts
 function calculateTargetCoords(
   recipientIds: string[],
   seats: any[] | undefined,
@@ -99,7 +99,7 @@ function calculateTargetCoords(
     .sort(() => Math.random() - 0.5)
     .slice(0, MAX_LISTENER_PARTICLES);
 
-  // [moorawi-waterfall] حساب عدد الجسيمات لكل مستلم (بسقف إجمالي 80)
+  // [ezo-waterfall] حساب عدد الجسيمات لكل مستلم (بسقف إجمالي 80)
   const visibleCount = visibleMicTargets.length + sampledListeners.length;
   const particlesPerRecipient = visibleCount > 0
     ? Math.max(1, Math.min(quantity, Math.floor(MAX_TOTAL_PARTICLES / visibleCount)))
@@ -162,7 +162,7 @@ function calculateTargetCoords(
 
 interface Props { roomId: Id<"rooms">; onLeave: () => void; }
 
-// [moorawi] Chat bubble style
+// [ezo] Chat bubble style
 function bubbleClass(vip: number, customUrl?: string): string {
   if (customUrl) return ""; // إذا كان هناك صورة مخصصة، سنعرضها كخلفية ولن نستخدم الكلاسات الافتراضية
   if (vip <= 0) return "bg-white/5 border border-white/10";
@@ -303,7 +303,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const [showMicRequests, setShowMicRequests] = useState(false);
   const [myRequestToast, setMyRequestToast] = useState<string | null>(null);
 
-  // [moorawi] mic requests queries
+  // [ezo] mic requests queries
   const micRequestsList = useQuery(api.mics.listRequests, { roomId });
   const micRequestsCount = micRequestsList?.length ?? 0;
   const myMicRequest = useQuery(api.mics.myRequestStatus, { roomId, tokenOverride: getActiveToken() ?? deviceId });
@@ -340,20 +340,20 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const [comboOverlay, setComboOverlay] = useState<{gift: any; count: number; id: number} | null>(null);
   const comboOverlayTimerRef = useRef<any>(null);
 
-  // [moorawi-batch] Flying particles for batch gifts
+  // [ezo-batch] Flying particles for batch gifts
   const [flyingTargets, setFlyingTargets] = useState<FlyingTarget[]>([]);
   const [aggregateBadge, setAggregateBadge] = useState<{ count: number; x: number; y: number } | null>(null);
 
-  // [moorawi-waterfall] Combo stacked waves (شلال)
+  // [ezo-waterfall] Combo stacked waves (شلال)
   const [stackedWaves, setStackedWaves] = useState<StackedWave[]>([]);
   // [ezo-gifts-pro] imperative wave spawner ref — لا React re-render
   const wavesRef = useRef<GiftWavesHandle>(null);
 
-  // [moorawi-fix] Track latest userId for cleanup on unmount
+  // [ezo-fix] Track latest userId for cleanup on unmount
   const myUserIdRef = useRef<Id<"users"> | undefined>(undefined);
   useEffect(() => { myUserIdRef.current = myInfo?.userId; }, [myInfo?.userId]);
 
-  // [moorawi-fix] Reset room-local state whenever roomId changes
+  // [ezo-fix] Reset room-local state whenever roomId changes
   useEffect(() => {
     setActiveGift(null);
     setGiftQueue([]);
@@ -368,7 +368,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
     if (comboOverlayTimerRef.current) clearTimeout(comboOverlayTimerRef.current);
   }, [roomId]);
 
-  // [moorawi-fix] Leave seat + release DB slot on unmount
+  // [ezo-fix] Leave seat + release DB slot on unmount
   useEffect(() => {
     return () => {
       if (myUserIdRef.current) {
@@ -449,14 +449,14 @@ export default function RoomView({ roomId, onLeave }: Props) {
     }
   }, [agoraConnected, isOnMic]);
 
-  // [moorawi] Auto-hide my request toast
+  // [ezo] Auto-hide my request toast
   useEffect(() => {
     if (!myRequestToast) return;
     const t = setTimeout(() => setMyRequestToast(null), 3000);
     return () => clearTimeout(t);
   }, [myRequestToast]);
 
-  // [moorawi] Watch my request status change
+  // [ezo] Watch my request status change
   const lastReqStatusRef = useRef<string | null>(null);
   useEffect(() => {
     const status = myMicRequest?.status ?? null;
@@ -477,7 +477,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
     if (!latestGift) return;
     const giftKey = `${latestGift.fromUserId}_${latestGift.giftId}`;
     if (activeGift && `${activeGift.fromUserId}_${activeGift.giftId}` === giftKey) {
-      // [moorawi-waterfall] احسب العدد الفعلي = مستقبلون × كمية
+      // [ezo-waterfall] احسب العدد الفعلي = مستقبلون × كمية
       const recipientIds: string[] = Array.isArray(latestGift.batchTargets) && latestGift.batchTargets.length > 0
         ? latestGift.batchTargets.map((t: any) => t.toUserId).filter(Boolean)
         : (latestGift.toUserId ? [latestGift.toUserId] : []);
@@ -573,7 +573,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
     const next = giftQueue[0];
     setGiftQueue((q) => q.slice(1));
 
-    // [moorawi-batch] حساب كل الجسيمات بناءً على قائمة المستقبلين
+    // [ezo-batch] حساب كل الجسيمات بناءً على قائمة المستقبلين
     // batchTargets → هدية جماعية | toUserId → هدية فردية
     const recipientIds: string[] = Array.isArray(next.batchTargets) && next.batchTargets.length > 0
       ? next.batchTargets.map((t: any) => t.toUserId).filter(Boolean)
@@ -602,7 +602,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
     }
 
     setActiveGift(next);
-    // [moorawi-waterfall] العدّاد = عدد المستقبلين × الكمية
+    // [ezo-waterfall] العدّاد = عدد المستقبلين × الكمية
     const totalQtyInit = recipientIds.length * qty;
     setComboCount(totalQtyInit);
     setTotalQuantity(totalQtyInit);
@@ -698,7 +698,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
 
     // 1) مايك فاضي (سواء مقفل أو لا)
     if (!userId) {
-      // [moorawi-fix] Owner/Mod: always show menu (even locked/empty)
+      // [ezo-fix] Owner/Mod: always show menu (even locked/empty)
       if (isOwnerOrMod) {
         setOpenSeatMenuPos(menuPos);
         setOpenSeatMenu(seatIndex);
@@ -915,7 +915,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
             <div className="absolute top-20 right-2 z-30 bg-gray-900/95 backdrop-blur rounded-xl shadow-2xl border border-white/10 py-1 w-40">
               <button onClick={handleLeave} className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs"><LogOut size={14} /> مغادرة</button>
               <button onClick={() => { setShowBackMenu(false); setIsMinimized(true); }} className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs"><Minimize2 size={14} /> تصغير</button>
-              <button onClick={() => { navigator.clipboard.writeText(`https://moorawi-app.vercel.app/room/${roomId}`); setShowBackMenu(false); setShareToast(true); setTimeout(() => setShareToast(false), 1800); }} className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs"><Share2 size={14} /> مشاركة</button>
+              <button onClick={() => { navigator.clipboard.writeText(`https://ezo-app.vercel.app/room/${roomId}`); setShowBackMenu(false); setShareToast(true); setTimeout(() => setShareToast(false), 1800); }} className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs"><Share2 size={14} /> مشاركة</button>
             </div>
           </>
         )}
@@ -1077,7 +1077,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
                         <button onClick={() => { toggleLock({ roomId, seatIndex: currentSeatMenuData.seatIndex, tokenOverride: getActiveToken() ?? deviceId }); setOpenSeatMenu(null); setOpenSeatMenuPos(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs">
                           {currentSeatMenuData.locked ? <Unlock size={14} /> : <Lock size={14} />} {currentSeatMenuData.locked ? "فك القفل" : "قفل المايك"}
                         </button>
-                        {/* [moorawi] الكتم الإداري — يمنع المستخدم من إلغاء الكتم */}
+                        {/* [ezo] الكتم الإداري — يمنع المستخدم من إلغاء الكتم */}
                         <button onClick={() => { toggleAdminMute({ roomId, seatIndex: currentSeatMenuData.seatIndex, tokenOverride: getActiveToken() ?? deviceId }); setOpenSeatMenu(null); setOpenSeatMenuPos(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs">
                           <MicOff size={14} />
                           {currentSeatMenuData.adminMuted ? "إلغاء الكتم الإداري" : "كتم المايك (إداري)"}
@@ -1547,7 +1547,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
             </div>
           )}
 
-          {/* ============ [moorawi-waterfall] STACKED COMBO WAVES ============ */}
+          {/* ============ [ezo-waterfall] STACKED COMBO WAVES ============ */}
           <GiftWavesLayer ref={wavesRef} />
 
            

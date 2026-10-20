@@ -14,7 +14,7 @@ export const BINMO_VIP_LEVELS = [
 /**
  * حساب مستوى الـ VIP التلقائي بناءً على إجمالي العملات المشحونة بسعر صرفك
  */
-export function calculateBinmoVipLevel(totalRechargedCoins: number = 0): number {
+export function calculateEzoVipLevel(totalRechargedCoins: number = 0): number {
   let currentLevel = 0;
   for (const tier of BINMO_VIP_LEVELS) {
     if (totalRechargedCoins >= tier.minCoins) {
@@ -27,7 +27,7 @@ export function calculateBinmoVipLevel(totalRechargedCoins: number = 0): number 
 }
 
 
-// [moorawi-vip] VIP subscription system
+// [ezo-vip] VIP subscription system
 //
 // VIP is a PAID subscription (1-7), not a wealth/charm level.
 // - vipSubscriptions: immutable log of every purchase/gift/admin grant
@@ -240,7 +240,7 @@ export const getPlans = query({
 });
 
 // ============================================================
-// [moorawi-vip] Benefits — per-level features (DB-driven)
+// [ezo-vip] Benefits — per-level features (DB-driven)
 // ============================================================
 export const getBenefits = query({
   args: { level: v.number() },
@@ -376,7 +376,7 @@ export const seedBenefits = internalMutation({
       { icon: "Gem",            textAr: "الألماسة الحمراء" },
     ];
 
-    // [ezo-vip] عدد المزايا لكل مستوى (Binmo-style)
+    // [ezo-vip] عدد المزايا لكل مستوى (Ezo-style)
     const COUNTS: Record<number, number> = {
       1: 14, 2: 16, 3: 18, 4: 22, 5: 28, 6: 31, 7: 40,
     };
@@ -415,7 +415,7 @@ export const seedBenefits = internalMutation({
 
 
 /**
- * عملية شحن رصيد المستخدم وتحديث مستوى الـ VIP تلقائياً (طريقة Binmo)
+ * عملية شحن رصيد المستخدم وتحديث مستوى الـ VIP تلقائياً (طريقة Ezo)
  */
 export const rechargeAndUpgradeUser = mutation({
   args: {
@@ -438,7 +438,7 @@ export const rechargeAndUpgradeUser = mutation({
     const newTotalPurchased = currentPurchased + addedCents;
 
     // حساب مستوى الـ VIP الجديد بناءً على العتبات التراكمية
-    const newVipLevel = calculateBinmoVipLevel(newTotalRecharged);
+    const newVipLevel = calculateEzoVipLevel(newTotalRecharged);
 
     // تحديث بيانات المستخدم في قاعدة البيانات
     await ctx.db.patch(args.userId, {
@@ -461,7 +461,7 @@ export const rechargeAndUpgradeUser = mutation({
 
 
 /**
- * التحقق مما إذا كان المستخدم يمتلك حصانة ضد الطرد (VIP 5 فما فوق على طريقة Binmo)
+ * التحقق مما إذا كان المستخدم يمتلك حصانة ضد الطرد (VIP 5 فما فوق على طريقة Ezo)
  */
 export function hasAntiKickImmunity(vipLevel: number = 0): boolean {
   return vipLevel >= 5;

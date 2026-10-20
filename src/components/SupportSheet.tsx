@@ -1,4 +1,4 @@
-// [moorawi-services] خدمة العملاء
+// [ezo-services] خدمة العملاء
 import { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
