@@ -1,3 +1,8 @@
+import chip100 from "../assets/wheel/100.png";
+import chip1k from "../assets/wheel/1k.png";
+import chip5k from "../assets/wheel/5k.png";
+import chip10k from "../assets/wheel/10k.png";
+import chip50k from "../assets/wheel/50k.png";
 import { getActiveToken } from '../lib/session';
 import React, { useEffect, useState, useRef } from "react";
 import { useQuery, useMutation } from "convex/react";
@@ -258,9 +263,9 @@ export default function LuckyWheelSheet({ isOpen, onClose, onOpenRecharge }: Luc
             <img src="/wheel/wheel.png" alt="wheel" className="w-full h-full object-contain drop-shadow-2xl" />
           </div>
 
-          {/* الجوهرة البنفسجية المركزية الثابتة مع العداد */}
-          <div className="absolute z-20 w-16 h-16 rounded-full border-4 border-yellow-400 bg-gradient-to-br from-fuchsia-400 via-purple-700 to-indigo-950 shadow-[0_0_15px_rgba(0,0,0,0.9),inset_0_0_12px_#f0abfc] flex items-center justify-center">
-            <span className="text-2xl font-black text-white drop-shadow">
+          {/* العداد المركزي الشفاف */}
+          <div className="absolute z-20 flex items-center justify-center pointer-events-none">
+            <span className="text-5xl font-black text-white drop-shadow-[0_0_15px_rgba(0,0,0,0.9)]">
               {state?.status === "BETTING" ? timeLeft : ""}
             </span>
           </div>
@@ -336,11 +341,11 @@ export default function LuckyWheelSheet({ isOpen, onClose, onOpenRecharge }: Luc
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               {[
-                { val: 100, img: "/wheel/100.png", label: "100" },
-                { val: 1000, img: "/wheel/1k.png", label: "1K" },
-                { val: 5000, img: "/wheel/5k.png", label: "5K" },
-                { val: 10000, img: "/wheel/10k.png", label: "10K" },
-                { val: 50000, img: "/wheel/50k.png", label: "50K" },
+                { val: 100, img: chip100, label: "100" },
+                { val: 1000, img: chip1k, label: "1K" },
+                { val: 5000, img: chip5k, label: "5K" },
+                { val: 10000, img: chip10k, label: "10K" },
+                { val: 50000, img: chip50k, label: "50K" },
               ].map((chip) => (
                 <button
                   key={chip.val}
