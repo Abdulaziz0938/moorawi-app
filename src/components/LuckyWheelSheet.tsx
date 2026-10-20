@@ -336,21 +336,22 @@ export default function LuckyWheelSheet({ isOpen, onClose, onOpenRecharge }: Luc
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               {[
-                { val: 1000, label: "1K", bg: "bg-amber-600" },
-                { val: 5000, label: "5K", bg: "bg-purple-600" },
-                { val: 10000, label: "10K", bg: "bg-pink-600" },
-                { val: 50000, label: "50K", bg: "bg-emerald-600" },
+                { val: 100, img: "/wheel/100.png", label: "100" },
+                { val: 1000, img: "/wheel/1k.png", label: "1K" },
+                { val: 5000, img: "/wheel/5k.png", label: "5K" },
+                { val: 10000, img: "/wheel/10k.png", label: "10K" },
+                { val: 50000, img: "/wheel/50k.png", label: "50K" },
               ].map((chip) => (
                 <button
                   key={chip.val}
                   onClick={() => setSelectedChip(chip.val)}
-                  className={`w-11 h-11 rounded-full ${chip.bg} border-2 border-dashed flex items-center justify-center text-xs font-black shadow-lg transition-transform ${
+                  className={`relative w-12 h-12 rounded-full flex items-center justify-center transition-transform ${
                     selectedChip === chip.val
-                      ? "-translate-y-1.5 scale-110 border-solid border-yellow-300 shadow-[0_0_12px_#fde047]"
-                      : "border-white/70 opacity-85"
+                      ? "-translate-y-2 scale-110 drop-shadow-[0_0_12px_#fde047]"
+                      : "opacity-85 hover:opacity-100"
                   }`}
                 >
-                  {chip.label}
+                  <img src={chip.img} alt={chip.label} className="w-full h-full object-contain drop-shadow-md" />
                 </button>
               ))}
             </div>
