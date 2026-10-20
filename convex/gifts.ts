@@ -1,0 +1,657 @@
+import { ConvexError, v } from "convex/values";
+import { levelFromValue } from "./lib/levels";
+import { activeVipLevel } from "./lib/vip";
+import { mutation, query } from "./_generated/server";
+import { internal } from "./_generated/api";
+import { requireUser, isFullAdmin } from "./lib/auth";
+import { weekKey } from "./lib/week";
+import { checkAndGrantMedals } from "./medals";
+
+
+// [ezo-charms] يزيد sessionCharms على مايك المستلم (إن كان على مايك)
+async function bumpSeatCharms(
+  ctx: any,
+  roomId: any,
+  userId: any,
+  amount: number,
+) {
+  const seats = await ctx.db
+    .query("micSeats")
+    .withIndex("by_room_and_seatIndex", (q: any) => q.eq("roomId", roomId))
+    .take(24);
+  for (const s of seats) {
+    if (s.userId === userId) {
+      await ctx.db.patch("micSeats", s._id, {
+        sessionCharms: (s.sessionCharms ?? 0) + amount,
+        sessionStartedAt: s.sessionStartedAt ?? Date.now(),
+      });
+      break;
+    }
+  }
+}
+
+
+
+// [moorawi-agency] حساب مستوى المضيف من دخله الشهري
+function levelFromAchieved(achieved: number): number {
+  const T = [0, 20_000, 40_000, 80_000, 126_000, 220_000, 320_000,
+    460_000, 580_000, 850_000, 1_250_000, 1_850_000, 3_500_000,
+    5_250_000, 7_000_000, 10_500_000];
+  let lvl = 0;
+  for (let i = 1; i < T.length; i++) {
+    if (achieved >= T[i]) lvl = i;
+    else break;
+  }
+  return lvl;
+}
+
+
+// (تم حذف generateGiftUploadUrl — نستخدم Cloudinary)
+
+// ============ ADMIN: Create gift ============
+// [moorawi-trophy] Update room weekly total (lazy reset)
+async function updateRoomWeekly(ctx: any, roomId: any, amount: number) {
+  const room = await ctx.db.get("rooms", roomId);
+  if (!room) return;
+  const current = weekKey();
+  const sameCycle = room.weeklyCycleKey === current;
+  await ctx.db.patch("rooms", roomId, {
+    weeklyTotal: sameCycle ? (room.weeklyTotal ?? 0) + amount : amount,
+    weeklyCycleKey: current,
+    weeklyResetAt: sameCycle ? room.weeklyResetAt : Date.now(),
+  });
+}
+
+export const createGift = mutation({
+  args: {
+    name: v.string(),
+    price: v.number(),
+    category: v.string(),
+    mediaUrl: v.string(),
+    mediaType: v.union(v.literal("image"), v.literal("video")),
+    forceGlobal: v.optional(v.boolean()),
+    tokenOverride: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx, args.tokenOverride);
+    if (!user.isAdmin && user.adminRole !== "super" && user.adminRole !== "moderator") {
+      throw new ConvexError({ code: "FORBIDDEN", message: "غير مصرح" });
+    }
+    const name = args.name.trim();
+    if (name.length < 1 || name.length > 30) {
+      throw new ConvexError({ code: "BAD_REQUEST", message: "اسم الهدية غير صالح" });
+    }
+    if (args.price < 1 || args.price > 1000000) {
+      throw new ConvexError({ code: "BAD_REQUEST", message: "السعر غير صالح" });
+    }
+    const isVideo = args.mediaType === "video";
+    const isRelationship = args.category === "relation";
+    const isGlobal = args.price >= 30000 || !!args.forceGlobal;
+    const showsBanner = args.price >= 1000 && isVideo;
+
+    const id = await ctx.db.insert("gifts", {
+      name,
+      price: args.price,
+      category: args.category,
+      mediaUrl: args.mediaUrl,
+      mediaType: args.mediaType,
+      hasSound: isVideo,
+      isGlobal,
+      isRelationship,
+      forceGlobal: args.forceGlobal ?? false,
+      showsBanner,
+      active: true,
+    });
+    return id;
+  },
+});
+
+// ============ ADMIN: Delete gift ============
+export const removeGift = mutation({
+  args: { giftId: v.id("gifts"), tokenOverride: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx, args.tokenOverride);
+    if (!user.isAdmin && user.adminRole !== "super") {
+      throw new ConvexError({ code: "FORBIDDEN", message: "غير مصرح" });
+    }
+    const gift = await ctx.db.get("gifts", args.giftId);
+    if (!gift) return null;
+    await ctx.db.delete(gift._id);
+    return null;
+  },
+});
+
+// ============ LIST: All gifts (with URLs) ============
+export const listActive = query({
+  args: {},
+  handler: async (ctx) => {
+    const gifts = await ctx.db
+      .query("gifts")
+      .withIndex("by_active", (q) => q.eq("active", true))
+      .take(200);
+    return gifts.sort((a, b) => a.price - b.price);
+  },
+});
+
+// ============ LIST: Admin — all gifts ============
+export const listAllAdmin = query({
+  args: { tokenOverride: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    try {
+      const user = await requireUser(ctx, args.tokenOverride);
+      if (!user.isAdmin && user.adminRole !== "super" && user.adminRole !== "moderator") return [];
+      const gifts = await ctx.db.query("gifts").take(300);
+      return gifts.sort((a, b) => a.price - b.price);
+    } catch { return []; }
+  },
+});
+
+// ============ BALANCE ============
+export const myBalance = query({
+  args: { tokenOverride: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    try {
+      const user = await requireUser(ctx, args.tokenOverride);
+      return user.coins ?? 0;
+    } catch { return 0; }
+  },
+});
+
+// ============ SEND ============
+export const send = mutation({
+  args: {
+    roomId: v.id("rooms"),
+    toUserId: v.id("users"),
+    giftId: v.id("gifts"),
+    quantity: v.number(),
+    tokenOverride: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx, args.tokenOverride);
+    if (args.quantity < 1 || args.quantity > 999) {
+      throw new ConvexError({ code: "BAD_REQUEST", message: "عدد غير صالح" });
+    }
+    const gift = await ctx.db.get("gifts", args.giftId);
+    if (!gift) throw new ConvexError({ code: "NOT_FOUND", message: "الهدية غير موجودة" });
+
+    // [VIP-Lock] فحص حصرية هدايا VIP
+    if (gift.category === "vip") {
+      const senderVip = activeVipLevel(user);
+      if (senderVip <= 0) {
+        throw new ConvexError({
+          code: "FORBIDDEN",
+          message: "هذه الهدية حصرية لأعضاء VIP فقط! اشترك في VIP لإرسالها.",
+        });
+      }
+    }
+
+    const target = await ctx.db.get("users", args.toUserId);
+    if (!target) throw new ConvexError({ code: "NOT_FOUND", message: "المستلم غير موجود" });
+    
+
+    const totalPrice = gift.price * args.quantity;
+    const myCoins = user.coins ?? 0;
+    if (myCoins < totalPrice) {
+      throw new ConvexError({ code: "BAD_REQUEST", message: "رصيدك غير كافٍ" });
+    }
+
+    await ctx.db.patch("users", user._id, {
+      coins: myCoins - totalPrice,
+      totalSent: (user.totalSent ?? 0) + totalPrice,
+    });
+    await recordMissionProgress(ctx, user._id, ["daily_send_gift", "daily_5_gifts", "weekly_50_gifts"]);
+    // [moorawi-levels] 1 coin received = 1 Charm XP
+    await ctx.db.patch("users", args.toUserId, {
+      charms: (target.charms ?? 0) + totalPrice,
+      totalReceived: (target.totalReceived ?? 0) + totalPrice,
+    });
+    // [ezo-charms] زيادة عدّاد الجلسة على المايك
+    await bumpSeatCharms(ctx, args.roomId, args.toUserId, totalPrice);
+
+    // افحص آخر transaction — هل هي combo continuation؟
+    const lastTx = await ctx.db
+      .query("giftTransactions")
+      .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
+      .order("desc")
+      .first();
+    const isComboContinuation = lastTx &&
+      lastTx.fromUserId === user._id &&
+      lastTx.giftId === gift._id &&
+      (Date.now() - lastTx._creationTime) < 3000;
+
+    await ctx.db.insert("giftTransactions", {
+      roomId: args.roomId,
+      fromUserId: user._id,
+      fromName: user.name ?? "ضيف",
+      toUserId: args.toUserId,
+      toName: target.name ?? "ضيف",
+      giftId: gift._id,
+      giftName: gift.name,
+      giftIcon: gift.mediaUrl ?? "",
+      quantity: args.quantity,
+      totalPrice,
+    });
+
+    // [moorawi-trophy] Add to room weekly total
+    await updateRoomWeekly(ctx, args.roomId, totalPrice);
+
+    // [moorawi-medals] Auto-grant medals for sender + receiver
+    await checkAndGrantMedals(ctx, user._id);
+    await checkAndGrantMedals(ctx, args.toUserId);
+
+    // لا تنشئ رسالة جديدة إذا كانت استمرار كومبو
+    if (!isComboContinuation) {
+      await ctx.db.insert("messages", {
+        roomId: args.roomId,
+        senderId: user._id,
+        senderName: user.name ?? "ضيف",
+        text: `${user.name ?? "ضيف"} أرسل ${gift.name} × ${args.quantity} إلى ${target.name ?? "ضيف"}`,
+        system: true,
+      });
+    }
+
+    return { success: true, remaining: myCoins - totalPrice };
+  },
+});
+
+// ============ إرسال هدية لعدة مستخدمين دفعة واحدة (Batch) ============
+export const sendBatch = mutation({
+  args: {
+    roomId: v.id("rooms"),
+    toUserIds: v.array(v.id("users")),
+    giftId: v.id("gifts"),
+    quantity: v.number(),
+    tokenOverride: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx, args.tokenOverride);
+
+    // تحققات الإدخال
+    if (!args.toUserIds.length) {
+      throw new ConvexError({ code: "BAD_REQUEST", message: "لم يتم اختيار أي مستلم" });
+    }
+    if (args.toUserIds.length > 500) {
+      throw new ConvexError({ code: "BAD_REQUEST", message: "عدد المستلمين كبير جداً (500 كحد أقصى)" });
+    }
+    if (args.quantity < 1 || args.quantity > 999) {
+      throw new ConvexError({ code: "BAD_REQUEST", message: "عدد غير صالح" });
+    }
+
+    const gift = await ctx.db.get("gifts", args.giftId);
+    if (!gift) throw new ConvexError({ code: "NOT_FOUND", message: "الهدية غير موجودة" });
+    // [VIP-Lock] فحص حصرية هدايا VIP في الإرسال الجماعي
+    if (gift.category === "vip") {
+      const myVip = activeVipLevel(user);
+      if (myVip <= 0) {
+        throw new ConvexError({
+          code: "FORBIDDEN",
+          message: "هذه الهدية حصرية لأعضاء VIP فقط! اشترك في VIP لإرسالها.",
+        });
+      }
+    }
+
+    // إزالة التكرار (حماية من إرسال نفس الـ ID مرتين)
+    const uniqueIds = Array.from(new Set(args.toUserIds));
+
+    // جلب جميع المستلمين دفعة واحدة
+    const targetDocs = await Promise.all(uniqueIds.map((id) => ctx.db.get("users", id)));
+    const targets = targetDocs.filter((t): t is NonNullable<typeof t> => t !== null);
+
+    if (targets.length === 0) {
+      throw new ConvexError({ code: "NOT_FOUND", message: "المستلمون غير موجودين" });
+    }
+
+    const totalPrice = gift.price * args.quantity * targets.length;
+    const myCoins = user.coins ?? 0;
+    if (myCoins < totalPrice) {
+      throw new ConvexError({ code: "BAD_REQUEST", message: "رصيدك غير كافٍ" });
+    }
+
+    // batchId موحد لكل معاملات الدفعة (للتجميع في الواجهة)
+    const batchId = `b_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+
+    // التحقق مما إذا كان المرسل يهدي نفسه ضمن الدفعة
+    const isSelfIncluded = targets.some((t) => t._id === user._id);
+    const perTarget = gift.price * args.quantity;
+
+    // خصم مرة واحدة من المرسل مع دمج حصته إن كان ضمن المستلمين (Self-Gift Safe)
+    const selfDiamondRatio = user.agencyId ? 0.3 : 0.7;
+    await ctx.db.patch("users", user._id, {
+      coins: myCoins - totalPrice,
+      totalSent: (user.totalSent ?? 0) + totalPrice,
+      ...(isSelfIncluded ? {
+        charms: (user.charms ?? 0) + perTarget,
+        totalReceived: (user.totalReceived ?? 0) + perTarget,
+        diamonds: (user.diamonds ?? 0) + Math.floor(perTarget * selfDiamondRatio),
+        ...(user.agencyId ? { hostIncomeMonth: (user.hostIncomeMonth ?? 0) + perTarget } : {}),
+      } : {}),
+    });
+
+    // لكل مستلم آخر: زيادة charms + totalReceived + insert transaction
+    for (const target of targets) {
+      if (target._id !== user._id) {
+        await ctx.db.patch("users", target._id, {
+          charms: (target.charms ?? 0) + perTarget,
+          totalReceived: (target.totalReceived ?? 0) + perTarget,
+          // [moorawi-agency] 30% ماس للمضيف، 70% لعضو عادي
+          ...(target.agencyId ? {
+            diamonds: (target.diamonds ?? 0) + Math.floor(perTarget * 0.3),
+            hostIncomeMonth: (target.hostIncomeMonth ?? 0) + perTarget,
+          } : {
+            diamonds: (target.diamonds ?? 0) + Math.floor(perTarget * 0.7),
+          }),
+        });
+      }
+      // [ezo-charms] زيادة عدّاد الجلسة على المايك
+      await bumpSeatCharms(ctx, args.roomId, target._id, perTarget);
+      await ctx.db.insert("giftTransactions", {
+        roomId: args.roomId,
+        fromUserId: user._id,
+        fromName: user.name ?? "ضيف",
+        toUserId: target._id,
+        toName: target.name ?? "ضيف",
+        giftId: gift._id,
+        giftName: gift.name,
+        giftIcon: gift.mediaUrl ?? "",
+        quantity: args.quantity,
+        totalPrice: gift.price * args.quantity,
+        batchId,
+      });
+    }
+
+    // [moorawi-trophy] Add to room weekly total (once per batch)
+    await updateRoomWeekly(ctx, args.roomId, totalPrice);
+
+    // [moorawi-medals] Auto-grant medals
+    await checkAndGrantMedals(ctx, user._id);
+    for (const target of targets) {
+      await checkAndGrantMedals(ctx, target._id);
+    }
+
+    // رسالة واحدة فقط (بدل N)
+    const summary = targets.length === 1
+      ? `إلى ${targets[0]?.name ?? "ضيف"}`
+      : `إلى ${targets.length} مستخدمين`;
+    await ctx.db.insert("messages", {
+      roomId: args.roomId,
+      senderId: user._id,
+      senderName: user.name ?? "ضيف",
+      text: `${user.name ?? "ضيف"} أرسل ${gift.name} × ${args.quantity} ${summary}`,
+      system: true,
+    });
+
+    // [ezo-rocket] شحن الصاروخ عند كل دفعة هدايا
+    try {
+      await ctx.scheduler.runAfter(0, internal.rockets.addEnergy, {
+        roomId: args.roomId,
+        fromUserId: user._id,
+        amount: totalPrice,
+      });
+    } catch (e) {
+      console.error("[rocket] addEnergy failed:", e);
+    }
+
+    return {
+      success: true,
+      batchId,
+      count: targets.length,
+      totalSpent: totalPrice,
+      remaining: myCoins - totalPrice,
+    };
+  },
+});
+
+// ============ LEADERBOARD ============
+export const roomLeaderboard = query({
+  args: {
+    roomId: v.id("rooms"),
+    type: v.union(v.literal("wealth"), v.literal("charm")),
+    period: v.union(v.literal("daily"), v.literal("weekly"), v.literal("monthly")),
+  },
+  handler: async (ctx, args) => {
+    // حساب since حسب الفترة
+    const now = new Date();
+    let since: number;
+    if (args.period === "daily") {
+      since = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    } else if (args.period === "weekly") {
+      const d = new Date(now); d.setDate(d.getDate() - 7); since = d.getTime();
+    } else {
+      const d = new Date(now); d.setDate(d.getDate() - 30); since = d.getTime();
+    }
+
+    const txs = await ctx.db
+      .query("giftTransactions")
+      .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
+      .order("desc")
+      .take(1000);
+
+    const filtered = txs.filter((t) => t._creationTime >= since);
+    const isWealth = args.type === "wealth";
+
+    // تجميع حسب المستخدم
+    const totals: Record<string, { userId: any; total: number }> = {};
+    for (const t of filtered) {
+      const key = isWealth ? t.fromUserId : t.toUserId;
+      if (!totals[key]) totals[key] = { userId: key, total: 0 };
+      totals[key].total += t.totalPrice;
+    }
+
+    const sorted = Object.values(totals).sort((a, b) => b.total - a.total).slice(0, 20);
+
+    // جلب بيانات كل مستخدم
+    const enriched = await Promise.all(
+      sorted.map(async (item) => {
+        const u = await ctx.db.get("users", item.userId);
+        // [moorawi-fix] prefer Cloudinary avatarUrl, fallback to legacy storage avatarId
+        const avatarUrl = u?.avatarUrl ?? (u?.avatarId ? await ctx.storage.getUrl(u.avatarId) : null);
+        const vip = activeVipLevel(u);
+        return {
+          userId: item.userId as string,
+          userNumber: u?.userNumber ?? null,
+          name: u?.name ?? "ضيف",
+          avatarUrl,
+          vip,
+          charmLevel: levelFromValue(u?.totalReceived ?? 0),
+          charmValue: u?.charms ?? 0,
+          wealthValue: u?.totalSent ?? 0,
+          adminRole: u?.adminRole ?? null,
+          total: item.total,
+        };
+      })
+    );
+
+    return enriched;
+  },
+});
+
+// Latest gift in room (for on-screen animation overlay)
+export const latestGift = query({
+  args: { roomId: v.id("rooms"), since: v.number() },
+  handler: async (ctx, args) => {
+    const txs = await ctx.db
+      .query("giftTransactions")
+      .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
+      .order("desc")
+      .take(5);
+    const recent = txs.find((t) => t._creationTime > args.since);
+    if (!recent) return null;
+    const gift = await ctx.db.get("gifts", recent.giftId);
+    if (!gift) return null;
+    const mediaUrl = gift.mediaUrl ?? (gift.mediaId ? await ctx.storage.getUrl(gift.mediaId) : null);
+    return {
+      _id: recent._id,
+      fromName: recent.fromName,
+      toName: recent.toName,
+      giftName: recent.giftName,
+      quantity: recent.quantity,
+      price: gift.price,
+      mediaUrl,
+      mediaType: gift.mediaType,
+      createdAt: recent._creationTime,
+    };
+  },
+});
+
+// Latest gift in room WITH avatars for the banner
+export const latestGiftFull = query({
+  args: { roomId: v.id("rooms"), since: v.number() },
+  handler: async (ctx, args) => {
+    const txs = await ctx.db
+      .query("giftTransactions")
+      .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
+      .order("desc")
+      .take(20);
+    const recent = txs.find((t) => t._creationTime > args.since);
+    if (!recent) return null;
+    const gift = await ctx.db.get("gifts", recent.giftId);
+    if (!gift) return null;
+    const [fromUser, toUser] = await Promise.all([
+      ctx.db.get("users", recent.fromUserId),
+      ctx.db.get("users", recent.toUserId),
+    ]);
+    const [mediaUrl, fromAvatar, toAvatar] = await Promise.all([
+      gift.mediaUrl ?? (gift.mediaId ? await ctx.storage.getUrl(gift.mediaId) : null),
+      fromUser?.avatarId ? ctx.storage.getUrl(fromUser.avatarId) : Promise.resolve(null),
+      toUser?.avatarId ? ctx.storage.getUrl(toUser.avatarId) : Promise.resolve(null),
+    ]);
+    // ============ دعم الدفعات (batch): جلب كل الأهداف ============
+    let batchTargets: Array<{ toUserId: string; toName: string; toAvatar: string | null }> = [];
+    if (recent.batchId) {
+      const batchTxs = await ctx.db
+        .query("giftTransactions")
+        .withIndex("by_batch", (q) => q.eq("batchId", recent.batchId))
+        .take(500);
+      batchTargets = await Promise.all(
+        batchTxs.map(async (t) => {
+          const u = await ctx.db.get("users", t.toUserId);
+          const av = u?.avatarId ? await ctx.storage.getUrl(u.avatarId) : null;
+          return {
+            toUserId: t.toUserId as string,
+            toName: t.toName,
+            toAvatar: av,
+          };
+        })
+      );
+    }
+
+    return {
+      _id: recent._id,
+      giftId: recent.giftId,
+      fromName: recent.fromName,
+      toName: recent.toName,
+      fromUserId: recent.fromUserId,
+      toUserId: recent.toUserId,
+      fromAvatar,
+      toAvatar,
+      giftName: recent.giftName,
+      quantity: recent.quantity,
+      price: gift.price,
+      mediaUrl,
+      mediaType: gift.mediaType,
+      hasSound: gift.hasSound ?? false,
+      isGlobal: gift.isGlobal ?? false,
+      isRelationship: gift.isRelationship ?? false,
+      createdAt: recent._creationTime,
+      batchId: recent.batchId ?? null,
+      batchTargets,
+    };
+  },
+});
+
+// Migration: backfill badges for old gifts
+export const migrateGiftBadges = mutation({
+  args: { tokenOverride: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    await requireUser(ctx, args.tokenOverride);
+    const gifts = await ctx.db.query("gifts").take(500);
+    let updated = 0;
+    for (const g of gifts) {
+      const isVideo = g.mediaType === "video";
+      const isRelationship = g.category === "relation";
+      const isGlobal = g.price >= 30000 || !!g.forceGlobal;
+      const showsBanner = g.price >= 1000 && isVideo;
+      await ctx.db.patch("gifts", g._id, {
+        hasSound: isVideo,
+        isGlobal,
+        isRelationship,
+        showsBanner,
+      });
+      updated++;
+    }
+    return { updated };
+  },
+});
+
+// استعلام عام لجميع الغرف للاستماع للشريط الذهبي (≥ 30000)
+export const latestGlobalBroadcast = query({
+  args: { since: v.number() },
+  handler: async (ctx, args) => {
+    const txs = await ctx.db
+      .query("giftTransactions")
+      .order("desc")
+      .take(10);
+    const recent = txs.find((t) => t._creationTime > args.since);
+    if (!recent) return null;
+    const gift = await ctx.db.get("gifts", recent.giftId);
+    if (!gift) return null;
+    if ((gift.price ?? 0) < 30000 && !gift.isGlobal) return null;
+
+    const [fromUser, toUser, room] = await Promise.all([
+      ctx.db.get("users", recent.fromUserId),
+      ctx.db.get("users", recent.toUserId),
+      ctx.db.get("rooms", recent.roomId),
+    ]);
+    const [fromAvatar, toAvatar] = await Promise.all([
+      fromUser?.avatarId ? ctx.storage.getUrl(fromUser.avatarId) : Promise.resolve(null),
+      toUser?.avatarId ? ctx.storage.getUrl(toUser.avatarId) : Promise.resolve(null),
+    ]);
+
+    return {
+      _id: recent._id,
+      giftName: recent.giftName,
+      quantity: recent.quantity,
+      price: gift.price,
+      roomId: recent.roomId,
+      roomName: room?.name ?? "غرفة",
+      fromName: recent.fromName,
+      fromAvatar,
+      toName: recent.toName,
+      toAvatar,
+      createdAt: recent._creationTime,
+    };
+  },
+});
+
+// [moorawi-missions] Helper لتسجيل تقدم المهام
+async function recordMissionProgress(ctx: any, userId: any, keys: string[], amount = 1) {
+  const dailyCycle = new Date().toISOString().slice(0, 10);
+  const onejan = new Date(new Date().getFullYear(), 0, 1);
+  const week = Math.ceil(((new Date().getTime() - onejan.getTime()) / 86400000 + onejan.getDay() + 1) / 7);
+  const weeklyCycle = `${new Date().getFullYear()}-W${week}`;
+
+  const missions = await ctx.db.query("missions").collect();
+  for (const key of keys) {
+    const m = missions.find((x: any) => x.key === key);
+    if (!m) continue;
+    const cycle = m.type === "weekly" ? weeklyCycle : dailyCycle;
+    const existing = await ctx.db
+      .query("userMissions")
+      .withIndex("by_user_and_mission", (q: any) => q.eq("userId", userId).eq("missionId", m._id))
+      .filter((q: any) => q.eq(q.field("cycleKey"), cycle))
+      .first();
+    if (existing) {
+      if (existing.claimedAt) continue;
+      await ctx.db.patch("userMissions", existing._id, {
+        progress: Math.min((existing.progress ?? 0) + amount, m.target),
+      });
+    } else {
+      await ctx.db.insert("userMissions", {
+        userId,
+        missionId: m._id,
+        progress: Math.min(amount, m.target),
+        cycleKey: cycle,
+      });
+    }
+  }
+}

@@ -1,0 +1,405 @@
+// [moorawi-vip] VIP Shop — Ezo-style page per level
+// Structure: tabs (7 levels) → banner → 9 asset slots → benefits table → buy footer
+
+import { useState, useMemo } from "react";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import { getActiveToken } from "../lib/session";
+import { useAssets } from "../lib/assets";
+import { dialog } from "../lib/dialog";
+import {
+  X, Crown, Coins, Loader2, Clock, Sparkles, Lock,
+  Gift, Star, Eye, Heart, Percent, TrendingUp, MessageCircle,
+  Zap, ShoppingBag, Wand2, Award, Ban, Ghost, IdCard, Share2,
+  Megaphone, ShieldOff, BadgeCheck, Users, Mic, UserCircle,
+  Car, Home, AudioLines, MicVocal, Bell, Music, Palette,
+  LayoutGrid, Check, Type, Gem, ScrollText, Shield, Trophy,
+} from "lucide-react";
+
+interface Props {
+  onClose: () => void;
+}
+
+// Icon name → lucide component (only those used in seedBenefits)
+const ICONS: Record<string, any> = {
+  Gift, Star, Coins, Eye, Heart, Percent, TrendingUp, MessageCircle,
+  Zap, ShoppingBag, Wand2, Award, Ban, Ghost, IdCard, Share2,
+  Megaphone, ShieldOff, BadgeCheck, Users, Mic, UserCircle,
+  Car, Home, AudioLines, MicVocal, Bell, Music, Palette, LayoutGrid,
+  // [ezo-vip] أيقونات مزايا VIP7 الإضافية
+  Type, Gem, ScrollText, Shield, Sparkles, Trophy, Crown,
+};
+
+// 9 asset slot keys per level (order matters for grid 3x3)
+// [ezo-vip] ألوان المستويات (تطابق CSS vip-frame-N / vip-halo-N)
+const VIP_COLORS: Record<number, { main: string; glow: string; ring: string }> = {
+  1: { main: "#10b981", glow: "rgba(16,185,129,0.5)",  ring: "ring-emerald-400/60" },
+  2: { main: "#3b82f6", glow: "rgba(59,130,246,0.5)",  ring: "ring-blue-400/60" },
+  3: { main: "#a855f7", glow: "rgba(168,85,247,0.5)",  ring: "ring-purple-400/60" },
+  4: { main: "#dc2626", glow: "rgba(220,38,38,0.5)",   ring: "ring-red-400/60" },
+  5: { main: "#eab308", glow: "rgba(234,179,8,0.55)",  ring: "ring-amber-400/70" },
+  6: { main: "#f97316", glow: "rgba(249,115,22,0.6)",  ring: "ring-orange-400/70" },
+  7: { main: "#fbbf24", glow: "rgba(251,191,36,0.7)",  ring: "ring-yellow-300/80" },
+};
+
+const VIP_SLOTS: { key: string; label: string }[] = [
+  { key: "logo",     label: "الشعار" },
+  { key: "medal",    label: "الميدالية" },
+  { key: "frame",    label: "الإطار" },
+  { key: "halo",     label: "الهالة" },
+  { key: "card",     label: "البطاقة" },
+  { key: "nickname", label: "الاسم" },
+  { key: "entry",    label: "الدخول" },
+  { key: "wave",     label: "الموجة" },
+  { key: "bubble",   label: "الفقاعات" },
+];
+
+function formatNum(n: number): string {
+  if (n >= 1_000_000) return (n / 1_000_000).toFixed(2) + "M";
+  if (n >= 1_000) return (n / 1_000).toFixed(0) + "K";
+  return n.toString();
+}
+
+function formatDate(ts: number): string {
+  const d = new Date(ts);
+  return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, "0")}/${String(d.getDate()).padStart(2, "0")}`;
+}
+
+export default function VipShopSheet({ onClose }: Props) {
+  const token = getActiveToken();
+  const assets = useAssets();
+  const data = useQuery(api.vip.myVip, { tokenOverride: token });
+  const allBenefits = useQuery(api.vip.getAllBenefits);
+  const balance = useQuery(api.wallet.balance, { tokenOverride: token });
+  const buyVip = useMutation(api.vip.buyVip);
+
+  const [selected, setSelected] = useState<number>(1);
+  const [busy, setBusy] = useState(false);
+
+  const plans = data?.plans ?? [];
+  const currentLevel = data?.level ?? 0;
+  const active = data?.active ?? false;
+  const coins = balance?.coins ?? 0;
+
+  const plan = plans.find((p) => p.level === selected);
+
+  // Benefits indexed by level
+  const benefitsByLevel = useMemo(() => {
+    const map: Record<number, any[]> = { 1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [] };
+    for (const b of allBenefits ?? []) {
+      if (!map[b.level]) map[b.level] = [];
+      map[b.level].push(b);
+    }
+    return map;
+  }, [allBenefits]);
+
+  const selectedBenefits = benefitsByLevel[selected] ?? [];
+
+  const handleBuy = () => {
+    if (!plan) return;
+    if (plan.exclusive) {
+      dialog.alert(
+        (plan as any).exclusiveReason ??
+          "هذا المستوى حصري — يُحصل عليه عبر الشحن التركي"
+      );
+      return;
+    }
+    if (plan.priceCoins == null) {
+      dialog.alert("السعر غير محدد بعد — يرجى المحاولة لاحقاً");
+      return;
+    }
+    const price = plan.priceCoins ?? 0;
+    if (coins < price) {
+      dialog.alert(`تحتاج ${price.toLocaleString()} عملة — رصيدك ${coins.toLocaleString()}`);
+      return;
+    }
+    dialog.confirm(
+      `شراء ${plan.name} بمبلغ ${price.toLocaleString()} عملة؟`,
+      async () => {
+        setBusy(true);
+        try {
+          await buyVip({ level: selected, tokenOverride: token });
+          dialog.alert(`تم تفعيل ${plan.name} لمدة 30 يوماً`);
+        } catch (e: any) {
+          dialog.alert(e?.message || "فشل الشراء");
+        } finally {
+          setBusy(false);
+        }
+      },
+      plan.name,
+      "شراء"
+    );
+  };
+
+  const owned = selected <= currentLevel && active;
+  const isUpgrade = selected > currentLevel && active;
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-end justify-center"
+      dir="rtl"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-md bg-gradient-to-b from-slate-900 to-black rounded-t-3xl h-[92dvh] flex flex-col overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* ===== Header ===== */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 flex-shrink-0">
+          <div className="flex items-center gap-2">
+            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-purple-600 flex items-center justify-center">
+              <Crown size={18} className="text-white" fill="currentColor" />
+            </div>
+            <h2 className="text-white text-lg font-black">VIP</h2>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/15 border border-amber-400/30">
+              <Coins size={14} className="text-amber-300" />
+              <span className="text-amber-200 text-xs font-black tabular-nums" dir="ltr">
+                {formatNum(coins)}
+              </span>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-full hover:bg-white/10 text-white"
+            >
+              <X size={20} />
+            </button>
+          </div>
+        </div>
+
+        {/* ===== Level tabs ===== */}
+        <div
+          className="flex gap-1 px-4 pt-3 pb-2 overflow-x-auto flex-shrink-0"
+          style={{ scrollbarWidth: "none" }}
+        >
+          {[7, 6, 5, 4, 3, 2, 1].map((lvl) => {
+            const p = plans.find((x) => x.level === lvl);
+            const isSel = lvl === selected;
+            const isOwned = lvl <= currentLevel && active;
+            const c = VIP_COLORS[lvl] ?? VIP_COLORS[1];
+            return (
+              <button
+                key={lvl}
+                onClick={() => setSelected(lvl)}
+                className={`flex-shrink-0 px-3 py-2 rounded-xl border-2 transition active:scale-95 text-xs font-black relative ${
+                  isSel
+                    ? "text-white"
+                    : "text-white/50 border-white/10 bg-white/[0.03]"
+                }`}
+                style={isSel ? {
+                  background: `linear-gradient(135deg, ${c.main}40, ${c.main}15)`,
+                  borderColor: c.main,
+                  boxShadow: `0 0 14px ${c.glow}, inset 0 0 0 1px ${c.main}30`,
+                } : undefined}
+              >
+                VIP {lvl}
+                {isOwned && (
+                  <span
+                    className="absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-black"
+                    style={{ background: c.main }}
+                  />
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* ===== Content ===== */}
+        <div className="flex-1 overflow-y-auto">
+          {plan && (
+            <>
+              {/* ===== Banner ===== */}
+              {(() => {
+                const bgUrl = assets[`vip.background.${plan.level}`];
+                const heroUrl = assets[`vip.hero.${plan.level}`];
+                return (
+                  <div
+                    className="mx-4 mt-2 rounded-2xl border overflow-hidden relative flex-shrink-0"
+                    style={{
+                      borderColor: plan.color + "80",
+                      background: bgUrl
+                        ? `url(${bgUrl}) center/cover no-repeat`
+                        : `linear-gradient(135deg, ${plan.color}30 0%, ${plan.accent}15 50%, transparent 100%)`,
+                    }}
+                  >
+                    <div className="aspect-[16/9] flex items-center justify-center relative overflow-hidden">
+                      {/* Radiant glow behind (premium look) */}
+                      <div
+                        className="absolute inset-0 pointer-events-none"
+                        style={{
+                          background: `radial-gradient(circle at 50% 60%, ${plan.accent}25 0%, transparent 60%)`,
+                        }}
+                      />
+                      {heroUrl ? (
+                        <img
+                          src={heroUrl}
+                          alt={plan.name}
+                          className="max-h-full max-w-full object-contain drop-shadow-2xl relative z-10"
+                          draggable={false}
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center gap-2 relative z-10">
+                          <div
+                            className="w-28 h-28 rounded-full flex items-center justify-center relative"
+                            style={{
+                              background: `conic-gradient(from 0deg, ${plan.color}, ${plan.accent}, ${plan.color})`,
+                              boxShadow: `0 0 32px ${plan.accent}80, 0 0 60px ${plan.color}40`,
+                            }}
+                          >
+                            <div className="w-[100px] h-[100px] rounded-full bg-black/70 flex items-center justify-center">
+                              <Crown size={52} style={{ color: plan.accent }} strokeWidth={1.2} fill={plan.accent + "40"} />
+                            </div>
+                          </div>
+                          <p className="text-white text-3xl font-black tracking-wider mt-1" style={{ textShadow: `0 0 20px ${plan.accent}80` }}>
+                            {plan.name}
+                          </p>
+                          {plan.exclusive && (
+                            <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-black/40 border border-amber-400/40 text-amber-200 text-[10px] font-black">
+                              <Lock size={10} />
+                              حصري للشحن التركي
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    <div className="py-2 text-center text-white/70 text-xs">
+                      <span className="text-amber-200 font-black">
+                        {selectedBenefits.length} امتيازاً
+                      </span>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* ===== 9 asset slots (3x3) ===== */}
+              <div className="mx-4 mt-3 grid grid-cols-3 gap-2">
+                {VIP_SLOTS.map((slot) => {
+                  const key = `vip.${slot.key}.${plan.level}`;
+                  const url = assets[key];
+                  return (
+                    <div
+                      key={slot.key}
+                      className="aspect-square rounded-xl border bg-black/30 flex items-center justify-center overflow-hidden p-1.5 relative group transition active:scale-95"
+                      style={{
+                        borderColor: url ? plan.color + "60" : plan.color + "25",
+                        boxShadow: url ? `0 0 12px ${plan.accent}30, inset 0 0 0 1px ${plan.color}20` : undefined,
+                        background: url ? `linear-gradient(135deg, ${plan.color}15, transparent)` : undefined,
+                      }}
+                    >
+                      {url ? (
+                        <img
+                          src={url}
+                          alt={slot.label}
+                          className="max-h-full max-w-full object-contain"
+                          draggable={false}
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center justify-center gap-1 opacity-70">
+                          <Sparkles size={22} style={{ color: plan.accent, opacity: 0.6 }} />
+                          <span className="text-white/50 text-[9px] font-bold">{slot.label}</span>
+                        </div>
+                      )}
+                      {/* Checkmark if owned asset */}
+                      {url && (
+                        <div
+                          className="absolute top-1 right-1 w-3.5 h-3.5 rounded-full flex items-center justify-center"
+                          style={{ background: plan.accent }}
+                        >
+                          <Check size={8} className="text-black" strokeWidth={3} />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* ===== Benefits ===== */}
+              <div className="mx-4 mt-4 pb-4">
+                <div className="flex items-center justify-center gap-2 mb-3">
+                  <Sparkles size={14} className="text-amber-300" />
+                  <p className="text-white text-sm font-black">امتيازات VIP</p>
+                  <Sparkles size={14} className="text-amber-300" />
+                </div>
+                <div
+                  className="rounded-2xl border divide-y divide-white/5 overflow-hidden"
+                  style={{ borderColor: plan.color + "30", background: `linear-gradient(135deg, ${plan.color}08, transparent)` }}
+                >
+                  {selectedBenefits.length === 0 ? (
+                    <div className="p-6 text-center text-white/40 text-xs">
+                      لا توجد امتيازات بعد
+                    </div>
+                  ) : (
+                    selectedBenefits.map((b) => {
+                      const Icon = ICONS[b.icon] ?? Sparkles;
+                      return (
+                        <div key={b._id} className="flex items-center gap-3 px-4 py-3">
+                          <div
+                            className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                            style={{
+                              background: `linear-gradient(135deg, ${plan.color}40, ${plan.accent}20)`,
+                              boxShadow: `0 0 8px ${plan.accent}30`,
+                            }}
+                          >
+                            <Icon size={15} style={{ color: plan.accent }} />
+                          </div>
+                          <span className="text-white/90 text-sm font-bold">{b.textAr}</span>
+                          <Check size={15} className="text-emerald-400 mr-auto" strokeWidth={2.5} />
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* ===== Footer (buy) ===== */}
+        {plan && (
+          <div className="flex-shrink-0 border-t border-white/10 px-4 py-3 flex items-center gap-3 bg-black/60 backdrop-blur">
+            <div className="flex flex-col items-start gap-0.5">
+              {plan.exclusive ? (
+                <span className="text-amber-300 text-sm font-black">حصري</span>
+              ) : (
+                <div className="flex items-center gap-1.5">
+                  <Coins size={16} className="text-amber-300" />
+                  <span className="text-amber-200 text-lg font-black tabular-nums" dir="ltr">
+                    {(plan.priceCoins ?? 0).toLocaleString()}
+                  </span>
+                </div>
+              )}
+              <span className="text-white/50 text-[10px] flex items-center gap-1">
+                <Clock size={10} /> 30 يوماً
+              </span>
+            </div>
+            <button
+              onClick={handleBuy}
+              disabled={busy || plan.exclusive}
+              className="flex-1 rounded-xl py-3 text-white font-black text-sm flex items-center justify-center gap-2 active:scale-95 transition disabled:opacity-50"
+              style={{
+                background: plan.exclusive
+                  ? "linear-gradient(90deg, #4b5563, #6b7280)"
+                  : `linear-gradient(90deg, ${plan.color}, ${plan.accent})`,
+              }}
+            >
+              {busy ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : plan.exclusive ? (
+                <>
+                  <Lock size={16} />
+                  الشحن التركي
+                </>
+              ) : (
+                <>
+                  <Crown size={16} fill="currentColor" />
+                  {owned ? "تمديد 30 يوم" : isUpgrade ? `ترقية لـ VIP ${plan.level}` : "اشترِ الآن"}
+                </>
+              )}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

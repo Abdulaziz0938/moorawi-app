@@ -1,0 +1,510 @@
+import React, { useEffect, useState, useRef } from "react";
+import { useQuery, useMutation } from "convex/react";
+import { getActiveToken } from "../lib/auth";
+import { api } from "../../convex/_generated/api";
+import { Volume2, VolumeX, HelpCircle, Trophy, FileText, Plus, X, Wifi } from "lucide-react";
+
+interface LuckyWheelSheetProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onOpenRecharge?: () => void;
+}
+
+const SECTORS = [
+  { index: 0, item: "77", label: "77", color: "#f59e0b" },
+  { index: 1, item: "apple", label: "🍎", color: "#38bdf8" },
+  { index: 2, item: "watermelon", label: "🍉", color: "#a855f7" },
+  { index: 3, item: "apple", label: "🍎", color: "#38bdf8" },
+  { index: 4, item: "watermelon", label: "🍉", color: "#a855f7" },
+  { index: 5, item: "apple", label: "🍎", color: "#38bdf8" },
+  { index: 6, item: "watermelon", label: "🍉", color: "#a855f7" },
+  { index: 7, item: "apple", label: "🍎", color: "#38bdf8" },
+  { index: 8, item: "watermelon", label: "🍉", color: "#a855f7" },
+];
+
+export default function LuckyWheelSheet({ isOpen, onClose, onOpenRecharge }: LuckyWheelSheetProps) {
+  const token = getActiveToken();
+  const data = useQuery(api.wheelGame.getState, { tokenOverride: token ?? undefined });
+  const leaderboard = useQuery(api.wheelGame.getLeaderboard, {});
+  const ensureRunning = useMutation(api.wheelGame.ensureGameRunning);
+  const placeBetMut = useMutation(api.wheelGame.placeBet);
+
+  const [selectedChip, setSelectedChip] = useState<number>(1000);
+  const [timeLeft, setTimeLeft] = useState<number>(15);
+  const [rotation, setRotation] = useState<number>(0);
+  const [muted, setMuted] = useState<boolean>(false);
+  const [showLowBalance, setShowLowBalance] = useState<boolean>(false);
+  const [showLeaderboard, setShowLeaderboard] = useState<boolean>(false);
+  const [activeRankTab, setActiveRankTab] = useState<string>("VI");
+  const [lastRoundBets, setLastRoundBets] = useState<{ watermelon: number; "77": number; apple: number }>({
+    watermelon: 0,
+    "77": 0,
+    apple: 0,
+  });
+
+  // العملات الذهبية المتطايرة داخل الصناديق الثلاثة
+  const [coinsPile, setCoinsPile] = useState<{
+    watermelon: { id: number; x: number; y: number }[];
+    "77": { id: number; x: number; y: number }[];
+    apple: { id: number; x: number; y: number }[];
+  }>({ watermelon: [], "77": [], apple: [] });
+
+  const lastSpunRound = useRef<number | null>(null);
+
+  // التأكد من أن محرك السيرفر يعمل فور فتح اللعبة
+  useEffect(() => {
+    if (isOpen) {
+      ensureRunning().catch(() => {});
+    }
+  }, [isOpen]);
+
+  // حساب العداد التنازلي بالثواني بدقة ومزامنته مع السيرفر
+  useEffect(() => {
+    if (!data?.state) return;
+    const state = data.state;
+
+    const updateTimer = () => {
+      if (state.status === "BETTING") {
+        const diff = Math.max(0, Math.ceil((state.endTime - Date.now()) / 1000));
+        setTimeLeft(diff);
+        if (diff === 0) {
+          ensureRunning().catch(() => {});
+        }
+      } else {
+        setTimeLeft(0);
+      }
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 300);
+    return () => clearInterval(interval);
+  }, [data?.state?.status, data?.state?.endTime, data?.state?.roundNumber]);
+
+  // التحكم بدوران العجلة عند تحول الحالة إلى SPINNING
+  useEffect(() => {
+    if (!data?.state) return;
+    const state = data.state;
+
+    if (state.status === "BETTING") {
+      // تصفير العملات المرئية عند بداية جولة جديدة
+      if (lastSpunRound.current !== null && lastSpunRound.current !== state.roundNumber) {
+        setCoinsPile({ watermelon: [], "77": [], apple: [] });
+      }
+    }
+
+    if (
+      state.status === "SPINNING" &&
+      state.winningIndex !== undefined &&
+      lastSpunRound.current !== state.roundNumber
+    ) {
+      lastSpunRound.current = state.roundNumber;
+
+      // حفظ رهانات المستخدم لاستخدامها في زر "كرر"
+      if (data.myTotalBet > 0) {
+        setLastRoundBets(data.myBets);
+      }
+
+      const sectorAngle = state.winningIndex * 40 + 20;
+      const targetStopAngle = 360 - sectorAngle;
+      const extraSpins = 360 * 6; // 6 دورات كاملة سريعة ثم تباطؤ
+      setRotation((prev) => {
+        const normalizedPrev = prev % 360;
+        const delta = (targetStopAngle - normalizedPrev + 360) % 360;
+        return prev + extraSpins + delta;
+      });
+    }
+  }, [data?.state?.status, data?.state?.winningIndex, data?.state?.roundNumber]);
+
+  // محاكاة تطاير عملات اللاعبين الآخرين في الغرفة أثناء وقت الرهان
+  useEffect(() => {
+    if (!isOpen || data?.state?.status !== "BETTING") return;
+    const timer = setInterval(() => {
+      const items: ("watermelon" | "77" | "apple")[] = ["watermelon", "77", "apple"];
+      const randomItem = items[Math.floor(Math.random() * items.length)];
+      addVisualCoin(randomItem);
+    }, 900);
+    return () => clearInterval(timer);
+  }, [isOpen, data?.state?.status]);
+
+  const addVisualCoin = (item: "watermelon" | "77" | "apple") => {
+    setCoinsPile((prev) => {
+      const currentList = prev[item];
+      if (currentList.length > 18) return prev;
+      return {
+        ...prev,
+        [item]: [
+          ...currentList,
+          {
+            id: Date.now() + Math.random(),
+            x: 15 + Math.random() * 68,
+            y: 18 + Math.random() * 48,
+          },
+        ],
+      };
+    });
+  };
+
+  const handlePlaceBet = async (item: "watermelon" | "77" | "apple") => {
+    if (!data?.state || data.state.status !== "BETTING" || timeLeft <= 0) return;
+
+    if (data.userCoins < selectedChip) {
+      setShowLowBalance(true);
+      return;
+    }
+
+    addVisualCoin(item);
+    try {
+      await placeBetMut({ item, amount: selectedChip, tokenOverride: token ?? undefined });
+    } catch (err: any) {
+      if (err?.message?.includes("LOW_BALANCE")) {
+        setShowLowBalance(true);
+      }
+    }
+  };
+
+  const handleRepeatBet = async () => {
+    if (!data?.state || data.state.status !== "BETTING" || timeLeft <= 0) return;
+    const totalNeeded = lastRoundBets.watermelon + lastRoundBets["77"] + lastRoundBets.apple;
+    if (totalNeeded <= 0) return;
+    if (data.userCoins < totalNeeded) {
+      setShowLowBalance(true);
+      return;
+    }
+
+    for (const item of ["watermelon", "77", "apple"] as const) {
+      if (lastRoundBets[item] > 0) {
+        addVisualCoin(item);
+        await placeBetMut({ item, amount: lastRoundBets[item], tokenOverride: token ?? undefined }).catch(() => {});
+      }
+    }
+  };
+
+  if (!isOpen) return null;
+
+  const state = data?.state;
+  const isBetting = state?.status === "BETTING" && timeLeft > 0;
+  const isResultModal = state?.status === "RESULT";
+
+  const renderIcon = (item: string) => {
+    if (item === "77") return <img src="/wheel/seven.png" alt="77" className="w-8 h-8 object-contain drop-shadow" />;
+    if (item === "watermelon") return <img src="/wheel/watermelon.png" alt="watermelon" className="w-8 h-8 object-contain drop-shadow" />;
+    return <img src="/wheel/apple.png" alt="apple" className="w-8 h-8 object-contain drop-shadow" />;
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-xs select-none" dir="rtl">
+      <div className="relative w-full max-w-[430px] h-[85vh] rounded-t-3xl border-t-2 border-yellow-400 bg-gradient-to-b from-[#4c1d95] via-[#2e1065] to-[#170536] p-3 flex flex-col justify-between overflow-hidden shadow-2xl text-white">
+        
+        {/* زر الإغلاق العلوي */}
+        <button
+          onClick={onClose}
+          className="absolute top-2.5 left-2.5 z-30 w-8 h-8 rounded-full bg-white/15 border border-yellow-400/60 flex items-center justify-center active:scale-90"
+        >
+          <X size={18} />
+        </button>
+
+        {/* الشريط العلوي والجاكبوت */}
+        <div className="flex items-center justify-between px-1 z-20">
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => setMuted(!muted)}
+              className="w-8 h-8 rounded-full bg-purple-900/80 border border-yellow-400 flex items-center justify-center"
+            >
+              {muted ? <VolumeX size={15} /> : <Volume2 size={15} />}
+            </button>
+            <button
+              onClick={() => setShowLeaderboard(true)}
+              className="w-8 h-8 rounded-full bg-purple-900/80 border border-yellow-400 flex items-center justify-center text-yellow-300"
+            >
+              <Trophy size={15} />
+            </button>
+          </div>
+
+          <div
+            className="px-5 py-1 rounded-full bg-gradient-to-b from-amber-600 to-amber-900 border-2 border-yellow-300 shadow-[0_0_15px_rgba(253,224,71,0.5)] font-black text-sm tracking-wider"
+            dir="ltr"
+          >
+            Jackpot: <span className="text-yellow-300">{state?.jackpot ?? 715848}</span>
+          </div>
+
+          <div className="flex items-center gap-1.5 ml-8">
+            <div className="flex items-center gap-0.5 text-[10px] text-emerald-400 font-bold bg-black/30 px-1.5 py-0.5 rounded-full">
+              <Wifi size={11} /> 78ms
+            </div>
+          </div>
+        </div>
+
+        {/* منطقة العجلة الدوارة */}
+        <div className="relative w-[265px] h-[265px] mx-auto my-1 flex items-center justify-center">
+          {/* السهم العلوي الحقيقي المفرغ */}
+          <img
+            src="/wheel/pointer.png"
+            alt="pointer"
+            className="absolute -top-6 left-1/2 -translate-x-1/2 z-30 w-11 h-14 object-contain drop-shadow-[0_4px_6px_rgba(0,0,0,0.8)]"
+          />
+
+          {/* صورة العجلة الحقيقية المفرغة التي تدور */}
+          <div
+            className="w-full h-full rounded-full relative overflow-hidden flex items-center justify-center"
+            style={{
+              transform: `rotate(${rotation}deg)`,
+              transition:
+                state?.status === "SPINNING"
+                  ? "transform 4.2s cubic-bezier(0.12, 0.8, 0.18, 1)"
+                  : "none",
+            }}
+          >
+            <img src="/wheel/wheel.png" alt="wheel" className="w-full h-full object-contain drop-shadow-2xl" />
+          </div>
+
+          {/* الجوهرة البنفسجية المركزية الثابتة مع العداد */}
+          <div className="absolute z-20 w-16 h-16 rounded-full border-4 border-yellow-400 bg-gradient-to-br from-fuchsia-400 via-purple-700 to-indigo-950 shadow-[0_0_15px_rgba(0,0,0,0.9),inset_0_0_12px_#f0abfc] flex items-center justify-center">
+            <span className="text-2xl font-black text-white drop-shadow">
+              {state?.status === "BETTING" ? timeLeft : ""}
+            </span>
+          </div>
+
+          {/* رقم الجولة */}
+          <div className="absolute -bottom-1 right-1 text-[11px] text-purple-200 font-semibold">
+            {state?.roundNumber ?? 2774} الجولة
+          </div>
+        </div>
+
+        {/* شريط سجل النتائج (History Bar) */}
+        <div className="bg-black/45 border border-purple-500/60 rounded-full px-3 py-1.5 flex items-center gap-2">
+          <span className="text-xs font-bold text-purple-200 shrink-0">نتيجة</span>
+          <div className="flex items-center gap-2 overflow-hidden flex-1">
+            {(state?.history ?? []).slice(0, 9).map((h, i) => (
+              <div key={i} className="relative flex items-center justify-center text-lg shrink-0">
+                {renderIcon(h)}
+                {i === 0 && (
+                  <span className="absolute -bottom-1 left-0 bg-emerald-500 text-[8px] font-black px-1 rounded text-white leading-tight">
+                    NEW
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* صناديق المراهنة الثلاثة (بطيخ x2 | 77 x8 | تفاح x2) */}
+        <div className="grid grid-cols-3 gap-2 my-1">
+          {[
+            { key: "watermelon" as const, img: "/wheel/watermelon.png", mult: "x2" },
+            { key: "77" as const, img: "/wheel/seven.png", mult: "x8" },
+            { key: "apple" as const, img: "/wheel/apple.png", mult: "x2" },
+          ].map((box) => {
+            const isWinner = state?.status !== "BETTING" && state?.winningItem === box.key;
+            return (
+              <button
+                key={box.key}
+                disabled={!isBetting}
+                onClick={() => handlePlaceBet(box.key)}
+                className={`relative rounded-2xl border-2 pt-3 pb-0 flex flex-col items-center overflow-hidden transition-all ${
+                  isWinner
+                    ? "border-yellow-300 bg-purple-800/90 shadow-[0_0_20px_#fde047] scale-[1.03]"
+                    : "border-purple-400/70 bg-gradient-to-b from-purple-800/60 to-indigo-950/90 active:scale-95"
+                } ${!isBetting ? "opacity-80 cursor-not-allowed" : ""}`}
+              >
+                {/* العملات الذهبية المتطايرة داخل الصندوق */}
+                <div className="absolute inset-0 pointer-events-none">
+                  {coinsPile[box.key].map((c) => (
+                    <div
+                      key={c.id}
+                      className="absolute w-3.5 h-3.5 rounded-full bg-gradient-to-b from-yellow-200 to-amber-500 border border-amber-700 shadow"
+                      style={{ left: `${c.x}%`, top: `${c.y}%` }}
+                    />
+                  ))}
+                </div>
+
+                <div className="relative z-10 flex items-center gap-1 my-1">
+                  <img src={box.img} alt="" className="w-10 h-10 object-contain drop-shadow" />
+                  <span className="text-sm font-black text-yellow-300">{box.mult}</span>
+                </div>
+
+                <div className="relative z-10 w-full bg-slate-950/80 border-t border-purple-500/50 py-1 text-center text-xs font-bold text-yellow-300">
+                  {data?.myBets?.[box.key] ?? 0}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* الشريط السفلي: الفيش + زر كرر + المحفظة */}
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {[
+                { val: 1000, label: "1K", bg: "bg-amber-600" },
+                { val: 5000, label: "5K", bg: "bg-purple-600" },
+                { val: 10000, label: "10K", bg: "bg-pink-600" },
+                { val: 50000, label: "50K", bg: "bg-emerald-600" },
+              ].map((chip) => (
+                <button
+                  key={chip.val}
+                  onClick={() => setSelectedChip(chip.val)}
+                  className={`w-11 h-11 rounded-full ${chip.bg} border-2 border-dashed flex items-center justify-center text-xs font-black shadow-lg transition-transform ${
+                    selectedChip === chip.val
+                      ? "-translate-y-1.5 scale-110 border-solid border-yellow-300 shadow-[0_0_12px_#fde047]"
+                      : "border-white/70 opacity-85"
+                  }`}
+                >
+                  {chip.label}
+                </button>
+              ))}
+            </div>
+
+            <button
+              disabled={!isBetting}
+              onClick={handleRepeatBet}
+              className="px-6 py-2 rounded-full bg-gradient-to-b from-amber-400 to-amber-600 border border-yellow-200 font-black text-sm shadow-md active:scale-95 disabled:opacity-50"
+            >
+              كرر
+            </button>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="text-[11px] text-purple-300">
+              {isBetting ? "المراهنة مفتوحة الآن" : "الرهان مغلق - العجلة تدور..."}
+            </div>
+            <div className="flex items-center gap-2 bg-black/50 border border-purple-500/60 rounded-full px-3 py-1">
+              <span className="text-yellow-400 font-black text-sm">{data?.userCoins ?? 0}</span>
+              <span>🪙</span>
+              <button
+                onClick={() => (onOpenRecharge ? onOpenRecharge() : setShowLowBalance(true))}
+                className="w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center font-bold text-xs"
+              >
+                <Plus size={13} />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* 1. نافذة إعلان الفائزين بعد كل جولة (حظاً سعيداً) */}
+        {isResultModal && (
+          <div className="absolute inset-0 z-40 bg-black/75 flex items-center justify-center p-4 animate-fade-in">
+            <div className="w-full rounded-2xl border-2 border-yellow-400 bg-gradient-to-b from-purple-900 via-indigo-950 to-slate-950 p-4 text-center shadow-2xl">
+              <div className="inline-block px-6 py-1 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 font-black text-sm mb-1">
+                حظاً سعيداً
+              </div>
+              <div className="text-xs text-purple-200">{state?.roundNumber} الجولة</div>
+              <div className="text-yellow-300 font-bold text-sm my-2">تهانينا للفائزين التاليين</div>
+
+              <div className="grid grid-cols-3 gap-2 my-3">
+                {(state?.topWinners && state.topWinners.length > 0
+                  ? state.topWinners
+                  : [
+                      { name: "Sniper", bet: 35000, win: 70000, avatarUrl: "" },
+                      { name: "صقر", bet: 93000, win: 186000, avatarUrl: "" },
+                      { name: "شيماء", bet: 20000, win: 40000, avatarUrl: "" },
+                    ]
+                ).map((w, idx) => (
+                  <div key={idx} className="bg-white/10 rounded-xl p-2 text-[11px] flex flex-col items-center">
+                    <div className="w-10 h-10 rounded-full border-2 border-yellow-400 bg-purple-700 flex items-center justify-center font-bold mb-1 overflow-hidden">
+                      {w.avatarUrl ? (
+                        <img src={w.avatarUrl} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        "👑"
+                      )}
+                    </div>
+                    <div className="font-bold truncate w-full">{w.name}</div>
+                    <div className="text-slate-300">الرهان: {w.bet}</div>
+                    <div className="text-yellow-300 font-bold">فوز: {w.win}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="bg-black/40 rounded-xl p-2.5 flex items-center justify-between text-xs border border-purple-500/30">
+                <span className="font-bold">💪 نتيجتك في الجولة</span>
+                <div className="flex gap-3">
+                  <span>
+                    الرهان: <b className="text-white">{data?.myTotalBet ?? 0}</b>
+                  </span>
+                  <span>
+                    فوز: <b className="text-yellow-300">{data?.myWin ?? 0}</b>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 2. نافذة الرصيد غير كافٍ */}
+        {showLowBalance && (
+          <div className="absolute inset-0 z-50 bg-black/70 flex items-center justify-center p-6">
+            <div className="bg-white text-slate-800 rounded-2xl p-5 w-full max-w-xs text-center shadow-2xl">
+              <div className="text-blue-600 font-black text-sm mb-2">🔥 HOT GAMES</div>
+              <div className="text-4xl my-3">👛</div>
+              <p className="font-bold text-sm mb-4">رصيدك غير كافي، هل تريد الشحن الآن؟</p>
+              <div className="flex justify-around gap-3">
+                <button
+                  onClick={() => {
+                    setShowLowBalance(false);
+                    if (onOpenRecharge) onOpenRecharge();
+                  }}
+                  className="flex-1 py-2 rounded-full bg-emerald-500 text-white font-bold text-sm"
+                >
+                  تأكيد
+                </button>
+                <button
+                  onClick={() => setShowLowBalance(false)}
+                  className="flex-1 py-2 rounded-full bg-slate-400 text-white font-bold text-sm"
+                >
+                  إلغاء
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 3. نافذة لوحة المتصدرين بالمستويات I إلى VI كما في الفيديو */}
+        {showLeaderboard && (
+          <div className="absolute inset-0 z-50 bg-black/80 flex items-center justify-center p-3">
+            <div className="w-full h-[78%] rounded-2xl border-2 border-yellow-400 bg-[#2a0b4e] flex flex-col overflow-hidden">
+              <div className="flex items-center justify-between px-3 py-2 bg-purple-950 border-b border-yellow-400/40">
+                <span className="text-yellow-300 font-black text-sm">🏆 قائمة المتصدرين</span>
+                <button onClick={() => setShowLeaderboard(false)} className="text-white/80">
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div className="flex justify-around py-2 bg-purple-900/50 border-b border-purple-700">
+                {["I", "II", "III", "IV", "V", "VI"].map((lvl) => (
+                  <button
+                    key={lvl}
+                    onClick={() => setActiveRankTab(lvl)}
+                    className={`w-9 h-9 rounded-full font-black text-xs border-2 ${
+                      activeRankTab === lvl
+                        ? "bg-red-600 border-yellow-300 text-white scale-110"
+                        : "bg-purple-800 border-purple-400 text-purple-200"
+                    }`}
+                  >
+                    {lvl}
+                  </button>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-4 text-[11px] font-bold text-yellow-200 bg-purple-950/90 py-1.5 px-2 text-center">
+                <span>الترتيب</span>
+                <span>اسم المستخدم</span>
+                <span>النقاط</span>
+                <span>مكافآت</span>
+              </div>
+
+              <div className="flex-1 overflow-y-auto divide-y divide-purple-800/50 text-xs">
+                {(leaderboard ?? []).map((u, i) => (
+                  <div key={u._id} className="grid grid-cols-4 items-center py-2 px-2 text-center">
+                    <span className="font-black text-yellow-400">#{i + 1}</span>
+                    <span className="truncate font-semibold">{u.name}</span>
+                    <span className="text-purple-200">{u.points}</span>
+                    <span className="text-yellow-300 font-bold">{u.reward}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
