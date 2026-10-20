@@ -543,27 +543,53 @@ export default function VipShopSheet({ onClose, onOpenRecharge }: Props) {
               ))}
             </div>
 
-            {/* الـ 4 دوائر السفلية للملكة */}
-            <div className="grid grid-cols-4 gap-2 px-3 mt-6">
+            {/* شبكة الـ 20 امتياز (5 صفوف × 4 أعمدة) */}
+            <div className="grid grid-cols-4 gap-x-2 gap-y-5 px-3 mt-6 mb-6">
               {[
-                { icon: Palette, label: "خلفية الغرفة" },
+                { icon: Crown, label: "مستوى الداعمين" },
+                { icon: Type, label: "لقب بلون وردي متدرج" },
                 { icon: Mic, label: "ديكور المايك" },
-                { icon: Type, label: "لقب بلون وردي متدرج جميل" },
-                { icon: TrendingUp, label: "مستوى الجاذبية" },
+                { icon: Palette, label: "خلفية الغرفة" },
+                { icon: Heart, label: "اهداء CP Lv.2" },
+                { icon: Mic, label: "المانح: مظهر المايكروفون +30" },
+                { icon: AudioLines, label: "اهداء موجة المايك +30 يوم" },
+                { icon: IdCard, label: "اهداء VIP6 +3 أيام" },
+                { icon: MessageCircle, label: "دردشة خاصة" },
+                { icon: Gift, label: "هدايا VIP الحصرية!" },
+                { icon: Coins, label: "اهداء: خبير الثروة" },
+                { icon: Heart, label: "اهداء: نقاط الحب" },
+                { icon: Ban, label: "يحظر المتابعة" },
+                { icon: Ghost, label: "تخفي" },
+                { icon: Wand2, label: "تصميم تأثير الدخول" },
+                { icon: ShieldOff, label: "تجنب الطرد" },
+                { icon: Eye, label: "عرض الزوار" },
+                { icon: Heart, label: "متابعة غير محدودة" },
+                { icon: IdCard, label: "شراء ايدي مميز" },
+                { icon: TrendingUp, label: "الأعلى في القائمة" },
               ].map((c, i) => {
                 const Icon = c.icon;
                 return (
-                  <div key={i} className="flex flex-col items-center text-center gap-2">
-                    <div className="w-14 h-14 rounded-full bg-gradient-to-b from-[#3d2c2e] to-[#1f1617] border border-[#e5c17b]/30 flex items-center justify-center shadow-inner">
-                      <Icon size={24} className="text-[#f5deb3]" />
+                  <div key={i} className="flex flex-col items-center text-center gap-1.5">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-b from-[#3d2c2e] to-[#1f1617] border border-[#e5c17b]/30 flex items-center justify-center shadow-inner">
+                      <Icon size={20} className="text-[#f5deb3]" />
                     </div>
-                    <span className="text-[#d6c7b2] text-[11px] font-semibold leading-tight">{c.label}</span>
+                    <span className="text-[#d6c7b2] text-[9px] font-semibold leading-tight max-w-[70px]">{c.label}</span>
                   </div>
                 );
               })}
             </div>
+            
+            {/* بطاقة VIP هوية */}
+            <div className="flex flex-col items-end px-5 mb-4">
+              <div className="flex flex-col items-center gap-1.5">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-b from-[#3d2c2e] to-[#1f1617] border border-[#e5c17b]/30 flex items-center justify-center shadow-inner">
+                  <IdCard size={20} className="text-[#f5deb3]" />
+                </div>
+                <span className="text-[#d6c7b2] text-[9px] font-semibold">بطاقة هوية VIP</span>
+              </div>
+            </div>
           </div>
-                ) : mainTab === "special" ? (
+        ) : mainTab === "special" ? (
           /* ================= تبويب الخاص (Binmo Style) ================= */
           <div className="pb-24">
             {/* البانر العلوي */}
