@@ -11,9 +11,9 @@ import {
   Gift, Star, Eye, Heart, Percent, TrendingUp, MessageCircle,
   Zap, ShoppingBag, Wand2, Award, Ban, Ghost, IdCard, Share2,
   Megaphone, ShieldOff, BadgeCheck, Users, Mic, UserCircle,
-  Car, Home, AudioLines, MicVocal, Bell, Music, Palette,
-  LayoutGrid, Type, Gem, ScrollText, Shield, Trophy,
-, Lock } from "lucide-react";
+  Car, Home, AudioLines, MicVocal, Bell, Music, Palette, LayoutGrid,
+  Type, Gem, ScrollText, Shield, Trophy, Lock,
+} from "lucide-react";
 
 interface Props {
   onClose: () => void;
