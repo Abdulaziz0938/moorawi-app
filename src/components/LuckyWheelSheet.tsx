@@ -38,6 +38,7 @@ const SECTORS = [
 export default function LuckyWheelSheet({ isOpen, onClose, onOpenRecharge }: LuckyWheelSheetProps) {
   const token = getActiveToken();
   const data = useQuery(api.wheelGame.getState, { tokenOverride: token ?? undefined });
+  const [leaderboardTab, setLeaderboardTab] = useState<"day" | "week" | "all">("day");
   const leaderboardData = useQuery(api.wheelGame.getLeaderboard, { period: leaderboardTab, tokenOverride: getActiveToken() ?? undefined });
   const leaderboard = leaderboardData?.top10 || [];
   const myRank = leaderboardData?.myRank;
@@ -54,8 +55,7 @@ export default function LuckyWheelSheet({ isOpen, onClose, onOpenRecharge }: Luc
   const [muted, setMuted] = useState<boolean>(false);
   const [showLowBalance, setShowLowBalance] = useState<boolean>(false);
   const [showLeaderboard, setShowLeaderboard] = useState<boolean>(false);
-  const [leaderboardTab, setLeaderboardTab] = useState<"day" | "week" | "all">("day");
-  const [activeRankTab, setActiveRankTab] = useState<string>("VI");
+const [activeRankTab, setActiveRankTab] = useState<string>("VI");
   const [lastRoundBets, setLastRoundBets] = useState<{ watermelon: number; "77": number; apple: number }>({
     watermelon: 0,
     "77": 0,
@@ -64,6 +64,17 @@ export default function LuckyWheelSheet({ isOpen, onClose, onOpenRecharge }: Luc
 
   // العملات الذهبية المتطايرة داخل الصناديق الثلاثة
   const [coinsPile, setCoinsPile] = useState<{
+
+  // حساب النسب المئوية للإحصائيات
+  const historyList = state?.history ?? [];
+  const totalHistory = historyList.length || 1;
+  const appleCount = historyList.filter((h: string) => h === "apple").length;
+  const melonCount = historyList.filter((h: string) => h === "watermelon").length;
+  const sevenCount = historyList.filter((h: string) => h === "77").length;
+  const applePct = Math.round((appleCount / totalHistory) * 100);
+  const melonPct = Math.round((melonCount / totalHistory) * 100);
+  const sevenPct = Math.round((sevenCount / totalHistory) * 100);
+
     watermelon: { id: number; x: number; y: number; img: string }[];
     "77": { id: number; x: number; y: number; img: string }[];
     apple: { id: number; x: number; y: number; img: string }[];
@@ -570,7 +581,7 @@ export default function LuckyWheelSheet({ isOpen, onClose, onOpenRecharge }: Luc
                           {u.avatarUrl ? <img src={u.avatarUrl} className="w-7 h-7 rounded-full object-cover border border-white/20" alt="" /> : <div className="w-7 h-7 rounded-full bg-purple-700" />}
                         </div>
                         <div className="flex items-center justify-center gap-1 font-black text-yellow-300">
-                          <img src={imgCoinsSmall || "/rewards/coins-small.png"} className="w-4 h-4" alt="" onError={(e) => (e.target as any).style.display='none'} />
+                          <img src="/rewards/coins-small.png" className="w-4 h-4" alt="" onError={(e) => (e.target as any).style.display='none'} />
                           {u.reward?.toLocaleString() ?? 0}
                         </div>
                       </div>
