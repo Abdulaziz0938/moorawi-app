@@ -102,17 +102,7 @@ export default function LuckyWheelSheet({ isOpen, onClose, onOpenRecharge }: Luc
 
     updateTimer();
     const interval = setInterval(updateTimer, 300);
-    // حساب النسب المئوية للإحصائيات
-  const historyList = state?.history ?? [];
-  const totalHistory = historyList.length || 1;
-  const appleCount = historyList.filter((h: string) => h === "apple").length;
-  const melonCount = historyList.filter((h: string) => h === "watermelon").length;
-  const sevenCount = historyList.filter((h: string) => h === "77").length;
-  const applePct = Math.round((appleCount / totalHistory) * 100);
-  const melonPct = Math.round((melonCount / totalHistory) * 100);
-  const sevenPct = Math.round((sevenCount / totalHistory) * 100);
-
-  return () => clearInterval(interval);
+    return () => clearInterval(interval);
   }, [data?.state?.status, data?.state?.endTime, data?.state?.roundNumber]);
 
   // التحكم بدوران العجلة عند تحول الحالة إلى SPINNING
@@ -173,7 +163,7 @@ export default function LuckyWheelSheet({ isOpen, onClose, onOpenRecharge }: Luc
     });
   }, [liveBets, data?.state?.status]);
 
-  const addVisualCoin = (item: "watermelon" | "77" | "apple") => {
+  const addVisualCoin = (item: "watermelon" | "77" | "apple", img: string) => {
     setCoinsPile((prev) => {
       const currentList = prev[item];
       if (currentList.length > 18) return prev;

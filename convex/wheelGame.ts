@@ -110,6 +110,10 @@ export const ensureGameRunning = mutation({
     // إذا علقت الجولة لأكثر من 25 ثانية بسبب إعادة تشغيل السيرفر، نعيد تنشيطها تلقائياً
     if (now > existing.endTime + 12000) {
       const nextRound = existing.roundNumber + 1;
+      // مسح الرهانات القديمة من الجدول الحي
+      const oldBets = await ctx.db.query("wheelLiveBets").collect();
+      for (const b of oldBets) await ctx.db.delete(b._id);
+
       await ctx.db.patch(existing._id, {
         roundNumber: nextRound,
         status: "BETTING",
@@ -132,6 +136,12 @@ export const placeBet = mutation({
   handler: async (ctx, args) => {
     const user = await requireUser(ctx, args.tokenOverride);
     if (args.amount <= 0) throw new Error("قيمة الرهان غير صالحة");
+
+    await ctx.db.insert("wheelLiveBets", {
+      item: args.item,
+      amount: args.amount,
+      createdAt: Date.now(),
+    });
 
     const state = await ctx.db
       .query("wheelState")
@@ -251,7 +261,7 @@ export const spinWheel = internalMutation({
         win: w.totalWin,
       }));
 
-    const newHistory = [winner.item, ...state.history].slice(0, 10);
+    const newHistory = [winner.item, ...state.history].slice(0, 50);
 
     await ctx.db.patch(state._id, {
       status: "SPINNING",
@@ -314,5 +324,13 @@ export const startNextRound = internalMutation({
     await ctx.scheduler.runAfter(15000, internal.wheelGame.spinWheel, {
       roundNumber: args.roundNumber,
     });
+  },
+});
+
+
+export const getLiveBets = query({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db.query("wheelLiveBets").withIndex("by_createdAt").order("desc").take(10);
   },
 });
