@@ -67,19 +67,50 @@ export const getState = query({
 });
 
 export const getLeaderboard = query({
-  args: {},
-  handler: async (ctx) => {
-    const users = await ctx.db.query("users").take(50);
-    return users
-      .map((u) => ({
-        _id: u._id,
-        name: u.name ?? "مستخدم",
-        avatarUrl: u.avatarUrl,
-        points: (u.totalSent ?? 0) + (u.coins ?? 0),
-        reward: Math.floor(((u.totalSent ?? 0) + (u.coins ?? 0)) * 0.14),
-      }))
-      .sort((a, b) => b.points - a.points)
-      .slice(0, 10);
+  args: {
+    period: v.union(v.literal("day"), v.literal("week"), v.literal("all")),
+    tokenOverride: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    let since = 0;
+    if (args.period === "day") since = now - 24 * 60 * 60 * 1000;
+    else if (args.period === "week") since = now - 7 * 24 * 60 * 60 * 1000;
+
+    const allWins = await ctx.db
+      .query("wheelWins")
+      .withIndex("by_createdAt")
+      .filter((q) => q.gte(q.field("createdAt"), since))
+      .collect();
+
+    // تجميع الأرباح لكل مستخدم
+    const userMap = new Map();
+    for (const w of allWins) {
+      const uid = w.userId;
+      if (!userMap.has(uid)) {
+        userMap.set(uid, { _id: uid, name: w.name, avatarUrl: w.avatarUrl, points: 0 });
+      }
+      userMap.get(uid).points += w.profit;
+    }
+
+    const sorted = Array.from(userMap.values()).sort((a, b) => b.points - a.points);
+    const top10 = sorted.slice(0, 10);
+    
+    // إيجاد ترتيب المستخدم الحالي
+    let myRank = null;
+    if (args.tokenOverride) {
+      const me = await requireUser(ctx, args.tokenOverride);
+      if (me) {
+        const myIdx = sorted.findIndex((u) => u._id === me._id);
+        if (myIdx !== -1) {
+          myRank = { ...sorted[myIdx], rank: myIdx + 1 };
+        } else {
+          myRank = { _id: me._id, name: me.name ?? "أنت", avatarUrl: me.avatarUrl, points: 0, rank: 0 };
+        }
+      }
+    }
+
+    return { top10, myRank };
   },
 });
 
@@ -162,6 +193,7 @@ export const placeBet = mutation({
       coins: currentCoins - args.amount,
       totalSent: (user.totalSent ?? 0) + args.amount,
     });
+
 
     await ctx.db.patch(state._id, {
       jackpot: state.jackpot + Math.floor(args.amount * 0.05),
@@ -260,6 +292,40 @@ export const spinWheel = internalMutation({
         bet: w.totalBet,
         win: w.totalWin,
       }));
+
+    // تسجيل الأرباح لكل فائز في جدول wheelWins
+    const allBetsForRound = await ctx.db
+      .query("wheelBets")
+      .withIndex("by_round", (q) => q.eq("roundNumber", state.roundNumber))
+      .collect();
+      
+    const userTotals = new Map();
+    for (const b of allBetsForRound) {
+      if (!userTotals.has(b.userId)) {
+        userTotals.set(b.userId, { userId: b.userId, name: b.userName, avatarUrl: b.userAvatar, totalBet: 0, totalWin: 0 });
+      }
+      userTotals.get(b.userId).totalBet += b.amount;
+    }
+
+    const winnerItem = winner.item;
+    const mult = winnerItem === "77" ? 8 : 2;
+    for (const b of allBetsForRound) {
+      if (b.item === winnerItem) {
+        userTotals.get(b.userId).totalWin += b.amount * mult;
+      }
+    }
+
+    for (const w of Array.from(userTotals.values())) {
+      if (w.totalWin > 0) {
+        await ctx.db.insert("wheelWins", {
+          userId: w.userId,
+          name: w.name,
+          avatarUrl: w.avatarUrl,
+          profit: w.totalWin - w.totalBet,
+          createdAt: Date.now(),
+        });
+      }
+    }
 
     const newHistory = [winner.item, ...state.history].slice(0, 50);
 
