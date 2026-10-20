@@ -40,8 +40,12 @@ export default function LuckyWheelSheet({ isOpen, onClose, onOpenRecharge }: Luc
   const data = useQuery(api.wheelGame.getState, { tokenOverride: token ?? undefined });
   const leaderboard = useQuery(api.wheelGame.getLeaderboard, {});
   const ensureRunning = useMutation(api.wheelGame.ensureGameRunning);
+  const liveBets = useQuery(api.wheelGame.getLiveBets);
   const placeBetMut = useMutation(api.wheelGame.placeBet);
 
+  const [screen, setScreen] = useState<"lobby" | "game">("lobby");
+  const [showStats, setShowStats] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [selectedChip, setSelectedChip] = useState<number>(1000);
   const [timeLeft, setTimeLeft] = useState<number>(15);
   const [rotation, setRotation] = useState<number>(0);
@@ -57,12 +61,20 @@ export default function LuckyWheelSheet({ isOpen, onClose, onOpenRecharge }: Luc
 
   // العملات الذهبية المتطايرة داخل الصناديق الثلاثة
   const [coinsPile, setCoinsPile] = useState<{
-    watermelon: { id: number; x: number; y: number }[];
-    "77": { id: number; x: number; y: number }[];
-    apple: { id: number; x: number; y: number }[];
+    watermelon: { id: number; x: number; y: number; img: string }[];
+    "77": { id: number; x: number; y: number; img: string }[];
+    apple: { id: number; x: number; y: number; img: string }[];
   }>({ watermelon: [], "77": [], apple: [] });
 
   const lastSpunRound = useRef<number | null>(null);
+
+  const handleEnterGame = () => {
+    setIsLoading(true);
+    setTimeout(() => {
+      setScreen("game");
+      setIsLoading(false);
+    }, 1500); // ثانية ونصف تحميل
+  };
 
   // التأكد من أن محرك السيرفر يعمل فور فتح اللعبة
   useEffect(() => {
@@ -90,7 +102,17 @@ export default function LuckyWheelSheet({ isOpen, onClose, onOpenRecharge }: Luc
 
     updateTimer();
     const interval = setInterval(updateTimer, 300);
-    return () => clearInterval(interval);
+    // حساب النسب المئوية للإحصائيات
+  const historyList = state?.history ?? [];
+  const totalHistory = historyList.length || 1;
+  const appleCount = historyList.filter((h: string) => h === "apple").length;
+  const melonCount = historyList.filter((h: string) => h === "watermelon").length;
+  const sevenCount = historyList.filter((h: string) => h === "77").length;
+  const applePct = Math.round((appleCount / totalHistory) * 100);
+  const melonPct = Math.round((melonCount / totalHistory) * 100);
+  const sevenPct = Math.round((sevenCount / totalHistory) * 100);
+
+  return () => clearInterval(interval);
   }, [data?.state?.status, data?.state?.endTime, data?.state?.roundNumber]);
 
   // التحكم بدوران العجلة عند تحول الحالة إلى SPINNING
@@ -117,8 +139,10 @@ export default function LuckyWheelSheet({ isOpen, onClose, onOpenRecharge }: Luc
         setLastRoundBets(data.myBets);
       }
 
-      const sectorAngle = state.winningIndex * 40 + 20;
-      const targetStopAngle = 360 - sectorAngle;
+      // حساب الزاوية بحيث يتوقف السهم في منتصف القطاع بدقة
+      const sectorAngle = (state.winningIndex * 40) + 20; 
+      // إضافة إزاحة صغيرة للتأكد من أن السهم في القلب وليس على الحافة
+      const targetStopAngle = 360 - sectorAngle; 
       const extraSpins = 360 * 6; // 6 دورات كاملة سريعة ثم تباطؤ
       setRotation((prev) => {
         const normalizedPrev = prev % 360;
@@ -128,16 +152,26 @@ export default function LuckyWheelSheet({ isOpen, onClose, onOpenRecharge }: Luc
     }
   }, [data?.state?.status, data?.state?.winningIndex, data?.state?.roundNumber]);
 
-  // محاكاة تطاير عملات اللاعبين الآخرين في الغرفة أثناء وقت الرهان
+  // مراقبة الرهانات الحقيقية وتطاير الفيشات
+  const processedBets = useRef<Set<string>>(new Set());
   useEffect(() => {
-    if (!isOpen || data?.state?.status !== "BETTING") return;
-    const timer = setInterval(() => {
-      const items: ("watermelon" | "77" | "apple")[] = ["watermelon", "77", "apple"];
-      const randomItem = items[Math.floor(Math.random() * items.length)];
-      addVisualCoin(randomItem);
-    }, 900);
-    return () => clearInterval(timer);
-  }, [isOpen, data?.state?.status]);
+    if (!liveBets || data?.state?.status !== "BETTING") return;
+    
+    liveBets.forEach((bet: any) => {
+      if (!processedBets.current.has(bet._id)) {
+        processedBets.current.add(bet._id);
+        
+        // تحديد صورة الفيشة بناءً على المبلغ الحقيقي
+        let chipImg = img100;
+        if (bet.amount >= 50000) chipImg = img50k;
+        else if (bet.amount >= 10000) chipImg = img10k;
+        else if (bet.amount >= 5000) chipImg = img5k;
+        else if (bet.amount >= 1000) chipImg = img1k;
+        
+        addVisualCoin(bet.item as any, chipImg);
+      }
+    });
+  }, [liveBets, data?.state?.status]);
 
   const addVisualCoin = (item: "watermelon" | "77" | "apple") => {
     setCoinsPile((prev) => {
@@ -292,10 +326,13 @@ export default function LuckyWheelSheet({ isOpen, onClose, onOpenRecharge }: Luc
           </div>
         </div>
 
-        {/* شريط سجل النتائج (History Bar) */}
-        <div className="bg-black/45 border border-purple-500/60 rounded-full px-3 py-1.5 flex items-center gap-2">
+        {/* شريط سجل النتائج (History Bar) - قابل للنقر */}
+        <div 
+          onClick={() => setShowStats(true)}
+          className="bg-black/45 border border-purple-500/60 rounded-full px-3 py-1.5 flex items-center gap-2 cursor-pointer active:scale-95 transition hover:bg-black/60"
+        >
           <span className="text-xs font-bold text-purple-200 shrink-0">نتيجة</span>
-          <div className="flex items-center gap-2 overflow-hidden flex-1">
+          <div className="flex items-center gap-2 overflow-hidden flex-1 pointer-events-none">
             {(state?.history ?? []).slice(0, 9).map((h, i) => (
               <div key={i} className="relative flex items-center justify-center text-lg shrink-0">
                 {renderIcon(h)}
@@ -331,10 +368,12 @@ export default function LuckyWheelSheet({ isOpen, onClose, onOpenRecharge }: Luc
                 {/* العملات الذهبية المتطايرة داخل الصندوق */}
                 <div className="absolute inset-0 pointer-events-none">
                   {coinsPile[box.key].map((c) => (
-                    <div
+                    <img
                       key={c.id}
-                      className="absolute w-3.5 h-3.5 rounded-full bg-gradient-to-b from-yellow-200 to-amber-500 border border-amber-700 shadow"
-                      style={{ left: `${c.x}%`, top: `${c.y}%` }}
+                      src={c.img}
+                      alt="chip"
+                      className="absolute w-5 h-5 object-contain drop-shadow-md"
+                      style={{ left: `${c.x}%`, top: `${c.y}%`, transform: "translate(-50%, -50%)" }}
                     />
                   ))}
                 </div>
@@ -528,6 +567,59 @@ export default function LuckyWheelSheet({ isOpen, onClose, onOpenRecharge }: Luc
           </div>
         )}
       </div>
-    </div>
+    
+      {/* نافذة الإحصائيات (Stats Modal) */}
+      {showStats && (
+        <div className="fixed inset-0 z-[200] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm" dir="rtl">
+          <div className="w-full max-w-md bg-[#3b1157] border-2 border-yellow-500 rounded-2xl shadow-[0_0_30px_rgba(234,179,8,0.3)] overflow-hidden">
+            
+            {/* Header */}
+            <div className="bg-[#4b1a6e] p-3 flex items-center justify-between border-b border-yellow-500/30">
+              <h3 className="text-yellow-400 font-black text-lg">نتيجة السحب</h3>
+              <button onClick={() => setShowStats(false)} className="w-8 h-8 rounded-full bg-black/30 flex items-center justify-center text-white hover:bg-black/50">
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Grid of History */}
+            <div className="p-4">
+              <div className="grid grid-cols-10 gap-1.5 mb-4">
+                {historyList.map((h: string, i: number) => (
+                  <div key={i} className="relative flex items-center justify-center w-7 h-7">
+                    <img 
+                      src={h === "apple" ? imgApple : h === "watermelon" ? imgWatermelon : imgSeven} 
+                      alt={h} 
+                      className="w-6 h-6 object-contain drop-shadow-md" 
+                    />
+                    {i === 0 && (
+                      <span className="absolute -top-2 -right-1 bg-[#22c55e] text-[7px] font-black px-1 rounded-sm text-white shadow-sm z-10">
+                        NEW
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Footer Percentages (باستخدام الصور الحقيقية) */}
+            <div className="bg-[#2d0d44] p-3 flex justify-around items-center border-t border-yellow-500/30">
+              <div className="flex items-center gap-2 bg-black/30 px-3 py-1.5 rounded-full border border-white/10 text-white font-bold text-sm">
+                <img src={imgApple} alt="apple" className="w-5 h-5 object-contain" /> 
+                <span>{applePct}%</span>
+              </div>
+              <div className="flex items-center gap-2 bg-black/30 px-3 py-1.5 rounded-full border border-white/10 text-white font-bold text-sm">
+                <img src={imgSeven} alt="77" className="w-5 h-5 object-contain" /> 
+                <span>{sevenPct}%</span>
+              </div>
+              <div className="flex items-center gap-2 bg-black/30 px-3 py-1.5 rounded-full border border-white/10 text-white font-bold text-sm">
+                <img src={imgWatermelon} alt="watermelon" className="w-5 h-5 object-contain" /> 
+                <span>{melonPct}%</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
+</div>
   );
 }
