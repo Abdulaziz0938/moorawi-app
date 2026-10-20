@@ -1,6 +1,6 @@
 
 // [custom-vip-tiers] عتبات مستويات الـ VIP متوافقة مع سعر الصرف (700 coins = $1)
-export const BINMO_VIP_LEVELS = [
+export const EZO_VIP_LEVELS = [
   { level: 0, minCoins: 0, usd: 0, name: "عادي" },
   { level: 1, minCoins: 7000, usd: 10, name: "فارس" },       // 7K Coins (~$10)
   { level: 2, minCoins: 35000, usd: 50, name: "نبيل" },      // 35K Coins (~$50)
@@ -16,7 +16,7 @@ export const BINMO_VIP_LEVELS = [
  */
 export function calculateEzoVipLevel(totalRechargedCoins: number = 0): number {
   let currentLevel = 0;
-  for (const tier of BINMO_VIP_LEVELS) {
+  for (const tier of EZO_VIP_LEVELS) {
     if (totalRechargedCoins >= tier.minCoins) {
       currentLevel = tier.level;
     } else {

@@ -28,7 +28,7 @@ const ICONS: Record<string, any> = {
 };
 
 // ثيمات الألوان المطابقة لصور Ezo بالبكسل لكل مستوى
-const BINMO_THEMES: Record<number, {
+const EZO_VIP_THEMES: Record<number, {
   bgGrad: string;
   cardBg: string;
   cardBorder: string;
@@ -183,7 +183,7 @@ export default function VipShopSheet({ onClose, onOpenRecharge }: Props) {
     exclusive: selected >= 5,
   };
 
-  const theme = BINMO_THEMES[selected] ?? BINMO_THEMES[1];
+  const theme = EZO_VIP_THEMES[selected] ?? EZO_VIP_THEMES[1];
 
   // تجميع كل المزايا الفريدة بالترتيب لجدول المقارنة السفلي
   const tableRows = useMemo(() => {
@@ -438,7 +438,7 @@ export default function VipShopSheet({ onClose, onOpenRecharge }: Props) {
         >
           {[7, 6, 5, 4, 3, 2, 1].map((lvl) => {
             const isSel = lvl === selected;
-            const t = BINMO_THEMES[lvl];
+            const t = EZO_VIP_THEMES[lvl];
             return (
               <button
                 key={lvl}
@@ -639,7 +639,7 @@ export default function VipShopSheet({ onClose, onOpenRecharge }: Props) {
                       <span
                         className="px-2.5 py-0.5 rounded text-xs font-black italic tracking-wider border"
                         style={{
-                          borderColor: BINMO_THEMES[lvl].accent,
+                          borderColor: EZO_VIP_THEMES[lvl].accent,
                           color: "#fde68a",
                           background: "rgba(0,0,0,0.6)",
                         }}
