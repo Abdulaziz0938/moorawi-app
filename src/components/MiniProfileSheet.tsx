@@ -104,7 +104,7 @@ export default function MiniProfileSheet({
   if (profile === undefined) {
     return (
       <div className="fixed inset-0 z-[110] flex items-end" dir="rtl">
-        <div className="absolute inset-0 bg-black" onClick={onClose} />
+        <div className="absolute inset-0 bg-black/20" onClick={onClose} />
         <div className="relative w-full max-w-md mx-auto bg-white/10 backdrop-blur-2xl rounded-t-3xl p-8 flex items-center justify-center border-t border-white/20">
           <Loader2 className="animate-spin text-white" size={32} />
         </div>
@@ -114,7 +114,7 @@ export default function MiniProfileSheet({
   if (profile === null) {
     return (
       <div className="fixed inset-0 z-[110] flex items-end" dir="rtl">
-        <div className="absolute inset-0 bg-black" onClick={onClose} />
+        <div className="absolute inset-0 bg-black/20" onClick={onClose} />
         <div className="relative w-full max-w-md mx-auto bg-white/10 backdrop-blur-2xl rounded-t-3xl p-8 text-center border-t border-white/20">
           <p className="text-white">المستخدم غير موجود</p>
         </div>
@@ -184,7 +184,7 @@ export default function MiniProfileSheet({
 
   return (
     <div className="fixed inset-0 z-[110] flex items-end" dir="rtl">
-      <div className="absolute inset-0 bg-black" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/20" onClick={onClose} />
 
       <div className="relative w-full max-w-md mx-auto">
         {/* Avatar straddling top edge */}
