@@ -111,6 +111,7 @@ export const currentForRoom = query({
     return {
       musicId: room.currentMusicId ?? null,
       name: room.currentMusicName ?? "",
+      source: (room as any).currentMusicSource ?? "local",
       url: room.currentMusicUrl,
       startedByName,
       startedAt: room.currentMusicStartedAt ?? 0,
@@ -537,5 +538,29 @@ export const setCover = mutation({
 
     await ctx.db.patch("userMusic", args.musicId, { coverUrl: args.coverUrl });
     return { ok: true };
+  },
+});
+
+// ═══ [ezo-music] Add YouTube track ═══
+export const addYouTubeTrack = mutation({
+  args: {
+    videoId: v.string(),
+    title: v.string(),
+    thumbnail: v.optional(v.string()),
+    durationSec: v.optional(v.number()),
+    tokenOverride: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
+    const id = await ctx.db.insert("userMusic", {
+      userId: me._id,
+      name: (args.title || "YouTube").trim().slice(0, 100),
+      url: args.videoId,
+      coverUrl: args.thumbnail,
+      durationSec: args.durationSec,
+      source: "youtube",
+      uploadedAt: Date.now(),
+    });
+    return { ok: true, id };
   },
 });

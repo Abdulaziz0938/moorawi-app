@@ -154,6 +154,7 @@ export default defineSchema({
     currentMusicName: v.optional(v.string()),
     currentMusicStartedBy: v.optional(v.id("users")),
     currentMusicStartedAt: v.optional(v.number()),
+    currentMusicSource: v.optional(v.string()),  // [ezo-music] "local" | "youtube"
     currentMusicPausedAt: v.optional(v.number()),  // seconds position when paused
     currentMusicIsPaused: v.optional(v.boolean()),
     // [ezo-music] Advanced music system
@@ -652,6 +653,7 @@ export default defineSchema({
     coverUrl: v.optional(v.string()),
     category: v.optional(v.string()),
     isPublic: v.optional(v.boolean()),       // مكتبة عامة (من الأدمن)
+    source: v.optional(v.string()),          // [ezo-music] "local" | "youtube"
     uploadedAt: v.number(),
   })
     .index("by_user", ["userId"])
