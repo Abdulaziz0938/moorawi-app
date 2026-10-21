@@ -674,11 +674,17 @@ export default function RoomView({ roomId, onLeave }: Props) {
     "m1":   [1],
     "m2":   [2],
     "m3":   [3],
+    "m4":   [4],
     "m5":   [5],
-    "m7":   [2, 5],
-    "m12b": [5, 5, 2],
+    "m6":   [3, 3],
+    "m7":   [3, 4],
+    "m8":   [4, 4],
+    "m9":   [4, 5],
+    "m10":  [5, 5],
+    "m12":  [4, 4, 4],
+    "m15":  [5, 5, 5],
     "m18":  [5, 5, 5, 3],
-    "m24":  [5, 5, 5, 5, 4],
+    "m24":  [6, 6, 6, 6],
   };
   const layoutRows = LAYOUT_ROWS[layout] ?? LAYOUT_ROWS["m7"];
   const maxRowCount = Math.max(...layoutRows);
@@ -937,10 +943,10 @@ export default function RoomView({ roomId, onLeave }: Props) {
                     if (!seat) return null;
                     const occupied = !!seat.userId;
                     return (
-                      <div key={seat._id} className="flex flex-col items-center justify-start pt-0.5 min-w-0" style={{ width: cellWidth }}>
+                      <div key={seat._id} className="flex flex-col items-center justify-start pt-0.5 min-w-0" style={{ width: cellWidth, maxWidth: '64px' }}>
                         <div data-mic-seat={seat.seatIndex}
                           onClick={() => handleSeatClick(seat.seatIndex, seat.userId)}
-                          className="relative w-full aspect-square flex-shrink-0 cursor-pointer">
+                          className="relative w-full aspect-square max-w-[56px] mx-auto flex-shrink-0 cursor-pointer">
                           {occupied ? (
                             <>
                               {(() => {
