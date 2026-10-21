@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import AssetVideo from "./ui/AssetVideo";
 import { useQuery } from "convex/react";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
@@ -317,7 +318,7 @@ export default function SettingsSheet({
               <label className={`relative cursor-pointer ${!isOwnerOrMod ? "opacity-50 pointer-events-none" : ""}`}>
                 <input ref={coverFileRef} type="file" accept="image/*" onChange={(e) => e.target.files?.[0] && handleCoverUpload(e.target.files[0])} className="hidden" />
                 <div className="w-24 h-24 rounded-2xl bg-white/10 flex items-center justify-center overflow-hidden border-2 border-white/20">
-                  {uploading ? <Loader2 className="animate-spin text-white" size={20} /> : coverUrl ? <img src={coverUrl} alt="" className="w-full h-full object-cover" /> : <ImageIcon size={28} className="text-white/60" />}
+                  {uploading ? <Loader2 className="animate-spin text-white" size={20} /> : coverUrl ? <AssetVideo url={coverUrl} type="auto" className="w-full h-full object-cover" /> : <ImageIcon size={28} className="text-white/60" />}
                 </div>
                 <div className="absolute bottom-1 left-1 bg-purple-600 rounded-full p-1.5 border-2 border-gray-950">
                   <ImageIcon size={12} className="text-white" />

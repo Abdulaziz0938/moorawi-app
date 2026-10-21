@@ -1,5 +1,6 @@
 // [ezo-live] بدء البث المباشر — يتحقق من الأهلية
 import { useState } from "react";
+import AssetVideo from "../ui/AssetVideo";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { getDeviceId } from "../../lib/device";
@@ -116,7 +117,7 @@ export default function LiveSetupSheet({ onClose, onStarted }: Props) {
           <div className="text-white/60 text-[11px] font-black mb-2">صورة الغلاف (اختياري)</div>
           <label className="block w-full aspect-video rounded-2xl overflow-hidden border-2 border-dashed border-white/20 bg-white/5 active:scale-95 transition cursor-pointer relative">
             {coverUrl ? (
-              <img src={coverUrl} alt="" className="w-full h-full object-cover" />
+              <AssetVideo url={coverUrl} type="auto" className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-white/40">
                 {uploading ? (

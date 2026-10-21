@@ -137,7 +137,7 @@ export default function BannersPanel({ token }: Props) {
               <Loader2 size={24} className="animate-spin text-white/60" />
             </div>
           ) : form.imageUrl ? (
-            <img src={form.imageUrl} alt="" className="aspect-video w-full object-cover" />
+            <AssetVideo url={form.imageUrl} type="auto" className="aspect-video w-full object-cover" />
           ) : (
             <div className="aspect-video flex flex-col items-center justify-center gap-2 text-white/60">
               <Upload size={28} />
