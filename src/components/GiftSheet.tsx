@@ -6,7 +6,7 @@ import { api } from "../../convex/_generated/api";
 import { Lock } from "lucide-react";
 import type { Id } from "../../convex/_generated/dataModel";
 import { getDeviceId } from "../lib/device";
-import { X, Coins, Loader2, Music, Heart, Globe, Mic, Users, Check, ChevronUp, Gift, Sparkles } from "lucide-react";
+import { X, Coins, Loader2, Music, Heart, Globe, Mic, Users, Check, ChevronUp, Gift, Sparkles, Clover } from "lucide-react";
 import { dialog } from "../lib/dialog";
 import { getActiveToken } from "../lib/session";
 
@@ -299,7 +299,10 @@ export default function GiftSheet({
                 category === c.key ? "text-white font-bold" : "text-white/60"
               }`}
             >
-              {c.label}
+              <span className="inline-flex items-center gap-1">
+                {c.key === "lucky" && <Clover size={10} className="text-green-400" />}
+                {c.label}
+              </span>
               {category === c.key && (
                 <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-emerald-400 rounded-full" />
               )}
@@ -349,7 +352,7 @@ export default function GiftSheet({
                           {g.isRelationship && <div className="w-3 h-3 rounded-sm bg-pink-500/95 flex items-center justify-center"><Heart size={7} className="text-white fill-white" /></div>}
                           {g.isGlobal && <div className="w-3 h-3 rounded-sm bg-blue-500/95 flex items-center justify-center"><Globe size={7} className="text-white" /></div>}
                           {g.hasSound && <div className="w-3 h-3 rounded-sm bg-purple-500/95 flex items-center justify-center"><Music size={7} className="text-white" /></div>}
-                          {g.isLucky && <div className="w-3 h-3 rounded-sm bg-yellow-500/95 flex items-center justify-center"><Sparkles size={7} className="text-white" /></div>}
+                          {g.isLucky && <div className="w-3 h-3 rounded-sm bg-green-500/95 flex items-center justify-center"><Clover size={7} className="text-white" /></div>}
                         </div>
                         {isSelected && (
                           <div className="absolute top-0.5 left-0.5 w-3.5 h-3.5 bg-emerald-500 rounded-full flex items-center justify-center">
