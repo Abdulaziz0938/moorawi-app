@@ -602,7 +602,7 @@ export default function VipShopSheet({ onClose, onOpenRecharge }: Props) {
                 <div className="text-right">
                   <span className="text-white font-black text-sm block" dir="ltr">{me?.userNumber || "مستخدم"}</span>
                 </div>
-                <img src={me?.avatarUrl || "/avatar.png"} alt="" className="w-10 h-10 rounded-full border-2 border-[#e5c17b]" />
+                <img src={"/avatar.png"} alt="" className="w-10 h-10 rounded-full border-2 border-[#e5c17b]" />
               </div>
 
               <div className="relative z-10 flex flex-col items-center mt-6">
@@ -612,7 +612,7 @@ export default function VipShopSheet({ onClose, onOpenRecharge }: Props) {
                   className="h-16 object-contain drop-shadow-[0_4px_15px_rgba(234,179,8,0.5)]" 
                 />
                 <p className="text-[#fde68a] font-bold text-sm mt-2 text-center px-6">
-                  استمتع بأكثر من {benefitsByLevel[currentLevel]?.length || 14} امتيازاً!
+                  استمتع بأكثر من {allBenefits?.filter((b: any) => b.level === currentLevel).length || 14} امتيازاً!
                 </p>
               </div>
             </div>
