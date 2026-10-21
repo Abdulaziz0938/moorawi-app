@@ -361,22 +361,22 @@ export default function SettingsSheet({
         )}
       </div>
 
-      {/* [ezo-cropper] مقصّ صورة الغرفة (مربّع) */}
+      {/* [ezo-cropper] مقصّ صورة الغرفة (مربّع 1:1) */}
       {pendingCover && (
         <ImageCropper
           file={pendingCover}
-          aspect={9/16}
+          aspect={1}
           shape="rect"
           onCancel={() => setPendingCover(null)}
           onConfirm={handleCroppedCoverConfirm}
         />
       )}
 
-      {/* [ezo-cropper] مقصّ خلفية الغرفة (16:9) */}
+      {/* [ezo-cropper] مقصّ خلفية الغرفة (طولي 9:16) */}
       {pendingBg && (
         <ImageCropper
           file={pendingBg}
-          aspect={16/9}
+          aspect={9/16}
           shape="rect"
           onCancel={() => setPendingBg(null)}
           onConfirm={handleCroppedBgConfirm}

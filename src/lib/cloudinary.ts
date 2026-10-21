@@ -32,7 +32,7 @@ export async function uploadToCloudinary(
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err?.error?.message || "فشل الرفع إلى Cloudinary");
+    throw new Error(`Cloudinary [${UPLOAD_PRESET}]: ${err?.error?.message || "خطأ غير معروف"}`);
   }
 
   const data = await res.json();
