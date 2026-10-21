@@ -959,7 +959,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
                                   <VipAvatar
                                     src={seat?.avatarUrl}
                                     name={seat?.userName ?? "?"}
-                                    size={44}
+                                    size={56}
                                     vip={seat?.userVip ?? 0}
                                     ring={false}
                                     customFrameUrl={finalUrl}
