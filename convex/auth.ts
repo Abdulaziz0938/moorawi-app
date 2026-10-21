@@ -47,7 +47,7 @@ async function getNextUserNumber(ctx: any): Promise<number> {
     .withIndex("by_name", (q: any) => q.eq("name", "userNumber"))
     .unique();
   if (!counter) {
-    await ctx.db.insert("counters", { name: "userNumber", value: 1001 });
+    await ctx.db.insert("counters", { name: "userNumber", value: 100000 });
     return 1000;
   }
   const current = counter.value;

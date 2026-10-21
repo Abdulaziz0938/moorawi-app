@@ -181,3 +181,26 @@ export const seedPackagesInternal = internalMutation({
     return { ok: true, created, note: "أسعار البيع: 700 كوينز = 1 USD" };
   },
 });
+
+
+// ═══════════════════════════════════════════════════════════
+// [ezo-migration] تحديث عداد الـ userNumber إلى 6 خانات
+// ═══════════════════════════════════════════════════════════
+
+export const fixUserNumberCounter = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const counter = await ctx.db
+      .query("counters")
+      .withIndex("by_name", (q) => q.eq("name", "userNumber"))
+      .first();
+
+    if (counter) {
+      await ctx.db.patch(counter._id, { value: 100000 });
+      return { ok: true, action: "updated_to_100000", oldValue: counter.value };
+    } else {
+      await ctx.db.insert("counters", { name: "userNumber", value: 100000 });
+      return { ok: true, action: "created_at_100000" };
+    }
+  },
+});
