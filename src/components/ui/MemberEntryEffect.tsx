@@ -26,7 +26,7 @@ export default function MemberEntryEffect({
   return (
     <EntryEffectOverlay
       url={effect.imageUrl}
-      type={(effect as any).previewType || "image"}
+      type="auto"
       onFinish={onDone}
     />
   );
