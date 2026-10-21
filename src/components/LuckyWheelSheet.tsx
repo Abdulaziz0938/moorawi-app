@@ -314,16 +314,18 @@ const [activeRankTab, setActiveRankTab] = useState<string>("VI");
 
           {/* العداد المركزي الثابت مع الحلقة الذهبية والجوهرة لمنع أي رجفة */}
           <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
+            {/* الجوهرة (في الخلف) */}
             <img
               src={imgCenterGem}
               alt=""
-              className="absolute w-[25.5%] h-[25.5%] rounded-full object-fill shadow-[0_0_12px_rgba(0,0,0,0.6)]"
+              className="absolute w-[26%] h-[26%] rounded-full object-fill z-0"
             />
+            {/* العداد (في الأمام بوضوح تام) */}
             <span
-              className="text-3xl font-black text-white"
+              className="relative z-10 text-4xl font-black text-white"
               style={{
-                fontFamily: "'Arial Black', sans-serif",
-                textShadow: "0 0 10px rgba(255,255,255,0.8), 0 2px 4px rgba(0,0,0,0.6)",
+                fontFamily: "'Arial Black', 'Impact', sans-serif",
+                textShadow: "0 0 15px rgba(0,0,0,0.9), 0 2px 4px rgba(0,0,0,1), 0 0 8px rgba(255,255,255,0.5)",
               }}
             >
               {state?.status === "BETTING" ? timeLeft : ""}
