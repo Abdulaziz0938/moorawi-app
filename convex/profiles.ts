@@ -88,6 +88,12 @@ export const getById = query({
       isAdmin: u.isAdmin ?? false,
       adminRole: u.adminRole ?? null,
       banned: u.banned ?? false,
+      // [ezo-stats] Social counts
+      visitorCount: u.visitorCount ?? 0,
+      fanCount: u.fanCount ?? 0,
+      followerCount: u.followerCount ?? 0,
+      followingCount: u.followingCount ?? 0,
+      medalCount: u.medalCount ?? 0,
     };
   },
 });
