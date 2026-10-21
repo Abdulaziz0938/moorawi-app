@@ -313,6 +313,12 @@ export default defineSchema({
     active: v.boolean(),
   }).index("by_active", ["active"]),
 
+  userLikes: defineTable({
+    fromUserId: v.id("users"),
+    toUserId: v.id("users"),
+    createdAt: v.number(),
+  }).index("by_to", ["toUserId"]).index("by_pair", ["fromUserId", "toUserId"]),
+
   giftTransactions: defineTable({
     roomId: v.id("rooms"),
     fromUserId: v.id("users"),

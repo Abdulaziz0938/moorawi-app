@@ -98,6 +98,11 @@ export default function ProfilePage({
   const removeAvatar = useMutation(api.profiles.removeAvatar);
   const recordVisit = useMutation(api.visits.record);
   const toggleFollow = useMutation(api.follows.toggle);
+  const toggleLikeMut = useMutation(api.likes.toggleLike);
+  const isLiked = useQuery(
+    api.likes.isLiked,
+    !isMe && userId ? { tokenOverride: getActiveToken() ?? deviceId, targetUserId: userId as Id<"users"> } : ("skip" as any)
+  );
   const isFollowing = useQuery(
     api.follows.isFollowing,
     !isMe && userId ? { tokenOverride: getActiveToken() ?? deviceId, targetUserId: userId as Id<"users"> } : ("skip" as any)
@@ -997,64 +1002,78 @@ export default function ProfilePage({
 
         {/* ============ Actions (not me) ============ */}
         {!isMe && (
-          <div className="mx-4 mb-6 flex items-center justify-center gap-4">
+          </div>
+        )}
+
+        {/* Fixed Action Bar (Binmo style) */}
+        {!isMe && (
+          <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-[60] flex items-center justify-center gap-3 px-4 py-2.5 rounded-full bg-black/60 backdrop-blur-xl border border-white/15 shadow-2xl">
+            {/* Friend/Following ? Message : Follow */}
+            {(friendStatus?.isFriend || isFollowing) ? (
+              <button
+                onClick={async () => {
+                  try {
+                    const res = await openWith({
+                      otherUserId: userId as Id<"users">,
+                      tokenOverride: getActiveToken() ?? deviceId,
+                    });
+                    setDmConversationId(res.conversationId);
+                  } catch (e: any) {
+                    dialog.alert(e?.message || "فشل فتح المحادثة");
+                  }
+                }}
+                className="w-13 h-13 min-w-[52px] min-h-[52px] rounded-full bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center text-white shadow-lg active:scale-90 transition"
+                title="مراسلة"
+              >
+                <MessageCircle size={22} />
+              </button>
+            ) : (
+              <button
+                onClick={async () => {
+                  try {
+                    await toggleFollow({ tokenOverride: getActiveToken() ?? deviceId, targetUserId: userId as Id<"users"> });
+                  } catch (e: any) {
+                    dialog.alert(e?.message || "فشل");
+                  }
+                }}
+                className="w-13 h-13 min-w-[52px] min-h-[52px] rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white shadow-lg active:scale-90 transition"
+                title="متابعة"
+              >
+                <UserPlus size={22} />
+              </button>
+            )}
+
+            {/* Like / Unlike */}
+            <button
+              onClick={async () => {
+                try {
+                  await toggleLikeMut({ tokenOverride: getActiveToken() ?? deviceId, targetUserId: userId as Id<"users"> });
+                } catch (e: any) {
+                  dialog.alert(e?.message || "فشل");
+                }
+              }}
+              className={`w-13 h-13 min-w-[52px] min-h-[52px] rounded-full flex items-center justify-center shadow-lg active:scale-90 transition ${
+                isLiked
+                  ? "bg-gradient-to-br from-pink-500 to-rose-600 text-white"
+                  : "bg-white/15 backdrop-blur border border-white/25 text-pink-300"
+              }`}
+              title={isLiked ? "إلغاء الإعجاب" : "إعجاب"}
+            >
+              <Heart size={22} fill={isLiked ? "currentColor" : "none"} />
+            </button>
+
+            {/* Gift */}
             <button
               onClick={onOpenGift}
-              className="w-14 h-14 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white shadow-lg active:scale-90 transition"
+              className="w-13 h-13 min-w-[52px] min-h-[52px] rounded-full bg-gradient-to-br from-purple-500 to-fuchsia-600 flex items-center justify-center text-white shadow-lg active:scale-90 transition"
+              title="إرسال هدية"
             >
-              <Gift size={24} />
-            </button>
-            <button
-              onClick={async () => {
-                try {
-                  const res = await openWith({
-                    otherUserId: userId as Id<"users">,
-                    tokenOverride: getActiveToken() ?? deviceId,
-                  });
-                  setDmConversationId(res.conversationId);
-                } catch (e: any) {
-                  dialog.alert(e?.message || "فشل فتح المحادثة");
-                }
-              }}
-              className="w-14 h-14 rounded-full bg-white/15 backdrop-blur border border-white/25 flex items-center justify-center text-white hover:bg-white/25 transition active:scale-90"
-              title="مراسلة"
-            >
-              <MessageCircle size={22} />
-            </button>
-            <button
-              onClick={async () => {
-                try {
-                  if (friendSent) {
-                    dialog.alert("تم إرسال الطلب مسبقاً");
-                    return;
-                  }
-                  await sendFriendRequest({
-                    targetUserId: userId as Id<"users">,
-                    tokenOverride: getActiveToken() ?? deviceId,
-                  });
-                  setFriendSent(true);
-                  dialog.alert("✅ تم إرسال طلب الصداقة");
-                } catch (e: any) {
-                  dialog.alert(e?.message || "فشل إرسال الطلب");
-                }
-              }}
-              className={`w-14 h-14 rounded-full backdrop-blur border flex items-center justify-center text-white transition active:scale-90 ${
-                friendSent
-                  ? "bg-emerald-500/30 border-emerald-400/50"
-                  : "bg-white/15 border-white/25 hover:bg-white/25"
-              }`}
-              title="إضافة صديق"
-            >
-              {friendSent ? (
-                <Check size={22} className="text-emerald-300" />
-              ) : (
-                <UserPlus size={22} />
-              )}
+              <Gift size={22} />
             </button>
           </div>
         )}
 
-        <div className="h-8" />
+        <div className="h-24" />
       </div>
 
       {/* ============ Direct Chat ============ */}

@@ -34,6 +34,7 @@ import type * as lib_levels from "../lib/levels.js";
 import type * as lib_vip from "../lib/vip.js";
 import type * as lib_week from "../lib/week.js";
 import type * as lifePhotos from "../lifePhotos.js";
+import type * as likes from "../likes.js";
 import type * as live from "../live.js";
 import type * as medals from "../medals.js";
 import type * as messages from "../messages.js";
@@ -98,6 +99,7 @@ declare const fullApi: ApiFromModules<{
   "lib/vip": typeof lib_vip;
   "lib/week": typeof lib_week;
   lifePhotos: typeof lifePhotos;
+  likes: typeof likes;
   live: typeof live;
   medals: typeof medals;
   messages: typeof messages;
