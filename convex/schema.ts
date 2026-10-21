@@ -301,7 +301,10 @@ export default defineSchema({
     mediaUrl: v.optional(v.string()),        // Cloudinary
     mediaType: v.union(v.literal("image"), v.literal("video")),
     isLucky: v.optional(v.boolean()),
-    refundPercent: v.optional(v.number()),
+    luckyMultipliers: v.optional(v.array(v.object({
+      multiplier: v.number(),
+      probability: v.number(),
+    }))),
     hasSound: v.optional(v.boolean()),
     isGlobal: v.optional(v.boolean()),
     isRelationship: v.optional(v.boolean()),

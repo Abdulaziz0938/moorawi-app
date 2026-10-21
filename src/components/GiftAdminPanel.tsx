@@ -22,7 +22,8 @@ export default function GiftsAdmin() {
   const [name, setName] = useState("");
   const [price, setPrice] = useState(100);
   const [category, setCategory] = useState("classic");
-  const [refundPercent, setRefundPercent] = useState(10);
+  const [multipliersInput, setMultipliersInput] = useState("1,5,10,20");
+  const [probabilitiesInput, setProbabilitiesInput] = useState("85,10,4,1");
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [forceGlobal, setForceGlobal] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -56,7 +57,11 @@ export default function GiftsAdmin() {
         mediaType,
         forceGlobal,
         isLucky: category === "lucky",
-        refundPercent: category === "lucky" ? refundPercent : undefined,
+        luckyMultipliers: category === "lucky" ? (() => {
+          const mults = multipliersInput.split(",").map(s => Number(s.trim())).filter(n => !isNaN(n));
+          const probs = probabilitiesInput.split(",").map(s => Number(s.trim())).filter(n => !isNaN(n));
+          return mults.map((m, i) => ({ multiplier: m, probability: probs[i] || 0 }));
+        })() : undefined,
         tokenOverride: getActiveToken() ?? deviceId,
       });
       setName(""); setPrice(100); setCategory("classic");
@@ -89,8 +94,13 @@ export default function GiftsAdmin() {
           <option value="lucky" className="text-black">محظوظ</option>
         </select>
         {category === "lucky" && (
-          <input type="number" placeholder="نسبة إرجاع الكوينز % (مثال: 10)" value={refundPercent} onChange={(e) => setRefundPercent(Number(e.target.value))} min={1} max={100}
-            className="w-full bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-2.5 outline-none focus:border-yellow-400 text-yellow-300 text-sm" />
+          <div className="space-y-2 bg-yellow-500/5 p-2 rounded-xl border border-yellow-500/20">
+            <p className="text-yellow-300 text-[10px]">المضاعفات والاحتمالات (مفصولة بفواصل)</p>
+            <input type="text" placeholder="المضاعفات (مثال: 1,5,10,20)" value={multipliersInput} onChange={(e) => setMultipliersInput(e.target.value)}
+              className="w-full bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-2 outline-none focus:border-yellow-400 text-yellow-300 text-xs" />
+            <input type="text" placeholder="الاحتمالات % (مثال: 85,10,4,1)" value={probabilitiesInput} onChange={(e) => setProbabilitiesInput(e.target.value)}
+              className="w-full bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-2 outline-none focus:border-yellow-400 text-yellow-300 text-xs" />
+          </div>
         )}
 
         <label className="block cursor-pointer">

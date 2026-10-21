@@ -593,10 +593,28 @@ export const sendGiftToLive = mutation({
 
     const now = Date.now();
 
-    // حساب إرجاع الكوينز لهدايا الحظ
+    // حساب إرجاع الكوينز لهدايا الحظ (بناءً على المضاعفات)
     let refund = 0;
-    if (gift.isLucky && gift.refundPercent && gift.refundPercent > 0) {
-      refund = Math.floor(total * (gift.refundPercent / 100));
+    let wonMultiplier = 0;
+    
+    if (gift.isLucky && gift.luckyMultipliers && gift.luckyMultipliers.length > 0) {
+      // حساب مجموع الاحتمالات
+      const totalProb = gift.luckyMultipliers.reduce((sum, item) => sum + item.probability, 0);
+      // توليد رقم عشوائي بين 0 و totalProb
+      let random = Math.random() * totalProb;
+      let selectedMultiplier = 1; // الافتراضي
+      
+      for (const item of gift.luckyMultipliers) {
+        if (random < item.probability) {
+          selectedMultiplier = item.multiplier;
+          break;
+        }
+        random -= item.probability;
+      }
+      
+      wonMultiplier = selectedMultiplier;
+      // في BIGO، الإرجاع يعتمد على سعر الهدية الواحدة × المضاعف (وليس إجمالي الكمية)
+      refund = gift.price * wonMultiplier;
     }
 
     // 1) خصم من المرسل + إرجاع الكوينز
@@ -648,7 +666,8 @@ export const sendGiftToLive = mutation({
     return {
       ok: true,
       totalValue: total,
-      remaining: myCoins - total,
+      remaining: myCoins - total + refund,
+      wonMultiplier,
     };
   },
 });
