@@ -148,8 +148,8 @@ export const setCustomId = mutation({
     const isAdmin = me.adminRole === "super" || me.userNumber === 1;
     
     // التحقق من أن الرقم من 1 إلى 99999
-    if (args.newId < 1 || args.newId > 99999) {
-      throw new Error("يجب أن يكون الرقم المخصص من 1 إلى 99999");
+    if (args.newId < 1 || args.newId > 99999999) {
+      throw new Error("يجب أن يكون الرقم المخصص صحيحاً");
     }
 
     // التحقق من عدم استخدام الرقم مسبقاً
@@ -198,7 +198,7 @@ export const updateAllUserIdsToSixDigits = internalMutation({
       if (user.userNumber === 1 || user.userNumber === 10) continue;
       
       // إذا كان الرقم أقل من 100000 (يعني ليس 6 خانات) وأكبر من أو يساوي 1000
-      if (user.userNumber < 100000 && user.userNumber >= 1000) {
+      if (user.userNumber < 10000000 && user.userNumber >= 1000) {
         // نضيف 99000 ليصبح 1022 => 100022
         const newNum = user.userNumber + 99000;
         

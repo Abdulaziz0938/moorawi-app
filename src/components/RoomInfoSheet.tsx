@@ -82,20 +82,28 @@ export default function RoomInfoSheet({ roomId, onClose, onUserClick, onOpenStaf
         <div className="flex-1 overflow-y-auto">
           {/* Room Header */}
           <div className="px-4 py-5 flex flex-col items-center text-center">
-            {/* Shield badge */}
+            {/* Room Cover / Owner Avatar */}
             <div className="relative mb-3">
-              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center shadow-2xl">
-                <Award size={36} className="text-white" />
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center shadow-2xl overflow-hidden border border-white/15">
+                {(room.coverUrl || room.ownerAvatarUrl || owner?.avatarUrl) ? (
+                  <img
+                    src={room.coverUrl || room.ownerAvatarUrl || owner?.avatarUrl}
+                    alt={room.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <Award size={36} className="text-white" />
+                )}
               </div>
               <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-emerald-500 text-[9px] font-black text-white whitespace-nowrap">
-                Lv.0
+                Lv.{room.level ?? 0}
               </div>
             </div>
 
             {/* Room name + ID */}
             <h3 className="text-white text-xl font-black">{room.name}</h3>
             <p className="text-white/50 text-xs mt-1" dir="ltr">
-              ID:{room._id.slice(-8)} • {room.memberCount} عضو
+              ID:{room.roomNumber ?? owner?.userNumber ?? room._id.slice(-6)} • {room.memberCount} عضو
             </p>
           </div>
 

@@ -41,11 +41,13 @@ export const listPublic = query({
   handler: async (ctx) => {
     const rooms = await ctx.db.query("rooms").withIndex("by_isPrivate", (q) => q.eq("isPrivate", false)).order("desc").take(50);
     const enriched = await Promise.all(rooms.map(async (r) => {
-      const coverUrl = r.coverUrl ?? (r.coverImageId ? await ctx.storage.getUrl(r.coverImageId) : null);
+      const rawCoverUrl = r.coverUrl ?? (r.coverImageId ? await ctx.storage.getUrl(r.coverImageId) : null);
       const owner = await ctx.db.get("users", r.ownerId);
       const ownerAvatarUrl = owner?.avatarUrl ?? (owner?.avatarId ? await ctx.storage.getUrl(owner.avatarId) : null);
+      const coverUrl = rawCoverUrl || ownerAvatarUrl || null;
       const ownerName = owner?.name ?? null;
-      return { ...r, coverUrl, ownerAvatarUrl, ownerName };
+      const ownerUserNumber = owner?.userNumber ?? null;
+      return { ...r, coverUrl, rawCoverUrl, ownerAvatarUrl, ownerName, ownerUserNumber };
     }));
     return enriched;
   },
@@ -67,8 +69,10 @@ export const myRoom = query({
       .take(1);
     if (rooms.length === 0) return null;
     const r = rooms[0];
-    const coverUrl = r.coverUrl ?? (r.coverImageId ? await ctx.storage.getUrl(r.coverImageId) : null);
-    return { ...r, coverUrl };
+    const rawCoverUrl = r.coverUrl ?? (r.coverImageId ? await ctx.storage.getUrl(r.coverImageId) : null);
+    const ownerAvatarUrl = user.avatarUrl ?? (user.avatarId ? await ctx.storage.getUrl(user.avatarId) : null);
+    const coverUrl = rawCoverUrl || ownerAvatarUrl || null;
+    return { ...r, coverUrl, ownerAvatarUrl, ownerName: user.name };
   },
 });
 
@@ -77,9 +81,13 @@ export const get = query({
   handler: async (ctx, args) => {
     const room = await ctx.db.get("rooms", args.roomId);
     if (!room) return null;
-    const coverUrl = room.coverUrl ?? (room.coverImageId ? await ctx.storage.getUrl(room.coverImageId) : null);
+    const owner = await ctx.db.get("users", room.ownerId);
+    const ownerAvatarUrl = owner?.avatarUrl ?? (owner?.avatarId ? await ctx.storage.getUrl(owner.avatarId) : null);
+    const rawCoverUrl = room.coverUrl ?? (room.coverImageId ? await ctx.storage.getUrl(room.coverImageId) : null);
+    const coverUrl = rawCoverUrl || ownerAvatarUrl || null;
     const backgroundUrl = room.backgroundUrl ?? (room.backgroundImageId ? await ctx.storage.getUrl(room.backgroundImageId) : null);
-    return { ...room, coverUrl, backgroundUrl };
+    const roomNumber = owner?.userNumber ?? room.roomNumber ?? 100000;
+    return { ...room, roomNumber, coverUrl, rawCoverUrl, ownerAvatarUrl, ownerName: owner?.name ?? null, backgroundUrl };
   },
 });
 
@@ -99,7 +107,7 @@ export const create = mutation({
 
     const name = args.name.trim();
     if (name.length < 2 || name.length > 40) throw new ConvexError({ code: "BAD_REQUEST", message: "Room name must be 2-40 chars" });
-    const roomNumber = await getNextRoomNumber(ctx);
+    const roomNumber = user.userNumber ?? (await getNextRoomNumber(ctx));
     const roomId = await ctx.db.insert("rooms", {
       name, description: args.description?.trim() || undefined, ownerId: user._id,
       isPrivate: args.isPrivate, micCount: 20, memberCount: 1,
