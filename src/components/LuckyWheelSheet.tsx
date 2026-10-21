@@ -312,20 +312,24 @@ const [activeRankTab, setActiveRankTab] = useState<string>("VI");
             <img src={imgWheel} alt="wheel" className="w-full h-full object-fill rounded-full" />
           </div>
 
-          {/* العداد المركزي الثابت مع الحلقة الذهبية والجوهرة لمنع أي رجفة */}
+          {/* طبقة إخفاء ظل الجوهرة القديمة */}
           <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
-            {/* الجوهرة (في الخلف) */}
+            {/* دائرة سوداء صلبة تغطي ظل الجوهرة القديمة تماماً */}
+            <div className="absolute w-[28%] h-[28%] rounded-full bg-[#120a1f] shadow-[inset_0_0_10px_rgba(0,0,0,0.8)]" />
+            
+            {/* الجوهرة الثابتة (فوق الدائرة) */}
             <img
               src={imgCenterGem}
               alt=""
-              className="absolute w-[26%] h-[26%] rounded-full object-fill z-0"
+              className="absolute w-[26%] h-[26%] rounded-full object-fill z-10"
             />
-            {/* العداد (في الأمام بوضوح تام) */}
+            
+            {/* العداد (في الأمام بوضوح) */}
             <span
-              className="relative z-10 text-4xl font-black text-white"
+              className="relative z-20 text-4xl font-black text-white"
               style={{
                 fontFamily: "'Arial Black', 'Impact', sans-serif",
-                textShadow: "0 0 15px rgba(0,0,0,0.9), 0 2px 4px rgba(0,0,0,1), 0 0 8px rgba(255,255,255,0.5)",
+                textShadow: "0 0 15px rgba(0,0,0,1), 0 2px 4px rgba(0,0,0,1)",
               }}
             >
               {state?.status === "BETTING" ? timeLeft : ""}

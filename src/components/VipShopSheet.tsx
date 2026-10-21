@@ -164,6 +164,7 @@ export default function VipShopSheet({ onClose, onOpenRecharge }: Props) {
   const token = getActiveToken();
   const assets = useAssets();
   const data = useQuery(api.vip.myVip, { tokenOverride: token });
+  const me = useQuery(api.auth.me, { tokenOverride: token });
   const allBenefits = useQuery(api.vip.getAllBenefits);
   const balance = useQuery(api.wallet.balance, { tokenOverride: token });
   const buyVip = useMutation(api.vip.buyVip);
@@ -599,9 +600,9 @@ export default function VipShopSheet({ onClose, onOpenRecharge }: Props) {
               
               <div className="absolute top-4 right-4 flex items-center gap-3 bg-black/40 border border-[#e5c17b]/30 rounded-full pl-1 pr-4 py-1 backdrop-blur-md">
                 <div className="text-right">
-                  <span className="text-white font-black text-sm block" dir="ltr">{data?.userId || "1831156"}</span>
+                  <span className="text-white font-black text-sm block" dir="ltr">{me?.userNumber || "مستخدم"}</span>
                 </div>
-                <img src={data?.avatarUrl || "/avatar.png"} alt="" className="w-10 h-10 rounded-full border-2 border-[#e5c17b]" />
+                <img src={me?.avatarUrl || "/avatar.png"} alt="" className="w-10 h-10 rounded-full border-2 border-[#e5c17b]" />
               </div>
 
               <div className="relative z-10 flex flex-col items-center mt-6">
