@@ -645,10 +645,19 @@ export default function RoomView({ roomId, onLeave }: Props) {
   }, [messages?.length, showChatInput]);
 
   useEffect(() => {
+    const onBackPress = () => setShowBackMenu(true);
+    window.addEventListener("room-back-pressed", onBackPress);
+    return () => window.removeEventListener("room-back-pressed", onBackPress);
+  }, []);
+
+  useEffect(() => {
     if (!members) return;
     if (seenMembersRef.current.size === 0) {
-      // في التحميل الأول، سجل كل الموجودين بدون تشغيل تأثيرات
       members.forEach((m: any) => seenMembersRef.current.add(String(m.userId)));
+      // شغل تأثير دخول المستخدم نفسه (المركبة) فور دخوله للغرفة
+      if (myInfo?.userId) {
+        setActiveEntryUserId(myInfo.userId);
+      }
       return;
     }
     const newMembers = members.filter((m: any) => !seenMembersRef.current.has(String(m.userId)));
@@ -669,7 +678,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const isOwnerOrMod = myInfo?.role === "owner" || myInfo?.role === "moderator";
   const roomAvatar = room.coverUrl || owner?.avatarUrl || null;
 
-  const layout = room.micLayout || "m18";
+  const layout = room.micLayout || "m10";
   const LAYOUT_ROWS: Record<string, number[]> = {
     "m1":   [1],
     "m2":   [2],
@@ -679,17 +688,21 @@ export default function RoomView({ roomId, onLeave }: Props) {
     "m6":   [3, 3],
     "m7":   [3, 4],
     "m8":   [4, 4],
-    "m9":   [4, 5],
+    "m9":   [1, 4, 4],
     "m10":  [5, 5],
     "m12":  [4, 4, 4],
+    "m12b": [5, 5, 2],
     "m15":  [5, 5, 5],
     "m18":  [5, 5, 5, 3],
+    "m20":  [5, 5, 5, 5],
     "m24":  [6, 6, 6, 6],
+    "m30":  [5, 5, 5, 5, 5, 5],
   };
-  const layoutRows = LAYOUT_ROWS[layout] ?? LAYOUT_ROWS["m7"];
+  const layoutRows = LAYOUT_ROWS[layout] ?? LAYOUT_ROWS["m10"];
   const maxRowCount = Math.max(...layoutRows);
-  const cellWidth = `min(calc((100% - ${(maxRowCount - 1) * 18}px) / ${maxRowCount}), 62px)`;
-  const gridHeight = layoutRows.length * 96 + 24;
+  const baseMicSize = maxRowCount === 1 ? 84 : maxRowCount === 2 ? 72 : maxRowCount === 3 ? 64 : maxRowCount === 4 ? 60 : 56;
+  const cellWidth = `min(calc((100% - ${(maxRowCount - 1) * 12}px) / ${maxRowCount}), ${baseMicSize + 8}px)`;
+  const gridHeight = layoutRows.length * (baseMicSize + 36) + 16;
 
   const handleSeatClick = (seatIndex: number, userId: string | undefined) => {
     const seat = seats?.find((s) => s.seatIndex === seatIndex);
@@ -942,11 +955,14 @@ export default function RoomView({ roomId, onLeave }: Props) {
                     const seat = seats[rowStart + i];
                     if (!seat) return null;
                     const occupied = !!seat.userId;
+                    const isHeroSeat = count === 1;
+                    const seatPx = isHeroSeat ? 78 : baseMicSize;
                     return (
-                      <div key={seat._id} className="flex flex-col items-center justify-start pt-0.5 min-w-0" style={{ width: cellWidth, maxWidth: '64px' }}>
+                      <div key={seat._id} className="flex flex-col items-center justify-start pt-0.5 min-w-0" style={{ width: isHeroSeat ? '86px' : cellWidth }}>
                         <div data-mic-seat={seat.seatIndex}
                           onClick={() => handleSeatClick(seat.seatIndex, seat.userId)}
-                          className="relative w-full aspect-square max-w-[56px] mx-auto flex-shrink-0 cursor-pointer">
+                          style={{ width: `${seatPx}px`, height: `${seatPx}px` }}
+                          className="relative rounded-full mx-auto flex-shrink-0 cursor-pointer flex items-center justify-center bg-black/35 ring-1 ring-white/25 shadow-[inset_0_0_16px_rgba(255,255,255,0.08)]">
                           {occupied ? (
                             <>
                               {(() => {
@@ -959,7 +975,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
                                   <VipAvatar
                                     src={seat?.avatarUrl}
                                     name={seat?.userName ?? "?"}
-                                    size={56}
+                                    size={seatPx}
                                     vip={seat?.userVip ?? 0}
                                     ring={false}
                                     customFrameUrl={finalUrl}
@@ -1968,6 +1984,12 @@ export default function RoomView({ roomId, onLeave }: Props) {
         </div>
       )}
       <VipEntryOverlay entry={currentEntry} />
+      {activeEntryUserId && (
+        <MemberEntryEffect
+          userId={activeEntryUserId}
+          onDone={() => setActiveEntryUserId(null)}
+        />
+      )}
     </div>
   );
 }

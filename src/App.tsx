@@ -28,7 +28,7 @@ function App() {
   const [showDailyLogin, setShowDailyLogin] = useState(false);
 
   // Back button → leave room
-  useBackButton(!!currentRoomId, () => setCurrentRoomId(null));
+  useBackButton(!!currentRoomId, () => window.dispatchEvent(new CustomEvent("room-back-pressed")));
   const [refreshKey, setRefreshKey] = useState(0);
 
   const me = useQuery(api.auth.me, { tokenOverride: token });

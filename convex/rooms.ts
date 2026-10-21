@@ -325,12 +325,13 @@ export const listRecent = query({
       rooms.push({
         _id: r._id,
         name: r.name,
-        coverUrl: r.coverUrl ?? null,
+        coverUrl: r.coverUrl ?? (r.coverImageId ? await ctx.storage.getUrl(r.coverImageId) : null) ?? ownerAvatar ?? null,
         welcomeMessage: r.welcomeMessage ?? "",
         memberCount: r.memberCount,
-        roomNumber: r.roomNumber ?? null,
+        roomNumber: owner?.userNumber ?? r.roomNumber ?? null,
         ownerName: owner?.name ?? "—",
         ownerAvatar,
+        ownerAvatarUrl: ownerAvatar,
         ownerUserNumber: owner?.userNumber ?? null,
       });
     }
@@ -362,12 +363,13 @@ export const listFollowing = query({
       rooms.push({
         _id: r._id,
         name: r.name,
-        coverUrl: r.coverUrl ?? null,
+        coverUrl: r.coverUrl ?? (r.coverImageId ? await ctx.storage.getUrl(r.coverImageId) : null) ?? ownerAvatar ?? null,
         welcomeMessage: r.welcomeMessage ?? "",
         memberCount: r.memberCount,
-        roomNumber: r.roomNumber ?? null,
+        roomNumber: owner?.userNumber ?? r.roomNumber ?? null,
         ownerName: owner?.name ?? "—",
         ownerAvatar,
+        ownerAvatarUrl: ownerAvatar,
         ownerUserNumber: owner?.userNumber ?? null,
       });
     }
@@ -389,12 +391,13 @@ export const listTrending = query({
       result.push({
         _id: r._id,
         name: r.name,
-        coverUrl: r.coverUrl ?? null,
+        coverUrl: r.coverUrl ?? (r.coverImageId ? await ctx.storage.getUrl(r.coverImageId) : null) ?? ownerAvatar ?? null,
         welcomeMessage: r.welcomeMessage ?? "",
         memberCount: r.memberCount,
-        roomNumber: r.roomNumber ?? null,
+        roomNumber: owner?.userNumber ?? r.roomNumber ?? null,
         ownerName: owner?.name ?? "—",
         ownerAvatar,
+        ownerAvatarUrl: ownerAvatar,
         ownerUserNumber: owner?.userNumber ?? null,
       });
     }
@@ -414,12 +417,13 @@ export const listNew = query({
       result.push({
         _id: r._id,
         name: r.name,
-        coverUrl: r.coverUrl ?? null,
+        coverUrl: r.coverUrl ?? (r.coverImageId ? await ctx.storage.getUrl(r.coverImageId) : null) ?? ownerAvatar ?? null,
         welcomeMessage: r.welcomeMessage ?? "",
         memberCount: r.memberCount,
-        roomNumber: r.roomNumber ?? null,
+        roomNumber: owner?.userNumber ?? r.roomNumber ?? null,
         ownerName: owner?.name ?? "—",
         ownerAvatar,
+        ownerAvatarUrl: ownerAvatar,
         ownerUserNumber: owner?.userNumber ?? null,
       });
     }
@@ -628,18 +632,21 @@ export const publicRoomsWithStats = query({
           .withIndex("by_room", (q) => q.eq("roomId", r._id))
           .collect();
 
+        const ownerAvatar = owner?.avatarUrl ?? (owner?.avatarId ? await ctx.storage.getUrl(owner.avatarId) : null);
+        const rawCover = r.coverUrl ?? (r.coverImageId ? await ctx.storage.getUrl(r.coverImageId) : null);
         return {
           _id: r._id,
           name: r.name,
-          coverUrl: r.coverUrl ?? null,
+          coverUrl: rawCover || ownerAvatar || null,
           welcomeMessage: r.welcomeMessage ?? "",
           memberCount: r.memberCount ?? 0,
           onlineCount: members.length,
-          roomNumber: r.roomNumber ?? null,
+          roomNumber: owner?.userNumber ?? r.roomNumber ?? null,
           weeklyTotal: r.weeklyTotal ?? 0,
           rank: idx + 1,
           ownerName: owner?.name ?? "—",
-          ownerAvatar: owner?.avatarUrl ?? (owner?.avatarId ? await ctx.storage.getUrl(owner.avatarId) : null),
+          ownerAvatar,
+          ownerAvatarUrl: ownerAvatar,
           ownerUserNumber: owner?.userNumber ?? null,
         };
       })

@@ -60,7 +60,7 @@ export default function VipAvatar({
   assetType,
 }: Props) {
   const pad = FRAME_PADDING[vip] ?? 2;
-  const innerSize = size - pad * 2;
+  const innerSize = Math.max(size - 2, Math.round(size * 0.94));
   const isLegendary = vip >= 5;
   const hasCustom = !!customFrameUrl;
 
@@ -193,7 +193,7 @@ export default function VipAvatar({
               style={{
                 objectFit: "contain",
                 objectPosition: "center",
-                mixBlendMode: "screen",
+                
                 }}
             />
           )}

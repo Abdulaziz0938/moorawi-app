@@ -1,3 +1,4 @@
+import MemberEntryEffect from "./ui/MemberEntryEffect";
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
@@ -126,6 +127,7 @@ export default function ProfilePage({
   const [showCoverPreview, setShowCoverPreview] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [playVehicleOnOpen, setPlayVehicleOnOpen] = useState(true);
   const [tab, setTab] = useState<Tab>("info");
   const [showMyItems, setShowMyItems] = useState(false);
   const [showGiftHistory, setShowGiftHistory] = useState(false);
@@ -1385,6 +1387,10 @@ function AssetRow({
   return (
     <div className={`w-full rounded-2xl border ${t.border} bg-gradient-to-br ${t.bg} backdrop-blur-xl p-3`}>
       {inner}
+    
+      {playVehicleOnOpen && profile?._id && (
+        <MemberEntryEffect userId={profile._id} onDone={() => setPlayVehicleOnOpen(false)} />
+      )}
     </div>
   );
 }
