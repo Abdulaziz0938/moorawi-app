@@ -91,7 +91,6 @@ export default function ServicesSection({
     { key: "level",      assetKey: "ui.service.level",    label: "مستوى",      icon: Sparkles,   color: "text-amber-300",    onClick: onOpenLevel ?? (() => soon("المستوى")) },
     { key: "medals",      assetKey: "ui.service.medals",   label: "أوسمة",      icon: Award,      color: "text-yellow-300",   onClick: onOpenMedals ?? (() => soon("الأوسمة")) },
     { key: "wallet",      assetKey: "ui.service.wallet",   label: "محفظة",      icon: Wallet,     color: "text-emerald-300",  onClick: onOpenWallet },
-    { key: "giftHistory", assetKey: "ui.service.giftHistory", label: "سجل الهدايا", icon: Gift,    color: "text-pink-300",     onClick: onOpenGiftHistory ?? (() => soon("سجل الهدايا")) },
     { key: "legend",      assetKey: "ui.service.legend",   label: "الأسطورة",   icon: Star,       color: "text-fuchsia-300",  onClick: onOpenLegend ?? (() => soon("الأسطورة")) },
     { key: "host",      assetKey: "ui.service.host",     label: "مضيف",       icon: Mic,        color: "text-sky-300",      onClick: onOpenHost ?? (() => soon("المضيف")) },
     { key: "agency",      assetKey: "ui.service.agency",   label: "وكالة",      icon: Briefcase,  color: "text-teal-300",     onClick: onOpenAgency ?? (() => soon("الوكالة")) },
@@ -156,11 +155,14 @@ export default function ServicesSection({
             <button
               key={g.key}
               onClick={g.onClick}
-              className="flex flex-col items-center gap-1.5 py-3 rounded-xl hover:bg-white/10 active:scale-95 transition"
+              className="flex flex-col items-center justify-start gap-1 py-2 px-1 rounded-xl hover:bg-white/10 active:scale-95 transition"
             >
               <div className="w-full aspect-square flex items-center justify-center">
-                <IconOrImage assetKey={g.assetKey} Icon={Icon} size={26} imgSize={64} fillParent className={g.color} strokeWidth={1.8} />
+                <IconOrImage assetKey={g.assetKey} Icon={Icon} size={26} imgSize={56} fillParent className={g.color} strokeWidth={1.8} />
               </div>
+              <span className="text-white/90 text-[10px] font-bold text-center leading-tight w-full truncate">
+                {g.label}
+              </span>
             </button>
           );
         })}
