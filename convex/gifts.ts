@@ -100,6 +100,8 @@ export const createGift = mutation({
       category: args.category,
       mediaUrl: args.mediaUrl,
       mediaType: args.mediaType,
+      isLucky: args.isLucky,
+      luckyMultipliers: args.luckyMultipliers,
       hasSound: isVideo,
       isGlobal,
       isRelationship,
