@@ -587,6 +587,7 @@ export default function VipShopSheet({ onClose, onOpenRecharge }: Props) {
               <div className="absolute top-4 right-4 flex items-center gap-3 bg-black/40 border border-[#e5c17b]/30 rounded-full pl-1 pr-4 py-1 backdrop-blur-md">
                 <div className="text-right">
                   <span className="text-white font-black text-sm block" dir="ltr">{me?.userNumber || "مستخدم"}</span>
+                              <span className={`text-[9px] font-black block leading-tight ${active && currentLevel > 0 ? "text-yellow-300" : "text-white/40"}`} dir="ltr">{active && currentLevel > 0 ? `VIP ${currentLevel}` : "بدون VIP"}</span>
                 </div>
                 <img src={"/avatar.png"} alt="" className="w-10 h-10 rounded-full border-2 border-[#e5c17b]" />
               </div>
@@ -594,7 +595,7 @@ export default function VipShopSheet({ onClose, onOpenRecharge }: Props) {
               <div className="relative z-10 flex flex-col items-center mt-6">
                 <AssetVideo url={assets["vip.hero.special"] || "https://cdn-icons-png.flaticon.com/512/6491/6491618.png"} type="auto" alt="VIP" className="h-16 object-contain drop-shadow-[0_4px_15px_rgba(234,179,8,0.5)]" />
                 <p className="text-[#fde68a] font-bold text-sm mt-2 text-center px-6">
-                  استمتع بأكثر من {allBenefits?.filter((b: any) => b.level === currentLevel).length || 14} امتيازاً!
+                  {active && currentLevel > 0 ? `استمتع بأكثر من ${allBenefits?.filter((b: any) => b.level === currentLevel).length || 14} امتيازاً!` : "اشترك في VIP للاستمتاع بأكثر من 14 امتيازاً حصرياً!"}
                 </p>
               </div>
             </div>
