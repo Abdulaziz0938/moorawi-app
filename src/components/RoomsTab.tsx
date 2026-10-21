@@ -281,8 +281,8 @@ function MyRoomCard({ room, onEnter }: any) {
     >
       {/* Cover */}
       <div className="w-16 h-16 rounded-2xl overflow-hidden bg-black/40 flex-shrink-0 flex items-center justify-center">
-        {room.coverUrl ? (
-          <AssetVideo url={room.coverUrl} type="auto" className="w-full h-full object-cover" />
+        {(room.coverUrl || room.ownerAvatarUrl) ? (
+          <AssetVideo url={room.coverUrl || room.ownerAvatarUrl} type="auto" className="w-full h-full object-cover" />
         ) : (
           <Home size={26} className="text-purple-300/60" />
         )}
@@ -537,8 +537,8 @@ function RoomCardGrid({ room, onEnter }: { room: any; onEnter: (id: Id<"rooms">)
       className="relative rounded-2xl overflow-hidden aspect-square bg-gradient-to-br from-purple-900/40 to-indigo-900/40 border border-white/10 active:scale-95 transition"
     >
       {/* Cover */}
-      {room.coverUrl ? (
-        <AssetVideo url={room.coverUrl} type="auto" className="absolute inset-0 w-full h-full object-cover" />
+      {(room.coverUrl || room.ownerAvatarUrl) ? (
+        <AssetVideo url={room.coverUrl || room.ownerAvatarUrl} type="auto" className="absolute inset-0 w-full h-full object-cover" />
       ) : (
         <div className="absolute inset-0 flex items-center justify-center">
           <Home size={40} className="text-purple-300/40" />
@@ -594,8 +594,8 @@ function RoomList({ rooms, onEnter, empty }: any) {
           className="w-full rounded-2xl bg-white/5 border border-white/10 p-2 flex items-center gap-3 active:scale-95 transition"
         >
           <div className="w-14 h-14 rounded-xl overflow-hidden bg-black/40 flex-shrink-0 flex items-center justify-center">
-            {r.coverUrl ? (
-              <AssetVideo url={r.coverUrl} type="auto" className="w-full h-full object-cover" />
+            {(r.coverUrl || r.ownerAvatarUrl) ? (
+              <AssetVideo url={r.coverUrl || r.ownerAvatarUrl} type="auto" className="w-full h-full object-cover" />
             ) : (
               <Home size={20} className="text-purple-300/50" />
             )}

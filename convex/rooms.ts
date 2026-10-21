@@ -42,7 +42,10 @@ export const listPublic = query({
     const rooms = await ctx.db.query("rooms").withIndex("by_isPrivate", (q) => q.eq("isPrivate", false)).order("desc").take(50);
     const enriched = await Promise.all(rooms.map(async (r) => {
       const coverUrl = r.coverUrl ?? (r.coverImageId ? await ctx.storage.getUrl(r.coverImageId) : null);
-      return { ...r, coverUrl };
+      const owner = await ctx.db.get("users", r.ownerId);
+      const ownerAvatarUrl = owner?.avatarUrl ?? (owner?.avatarId ? await ctx.storage.getUrl(owner.avatarId) : null);
+      const ownerName = owner?.name ?? null;
+      return { ...r, coverUrl, ownerAvatarUrl, ownerName };
     }));
     return enriched;
   },
