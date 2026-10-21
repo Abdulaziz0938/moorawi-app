@@ -929,15 +929,52 @@ export default function RoomView({ roomId, onLeave }: Props) {
           </div>
         </header>
 
-        {showBackMenu && (
-          <>
-            <div className="fixed inset-0 z-20" onClick={() => setShowBackMenu(false)} />
-            <div className="absolute top-20 right-2 z-30 bg-gray-900/95 backdrop-blur rounded-xl shadow-2xl border border-white/10 py-1 w-40">
-              <button onClick={handleLeave} className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs"><LogOut size={14} /> مغادرة</button>
-              <button onClick={() => { setShowBackMenu(false); setIsMinimized(true); }} className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs"><Minimize2 size={14} /> تصغير</button>
-              <button onClick={() => { navigator.clipboard.writeText(`https://ezo-app.vercel.app/room/${roomId}`); setShowBackMenu(false); setShareToast(true); setTimeout(() => setShareToast(false), 1800); }} className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs"><Share2 size={14} /> مشاركة</button>
+                {showBackMenu && (
+          <div
+            className="fixed inset-0 z-[350] bg-black/75 backdrop-blur-sm flex items-center justify-center p-6"
+            onClick={() => setShowBackMenu(false)}
+            dir="rtl"
+          >
+            <div
+              className="w-full max-w-xs rounded-3xl bg-gradient-to-b from-slate-800 to-slate-950 border border-white/15 shadow-2xl p-5 flex flex-col items-center gap-3"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="w-14 h-14 rounded-full bg-amber-500/15 border border-amber-400/30 flex items-center justify-center mb-1">
+                <LogOut size={26} className="text-amber-300" />
+              </div>
+              <h3 className="text-white font-black text-base text-center leading-tight">هل تريد مغادرة الغرفة؟</h3>
+              <p className="text-white/50 text-[11px] text-center -mt-1">يمكنك تصغيرها والاستمرار بالاستماع</p>
+              <button
+                onClick={() => { setShowBackMenu(false); setIsMinimized(true); }}
+                className="w-full py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black text-sm flex items-center justify-center gap-2 shadow-lg active:scale-95 transition mt-1"
+              >
+                <Minimize2 size={16} /> تصغير (الاستماع مستمر)
+              </button>
+              <button
+                onClick={handleLeave}
+                className="w-full py-3 rounded-2xl bg-red-500/20 border border-red-500/40 text-red-200 hover:bg-red-500/30 font-black text-sm flex items-center justify-center gap-2 active:scale-95 transition"
+              >
+                <LogOut size={16} /> مغادرة نهائية
+              </button>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(window.location.href);
+                  setShowBackMenu(false);
+                  setShareToast(true);
+                  setTimeout(() => setShareToast(false), 1800);
+                }}
+                className="w-full py-2.5 rounded-2xl bg-white/5 hover:bg-white/10 text-white/80 font-bold text-xs flex items-center justify-center gap-2 active:scale-95 transition"
+              >
+                <Share2 size={14} /> مشاركة رابط الغرفة
+              </button>
+              <button
+                onClick={() => setShowBackMenu(false)}
+                className="mt-1 text-white/50 hover:text-white text-xs font-bold"
+              >
+                إلغاء
+              </button>
             </div>
-          </>
+          </div>
         )}
 
         <div className="text-center py-0.5 flex-shrink-0">
