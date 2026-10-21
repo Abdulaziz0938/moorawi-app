@@ -570,6 +570,9 @@ export default function ProfilePage({
         )}
 
         {/* ============ Stats inline (no card, tappable for isMe) ============ */}
+        {playVehicleOnOpen && profile?._id && (
+          <MemberEntryEffect userId={profile._id} onDone={() => setPlayVehicleOnOpen(false)} />
+        )}
         <div className="flex items-center justify-around gap-2 px-6 mt-4">
           <InlineStat
             label="متابعين"
@@ -1387,10 +1390,6 @@ function AssetRow({
   return (
     <div className={`w-full rounded-2xl border ${t.border} bg-gradient-to-br ${t.bg} backdrop-blur-xl p-3`}>
       {inner}
-    
-      {playVehicleOnOpen && profile?._id && (
-        <MemberEntryEffect userId={profile._id} onDone={() => setPlayVehicleOnOpen(false)} />
-      )}
     </div>
   );
 }
