@@ -1,5 +1,6 @@
 // [ezo-agency] تبويب "وكالة" — لمالك الوكالة أو المضيف
 import { useState } from "react";
+import AssetVideo from "./ui/AssetVideo";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { getDeviceId } from "../lib/device";
@@ -131,7 +132,7 @@ function AgencyInfo({ agency, isOwner }: any) {
         <div className="flex items-center gap-3 mb-4">
           <div className="w-16 h-16 rounded-2xl bg-black/40 flex items-center justify-center overflow-hidden flex-shrink-0">
             {agency.logoUrl ? (
-              <img src={agency.logoUrl} alt="" className="w-full h-full object-cover" />
+              <AssetVideo url={agency.logoUrl} type="auto" className="w-full h-full object-cover" />
             ) : (
               <Briefcase size={28} className="text-teal-300" />
             )}

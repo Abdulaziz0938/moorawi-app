@@ -1,5 +1,6 @@
 // [ezo-agency] Admin panel — review agency create requests
 import { useState } from "react";
+import AssetVideo from "./ui/AssetVideo";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { dialog } from "../lib/dialog";
@@ -108,7 +109,7 @@ export default function AgencyRequestsPanel({ token }: Props) {
             <div className="rounded-xl bg-black/30 border border-white/5 p-3 space-y-2">
               {r.logoUrl && (
                 <div className="flex justify-center">
-                  <img src={r.logoUrl} alt="" className="w-20 h-20 rounded-2xl object-cover border border-white/10" />
+                  <AssetVideo url={r.logoUrl} type="auto" className="w-20 h-20 rounded-2xl object-cover border border-white/10" />
                 </div>
               )}
               <div className="flex items-center gap-2">

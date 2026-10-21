@@ -1,5 +1,6 @@
 // [ezo-bubbles] 9-Patch Visual Slicer v2 — with auto-detect from image pixels
 import { useEffect, useRef, useState } from "react";
+import AssetVideo from "./ui/AssetVideo";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { uploadToCloudinary } from "../lib/cloudinary";
@@ -251,7 +252,7 @@ export default function BubbleSlicer({ token }: Props) {
             {uploading ? (
               <Loader2 size={18} className="animate-spin text-white/50" />
             ) : form.imageUrl ? (
-              <img src={form.imageUrl} alt="" className="w-full h-full object-contain" />
+              <AssetVideo url={form.imageUrl} type="auto" className="w-full h-full object-contain" />
             ) : (
               <span className="text-white/30 text-[9px]">لا صورة</span>
             )}
@@ -378,7 +379,7 @@ export default function BubbleSlicer({ token }: Props) {
           bubbles.map((b) => (
             <div key={b._id} className="rounded-xl border border-white/10 bg-white/5 p-2.5 flex items-center gap-3">
               <div className="w-12 h-12 rounded-lg bg-black/40 overflow-hidden flex items-center justify-center flex-shrink-0">
-                <img src={b.imageUrl} alt="" className="w-full h-full object-contain" />
+                <AssetVideo url={b.imageUrl} type="auto" className="w-full h-full object-contain" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-white text-sm font-black truncate">{b.name}</p>

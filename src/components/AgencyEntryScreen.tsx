@@ -1,5 +1,6 @@
 // [ezo-agency] Agency entry — host/agent flow
 import { useState } from "react";
+import AssetVideo from "./ui/AssetVideo";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { getDeviceId } from "../lib/device";
@@ -315,7 +316,7 @@ function JoinSearch({ onClose }: { onClose: () => void }) {
             <div className="flex items-center gap-3 mb-3">
               <div className="w-16 h-16 rounded-2xl bg-black/40 flex items-center justify-center overflow-hidden flex-shrink-0">
                 {result.logoUrl ? (
-                  <img src={result.logoUrl} alt="" className="w-full h-full object-cover" />
+                  <AssetVideo url={result.logoUrl} type="auto" className="w-full h-full object-cover" />
                 ) : (
                   <Briefcase size={26} className="text-teal-300" />
                 )}

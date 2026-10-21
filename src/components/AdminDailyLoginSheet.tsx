@@ -1,5 +1,6 @@
 // [ezo-daily-login] لوحة الأدمن لتحرير الأيام السبعة
 import { useState } from "react";
+import AssetVideo from "./ui/AssetVideo";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { getActiveToken } from "../lib/session";
@@ -100,7 +101,7 @@ export default function AdminDailyLoginSheet({ onClose }: Props) {
           <div className="rounded-2xl bg-gradient-to-br from-amber-500/15 to-yellow-600/5 border border-amber-400/40 p-4 flex flex-col items-center gap-2">
             <div className="w-20 h-20 flex items-center justify-center">
               {imageUrl ? (
-                <img src={imageUrl} alt="" className="w-full h-full object-contain" />
+                <AssetVideo url={imageUrl} type="auto" className="w-full h-full object-contain" />
               ) : (
                 <ImageIcon size={40} className="text-white/30" />
               )}
@@ -134,7 +135,7 @@ export default function AdminDailyLoginSheet({ onClose }: Props) {
                         sel ? "border-emerald-400 bg-emerald-500/20" : "border-white/10 bg-white/5 hover:border-white/30"
                       }`}
                     >
-                      <img src={url} alt="" className="w-full h-full object-contain" />
+                      <AssetVideo url={url} type="auto" className="w-full h-full object-contain" />
                       {sel && (
                         <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center border-2 border-slate-900">
                           <Check size={10} className="text-white" strokeWidth={3} />
@@ -259,7 +260,7 @@ export default function AdminDailyLoginSheet({ onClose }: Props) {
                 }`}
               >
                 <div className="w-16 h-16 flex items-center justify-center">
-                  <img src={day.imageUrl} alt="" className="w-full h-full object-contain" />
+                  <AssetVideo url={day.imageUrl} type="auto" className="w-full h-full object-contain" />
                 </div>
                 <p className="text-white text-[11px] font-black">{day.label}</p>
                 <div className="flex items-center gap-1">
