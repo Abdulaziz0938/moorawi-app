@@ -305,7 +305,7 @@ function MedalsTab({ token }: { token: string | null }) {
             <div key={m._id} className="rounded-2xl border border-white/10 bg-white/5 p-3 flex items-center gap-3">
               <div className="w-12 h-12 rounded-lg overflow-hidden bg-black/40 flex items-center justify-center flex-shrink-0">
                 {isBusy ? <Loader2 size={16} className="animate-spin text-white/50" /> :
-                  m.imageUrl ? <img src={m.imageUrl} alt="" className="w-full h-full object-contain" /> :
+                  m.imageUrl ? <AssetVideo url={m.imageUrl} type="auto" className="w-full h-full object-contain" /> :
                   <Award size={20} className="text-white/40" />}
               </div>
               <div className="flex-1 min-w-0">
@@ -439,7 +439,7 @@ function ShopTab({ token }: { token: string | null }) {
             <div key={it._id} className="rounded-2xl border border-white/10 bg-white/5 p-3 flex items-center gap-3">
               <div className="w-12 h-12 rounded-lg overflow-hidden bg-black/40 flex items-center justify-center flex-shrink-0">
                 {isBusy ? <Loader2 size={16} className="animate-spin text-white/50" /> :
-                  it.previewType === "video" || (it.imageUrl ?? "").match(/\.(mp4|webm|mov)$/i) ? <video src={it.previewUrl ?? it.imageUrl} className="w-full h-full object-contain" muted autoPlay loop playsInline /> : it.imageUrl ? <img src={it.imageUrl} alt="" className="w-full h-full object-contain" /> :
+                  it.previewType === "video" || (it.imageUrl ?? "").match(/\.(mp4|webm|mov)$/i) ? <video src={it.previewUrl ?? it.imageUrl} className="w-full h-full object-contain" muted autoPlay loop playsInline /> : it.imageUrl ? <AssetVideo url={it.imageUrl} type="auto" className="w-full h-full object-contain" /> :
                   <ShoppingBag size={20} className="text-white/40" />}
               </div>
               <div className="flex-1 min-w-0">
@@ -682,7 +682,7 @@ function CreateItemModal({ token, onClose, onCreate }: any) {
             <label className="block cursor-pointer">
               <div className="w-full h-32 rounded-2xl bg-white/10 border-2 border-dashed border-white/30 flex items-center justify-center overflow-hidden">
                 {uploading ? <Loader2 size={24} className="animate-spin text-white/60" /> :
-                 imageUrl ? <img src={imageUrl} alt="" className="w-full h-full object-contain p-2" /> :
+                 imageUrl ? <AssetVideo url={imageUrl} type="auto" className="w-full h-full object-contain p-2" /> :
                  <span className="text-white/40 text-xs">اضغط لرفع صورة</span>}
               </div>
               <input type="file" accept="image/*,video/*" className="hidden"
@@ -984,7 +984,7 @@ function FramesTunerTab({ token }: { token: string | null }) {
               }`}
             >
               {it.imageUrl ? (
-                <img src={it.imageUrl} alt={it.name} className="w-full h-full object-contain p-1" />
+                <AssetVideo url={it.imageUrl} type="auto" className="w-full h-full object-contain p-1" />
               ) : (
                 <span className="text-white/30 text-[9px]">—</span>
               )}
