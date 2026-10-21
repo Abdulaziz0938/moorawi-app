@@ -34,7 +34,7 @@ interface Props {
   token: string | null;
 }
 
-type MainTab = "vip" | "medals" | "gifts" | "bubbles" | "shop" | "banners" | "frames" | "admin" | "ui" | "tuner";
+type MainTab = "vip" | "queen" | "medals" | "gifts" | "bubbles" | "shop" | "banners" | "frames" | "admin" | "ui" | "tuner";
 
 const VIP_SLOTS = [
   { key: "background", label: "الخلفية" },
@@ -122,6 +122,19 @@ const UI_SLOTS: { key: string; label: string }[] = [
   { key: "ui.badge.verified",     label: "شارة — حساب موثق" },
 ];
 
+// ===== Queen / Special assets =====
+const QUEEN_SLOTS = [
+  { key: "vip.queen.hero",      label: "الملكة — الشعار المركزي" },
+  { key: "vip.queen.supporter", label: "الملكة — زر الداعمين" },
+  { key: "queen.badge",         label: "الملكة — شعار Queen" },
+  { key: "queen.halo",          label: "الملكة — الهالة" },
+  { key: "queen.frame",         label: "الملكة — الإطار" },
+  { key: "queen.entry",         label: "الملكة — خلفية الدخول" },
+  { key: "queen.card",          label: "الملكة — البطاقة" },
+  { key: "queen.wave",          label: "الملكة — الموجة" },
+  { key: "vip.hero.special",    label: "الخاص — الشعار" },
+];
+
 export default function AssetsPanel({ token }: Props) {
   const [tab, setTab] = useState<MainTab>("vip");
 
@@ -139,6 +152,7 @@ export default function AssetsPanel({ token }: Props) {
         <TabBtn active={tab === "admin"}   onClick={() => setTab("admin")}   icon={Shield}       label="الأدمن" />
         <TabBtn active={tab === "ui"}      onClick={() => setTab("ui")}      icon={LayoutGrid}   label="الواجهة" />
         <TabBtn active={tab === "tuner"}   onClick={() => setTab("tuner")}   icon={Sparkles}     label="🎛️ ضبط" />
+        <TabBtn active={tab === "queen"}   onClick={() => setTab("queen")}   icon={Crown}        label="الملكة" />
       </div>
 
       {tab === "vip" && <VipAssetsTab token={token} />}
@@ -153,6 +167,7 @@ export default function AssetsPanel({ token }: Props) {
       {tab === "admin" && <SimpleSlotsTab token={token} slots={ADMIN_SLOTS} />}
       {tab === "ui" && <SimpleSlotsTab token={token} slots={UI_SLOTS} />}
       {tab === "tuner" && <AssetTunerTab />}
+      {tab === "queen" && <SimpleSlotsTab token={token} slots={QUEEN_SLOTS} />}
     </div>
   );
 }
