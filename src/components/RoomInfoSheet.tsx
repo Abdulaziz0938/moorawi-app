@@ -87,7 +87,7 @@ export default function RoomInfoSheet({ roomId, onClose, onUserClick, onOpenStaf
               <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center shadow-2xl overflow-hidden border border-white/15">
                 {(room.coverUrl || room.ownerAvatarUrl || owner?.avatarUrl) ? (
                   <img
-                    src={room.coverUrl || room.ownerAvatarUrl || owner?.avatarUrl}
+                    src={room.coverUrl || room.ownerAvatarUrl || owner?.avatarUrl || undefined}
                     alt={room.name}
                     className="w-full h-full object-cover"
                   />
@@ -96,7 +96,7 @@ export default function RoomInfoSheet({ roomId, onClose, onUserClick, onOpenStaf
                 )}
               </div>
               <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-emerald-500 text-[9px] font-black text-white whitespace-nowrap">
-                Lv.{room.level ?? 0}
+                Lv.0
               </div>
             </div>
 
