@@ -23,6 +23,7 @@ import type * as debug_equip from "../debug_equip.js";
 import type * as directMessages from "../directMessages.js";
 import type * as discover from "../discover.js";
 import type * as fix from "../fix.js";
+import type * as fix_social from "../fix_social.js";
 import type * as follows from "../follows.js";
 import type * as friends from "../friends.js";
 import type * as giftHistory from "../giftHistory.js";
@@ -86,6 +87,7 @@ declare const fullApi: ApiFromModules<{
   directMessages: typeof directMessages;
   discover: typeof discover;
   fix: typeof fix;
+  fix_social: typeof fix_social;
   follows: typeof follows;
   friends: typeof friends;
   giftHistory: typeof giftHistory;
