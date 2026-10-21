@@ -1,5 +1,4 @@
-// [ezo-nav] APK-like back button — simple, reliable, never exits
-// One persistent guard in history. Every popstate: close top handler OR re-arm.
+// [ezo-nav] APK-like back button — never exits the browser
 type Handler = { id: string; onClose: () => void; active: boolean };
 
 const handlers: Handler[] = [];
@@ -15,7 +14,6 @@ function pushGuard() {
 export function initHistoryGuard() {
   if (typeof window === "undefined") return;
   if (initialized) {
-    // Re-arm in case the guard was lost (e.g., after deep-link navigation)
     pushGuard();
     return;
   }
@@ -27,7 +25,6 @@ export function initHistoryGuard() {
       ignoreNextPopstate = false;
       return;
     }
-    // Find topmost active handler (last in array)
     for (let i = handlers.length - 1; i >= 0; i--) {
       if (handlers[i].active) {
         handlers[i].active = false;
@@ -41,7 +38,7 @@ export function initHistoryGuard() {
         break;
       }
     }
-    // ALWAYS re-arm — user never exits browser
+    // ALWAYS re-arm — user never leaves browser
     pushGuard();
   });
 }

@@ -14,6 +14,7 @@ import AuthScreen from "./components/AuthScreen";
 import { getActiveToken, hasSession, clearSession } from "./lib/session";
 import { Loader2 } from "lucide-react";
 import { useBackButton } from "./lib/hooks/useBackButton";
+import { initHistoryGuard } from "./lib/historyStack";
 import DailyLoginModal from "./components/DailyLoginModal";
 import InstallBanner from "./components/InstallBanner";
 
@@ -27,6 +28,7 @@ function App() {
   const [isLiveCoHost, setIsLiveCoHost] = useState(false);
   const [myOriginalStreamId, setMyOriginalStreamId] = useState<string | null>(null);
   const [showDailyLogin, setShowDailyLogin] = useState(false);
+  useEffect(() => { initHistoryGuard(); }, []);
 
   // Back button → leave room
   useBackButton(!!currentRoomId, () => window.dispatchEvent(new CustomEvent("room-back-pressed")));
