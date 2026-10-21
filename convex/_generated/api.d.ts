@@ -21,6 +21,7 @@ import type * as crons from "../crons.js";
 import type * as dailyLogin from "../dailyLogin.js";
 import type * as directMessages from "../directMessages.js";
 import type * as discover from "../discover.js";
+import type * as fix from "../fix.js";
 import type * as follows from "../follows.js";
 import type * as friends from "../friends.js";
 import type * as giftHistory from "../giftHistory.js";
@@ -82,6 +83,7 @@ declare const fullApi: ApiFromModules<{
   dailyLogin: typeof dailyLogin;
   directMessages: typeof directMessages;
   discover: typeof discover;
+  fix: typeof fix;
   follows: typeof follows;
   friends: typeof friends;
   giftHistory: typeof giftHistory;

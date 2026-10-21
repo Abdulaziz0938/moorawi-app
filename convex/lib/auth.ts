@@ -28,7 +28,13 @@ async function getNextUserNumber(ctx: MutationCtx): Promise<number> {
     await ctx.db.insert("counters", { name: "userNumber", value: FIRST_USER_NUMBER + 1 });
     return FIRST_USER_NUMBER;
   }
-  const current = counter.value;
+  let current = counter.value;
+  
+  // [ezo-fix] تصحيح تلقائي إذا كان العداد أقل من 100000 (بيانات قديمة)
+  if (current < FIRST_USER_NUMBER) {
+    current = FIRST_USER_NUMBER;
+  }
+  
   await ctx.db.patch("counters", counter._id, { value: current + 1 });
   return current;
 }
