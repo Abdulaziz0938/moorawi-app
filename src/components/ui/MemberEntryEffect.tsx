@@ -12,7 +12,9 @@ export default function MemberEntryEffect({
   onDone: () => void;
 }) {
   const equipped = useQuery(api.shop.getEquippedAssets, { userId });
-  const effect = equipped?.entryEffect || equipped?.vehicle;
+  const effect = [equipped?.entryEffect, equipped?.vehicle].find(
+    (x: any) => x && typeof x.imageUrl === "string" && x.imageUrl.length > 0
+  );
 
   useEffect(() => {
     // إذا لم يكن هناك تأثير، نغلق فوراً

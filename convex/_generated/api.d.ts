@@ -19,6 +19,7 @@ import type * as bubbles from "../bubbles.js";
 import type * as config from "../config.js";
 import type * as crons from "../crons.js";
 import type * as dailyLogin from "../dailyLogin.js";
+import type * as debug_equip from "../debug_equip.js";
 import type * as directMessages from "../directMessages.js";
 import type * as discover from "../discover.js";
 import type * as fix from "../fix.js";
@@ -81,6 +82,7 @@ declare const fullApi: ApiFromModules<{
   config: typeof config;
   crons: typeof crons;
   dailyLogin: typeof dailyLogin;
+  debug_equip: typeof debug_equip;
   directMessages: typeof directMessages;
   discover: typeof discover;
   fix: typeof fix;

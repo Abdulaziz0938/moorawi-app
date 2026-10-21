@@ -11,8 +11,6 @@ export default function EntryEffectOverlay({
   type: string;
   onFinish: () => void;
 }) {
-  // حماية احتياطية: إذا كان العنصر صورة وليس فيديو، سيُغلق بعد 15 ثانية
-  // (في حال كان فيديو، سيُغلق تلقائياً بمجرد انتهاء الفيديو عبر onEnded)
   useEffect(() => {
     const fallback = setTimeout(() => onFinish(), 15000);
     return () => clearTimeout(fallback);
@@ -30,8 +28,13 @@ export default function EntryEffectOverlay({
         <AssetVideo
           url={url}
           type={type}
-          muted={false}
+          muted={true}
+          onCanPlay={(e: any) => {
+            const v = e.target as HTMLVideoElement;
+            try { v.muted = false; v.volume = 0.85; } catch {}
+          }}
           onEnded={onFinish}
+          onError={onFinish}
           className="w-full h-full object-cover pointer-events-none"
           style={{
             opacity: 0.85,
