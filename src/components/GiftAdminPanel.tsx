@@ -22,6 +22,7 @@ export default function GiftsAdmin() {
   const [name, setName] = useState("");
   const [price, setPrice] = useState(100);
   const [category, setCategory] = useState("classic");
+  const [refundPercent, setRefundPercent] = useState(10);
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [forceGlobal, setForceGlobal] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -54,6 +55,8 @@ export default function GiftsAdmin() {
         mediaUrl: result.url,
         mediaType,
         forceGlobal,
+        isLucky: category === "lucky",
+        refundPercent: category === "lucky" ? refundPercent : undefined,
         tokenOverride: getActiveToken() ?? deviceId,
       });
       setName(""); setPrice(100); setCategory("classic");
@@ -82,7 +85,13 @@ export default function GiftsAdmin() {
           <option value="vip" className="text-black">VIP</option>
           <option value="relation" className="text-black">العلاقة</option>
           <option value="fun" className="text-black">مرح</option>
+          <option value="country" className="text-black">الدولة</option>
+          <option value="lucky" className="text-black">محظوظ</option>
         </select>
+        {category === "lucky" && (
+          <input type="number" placeholder="نسبة إرجاع الكوينز % (مثال: 10)" value={refundPercent} onChange={(e) => setRefundPercent(Number(e.target.value))} min={1} max={100}
+            className="w-full bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-2.5 outline-none focus:border-yellow-400 text-yellow-300 text-sm" />
+        )}
 
         <label className="block cursor-pointer">
           <input ref={mediaRef} type="file" accept="image/*,video/webm,video/mp4,video/quicktime,video/x-matroska"

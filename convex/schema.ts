@@ -300,6 +300,8 @@ export default defineSchema({
     mediaId: v.optional(v.id("_storage")),   // legacy
     mediaUrl: v.optional(v.string()),        // Cloudinary
     mediaType: v.union(v.literal("image"), v.literal("video")),
+    isLucky: v.optional(v.boolean()),
+    refundPercent: v.optional(v.number()),
     hasSound: v.optional(v.boolean()),
     isGlobal: v.optional(v.boolean()),
     isRelationship: v.optional(v.boolean()),

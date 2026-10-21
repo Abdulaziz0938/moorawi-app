@@ -120,6 +120,13 @@ const UI_SLOTS: { key: string; label: string }[] = [
 
   // ===== Badges =====
   { key: "ui.badge.verified",     label: "شارة — حساب موثق" },
+  // ===== Gift Banners =====
+  { key: "ui.gift.banner.country", label: "هدايا — بانر الدولة" },
+  { key: "ui.gift.banner.lucky",   label: "هدايا — بانر محظوظ" },
+  { key: "ui.gift.banner.relation",label: "هدايا — بانر CP (العلاقة)" },
+  { key: "ui.gift.banner.fun",     label: "هدايا — بانر مرح" },
+  { key: "ui.gift.banner.vip",     label: "هدايا — بانر VIP" },
+  { key: "ui.gift.banner.classic", label: "هدايا — بانر كلاسيكي" },
 ];
 
 // ===== Queen / Special assets =====

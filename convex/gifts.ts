@@ -70,6 +70,8 @@ export const createGift = mutation({
     mediaUrl: v.string(),
     mediaType: v.union(v.literal("image"), v.literal("video")),
     forceGlobal: v.optional(v.boolean()),
+    isLucky: v.optional(v.boolean()),
+    refundPercent: v.optional(v.number()),
     tokenOverride: v.optional(v.string()),
   },
   handler: async (ctx, args) => {

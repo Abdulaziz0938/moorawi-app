@@ -593,9 +593,15 @@ export const sendGiftToLive = mutation({
 
     const now = Date.now();
 
-    // 1) خصم من المرسل
+    // حساب إرجاع الكوينز لهدايا الحظ
+    let refund = 0;
+    if (gift.isLucky && gift.refundPercent && gift.refundPercent > 0) {
+      refund = Math.floor(total * (gift.refundPercent / 100));
+    }
+
+    // 1) خصم من المرسل + إرجاع الكوينز
     await ctx.db.patch("users", me._id, {
-      coins: myCoins - total,
+      coins: myCoins - total + refund,
       totalSent: (me.totalSent ?? 0) + total,
     });
 

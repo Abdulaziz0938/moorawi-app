@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import AssetVideo from "./ui/AssetVideo";
+import { useAssets } from "../lib/assets";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Lock } from "lucide-react";
 import type { Id } from "../../convex/_generated/dataModel";
 import { getDeviceId } from "../lib/device";
-import { X, Coins, Loader2, Music, Heart, Globe, Mic, Users, Check, ChevronUp, Gift } from "lucide-react";
+import { X, Coins, Loader2, Music, Heart, Globe, Mic, Users, Check, ChevronUp, Gift, Sparkles } from "lucide-react";
 import { dialog } from "../lib/dialog";
 import { getActiveToken } from "../lib/session";
 
@@ -21,6 +22,8 @@ const CATEGORIES = [
   { key: "vip",      label: "VIP" },
   { key: "relation", label: "العلاقة" },
   { key: "fun",      label: "مرح" },
+  { key: "country",  label: "الدولة" },
+  { key: "lucky",    label: "محظوظ" },
 ];
 
 type RecipientMode = "mic" | "room" | "individual";
@@ -41,6 +44,7 @@ export default function GiftSheet({
   const sendBatch = useMutation(api.gifts.sendBatch);
 
   const [category, setCategory] = useState("all");
+  const assets = useAssets();
   const [selectedGiftId, setSelectedGiftId] = useState<Id<"gifts"> | null>(null);
   const [selectedUserIds, setSelectedUserIds] = useState<Set<Id<"users">>>(new Set());
 
@@ -303,6 +307,13 @@ export default function GiftSheet({
           ))}
         </div>
 
+        {/* Category Banner */}
+        {category !== "all" && assets[`ui.gift.banner.${category}`] && (
+          <div className="px-2 py-1 flex-shrink-0">
+            <AssetVideo url={assets[`ui.gift.banner.${category}`]} type="auto" className="w-full h-14 object-cover rounded-lg border border-white/10" />
+          </div>
+        )}
+
         {/* Gifts grid */}
         <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-1.5 py-1.5 thin-scroll">
           {gifts === undefined ? (
@@ -338,6 +349,7 @@ export default function GiftSheet({
                           {g.isRelationship && <div className="w-3 h-3 rounded-sm bg-pink-500/95 flex items-center justify-center"><Heart size={7} className="text-white fill-white" /></div>}
                           {g.isGlobal && <div className="w-3 h-3 rounded-sm bg-blue-500/95 flex items-center justify-center"><Globe size={7} className="text-white" /></div>}
                           {g.hasSound && <div className="w-3 h-3 rounded-sm bg-purple-500/95 flex items-center justify-center"><Music size={7} className="text-white" /></div>}
+                          {g.isLucky && <div className="w-3 h-3 rounded-sm bg-yellow-500/95 flex items-center justify-center"><Sparkles size={7} className="text-white" /></div>}
                         </div>
                         {isSelected && (
                           <div className="absolute top-0.5 left-0.5 w-3.5 h-3.5 bg-emerald-500 rounded-full flex items-center justify-center">
