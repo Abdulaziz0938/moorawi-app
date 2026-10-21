@@ -11,9 +11,11 @@ export default function EntryEffectOverlay({
   type: string;
   onFinish: () => void;
 }) {
+  // حماية احتياطية: إذا كان العنصر صورة وليس فيديو، سيُغلق بعد 15 ثانية
+  // (في حال كان فيديو، سيُغلق تلقائياً بمجرد انتهاء الفيديو عبر onEnded)
   useEffect(() => {
-    const timer = setTimeout(() => onFinish(), 5000);
-    return () => clearTimeout(timer);
+    const fallback = setTimeout(() => onFinish(), 15000);
+    return () => clearTimeout(fallback);
   }, [onFinish]);
 
   return (
@@ -24,18 +26,17 @@ export default function EntryEffectOverlay({
       transition={{ duration: 0.5 }}
       className="fixed inset-0 z-[500] pointer-events-none flex items-center justify-center"
     >
-      <div className="w-full h-full" style={{ mixBlendMode: "screen" }}>
+      <div className="w-full h-full pointer-events-none" style={{ mixBlendMode: "screen" }}>
         <AssetVideo
           url={url}
           type={type}
           muted={false}
-          className="w-full h-full object-cover"
+          onEnded={onFinish}
+          className="w-full h-full object-cover pointer-events-none"
           style={{
             opacity: 0.85,
-            maskImage:
-              "radial-gradient(ellipse 70% 70% at center, black 30%, rgba(0,0,0,0.85) 55%, transparent 90%)",
-            WebkitMaskImage:
-              "radial-gradient(ellipse 70% 70% at center, black 30%, rgba(0,0,0,0.85) 55%, transparent 90%)",
+            maskImage: "radial-gradient(ellipse 70% 70% at center, black 30%, rgba(0,0,0,0.85) 55%, transparent 90%)",
+            WebkitMaskImage: "radial-gradient(ellipse 70% 70% at center, black 30%, rgba(0,0,0,0.85) 55%, transparent 90%)",
           }}
         />
       </div>
