@@ -1,5 +1,6 @@
 // [ezo-moments] عرض منشور + تعليقات
 import { useState } from "react";
+import AssetVideo from "./ui/AssetVideo";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { getDeviceId } from "../lib/device";
@@ -85,7 +86,7 @@ export default function MomentViewSheet({ momentId, onClose, onUserClick }: Prop
         {moment.imageUrls.length > 0 && (
           <div className="space-y-2 px-4 py-2">
             {moment.imageUrls.map((url: string, i: number) => (
-              <img key={i} src={url} alt="" className="rounded-2xl w-full" />
+              <AssetVideo key={i} url={url} type="auto" className="rounded-2xl w-full" />
             ))}
           </div>
         )}

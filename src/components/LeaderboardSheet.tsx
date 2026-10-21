@@ -1,4 +1,5 @@
 import { useState } from "react";
+import AssetVideo from "./ui/AssetVideo";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useAssets, resolveAsset } from "../lib/assets";
@@ -158,23 +159,26 @@ function PodiumSlot({
             <LevelBadge kind="wealth" level={levelFromValue(we)} size="xs" />
           )}
           {user.vip > 0 && (
-            <img
-              src={assets[`vip.logo.${user.vip}`] ?? ""}
+            <AssetVideo
+              url={assets[`vip.logo.${user.vip}`] ?? ""}
+              type="auto"
               alt=""
               className="h-4 w-auto object-contain badge-glow"
               draggable={false}
             />
           )}
           {user.adminRole === "super" && (
-            <img
-              src={resolveAsset(assets, "admin.super", "/badges/badge-super.png")}
+            <AssetVideo
+              url={resolveAsset(assets, "admin.super", "/badges/badge-super.png")}
+              type="auto"
               alt=""
               className="h-5 w-5 object-contain badge-glow"
             />
           )}
           {user.adminRole === "moderator" && (
-            <img
-              src={resolveAsset(assets, "admin.moderator", "/badges/badge-admin.png")}
+            <AssetVideo
+              url={resolveAsset(assets, "admin.moderator", "/badges/badge-admin.png")}
+              type="auto"
               alt=""
               className="h-5 w-5 object-contain badge-glow"
             />
@@ -399,7 +403,7 @@ export default function LeaderboardSheet({ roomId, onClose, onUserClick }: Props
                   <div className="relative flex-shrink-0">
                     <div className="w-14 h-14 rounded-xl overflow-hidden bg-amber-900/10">
                       {room.coverUrl ? (
-                        <img src={room.coverUrl} alt="" className="w-full h-full object-cover" />
+                        <AssetVideo url={room.coverUrl} type="auto" className="w-full h-full object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center"><Home size={24} className="text-amber-900/40" /></div>
                       )}

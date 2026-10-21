@@ -1,5 +1,6 @@
 // [ezo-moments] إنشاء منشور
 import { useState } from "react";
+import AssetVideo from "./ui/AssetVideo";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { getDeviceId } from "../lib/device";
@@ -87,7 +88,7 @@ export default function MomentCreateSheet({ onClose }: Props) {
         <div className="grid grid-cols-3 gap-2">
           {images.map((url, i) => (
             <div key={i} className="relative aspect-square rounded-xl overflow-hidden bg-black/40">
-              <img src={url} alt="" className="w-full h-full object-cover" />
+              <AssetVideo url={url} type="auto" className="w-full h-full object-cover" />
               <button
                 onClick={() => setImages(images.filter((_, idx) => idx !== i))}
                 className="absolute top-1 left-1 w-6 h-6 rounded-full bg-black/70 flex items-center justify-center text-white"

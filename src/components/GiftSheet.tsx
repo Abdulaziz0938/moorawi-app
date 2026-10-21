@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import AssetVideo from "./ui/AssetVideo";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Lock } from "lucide-react";
@@ -328,7 +329,7 @@ export default function GiftSheet({
                           g.mediaType === "video" ? (
                             <video src={g.mediaUrl} className="w-full h-full object-cover pointer-events-none" preload="metadata" muted playsInline disablePictureInPicture controlsList="nodownload noplaybackrate" />
                           ) : (
-                            <img src={g.mediaUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
+                            <AssetVideo url={g.mediaUrl} type="auto" className="w-full h-full object-cover" />
                           )
                         ) : (
                           <div className="w-full h-full flex items-center justify-center"><Gift size={20} className="text-pink-400" /></div>

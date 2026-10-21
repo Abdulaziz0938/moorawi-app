@@ -1,5 +1,6 @@
 // [ezo-moments] تبويب اللحظات
 import { useState, useRef } from "react";
+import AssetVideo from "./ui/AssetVideo";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { getDeviceId } from "../lib/device";
@@ -139,7 +140,7 @@ export default function MomentsTab({ onUserClick }: Props) {
                       onClick={() => setOpenMoment(m)}
                       className="aspect-square bg-black/40 overflow-hidden"
                     >
-                      <img src={url} alt="" className="w-full h-full object-cover" />
+                      <AssetVideo url={url} type="auto" className="w-full h-full object-cover" />
                     </button>
                   ))}
                 </div>
