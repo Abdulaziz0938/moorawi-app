@@ -177,7 +177,20 @@ function App() {
           />
         )
       ) : currentRoomId ? (
-        <RoomView roomId={currentRoomId} onLeave={() => setCurrentRoomId(null)} />
+        <>
+          <Dashboard
+            onEnterRoom={setCurrentRoomId}
+            onEnterLive={(id) => {
+              setIsLiveHost(false);
+              setCurrentLiveId(id);
+            }}
+            onStartLive={(id) => {
+              setIsLiveHost(true);
+              setCurrentLiveId(id);
+            }}
+          />
+          <RoomView roomId={currentRoomId} onLeave={() => setCurrentRoomId(null)} />
+        </>
       ) : (
         <Dashboard
           onEnterRoom={setCurrentRoomId}
