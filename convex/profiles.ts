@@ -98,6 +98,16 @@ export const getById = query({
   },
 });
 
+export const updateBio = mutation({
+  args: { bio: v.string(), tokenOverride: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
+    const clean = args.bio.trim().slice(0, 150);
+    await ctx.db.patch("users", me._id, { bio: clean || undefined });
+    return { ok: true };
+  },
+});
+
 // Check if a username is available
 export const isUsernameAvailable = query({
   args: { username: v.string() },

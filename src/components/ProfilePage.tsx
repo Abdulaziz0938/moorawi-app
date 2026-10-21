@@ -99,6 +99,7 @@ export default function ProfilePage({
   const recordVisit = useMutation(api.visits.record);
   const toggleFollow = useMutation(api.follows.toggle);
   const toggleLikeMut = useMutation(api.likes.toggleLike);
+  const updateBioMut = useMutation(api.profiles.updateBio);
   const isLiked = useQuery(
     api.likes.isLiked,
     !isMe && userId ? { tokenOverride: getActiveToken() ?? deviceId, targetUserId: userId as Id<"users"> } : ("skip" as any)
@@ -111,6 +112,8 @@ export default function ProfilePage({
   const [editingName, setEditingName] = useState(false);
   const [dmConversationId, setDmConversationId] = useState<string | null>(null);
   const [friendSentLocal, setFriendSentLocal] = useState(false);
+  const [editBio, setEditBio] = useState(false);
+  const [bioText, setBioText] = useState("");
   const friendStatus = useQuery(
     api.friends.isFriend,
     !isMe && userId ? { otherUserId: userId as Id<"users">, tokenOverride: getActiveToken() ?? deviceId } : ("skip" as any)
@@ -570,9 +573,23 @@ export default function ProfilePage({
         </div>
 
         {/* Bio */}
-        {profile.bio && (
-          <p className="text-white/85 text-xs text-right px-6 mt-3 leading-relaxed">{profile.bio}</p>
-        )}
+        <div className="px-6 mt-3">
+          {isMe ? (
+            <button
+              onClick={() => { setBioText(profile.bio || ""); setEditBio(true); }}
+              className="w-full text-right group"
+            >
+              {profile.bio ? (
+                <p className="text-white/85 text-xs text-right leading-relaxed">{profile.bio}</p>
+              ) : (
+                <p className="text-white/40 text-xs text-right italic">أضف نبذة تعريفية...</p>
+              )}
+              <span className="inline-block mt-1 text-[10px] text-purple-400 font-bold opacity-0 group-hover:opacity-100 transition">تعديل</span>
+            </button>
+          ) : (
+            profile.bio && <p className="text-white/85 text-xs text-right leading-relaxed">{profile.bio}</p>
+          )}
+        </div>
 
         {/* ============ Stats inline (no card, tappable for isMe) ============ */}
         {playVehicleOnOpen && profile?._id && (
@@ -1000,81 +1017,96 @@ export default function ProfilePage({
           )}
         </div>
 
-        {/* ============ Actions (not me) ============ */}
-        {!isMe && (
-          </div>
-        )}
-
-        {/* Fixed Action Bar (Binmo style) */}
-        {!isMe && (
-          <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-[60] flex items-center justify-center gap-3 px-4 py-2.5 rounded-full bg-black/60 backdrop-blur-xl border border-white/15 shadow-2xl">
-            {/* Friend/Following ? Message : Follow */}
-            {(friendStatus?.isFriend || isFollowing) ? (
-              <button
-                onClick={async () => {
-                  try {
-                    const res = await openWith({
-                      otherUserId: userId as Id<"users">,
-                      tokenOverride: getActiveToken() ?? deviceId,
-                    });
-                    setDmConversationId(res.conversationId);
-                  } catch (e: any) {
-                    dialog.alert(e?.message || "فشل فتح المحادثة");
-                  }
-                }}
-                className="w-13 h-13 min-w-[52px] min-h-[52px] rounded-full bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center text-white shadow-lg active:scale-90 transition"
-                title="مراسلة"
-              >
-                <MessageCircle size={22} />
-              </button>
-            ) : (
-              <button
-                onClick={async () => {
-                  try {
-                    await toggleFollow({ tokenOverride: getActiveToken() ?? deviceId, targetUserId: userId as Id<"users"> });
-                  } catch (e: any) {
-                    dialog.alert(e?.message || "فشل");
-                  }
-                }}
-                className="w-13 h-13 min-w-[52px] min-h-[52px] rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white shadow-lg active:scale-90 transition"
-                title="متابعة"
-              >
-                <UserPlus size={22} />
-              </button>
-            )}
-
-            {/* Like / Unlike */}
+        {/* ============ Fixed Action Bar (Binmo style) ============ */}
+      {!isMe && (
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-[60] flex items-center justify-center gap-3 px-4 py-2.5 rounded-full bg-black/60 backdrop-blur-xl border border-white/15 shadow-2xl">
+          {(friendStatus?.isFriend || isFollowing) ? (
             <button
               onClick={async () => {
                 try {
-                  await toggleLikeMut({ tokenOverride: getActiveToken() ?? deviceId, targetUserId: userId as Id<"users"> });
-                } catch (e: any) {
-                  dialog.alert(e?.message || "فشل");
-                }
+                  const res = await openWith({ otherUserId: userId as Id<"users">, tokenOverride: getActiveToken() ?? deviceId });
+                  setDmConversationId(res.conversationId);
+                } catch (e: any) { dialog.alert(e?.message || "فشل فتح المحادثة"); }
               }}
-              className={`w-13 h-13 min-w-[52px] min-h-[52px] rounded-full flex items-center justify-center shadow-lg active:scale-90 transition ${
-                isLiked
-                  ? "bg-gradient-to-br from-pink-500 to-rose-600 text-white"
-                  : "bg-white/15 backdrop-blur border border-white/25 text-pink-300"
-              }`}
-              title={isLiked ? "إلغاء الإعجاب" : "إعجاب"}
+              className="min-w-[52px] min-h-[52px] rounded-full bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center text-white shadow-lg active:scale-90 transition"
+              title="مراسلة"
             >
-              <Heart size={22} fill={isLiked ? "currentColor" : "none"} />
+              <MessageCircle size={22} />
             </button>
-
-            {/* Gift */}
+          ) : (
             <button
-              onClick={onOpenGift}
-              className="w-13 h-13 min-w-[52px] min-h-[52px] rounded-full bg-gradient-to-br from-purple-500 to-fuchsia-600 flex items-center justify-center text-white shadow-lg active:scale-90 transition"
-              title="إرسال هدية"
+              onClick={async () => {
+                try {
+                  await toggleFollow({ tokenOverride: getActiveToken() ?? deviceId, targetUserId: userId as Id<"users"> });
+                } catch (e: any) { dialog.alert(e?.message || "فشل"); }
+              }}
+              className="min-w-[52px] min-h-[52px] rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white shadow-lg active:scale-90 transition"
+              title="متابعة"
             >
-              <Gift size={22} />
+              <UserPlus size={22} />
             </button>
-          </div>
-        )}
+          )}
 
-        <div className="h-24" />
+          <button
+            onClick={async () => {
+              try {
+                await toggleLikeMut({ tokenOverride: getActiveToken() ?? deviceId, targetUserId: userId as Id<"users"> });
+              } catch (e: any) { dialog.alert(e?.message || "فشل"); }
+            }}
+            className={`min-w-[52px] min-h-[52px] rounded-full flex items-center justify-center shadow-lg active:scale-90 transition ${
+              isLiked ? "bg-gradient-to-br from-pink-500 to-rose-600 text-white" : "bg-white/15 backdrop-blur border border-white/25 text-pink-300"
+            }`}
+            title={isLiked ? "إلغاء الإعجاب" : "إعجاب"}
+          >
+            <Heart size={22} fill={isLiked ? "currentColor" : "none"} />
+          </button>
+
+          <button
+            onClick={onOpenGift}
+            className="min-w-[52px] min-h-[52px] rounded-full bg-gradient-to-br from-purple-500 to-fuchsia-600 flex items-center justify-center text-white shadow-lg active:scale-90 transition"
+            title="إرسال هدية"
+          >
+            <Gift size={22} />
+          </button>
+        </div>
+      )}
+
+        <div className="h-8" />
       </div>
+
+      {/* ============ Bio Edit Modal ============ */}
+      {editBio && (
+        <div className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm flex items-end justify-center" onClick={() => setEditBio(false)}>
+          <div className="w-full max-w-md bg-[#1a1a24] rounded-t-3xl p-5 border-t border-white/10" onClick={(e) => e.stopPropagation()} dir="rtl">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-white font-bold text-lg">تعديل النبذة التعريفية</h3>
+              <button onClick={() => setEditBio(false)} className="text-white/50 hover:text-white p-1 text-xl">✕</button>
+            </div>
+            <textarea
+              value={bioText}
+              onChange={(e) => setBioText(e.target.value.slice(0, 150))}
+              placeholder="اكتب شيئاً عن نفسك..."
+              className="w-full h-32 bg-black/30 border border-white/10 rounded-xl p-3 text-white text-sm outline-none focus:border-purple-500 resize-none"
+            />
+            <div className="flex justify-between items-center mt-2">
+              <span className="text-white/40 text-xs">{bioText.length}/150</span>
+              <button
+                onClick={async () => {
+                  try {
+                    await updateBioMut({ bio: bioText, tokenOverride: getActiveToken() ?? deviceId });
+                    setEditBio(false);
+                  } catch (e: any) {
+                    dialog.alert(e?.message || "فشل الحفظ");
+                  }
+                }}
+                className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-2 rounded-xl font-bold text-sm active:scale-95 transition"
+              >
+                حفظ
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ============ Direct Chat ============ */}
       {dmConversationId && (
