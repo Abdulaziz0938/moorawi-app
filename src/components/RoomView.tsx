@@ -315,7 +315,18 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
   const [showMusicSheet, setShowMusicSheet] = useState(false);
   const [showGamesSheet, setShowGamesSheet] = useState(false);
   const [showChatInput, setShowChatInput] = useState(false);
-  const [chatTab, setChatTab] = useState<"all" | "chat">("all");
+  const [chatTab, setChatTab] = useState<"chat" | "system">("chat");
+  // [ezo-unread] النقطة الحمراء على زر الرسائل
+  const lastMsgId = messages?.[messages.length - 1]?._id ?? null;
+  const [seenMsgId, setSeenMsgId] = useState<string | null>(() => {
+    try { return localStorage.getItem(`ezo:chat:seen:${roomId}`); } catch { return null; }
+  });
+  const hasUnread = !!lastMsgId && lastMsgId !== seenMsgId;
+  const markChatSeen = () => {
+    if (!lastMsgId) return;
+    try { localStorage.setItem(`ezo:chat:seen:${roomId}`, lastMsgId); } catch {}
+    setSeenMsgId(lastMsgId);
+  };
   const [pendingMention, setPendingMention] = useState<{ name: string; ts: number } | null>(null);
   const [showEmojiSheet, setShowEmojiSheet] = useState(false);
   const [showNotifSheet, setShowNotifSheet] = useState(false);
@@ -1188,19 +1199,24 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
 
         <div className="flex-shrink-0 mx-3 mt-2 flex items-center justify-start gap-4 border-b border-white/5">
           <button
-            onClick={() => setChatTab("all")}
+            onClick={() => setChatTab("system")}
             className="relative pb-1.5 text-xs font-black transition"
           >
-            <span className={chatTab === "all" ? "text-white" : "text-white/50"}>الكل</span>
-            {chatTab === "all" && (
+            <span className={chatTab === "system" ? "text-white" : "text-white/50"}>النظام</span>
+            {chatTab === "system" && (
               <span className="absolute bottom-0 right-0 left-0 h-0.5 rounded-full bg-emerald-400" />
             )}
           </button>
           <button
-            onClick={() => setChatTab("chat")}
+            onClick={() => { setChatTab("chat"); markChatSeen(); }}
             className="relative pb-1.5 text-xs font-black transition"
           >
-            <span className={chatTab === "chat" ? "text-white" : "text-white/50"}>الدردشة</span>
+            <span className={`relative ${chatTab === "chat" ? "text-white" : "text-white/50"}`}>
+                الدردشة
+                {hasUnread && (
+                  <span className="absolute -top-1 -right-3 w-2 h-2 rounded-full bg-red-500 ring-2 ring-black/60 animate-pulse" />
+                )}
+              </span>
             {chatTab === "chat" && (
               <span className="absolute bottom-0 right-0 left-0 h-0.5 rounded-full bg-emerald-400" />
             )}
@@ -1216,7 +1232,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
             <div className="space-y-2">
               {messages
               .filter((m: any) => (m.createdAt ?? 0) >= enteredAt || m.system)
-              .filter((m: any) => chatTab === "all" || !m.system)
+              .filter((m: any) => chatTab === "chat" ? !m.system : m.system)
               .map((m: any) => {
                 // [ezo-chat] System messages (entry/announcement) — centered pill
                 if (m.system || !m.senderId) {
@@ -1296,7 +1312,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
         <footer className="px-2 py-2 flex items-center justify-around flex-shrink-0">
           {/* 1. Chat — RIGHT in RTL (reversed) */}
           <button
-            onClick={() => setShowChatInput((v) => !v)}
+            onClick={() => markChatSeen(); setShowChatInput((v) => !v)}
             className="w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center active:scale-90 transition text-white/90"
           >
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
