@@ -21,6 +21,7 @@ function App() {
   const [token, setToken] = useState<string>(() => getActiveToken());
   const [showAuth, setShowAuth] = useState<boolean>(() => !hasSession());
   const [currentRoomId, setCurrentRoomId] = useState<Id<"rooms"> | null>(null);
+  const [roomMinimized, setRoomMinimized] = useState(false);
   const [currentLiveId, setCurrentLiveId] = useState<string | null>(null);
   const [isLiveHost, setIsLiveHost] = useState(false);
   const [isLiveCoHost, setIsLiveCoHost] = useState(false);
@@ -178,18 +179,24 @@ function App() {
         )
       ) : currentRoomId ? (
         <>
-          <Dashboard
-            onEnterRoom={setCurrentRoomId}
-            onEnterLive={(id) => {
-              setIsLiveHost(false);
-              setCurrentLiveId(id);
-            }}
-            onStartLive={(id) => {
-              setIsLiveHost(true);
-              setCurrentLiveId(id);
-            }}
+          {roomMinimized && (
+            <Dashboard
+              onEnterRoom={setCurrentRoomId}
+              onEnterLive={(id) => {
+                setIsLiveHost(false);
+                setCurrentLiveId(id);
+              }}
+              onStartLive={(id) => {
+                setIsLiveHost(true);
+                setCurrentLiveId(id);
+              }}
+            />
+          )}
+          <RoomView
+            roomId={currentRoomId}
+            onLeave={() => { setRoomMinimized(false); setCurrentRoomId(null); }}
+            onMinimizeChange={setRoomMinimized}
           />
-          <RoomView roomId={currentRoomId} onLeave={() => setCurrentRoomId(null)} />
         </>
       ) : (
         <Dashboard

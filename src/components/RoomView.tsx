@@ -161,7 +161,7 @@ function calculateTargetCoords(
   return { particles, aggregateBadge };
 }
 
-interface Props { roomId: Id<"rooms">; onLeave: () => void; }
+interface Props { roomId: Id<"rooms">; onLeave: () => void; onMinimizeChange?: (v: boolean) => void; }
 
 // [ezo] Chat bubble style
 function bubbleClass(vip: number, customUrl?: string): string {
@@ -192,7 +192,7 @@ function renderTextWithMentions(text: string | null | undefined) {
   );
 }
 
-export default function RoomView({ roomId, onLeave }: Props) {
+export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
   const recordRoomEntry = useMutation(api.visits.recordRoomEntry);
   useEffect(() => {
     if (roomId) {
@@ -286,6 +286,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
 
   const [showBackMenu, setShowBackMenu] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
+  useEffect(() => { onMinimizeChange?.(isMinimized); }, [isMinimized, onMinimizeChange]);
   const [shareToast, setShareToast] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -819,7 +820,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
   const wavesJsx = null; // [ezo-pro] replaced by <GiftWavesLayer ref={wavesRef} />
 
   return (
-    <div className="flex flex-col overflow-hidden fixed inset-0 mx-auto" dir="rtl"
+    <div className="flex flex-col overflow-hidden fixed inset-0 mx-auto z-[100] bg-[#0a0a0a]" dir="rtl"
       style={{ maxWidth: "28rem", backgroundImage: room.backgroundUrl ? `url(${room.backgroundUrl})` : undefined, backgroundSize: "cover", backgroundPosition: "center" }}>
       {room.backgroundUrl && <div className="absolute inset-0 bg-black/55 pointer-events-none" />}
 
