@@ -316,6 +316,24 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
   const [showGamesSheet, setShowGamesSheet] = useState(false);
   const [showChatInput, setShowChatInput] = useState(false);
   const [chatTab, setChatTab] = useState<"chat" | "system">("chat");
+  // [ezo-unread] Red dot on chat button when new user messages arrive
+  const [seenChatMsgId, setSeenChatMsgId] = useState<string | null>(() => {
+    try { return localStorage.getItem(`ezo:chat:seen:${roomId}`); } catch { return null; }
+  });
+  const lastUserMsgId = (() => {
+    if (!messages || messages.length === 0) return null;
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const m = messages[i] as any;
+      if (!m.system) return String(m._id);
+    }
+    return null;
+  })();
+  const hasChatUnread = !!lastUserMsgId && lastUserMsgId !== seenChatMsgId && !showChatInput;
+  const markChatSeen = () => {
+    if (!lastUserMsgId) return;
+    try { localStorage.setItem(`ezo:chat:seen:${roomId}`, lastUserMsgId); } catch {}
+    setSeenChatMsgId(lastUserMsgId);
+  };
   const [pendingMention, setPendingMention] = useState<{ name: string; ts: number } | null>(null);
   const [showEmojiSheet, setShowEmojiSheet] = useState(false);
   const [showNotifSheet, setShowNotifSheet] = useState(false);
@@ -1296,12 +1314,15 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
         <footer className="px-2 py-2 flex items-center justify-around flex-shrink-0">
           {/* 1. Chat — RIGHT in RTL (reversed) */}
           <button
-            onClick={() => setShowChatInput((v) => !v)}
-            className="w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center active:scale-90 transition text-white/90"
+            onClick={() => { const next = !showChatInput; setShowChatInput(next); if (next) markChatSeen(); }}
+            className="relative w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center active:scale-90 transition text-white/90"
           >
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 12a8 8 0 01-8 8H7l-4 3v-7a8 8 0 018-8h2a8 8 0 018 4z" />
             </svg>
+            {hasChatUnread && (
+              <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-black/50 animate-pulse" />
+            )}
           </button>
 
           {/* 2. Mic (mic-only) */}
