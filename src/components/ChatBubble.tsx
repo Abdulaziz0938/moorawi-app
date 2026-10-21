@@ -1,5 +1,6 @@
 // [ezo-bubbles] Chat bubble — corner-based rendering (handles large decorations)
 import { useQuery } from "convex/react";
+import AssetVideo from "./ui/AssetVideo";
 import { api } from "../../convex/_generated/api";
 import { useAssets } from "../lib/assets";
 import type { ReactNode } from "react";
@@ -129,7 +130,7 @@ export default function ChatBubble({ vip, children, isOwn, customBubbleUrl }: Pr
   return (
     finalBubbleUrl ? (
     <div className="relative w-fit max-w-[85%] mt-1">
-      <img src={finalBubbleUrl} alt="" className="absolute inset-0 w-full h-full object-fill pointer-events-none" draggable={false} />
+      <AssetVideo url={finalBubbleUrl} type="auto" className="absolute inset-0 w-full h-full object-fill pointer-events-none" draggable={false} />
       <div className="relative px-3 py-2 text-white text-sm">
         {children}
       </div>

@@ -1,5 +1,6 @@
 // [ezo-admin] مراجعة طلبات التوثيق
 import { useState } from "react";
+import AssetVideo from "./ui/AssetVideo";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { getDeviceId } from "../lib/device";
@@ -84,7 +85,7 @@ export default function VerificationPanel({ token }: Props) {
               onClick={() => setPreviewImg(r.imageUrl)}
               className="w-full rounded-xl bg-black/40 border border-white/10 overflow-hidden aspect-square max-h-64"
             >
-              <img src={r.imageUrl} alt="" className="w-full h-full object-cover" />
+              <AssetVideo url={r.imageUrl} type="auto" className="w-full h-full object-cover" />
             </button>
 
             {/* Actions */}

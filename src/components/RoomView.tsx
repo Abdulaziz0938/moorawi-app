@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import AssetVideo from "./ui/AssetVideo";
 import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
@@ -1201,7 +1202,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
                       {(m.text || m.imageUrl) && (
                         <div className="inline-block max-w-[85%] rounded-2xl rounded-tr-sm bg-white/5 border border-white/10 px-2.5 py-1.5">
                           {m.text && <p className="text-white text-xs break-words whitespace-pre-wrap leading-relaxed">{renderTextWithMentions(m.text)}</p>}
-                          {m.imageUrl && <img src={m.imageUrl} alt="" className="mt-1 rounded-lg max-w-[160px] max-h-[160px] object-cover" />}
+                          {m.imageUrl && <AssetVideo url={m.imageUrl} type="auto" className="mt-1 rounded-lg max-w-[160px] max-h-[160px] object-cover" />}
                         </div>
                       )}
                     </div>
@@ -1213,7 +1214,7 @@ export default function RoomView({ roomId, onLeave }: Props) {
         </div>
 
         {showChatInput && (
-          <div className="px-2 pt-1 flex-shrink-0">
+          <div className="px-2 pt-1 flex-shrink-0 relative z-[100]">
             <CompactChatInput onSend={handleSendMsg} onImage={handleImageUpload} sending={sending} uploading={uploading} pendingMention={pendingMention} />
           </div>
         )}
