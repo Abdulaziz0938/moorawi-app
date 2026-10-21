@@ -406,6 +406,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
   const joinedRef = useRef(false);
   const [activeEntryUserId, setActiveEntryUserId] = useState<Id<"users"> | null>(null);
   const seenMembersRef = useRef<Set<string>>(new Set());
+  const myEntryPlayedRef = useRef(false);
   const publishedRef = useRef(false);
 
   useEffect(() => {
@@ -650,6 +651,19 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
     window.addEventListener("room-back-pressed", onBackPress);
     return () => window.removeEventListener("room-back-pressed", onBackPress);
   }, []);
+
+  // [ezo-entry] تشغيل دخولية (مركبة) المستخدم نفسه عند تحميل بياناته
+  useEffect(() => {
+    if (!myInfo?.userId || myEntryPlayedRef.current) return;
+    myEntryPlayedRef.current = true;
+    
+    // تأخير بسيط للتأكد من أن الغرفة ظهرت بالكامل
+    const timer = setTimeout(() => {
+      setActiveEntryUserId(myInfo.userId);
+    }, 800);
+    
+    return () => clearTimeout(timer);
+  }, [myInfo?.userId]);
 
   useEffect(() => {
     if (!members) return;
