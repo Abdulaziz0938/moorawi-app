@@ -1020,7 +1020,7 @@ export default function ProfilePage({
         {/* ============ Fixed Action Bar (Binmo style) ============ */}
       {!isMe && (
         <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-[60] flex items-center justify-center gap-3 px-4 py-2.5 rounded-full bg-black/60 backdrop-blur-xl border border-white/15 shadow-2xl">
-          {(friendStatus?.isFriend || isFollowing) ? (
+          {(friendStatus?.status === "friends" || isFollowing) ? (
             <button
               onClick={async () => {
                 try {
