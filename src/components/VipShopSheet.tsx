@@ -284,12 +284,7 @@ export default function VipShopSheet({ onClose, onOpenRecharge }: Props) {
           }}
         >
           {url ? (
-            <img
-              src={url}
-              alt={slot.label}
-              className="max-h-[88%] max-w-[88%] object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.7)]"
-              draggable={false}
-            />
+            <AssetVideo url={url} type="auto" alt={slot.label} className="max-h-[88%] max-w-[88%] object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.7)]" draggable={false} />
           ) : slot.key === "nickname" ? (
             <span
               className="font-black text-xs sm:text-sm tracking-wider select-none"
@@ -350,12 +345,7 @@ export default function VipShopSheet({ onClose, onOpenRecharge }: Props) {
             }}
           >
             {assets[`vip.${item.key}.${selected}`] ? (
-              <img
-                src={assets[`vip.${item.key}.${selected}`]}
-                alt={item.label}
-                className="max-h-[88%] max-w-[88%] object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.7)]"
-                draggable={false}
-              />
+              <AssetVideo url={assets[`vip.${item.key}.${selected}`]} type="auto" alt={item.label} className="max-h-[88%] max-w-[88%] object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.7)]" draggable={false} />
             ) : (
               <div className="flex flex-col items-center justify-center gap-1 opacity-80">
                 <Sparkles size={22} style={{ color: theme.accent }} />
@@ -488,18 +478,14 @@ export default function VipShopSheet({ onClose, onOpenRecharge }: Props) {
               {/* زر الداعمين في الزاوية اليسرى العلوية كما في الصورة */}
               <div className="absolute top-4 left-4 flex flex-col items-center">
                 <div className="w-14 h-14 rounded-2xl overflow-hidden border border-rose-300/40 flex items-center justify-center shadow-lg">
-                  {assets["vip.queen.supporter"] ? <img src={assets["vip.queen.supporter"]} alt="Supporter" className="w-full h-full object-cover" /> : <div className="w-full h-full bg-gradient-to-b from-rose-500/30 to-black/60 flex items-center justify-center"><Gift size={28} className="text-rose-200" /></div>}
+                  {assets["vip.queen.supporter"] ? <AssetVideo url={assets["vip.queen.supporter"]} type="auto" alt="Supporter" className="w-full h-full object-cover" /> : <div className="w-full h-full bg-gradient-to-b from-rose-500/30 to-black/60 flex items-center justify-center"><Gift size={28} className="text-rose-200" /></div>}
                 </div>
                 <span className="text-[11px] font-black text-rose-100 -mt-1.5 drop-shadow">الداعمين</span>
               </div>
 
               {/* شعار الملكة المركزي */}
               {assets["vip.queen.hero"] ? (
-                <img
-                  src={assets["vip.queen.hero"]}
-                  alt="Queen"
-                  className="h-48 object-contain relative z-10 drop-shadow-[0_10px_25px_rgba(225,29,72,0.5)]"
-                />
+                <AssetVideo url={assets["vip.queen.hero"]} type="auto" alt="Queen" className="h-48 object-contain relative z-10 drop-shadow-[0_10px_25px_rgba(225,29,72,0.5)]" />
               ) : (
                 <div className="relative z-10 flex flex-col items-center">
                   <div className="w-36 h-36 rounded-full border-2 border-rose-300/60 bg-gradient-to-b from-rose-900/60 to-black/80 flex flex-col items-center justify-center shadow-[0_0_40px_rgba(225,29,72,0.6)]">
@@ -533,7 +519,7 @@ export default function VipShopSheet({ onClose, onOpenRecharge }: Props) {
                   }}
                 >
                   {assets[item.key] ? (
-                    <img src={assets[item.key]} alt={item.label} className="max-h-[85%] max-w-[85%] object-contain" />
+                    <AssetVideo url={assets[item.key]} type="auto" alt={item.label} className="max-h-[85%] max-w-[85%] object-contain" />
                   ) : (
                     <div className="flex flex-col items-center gap-1">
                       <Crown size={26} className="text-rose-300" />
@@ -606,11 +592,7 @@ export default function VipShopSheet({ onClose, onOpenRecharge }: Props) {
               </div>
 
               <div className="relative z-10 flex flex-col items-center mt-6">
-                <img 
-                  src={assets["vip.hero.special"] || "https://cdn-icons-png.flaticon.com/512/6491/6491618.png"} 
-                  alt="VIP" 
-                  className="h-16 object-contain drop-shadow-[0_4px_15px_rgba(234,179,8,0.5)]" 
-                />
+                <AssetVideo url={assets["vip.hero.special"] || "https://cdn-icons-png.flaticon.com/512/6491/6491618.png"} type="auto" alt="VIP" className="h-16 object-contain drop-shadow-[0_4px_15px_rgba(234,179,8,0.5)]" />
                 <p className="text-[#fde68a] font-bold text-sm mt-2 text-center px-6">
                   استمتع بأكثر من {allBenefits?.filter((b: any) => b.level === currentLevel).length || 14} امتيازاً!
                 </p>
