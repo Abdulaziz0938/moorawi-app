@@ -2,14 +2,12 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import type { Id } from "../../convex/_generated/types";
 import { getDeviceId } from "../lib/device";
 import { getActiveToken } from "../lib/session";
 import { dialog } from "../lib/dialog";
 import { X, Loader2, ArrowRight, Gem, Coins, History } from "lucide-react";
 
 interface Props {
-  roomId?: Id<"rooms">;
   onClose: () => void;
 }
 

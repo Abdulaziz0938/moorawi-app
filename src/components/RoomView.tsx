@@ -2043,7 +2043,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
       )}
 
       {showMiniChat && <MiniChatSheet roomId={roomId} onClose={() => setShowMiniChat(false)} />}
-      {showSpend && <DiamondExchangeSheet roomId={roomId} onClose={() => setShowSpend(false)} />}
+      {showSpend && <DiamondExchangeSheet onClose={() => setShowSpend(false)} />}
 
       {showStaffSettings && (
         <StaffSettingsSheet
