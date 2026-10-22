@@ -16,7 +16,7 @@ export const importWebSvga = mutation({
     ];
     let updated = 0, inserted = 0;
     for (const [key, url] of items) {
-      const existing = await ctx.db.query("assets").withIndex("by_key", q => q.eq("key", key)).unique();
+      const existing = await ctx.db.query("assets").withIndex("by_key", q => q.eq("key", key)).first();
       if (existing) {
         await ctx.db.patch(existing._id, { imageUrl: url, updatedAt: Date.now() });
         updated++;
