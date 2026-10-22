@@ -231,35 +231,8 @@ export default function MiniProfileSheet({
             <div className={`absolute inset-0 bg-gradient-to-b ${bgGradient}`} />
           )}
 
-          {/* [ezo-card] البطاقة كطبقة خلفية شبه شفافة */}
-          {vipCardUrl && (
-            <div
-              className="absolute inset-0"
-              style={{
-                backgroundImage: `url(${vipCardUrl})`,
-                backgroundSize: "100% 100%",
-                backgroundRepeat: "no-repeat",
-                opacity: 0.4,
-              }}
-            />
-          )}
-
-          {/* طبقة داكنة للقراءة */}
-          <div className="absolute inset-0 bg-black/80" />
-
-          {/* [ezo-card-frame] الإطار الرقيق كـ 9-patch — فوق الطبقات، تحت المحتوى */}
-          {vipCardUrl && (
-            <div
-              className="absolute inset-0 z-[18] pointer-events-none"
-              style={{
-                borderImageSource: `url(${vipCardUrl})`,
-                borderImageSlice: "80",
-                borderImageRepeat: "stretch",
-                borderImageWidth: "45px",
-                borderStyle: "solid",
-              }}
-            />
-          )}
+          {/* [ezo-fix] تم إزالة طبقات البطاقة الداكنة بناءً على طلب المالك */}
+          <div className="absolute inset-0 bg-black/40" />
 
           <div className="relative z-[25] flex flex-col max-h-[92vh] overflow-y-auto px-6 pt-7 pb-6">
             {/* Name + ID — right-aligned */}
