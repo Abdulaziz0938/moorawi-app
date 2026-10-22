@@ -2,9 +2,9 @@ import { mutation } from "./_generated/server";
 
 const SVGA_DATA: Record<string, string> = {
   // إطارات VIP متحركة (فقط 5/6/7 — لا نلمس 1-4 لأنها JPG من رفعك السابق)
-  "vip.frame.5": "https://res.cloudinary.com/wdicx984/raw/upload/v1792678598/hi4kj0loskjhyjxotsps.svga",
-  "vip.frame.6": "https://res.cloudinary.com/wdicx984/raw/upload/v1792678599/xswruawnyvmt1rsgjnqv.svga",
-  "vip.frame.7": "https://res.cloudinary.com/wdicx984/raw/upload/v1792678600/pvyw6zshliwgvmztwlrn.svga",
+  "vip.frame.5": "https://res.cloudinary.com/wdicx984/raw/upload/v1792678699/unlvauvcepki3rfapcoa.svga",
+  "vip.frame.6": "https://res.cloudinary.com/wdicx984/raw/upload/v1792678703/wgrrpzlnaki8ssrjb3er.svga",
+  "vip.frame.7": "https://res.cloudinary.com/wdicx984/raw/upload/v1792678591/emjyekg98rjckxuzljju.svga",
   // دخوليات SVGA (مفاتيح جديدة)
   "vip.entry.svga.1": "https://res.cloudinary.com/wdicx984/raw/upload/v1792678580/kjysbv5qxuaeqif1szyv.svga",
   "vip.entry.svga.2": "https://res.cloudinary.com/wdicx984/raw/upload/v1792678585/ujrejwdhas71u6zmpxdc.svga",
