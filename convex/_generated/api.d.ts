@@ -56,6 +56,7 @@ import type * as roomEmojis from "../roomEmojis.js";
 import type * as rooms from "../rooms.js";
 import type * as seedMedals from "../seedMedals.js";
 import type * as seedShop from "../seedShop.js";
+import type * as seed_svga from "../seed_svga.js";
 import type * as shop from "../shop.js";
 import type * as users from "../users.js";
 import type * as verification from "../verification.js";
@@ -121,6 +122,7 @@ declare const fullApi: ApiFromModules<{
   rooms: typeof rooms;
   seedMedals: typeof seedMedals;
   seedShop: typeof seedShop;
+  seed_svga: typeof seed_svga;
   shop: typeof shop;
   users: typeof users;
   verification: typeof verification;
