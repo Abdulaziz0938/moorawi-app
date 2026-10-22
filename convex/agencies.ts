@@ -555,9 +555,10 @@ export const submitCreateRequest = mutation({
     // حساب المستوى بمقارنة بسيطة (30 يعني تجاوز عدة عتبات)
     // نستورد levelFromValue من lib/levels لكن داخل convex
     const { levelFromValue } = await import("./lib/levels");
-    const wealthLevel = levelFromValue(me.totalSent ?? 0);
+    // [ezo-fix] استخدام totalRecharged (الثراء الحقيقي) بدلاً من totalSent
+    const wealthLevel = levelFromValue(me.totalRecharged ?? me.coins ?? 0);
     if (wealthLevel < 30) {
-      throw new Error("مستوى الثراء يجب أن يكون 30 أو أعلى");
+      throw new Error(`مستوى الثراء يجب أن يكون 30 أو أعلى (مستواك الحالي: ${wealthLevel})`);
     }
 
     const name = args.agencyName.trim();
