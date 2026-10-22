@@ -2,13 +2,13 @@ import { mutation } from "./_generated/server";
 
 const SVGA_DATA: Record<string, string> = {
   // إطارات VIP متحركة (فقط 5/6/7 — لا نلمس 1-4 لأنها JPG من رفعك السابق)
-  "vip.frame.5": "https://res.cloudinary.com/wdicx984/raw/upload/v1792678699/unlvauvcepki3rfapcoa.svga",
-  "vip.frame.6": "https://res.cloudinary.com/wdicx984/raw/upload/v1792678703/wgrrpzlnaki8ssrjb3er.svga",
-  "vip.frame.7": "https://res.cloudinary.com/wdicx984/raw/upload/v1792678591/emjyekg98rjckxuzljju.svga",
+  "vip.frame.5": "https://res.cloudinary.com/wdicx984/image/upload/f_auto,q_auto/v1792051879/tolwpv7um7lsoe1wnqb6.jpg",
+  "vip.frame.6": "https://res.cloudinary.com/wdicx984/image/upload/f_auto,q_auto/v1792051959/fzlrtd8ro7iivqgclcsg.jpg",
+  "vip.frame.7": "https://res.cloudinary.com/wdicx984/image/upload/f_auto,q_auto/v1792052015/wvdc2fi8ripdknkyesru.jpg",
   // دخوليات SVGA (مفاتيح جديدة)
-  "vip.entry.svga.1": "https://res.cloudinary.com/wdicx984/raw/upload/v1792678580/kjysbv5qxuaeqif1szyv.svga",
-  "vip.entry.svga.2": "https://res.cloudinary.com/wdicx984/raw/upload/v1792678585/ujrejwdhas71u6zmpxdc.svga",
-  "vip.entry.svga.3": "https://res.cloudinary.com/wdicx984/raw/upload/v1792678587/mj3nys20w7afbqoeh2hf.svga",
+  "vip.entry.svga.dragon": "https://res.cloudinary.com/wdicx984/raw/upload/v1792678699/unlvauvcepki3rfapcoa.svga",
+  "vip.entry.svga.kingset": "https://res.cloudinary.com/wdicx984/raw/upload/v1792678703/wgrrpzlnaki8ssrjb3er.svga",
+  "vip.entry.svga.angel": "https://res.cloudinary.com/wdicx984/raw/upload/v1792678591/emjyekg98rjckxuzljju.svga",
   "vip.entry.svga.4": "https://res.cloudinary.com/wdicx984/raw/upload/v1792678588/iercby15tiqbloab1w2w.svga",
   // مركبة SVGA
   "shop.vehicle.svga.posche": "https://res.cloudinary.com/wdicx984/raw/upload/v1792678604/ejvpqzptxdvkzzkkyhwt.svga",
