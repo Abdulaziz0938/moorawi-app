@@ -2,30 +2,26 @@ import { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import AssetVideo from "./ui/AssetVideo";
-import { Search, Copy, Check } from "lucide-react";
+import { Search, Copy, Check, Link as LinkIcon } from "lucide-react";
 
 export default function AssetsGalleryTab() {
   const assets = useQuery(api.assets.list);
   const [search, setSearch] = useState("");
-  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [copied, setCopied] = useState<string | null>(null);
 
   if (!assets) return <div className="text-white text-center py-4">جاري التحميل...</div>;
 
-  // عرض كل الملفات المفيدة (الهدايا، الإطارات، المركبات، الدخوليات، الملفات المخصصة، إلخ)
   const filtered = assets.filter((a: any) => {
-    const isUseful = 
-      a.key.startsWith("asset.") || 
-      a.key.startsWith("vip.");
-    // إخفاء أي ملف لا يحتوي على رابط
+    const isUseful = a.key.startsWith("asset.") || a.key.startsWith("vip.");
     const hasUrl = !!a.imageUrl && !a.imageUrl.includes("undefined");
     return isUseful && hasUrl && a.key.toLowerCase().includes(search.toLowerCase());
   });
 
-  const handleCopy = async (key: string) => {
+  const handleCopy = async (text: string, type: string) => {
     try {
-      await navigator.clipboard.writeText(key);
-      setCopiedKey(key);
-      setTimeout(() => setCopiedKey(null), 1500);
+      await navigator.clipboard.writeText(text);
+      setCopied(type + text);
+      setTimeout(() => setCopied(null), 1500);
     } catch {}
   };
 
@@ -51,21 +47,27 @@ export default function AssetsGalleryTab() {
         {filtered.map((item: any) => (
           <div
             key={item._id}
-            onClick={() => handleCopy(item.key)}
-            className="relative aspect-square bg-black/40 rounded-xl overflow-hidden border border-white/10 active:scale-95 transition cursor-pointer group flex items-center justify-center"
+            className="relative aspect-square bg-black/40 rounded-xl overflow-hidden border border-white/10 group flex flex-col"
           >
-            <AssetVideo
-              url={item.imageUrl}
-              type="auto"
-              loop={true}
-              className="w-full h-full object-contain"
-            />
-            <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition flex flex-col items-center justify-center p-2 text-center text-[10px] text-white break-all">
-              {copiedKey === item.key ? (
-                <><Check size={16} className="text-green-400 mb-1" /> تم النسخ</>
-              ) : (
-                <><Copy size={16} className="mb-1" /> {item.key.replace('asset.', '').replace('custom.', '')}</>
-              )}
+            <div className="flex-1 relative flex items-center justify-center overflow-hidden">
+              <AssetVideo url={item.imageUrl} type="auto" loop={true} className="w-full h-full object-contain" />
+            </div>
+            
+            {/* أزرار التحكم */}
+            <div className="bg-black/80 p-1 flex flex-col gap-1 text-[9px] text-white">
+              <button 
+                onClick={() => handleCopy(item.imageUrl, "url-")}
+                className="flex items-center justify-center gap-1 bg-blue-600/50 hover:bg-blue-600 py-1 rounded transition"
+              >
+                {copied === "url-" + item.imageUrl ? <Check size={10} className="text-green-400"/> : <LinkIcon size={10} />} نسخ الرابط
+              </button>
+              <button 
+                onClick={() => handleCopy(item.key, "key-")}
+                className="flex items-center justify-center gap-1 bg-purple-600/50 hover:bg-purple-600 py-1 rounded transition truncate px-1"
+              >
+                {copied === "key-" + item.key ? <Check size={10} className="text-green-400"/> : <Copy size={10} />} 
+                <span className="truncate">{item.key.replace('asset.', '').replace('custom.', '')}</span>
+              </button>
             </div>
           </div>
         ))}
