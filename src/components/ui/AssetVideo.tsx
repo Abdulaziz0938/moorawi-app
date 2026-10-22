@@ -20,7 +20,7 @@ export default function AssetVideo({
 
   // كشف SVGA (رسوم متحركة) — يُعرض عبر SvgaPlayer
   if (url.toLowerCase().endsWith(".svga")) {
-    return <SvgaPlayer src={url} className={className} loop={loop ? 0 : 1} />;
+    return <SvgaPlayer src={url} className={className} loops={loop ? 0 : 1} />;
   }
 
   // كشف الفيديو
