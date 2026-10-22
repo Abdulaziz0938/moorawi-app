@@ -51,6 +51,7 @@ export default function AssetsGalleryTab() {
             <AssetVideo
               url={item.imageUrl}
               type="auto"
+              loop={true}
               className="w-full h-full object-contain"
             />
             <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition flex flex-col items-center justify-center p-2 text-center text-[10px] text-white break-all">

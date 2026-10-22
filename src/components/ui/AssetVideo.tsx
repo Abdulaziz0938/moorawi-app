@@ -1,5 +1,6 @@
 import React from "react";
 import SvgaPlayer from "./SvgaPlayer";
+import LottiePlayer from "./LottiePlayer";
 
 export default function AssetVideo({
   url,
@@ -21,6 +22,11 @@ export default function AssetVideo({
   // كشف SVGA (رسوم متحركة) — يُعرض عبر SvgaPlayer
   if (url.toLowerCase().endsWith(".svga")) {
     return <SvgaPlayer src={url} className={className} loops={loop ? 0 : 1} />;
+  }
+
+  // كشف Lottie JSON — يُعرض عبر LottiePlayer
+  if (url.toLowerCase().endsWith(".json")) {
+    return <LottiePlayer src={url} loop={loop} className={className} />;
   }
 
   // كشف الفيديو
