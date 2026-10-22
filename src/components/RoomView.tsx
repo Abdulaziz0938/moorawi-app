@@ -16,6 +16,7 @@ import { useAssets, useAssetsFull } from "../lib/assets";
 import { uploadToCloudinary } from "../lib/cloudinary";
 import { smartUpload } from "../lib/uploadAssets";
 import SettingsSheet from "./SettingsSheet";
+import StaffSettingsSheet from "./StaffSettingsSheet";
 import RoomLockSheet from "./RoomLockSheet";
 import GiftSheet from "./GiftSheet";
 import MusicSheet from "./MusicSheet";
@@ -290,6 +291,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
   const [shareToast, setShareToast] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showStaffSettings, setShowStaffSettings] = useState(false);
   const [activeSubSheet, setActiveSubSheet] = useState<string | null>(null);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showMembers, setShowMembers] = useState(false);
@@ -2036,6 +2038,13 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
         />
       )}
 
+      {showStaffSettings && (
+        <StaffSettingsSheet
+          roomId={roomId}
+          onClose={() => setShowStaffSettings(false)}
+        />
+      )}
+
       {showSettings && (
         <SettingsSheet roomId={roomId} currentLayout={layout} isOwnerOrMod={isOwnerOrMod}
           currentName={room.name} currentWelcome={room.welcomeMessage ?? ""} currentCoverUrl={room.coverUrl ?? null}
@@ -2046,6 +2055,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
             if (key === "music") { setShowMusicSheet(true); return; }
             if (key === "lock") { setActiveSubSheet("lock"); return; }
             if (key === "gifts") { setShowGifts(true); return; }
+            if (key === "role") { setShowStaffSettings(true); return; }
             // باقي الميزات تحتاج مكونات خاصة - قريباً
             dialog.alert("هذه الميزة قيد التطوير — قريباً");
           }} />
