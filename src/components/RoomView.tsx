@@ -2044,7 +2044,10 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
           onOpenActivity={() => { setShowSettings(false); setShowActivity(true); }}
           onOpenSubSheet={(key) => {
             if (key === "music") { setShowMusicSheet(true); return; }
-            setActiveSubSheet(key);
+            if (key === "lock") { setActiveSubSheet("lock"); return; }
+            if (key === "gifts") { setShowGifts(true); return; }
+            // باقي الميزات تحتاج مكونات خاصة - قريباً
+            dialog.alert("هذه الميزة قيد التطوير — قريباً");
           }} />
       )}
 

@@ -235,7 +235,7 @@ export default function MusicSheet({ roomId, onClose }: Props) {
                 <input
                   ref={fileRef}
                   type="file"
-                  accept="audio/*,video/mp4,video/webm"
+                  accept=".mp3,.m4a,.aac,.wav,.ogg,.flac,.opus,.wma,.m4b,audio/*"
                   multiple
                   className="hidden"
                   onChange={(e) => {
