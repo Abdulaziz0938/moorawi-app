@@ -3,6 +3,7 @@
 // - عرض 90%، ارتفاع أقصى 140px
 // - قابلة للتعديل من Tuner (يستخدم canvasSize/offsetY/offsetX/holeSize الموجودة)
 import type { AssetFull } from "../../lib/assets";
+import SvgaPlayer from "./SvgaPlayer";
 
 interface Props {
   url: string;
@@ -37,17 +38,23 @@ export default function VipTopOrnament({
         opacity: fadeOut,
       }}
     >
-      <img
-        src={url}
-        alt=""
-        className="object-contain"
-        style={{
-          width: `${widthPct}%`,
-          transform: `scale(${scale})`,
-          transformOrigin: "center bottom",
-        }}
-        draggable={false}
-      />
+      {url.toLowerCase().endsWith(".svga") ? (
+        <div style={{ width: `${widthPct}%`, transform: `scale(${scale})`, transformOrigin: "center bottom" }}>
+          <SvgaPlayer src={url} loops={0} className="w-full h-auto" />
+        </div>
+      ) : (
+        <img
+          src={url}
+          alt=""
+          className="object-contain"
+          style={{
+            width: `${widthPct}%`,
+            transform: `scale(${scale})`,
+            transformOrigin: "center bottom",
+          }}
+          draggable={false}
+        />
+      )}
     </div>
   );
 }
