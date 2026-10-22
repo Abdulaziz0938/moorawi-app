@@ -441,26 +441,52 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
   const seenMembersRef = useRef<Set<string>>(new Set());
   const myEntryPlayedRef = useRef(false);
   const publishedRef = useRef(false);
+  // [ezo-agora] UID فريد لكل جلسة دخول (deviceId + timestamp + random)
+  const sessionUidRef = useRef<string>(
+    `${deviceId}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`
+  );
 
   useEffect(() => {
     if (!room || joinedRef.current) return;
     joinedRef.current = true;
     let cancelled = false;
     (async () => {
-      try {
-        const tokenData = await getToken({ roomId, tokenOverride: getActiveToken() ?? deviceId });
+      // [ezo-agora] Retry on UID_CONFLICT — مطابق لـ Binmo/Yalla
+      const maxAttempts = 3;
+      for (let attempt = 0; attempt < maxAttempts; attempt++) {
         if (cancelled) return;
-        await agoraManager.join(tokenData.appId, roomId, tokenData.token, tokenData.account,
-          () => setRemoteCount((c) => c + 1),
-          () => setRemoteCount((c) => Math.max(0, c - 1)));
-        if (cancelled) { agoraManager.leave(); return; }
-        setAgoraConnected(true);
-        setError(null);
-      } catch (e: any) {
-        if (cancelled) return;
-        const msg = e?.message || "فشل الاتصال";
-        if (msg.includes("OPERATION_ABORTED") || msg.includes("cancel token")) return;
-        setError(msg);
+        try {
+          const forceUid = attempt === 0
+            ? sessionUidRef.current
+            : `${deviceId}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+          const tokenData = await getToken({
+            roomId,
+            tokenOverride: getActiveToken() ?? deviceId,
+            deviceId,
+            forceUid,
+          });
+          if (cancelled) return;
+          await agoraManager.join(tokenData.appId, roomId, tokenData.token, tokenData.account,
+            () => setRemoteCount((c) => c + 1),
+            () => setRemoteCount((c) => Math.max(0, c - 1)));
+          if (cancelled) { agoraManager.leave(); return; }
+          setAgoraConnected(true);
+          setError(null);
+          break;
+        } catch (e: any) {
+          const errMsg = String(e?.message || "");
+          const errCode = String((e as any)?.code || "");
+          const isConflict = errMsg.includes("UID_CONFLICT") || errCode.includes("UID_CONFLICT");
+          if (errMsg.includes("OPERATION_ABORTED") || errMsg.includes("cancel token")) return;
+          if (isConflict && attempt < maxAttempts - 1) {
+            console.warn(`[agora] UID_CONFLICT retry ${attempt + 1}/${maxAttempts - 1}`);
+            await agoraManager.leave().catch(() => {});
+            await new Promise((r) => setTimeout(r, 800 * (attempt + 1)));
+            continue;
+          }
+          if (!cancelled) setError(errMsg || "فشل الاتصال");
+          break;
+        }
       }
     })();
     return () => {

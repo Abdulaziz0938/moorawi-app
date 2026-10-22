@@ -8,7 +8,12 @@ import { internal } from "./_generated/api";
 const TOKEN_TTL_SECONDS = 3600;
 
 export const getToken = action({
-  args: { roomId: v.id("rooms"), tokenOverride: v.optional(v.string()) },
+  args: {
+    roomId: v.id("rooms"),
+    tokenOverride: v.optional(v.string()),
+    deviceId: v.optional(v.string()),
+    forceUid: v.optional(v.string()),
+  },
   handler: async (
     ctx,
     args,
@@ -24,10 +29,13 @@ export const getToken = action({
     });
     const canPublish = access.onMic;
     const role = canPublish ? RtcRole.PUBLISHER : RtcRole.SUBSCRIBER;
+    // [ezo-agora] UID فريد لكل جلسة — يمنع UID_CONFLICT
+    // الترتيب: forceUid (retry) > deviceId (ثابت للجهاز) > user._id (fallback)
+    const uid = args.forceUid || args.deviceId || String(access.account);
     const token = RtcTokenBuilder.buildTokenWithUserAccount(
-      appId, cert, args.roomId, access.account, role, TOKEN_TTL_SECONDS, TOKEN_TTL_SECONDS,
+      appId, cert, args.roomId, uid, role, TOKEN_TTL_SECONDS, TOKEN_TTL_SECONDS,
     );
-    return { appId, token, account: access.account };
+    return { appId, token, account: uid };
   },
 });
 
