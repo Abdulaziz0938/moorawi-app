@@ -18,7 +18,7 @@ import { smartUpload } from "../lib/uploadAssets";
 import SettingsSheet from "./SettingsSheet";
 import StaffSettingsSheet from "./StaffSettingsSheet";
 import MiniChatSheet from "./MiniChatSheet";
-import SpendSheet from "./SpendSheet";
+import DiamondExchangeSheet from "./DiamondExchangeSheet";
 import RoomLockSheet from "./RoomLockSheet";
 import GiftSheet from "./GiftSheet";
 import MusicSheet from "./MusicSheet";
@@ -2043,7 +2043,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
       )}
 
       {showMiniChat && <MiniChatSheet roomId={roomId} onClose={() => setShowMiniChat(false)} />}
-      {showSpend && <SpendSheet roomId={roomId} onClose={() => setShowSpend(false)} />}
+      {showSpend && <DiamondExchangeSheet roomId={roomId} onClose={() => setShowSpend(false)} />}
 
       {showStaffSettings && (
         <StaffSettingsSheet

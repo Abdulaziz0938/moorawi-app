@@ -133,21 +133,21 @@ export default function MusicSheet({ roomId, onClose }: Props) {
             onClick={() => setTab("library")}
             className={`flex-1 py-3 text-xs font-black flex items-center justify-center gap-1.5 transition relative ${tab === "library" ? "text-white" : "text-white/50"}`}
           >
-            <Library size={14} /> مكتبتي
+            <Library size={14} /> محلي
             {tab === "library" && <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-purple-400 rounded-full" />}
           </button>
           <button
             onClick={() => setTab("upload")}
             className={`flex-1 py-3 text-xs font-black flex items-center justify-center gap-1.5 transition relative ${tab === "upload" ? "text-white" : "text-white/50"}`}
           >
-            <Upload size={14} /> رفع
+            <Upload size={14} /> تحميل
             {tab === "upload" && <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-purple-400 rounded-full" />}
           </button>
           <button
             onClick={() => setTab("search")}
             className={`flex-1 py-3 text-xs font-black flex items-center justify-center gap-1.5 transition relative ${tab === "search" ? "text-white" : "text-white/50"}`}
           >
-            <Search size={14} /> بحث
+            <Search size={14} /> أونلاين
             {tab === "search" && <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-purple-400 rounded-full" />}
           </button>
         </div>

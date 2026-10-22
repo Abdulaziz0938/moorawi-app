@@ -241,3 +241,21 @@ export const transferCoins = mutation({
     return { ok: true };
   },
 });
+
+// [ezo-exchange] Diamond → Gold conversion (1:1)
+export const exchangeDiamonds = mutation({
+  args: { amount: v.number(), tokenOverride: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
+    const n = Math.floor(args.amount);
+    if (n <= 0) throw new Error("الكمية غير صحيحة");
+    if (n % 10 !== 0) throw new Error("يجب أن تكون الكمية من مضاعفات 10");
+    const myDiamonds = (me as any).diamonds ?? 0;
+    if (myDiamonds < n) throw new Error("رصيد الألماس غير كافٍ");
+    await ctx.db.patch("users", me._id, {
+      diamonds: myDiamonds - n,
+      coins: ((me as any).coins ?? 0) + n,
+    });
+    return { ok: true };
+  },
+});

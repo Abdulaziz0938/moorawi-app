@@ -10,6 +10,10 @@ import { getDeviceId } from "../lib/device";
 import { Music, Volume2, VolumeX, Pause, Play, X, Loader2 } from "lucide-react";
 import { getActiveToken } from "../lib/session";
 
+// [ezo-music] Global singleton — prevents double playback
+let __ezoGlobalAudio: HTMLAudioElement | null = null;
+let __ezoGlobalTrackId: string | null = null;
+
 interface Props {
   roomId: Id<"rooms">;
   /** 'inline' = داخل MusicSheet | 'hidden' = لا يعرض UI (فقط يشغّل الصوت) */
@@ -76,7 +80,7 @@ export default function MusicPlayer({ roomId, variant = "inline" }: Props) {
 
     audioRef.current = a;
 
-    return () => { a.pause(); };
+    return () => {}; // [ezo-music] global audio persists
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [current?.musicId, current?.url]);
 
