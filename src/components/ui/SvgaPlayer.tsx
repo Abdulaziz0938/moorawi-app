@@ -1,6 +1,7 @@
 // [ezo-svga] SvgaPlayer — React wrapper for SVGA animations
+// Uses "svga" (SVGAPlayer-Web-Lite) — compatible with React 19
 import { useEffect, useRef, useState } from "react";
-import SVGA from "svgaplayerweb";
+import { Parser, Player } from "svga";
 
 interface Props {
   src: string;
@@ -19,73 +20,74 @@ export default function SvgaPlayer({
   autoPlay = true,
   clearOnStop = true,
 }: Props) {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const playerRef = useRef<any>(null);
+  const parserRef = useRef<any>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!containerRef.current || !src) return;
-    const container = containerRef.current;
+    if (!canvasRef.current || !src) return;
+    const canvas = canvasRef.current;
+    setError(null);
 
-    // نُنظف أي أطفال سابقين
-    container.innerHTML = "";
+    let cancelled = false;
 
-    let player: any = null;
-    let parser: any = null;
-
-    try {
-      player = new SVGA.Player(container);
-      parser = new SVGA.Parser();
-      playerRef.current = player;
-
-      player.setContentMode("AspectFit");
-      player.setClipsToBounds(false);
-      player.setLoops(loops);
-      if (autoPlay) player.startAnimation();
-      if (onFinish) player.onFinished(() => onFinish());
-
-      parser.load(
-        src,
-        (videoItem: any) => {
-          try {
-            player.setVideoItem(videoItem);
-            player.startAnimation();
-          } catch (e: any) {
-            setError(e?.message || "SVGA play error");
-          }
-        },
-        (err: any) => {
-          setError("تعذّر تحميل SVGA");
+    (async () => {
+      try {
+        // Ensure canvas has explicit size
+        const parent = canvas.parentElement;
+        if (parent && (parent.clientWidth > 0)) {
+          canvas.width = parent.clientWidth;
+          canvas.height = parent.clientHeight;
+        } else {
+          canvas.width = canvas.width || 64;
+          canvas.height = canvas.height || 64;
         }
-      );
-    } catch (e: any) {
-      setError(e?.message || "SVGA init error");
-    }
+
+        const parser = new Parser();
+        parserRef.current = parser;
+        const svgaData = await parser.load(src);
+        if (cancelled) return;
+
+        const player = new Player({
+          container: canvas,
+          loop: loops,
+          clearsAfterStop: clearOnStop,
+          onEnd: onFinish,
+        } as any);
+        playerRef.current = player;
+
+        await player.mount(svgaData);
+        if (cancelled) return;
+        if (autoPlay) player.start();
+      } catch (e: any) {
+        const msg = e?.message || String(e) || "SVGA failed";
+        console.error("[SvgaPlayer]", msg);
+        setError(msg);
+      }
+    })();
 
     return () => {
-      try {
-        if (player) {
-          player.stopAnimation();
-          if (clearOnStop) player.clear();
-        }
-      } catch {}
-      playerRef.current = null;
+      cancelled = true;
+      try { (playerRef.current as any)?.stop?.(); } catch {}
+      try { (playerRef.current as any)?.clear?.(); } catch {}
+      try { (playerRef.current as any)?.destroy?.(); } catch {}
+      try { (parserRef.current as any)?.destroy?.(); } catch {}
     };
-  }, [src, loops, autoPlay, onFinish, clearOnStop]);
-
-  if (error) {
-    return (
-      <div className={`flex items-center justify-center ${className}`}>
-        <span className="text-white/40 text-[10px]">{error}</span>
-      </div>
-    );
-  }
+  }, [src, loops, autoPlay, clearOnStop, onFinish]);
 
   return (
-    <div
-      ref={containerRef}
-      className={className}
-      style={{ width: "100%", height: "100%" }}
-    />
+    <div className={className} style={{ position: "relative", width: "100%", height: "100%" }}>
+      <canvas ref={canvasRef} style={{ width: "100%", height: "100%", display: "block" }} />
+      {error && (
+        <div style={{
+          position: "absolute", inset: 0, background: "rgba(220,38,38,0.9)",
+          color: "white", fontSize: "7px", padding: "2px", overflow: "hidden",
+          display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center",
+        }}>
+          ⚠ {error.slice(0, 60)}
+        </div>
+      )}
+    </div>
   );
 }
