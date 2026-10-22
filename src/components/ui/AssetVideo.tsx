@@ -1,4 +1,5 @@
 import React from "react";
+import SvgaPlayer from "./SvgaPlayer";
 
 export default function AssetVideo({
   url,
@@ -16,6 +17,11 @@ export default function AssetVideo({
   [key: string]: any;
 }) {
   if (!url) return null;
+
+  // كشف SVGA (رسوم متحركة) — يُعرض عبر SvgaPlayer
+  if (url.toLowerCase().endsWith(".svga")) {
+    return <SvgaPlayer src={url} className={className} loop={loop ? 0 : 1} />;
+  }
 
   // كشف الفيديو
   const isVideo = type === "video" || (type === "auto" && (/\.(mp4|webm|mov|mkv|gif)($|\?|#)/i.test(url) || url.includes("/video/upload/")));
