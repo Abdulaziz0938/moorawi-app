@@ -13,7 +13,7 @@ import ImageCropper from "./ImageCropper";
 import {
   X, Sparkles, Palette, LayoutGrid, Settings, Lock,
   Briefcase, Activity, Music, Coins, MessageCircle,
-  Wand2, Gift, Volume2, Mic2, ImageIcon, Monitor, VolumeX, Check, Loader2, Globe, Heart, Hand,
+  Wand2, Gift, Volume2, Mic2, ImageIcon, Monitor, VolumeX, Check, Loader2, Globe, Heart, Hand, Eraser,
 } from "lucide-react";
 import SectionTitle from "./ui/SectionTitle";
 import { getActiveToken } from "../lib/session";
@@ -78,6 +78,7 @@ export default function SettingsSheet({
   const updateRoomInfo = useMutation(api.rooms.updateRoomInfo);
   const updateBackground = useMutation(api.rooms.updateRoomBackground);
   const setMicRequestsEnabledMutation = useMutation(api.mics.setMicRequestsEnabled);
+  const clearRoomMutation = useMutation(api.messages.clearRoom);
   const [localMicReqEnabled, setLocalMicReqEnabled] = useState<boolean>(micRequestsEnabled);
   const [micReqSaving, setMicReqSaving] = useState(false);
 
@@ -170,6 +171,7 @@ export default function SettingsSheet({
     { icon: ImageIcon, label: "عملية الخلفية", key: "bg-process" },
     { icon: Monitor, label: "تشغيل الشاشة دوماً", key: "always-on" },
     { icon: VolumeX, label: "عازل صوت", key: "noise-cancel" },
+    { icon: Eraser, label: "شاشة واضحة", key: "clear-screen" },
   ];
 
   // [ezo-security] الأزرار المتاحة لجميع المستخدمين (شخصية فقط)
@@ -179,6 +181,19 @@ export default function SettingsSheet({
     // حماية: أي زر غير شخصي = owner/mod فقط
     if (!isOwnerOrMod && !personalKeys.includes(key)) {
       dialog.alert("للمالك/المشرف فقط");
+      return;
+    }
+
+    // ==== Clear Screen (مسح الشات) ====
+    if (key === "clear-screen") {
+      dialog.confirm("هل تريد مسح جميع رسائل الغرفة؟", async () => {
+        try {
+          const r = await clearRoomMutation({ roomId, tokenOverride: getActiveToken() ?? deviceId });
+          dialog.alert(`تم مسح ${(r as any)?.deleted ?? 0} رسالة`);
+        } catch (e: any) {
+          dialog.alert(e?.message || "فشل المسح");
+        }
+      }, "مسح", "مسح");
       return;
     }
 

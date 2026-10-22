@@ -126,3 +126,30 @@ async function recordMissionProgress(ctx: any, userId: any, keys: string[], amou
     }
   }
 }
+
+
+// ═══ [ezo-clear] مسح جميع رسائل الغرفة (للمالك/المشرف) ═══
+export const clearRoom = mutation({
+  args: { roomId: v.id("rooms"), tokenOverride: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
+    const room = await ctx.db.get("rooms", args.roomId);
+    if (!room) throw new Error("الغرفة غير موجودة");
+    const member = await ctx.db
+      .query("roomMembers")
+      .withIndex("by_room_and_user", (q: any) =>
+        q.eq("roomId", args.roomId).eq("userId", me._id)
+      )
+      .unique();
+    const isOwner = room.ownerId === me._id;
+    const isMod = member?.role === "moderator";
+    const isAdmin = (me as any).adminRole === "super" || me.userNumber === 1;
+    if (!isOwner && !isMod && !isAdmin) throw new Error("للمالك/المشرف فقط");
+    const msgs = await ctx.db
+      .query("messages")
+      .withIndex("by_room", (q: any) => q.eq("roomId", args.roomId))
+      .collect();
+    for (const m of msgs) await ctx.db.delete(m._id);
+    return { ok: true, deleted: msgs.length };
+  },
+});
