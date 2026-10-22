@@ -23,7 +23,7 @@ import {
   Upload, RotateCcw, Loader2, Pencil, Save, X, Home, MessageCircle,
   Image as ImageIcon, Compass, User, Mic, Grid2x2, Send, Bell,
   Trophy, Heart, Search, ChevronLeft, Hash, Settings, Users, Megaphone,
-  Plus, Trash2, Move, Sparkles,
+  Plus, Trash2, Move, Sparkles, Link as LinkIcon,
 } from "lucide-react";
 
 
@@ -230,6 +230,15 @@ function VipAssetsTab({ token }: any) {
     } catch (e: any) { dialog.alert(e?.message || "فشل"); }
     finally { setBusyKey(null); }
   };
+
+  const handlePasteUrl = async (key: string, url: string) => {
+    setBusyKey(key);
+    try {
+      await setAsset({ key, imageUrl: url, tokenOverride: token ?? undefined });
+      dialog.alert("تم الحفظ بنجاح");
+    } catch (e: any) { dialog.alert(e?.message || "فشل"); }
+    finally { setBusyKey(null); }
+  };
   const handleClear = (key: string) => {
     dialog.confirm("إعادة الافتراضي؟", async () => {
       setBusyKey(key);
@@ -258,7 +267,7 @@ function VipAssetsTab({ token }: any) {
           return (
             <div key={key} className={isTop ? "col-span-2" : ""}>
               <AssetCard slotKey={key} label={`${slot.label} — VIP ${level}`}
-                src={assets[key]} busy={busyKey === key} onUpload={handleFile} onClear={handleClear} />
+                src={assets[key]} busy={busyKey === key} onUpload={handleFile} onPasteUrl={handlePasteUrl} onClear={handleClear} />
               {isTop && assets[key] && <TopTuner slotKey={key} full={(assetsFullAll || {})[key]} />}
             </div>
           );
@@ -284,6 +293,15 @@ function SimpleSlotsTab({ token, slots }: any) {
     } catch (e: any) { dialog.alert(e?.message || "فشل"); }
     finally { setBusyKey(null); }
   };
+
+  const handlePasteUrl = async (key: string, url: string) => {
+    setBusyKey(key);
+    try {
+      await setAsset({ key, imageUrl: url, tokenOverride: token ?? undefined });
+      dialog.alert("تم الحفظ بنجاح");
+    } catch (e: any) { dialog.alert(e?.message || "فشل"); }
+    finally { setBusyKey(null); }
+  };
   const handleClear = (key: string) => {
     dialog.confirm("إعادة الافتراضي؟", async () => {
       setBusyKey(key);
@@ -296,7 +314,7 @@ function SimpleSlotsTab({ token, slots }: any) {
     <div className="grid grid-cols-2 gap-3">
       {slots.map((s: any) => (
         <AssetCard key={s.key} slotKey={s.key} label={s.label}
-          src={assets[s.key]} busy={busyKey === s.key} onUpload={handleFile} onClear={handleClear} />
+          src={assets[s.key]} busy={busyKey === s.key} onUpload={handleFile} onPasteUrl={handlePasteUrl} onClear={handleClear} />
       ))}
     </div>
   );
@@ -625,7 +643,7 @@ function TopTuner({ slotKey, full }: { slotKey: string; full?: any }) {
   );
 }
 
-function AssetCard({ slotKey, label, src, busy, onUpload, onClear }: any) {
+function AssetCard({ slotKey, label, src, busy, onUpload, onPasteUrl, onClear }: any) {
   return (
     <div className={`rounded-2xl border p-3 flex flex-col items-center gap-2 ${
       src ? "border-emerald-400/40 bg-emerald-500/5" : "border-white/10 bg-white/5"
@@ -637,12 +655,19 @@ function AssetCard({ slotKey, label, src, busy, onUpload, onClear }: any) {
       </div>
       <p className="text-white text-[10px] font-black text-center leading-tight">{label}</p>
       <p className="text-white/40 text-[8px] font-mono truncate max-w-full" dir="ltr">{slotKey}</p>
-      <div className="flex items-center gap-1.5">
+      <div className="flex flex-wrap items-center justify-center gap-1.5">
         <label className={`px-2 py-1 rounded-lg text-white text-[10px] font-black cursor-pointer flex items-center gap-1 active:scale-95 transition ${busy ? "opacity-50 pointer-events-none" : ""} bg-blue-500/25 border border-blue-400/40`}>
           <Upload size={10} /> رفع
           <input type="file" accept="image/*,video/*" className="hidden"
             onChange={(e) => { const f = e.target.files?.[0]; if (f) onUpload(slotKey, f); e.target.value = ""; }} />
         </label>
+        <button onClick={() => {
+          const url = window.prompt("الصق الرابط هنا (URL):");
+          if (url && url.trim()) onPasteUrl(slotKey, url.trim());
+        }} disabled={busy}
+          className="px-2 py-1 rounded-lg bg-emerald-500/25 border border-emerald-400/40 text-white text-[10px] font-black flex items-center gap-1 active:scale-95">
+          <LinkIcon size={10} /> رابط
+        </button>
         {src && (
           <button onClick={() => onClear(slotKey)} disabled={busy}
             className="px-2 py-1 rounded-lg bg-red-500/25 border border-red-400/40 text-white text-[10px] font-black flex items-center gap-1">
