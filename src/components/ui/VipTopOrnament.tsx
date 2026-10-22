@@ -9,6 +9,10 @@ interface Props {
   assetFull?: AssetFull | null;
   className?: string;
   fadeOut?: number;
+  /** % of parent height where ornament BOTTOM sits.
+   *  100 → bottom of parent (use when parent ends at divider).
+   *  0   → top of parent (use when parent starts at divider). */
+  anchorPercent?: number;
 }
 
 export default function VipTopOrnament({
@@ -16,23 +20,20 @@ export default function VipTopOrnament({
   assetFull,
   className = "",
   fadeOut = 1,
+  anchorPercent = 100,
 }: Props) {
   if (!url) return null;
 
   // إعادة استخدام الحقول الموجودة + افتراضيات ذكية
   const widthPct = assetFull?.canvasSize ?? 90;
-  // [ezo-fix] offsetX/offsetY من DB كانت قيماً خاطئة من Tuner سابق (47/172)
-  // نستخدم 0 حتى نضبط الموقع الصحيح، ثم نعيدها إن احتجنا
-  const yOffset = 0;
-  const xOffset = 0;
   const scale = (assetFull?.holeSize ?? 100) / 100;
 
   return (
     <div
       className={`absolute left-0 right-0 flex justify-center pointer-events-none ${className}`}
       style={{
-        top: "25%",
-        transform: `translateY(calc(-100% + ${yOffset}px))`,
+        top: `${anchorPercent}%`,
+        transform: "translateY(-100%)",
         opacity: fadeOut,
       }}
     >
@@ -42,8 +43,8 @@ export default function VipTopOrnament({
         className="object-contain"
         style={{
           width: `${widthPct}%`,
-          transform: `translateX(${xOffset}px) scale(${scale})`,
-          transformOrigin: "center center",
+          transform: `scale(${scale})`,
+          transformOrigin: "center bottom",
         }}
         draggable={false}
       />
