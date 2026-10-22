@@ -51,8 +51,8 @@ export default function SvgaPlayer({ src, loops = 0, className = "", onFinish, a
   return (
     <div ref={containerRef} className={className} style={{ width: "100%", height: "100%", position: "relative" }}>
       {error && (
-        <div className="absolute inset-0 bg-red-900/80 text-white text-[10px] flex items-center justify-center p-2 text-center rounded">
-          ⚠ {error}
+        <div className="absolute inset-0 bg-black/50 text-white/50 text-[9px] flex items-center justify-center p-1 text-center rounded">
+          ⚠ فشل التحميل
         </div>
       )}
     </div>

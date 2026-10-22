@@ -1,3 +1,4 @@
+import { calculateEzoVipLevel } from "./vip";
 import { mutation, query, internalMutation } from "./_generated/server";
 import { ConvexError, v } from "convex/values";
 import { requireUser } from "./lib/auth";
@@ -190,7 +191,14 @@ export const grantCoins = mutation({
     if (args.amount === 0) throw new ConvexError({ code: "BAD_REQUEST", message: "المبلغ صفر" });
 
     const newCoins = (target.coins ?? 0) + args.amount;
-    await ctx.db.patch("users", args.userId, { coins: newCoins });
+    const newTotalRecharged = Math.max(0, (target.totalRecharged ?? 0) + args.amount);
+    const newVipLevel = calculateEzoVipLevel(newTotalRecharged);
+    
+    await ctx.db.patch("users", args.userId, { 
+      coins: newCoins,
+      totalRecharged: newTotalRecharged,
+      vipLevel: newVipLevel
+    });
 
     await ctx.db.insert("walletTransactions", {
       userId: target._id,

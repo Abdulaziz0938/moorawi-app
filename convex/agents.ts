@@ -1,5 +1,6 @@
 // [ezo-agents] نظام وكلاء شحن — ينشئهم الأدمن ويشحنون المستخدمين بالـ UID
 import { mutation, query } from "./_generated/server";
+import { calculateEzoVipLevel } from "./vip";
 import { ConvexError, v } from "convex/values";
 import { requireUser } from "./lib/auth";
 
@@ -251,9 +252,13 @@ export const agentRecharge = mutation({
 
     // إضافة للمستخدم
     const newUserCoins = (target.coins ?? 0) + args.coins;
+    const newUserTotalRecharged = (target.totalRecharged ?? 0) + args.coins;
+    const newVipLevel = calculateEzoVipLevel(newUserTotalRecharged);
+    
     await ctx.db.patch("users", target._id, {
       coins: newUserCoins,
-      totalRecharged: (target.totalRecharged ?? 0) + args.coins,
+      totalRecharged: newUserTotalRecharged,
+      vipLevel: newVipLevel,
     });
 
     // سجل
