@@ -1,8 +1,8 @@
-// [ezo-music] MusicPlayer — synced room music player
-// Embedded inside MusicSheet (not floating).
-// Auto-plays when someone starts a track. Local mute + volume.
+// [ezo-music] MusicPlayer — ONE audio element, shared across all instances
+// - variant="hidden" (RoomView): drives the actual playback
+// - variant="inline" (MusicSheet): UI only, reads state from the global audio
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
@@ -10,13 +10,66 @@ import { getDeviceId } from "../lib/device";
 import { Music, Volume2, VolumeX, Pause, Play, X, Loader2 } from "lucide-react";
 import { getActiveToken } from "../lib/session";
 
-// [ezo-music] Global singleton — prevents double playback
-let __ezoGlobalAudio: HTMLAudioElement | null = null;
-let __ezoGlobalTrackId: string | null = null;
+// ═══ MODULE SINGLETON — exactly ONE <audio> in the entire app ═══
+let __audio: HTMLAudioElement | null = null;
+let __audioTrackId: string | null = null;
+let __isPlaying = false;
+const __listeners = new Set<() => void>();
+
+function notify() { __listeners.forEach(fn => fn()); }
+
+function ensureAudio(url: string, trackId: string): HTMLAudioElement {
+  if (__audio && __audioTrackId === trackId) return __audio;
+  if (__audio) {
+    try { __audio.pause(); } catch {}
+    try { __audio.src = ""; } catch {}
+    __audio = null;
+    __audioTrackId = null;
+    __isPlaying = false;
+  }
+  __audio = new Audio(url);
+  __audio.loop = true;
+  __audioTrackId = trackId;
+  __audio.addEventListener("play", () => { __isPlaying = true; notify(); });
+  __audio.addEventListener("pause", () => { __isPlaying = false; notify(); });
+  __audio.addEventListener("ended", () => { __isPlaying = false; notify(); });
+  return __audio;
+}
+
+function playAudio(seekTo?: number) {
+  if (!__audio) return;
+  if (seekTo != null && seekTo > 0 && Math.abs(__audio.currentTime - seekTo) > 2) {
+    try { __audio.currentTime = seekTo; } catch {}
+  }
+  __audio.play().catch(() => {});
+}
+
+function pauseAudio() {
+  if (__audio) { try { __audio.pause(); } catch {} }
+}
+
+function stopAudio() {
+  if (__audio) {
+    try { __audio.pause(); } catch {}
+    try { __audio.src = ""; } catch {}
+    __audio = null;
+    __audioTrackId = null;
+    __isPlaying = false;
+    notify();
+  }
+}
+
+function setMute(m: boolean) { if (__audio) __audio.muted = m; }
+function setVol(v: number) { if (__audio) __audio.volume = v; }
+function getPlaying() { return __isPlaying; }
+
+function subscribe(cb: () => void): () => void {
+  __listeners.add(cb);
+  return () => { __listeners.delete(cb); };
+}
 
 interface Props {
   roomId: Id<"rooms">;
-  /** 'inline' = داخل MusicSheet | 'hidden' = لا يعرض UI (فقط يشغّل الصوت) */
   variant?: "inline" | "hidden";
 }
 
@@ -27,81 +80,47 @@ export default function MusicPlayer({ roomId, variant = "inline" }: Props) {
   const pauseRoom = useMutation(api.music.pauseRoom);
   const resumeRoom = useMutation(api.music.resumeRoom);
 
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [muted, setMuted] = useState(false);
-  const [volume, setVolume] = useState(0.85);
+  const [muted, setMutedState] = useState(false);
+  const [volume, setVolumeState] = useState(0.85);
   const [playing, setPlaying] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Load / play / pause on track change
+  // Subscribe to global playing state
   useEffect(() => {
+    setPlaying(getPlaying());
+    return subscribe(() => setPlaying(getPlaying()));
+  }, []);
+
+  // ONLY the hidden variant drives the audio engine
+  useEffect(() => {
+    if (variant !== "hidden") return;
+
     if (!current || !current.url) {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
-      setPlaying(false);
+      stopAudio();
+      setLoading(false);
       return;
     }
-
-    if (audioRef.current && (audioRef.current as any)._trackId === current.musicId) {
-      if (current.isPaused && !audioRef.current.paused) {
-        audioRef.current.pause();
-        setPlaying(false);
-      } else if (!current.isPaused && audioRef.current.paused) {
-        audioRef.current.play().then(() => setPlaying(true)).catch(() => {});
-      }
-      return;
-    }
-
-    if (audioRef.current) audioRef.current.pause();
 
     setLoading(true);
-    const a = new Audio(current.url);
-    (a as any)._trackId = current.musicId;
-    a.loop = true;
+    const a = ensureAudio(current.url, String(current.musicId));
     a.muted = muted;
     a.volume = volume;
 
-    const onLoaded = () => {
-      try {
-        a.currentTime = Math.max(0, current.positionSec || 0);
-      } catch {}
-      if (!current.isPaused) {
-        a.play()
-          .then(() => { setPlaying(true); setLoading(false); })
-          .catch(() => { setPlaying(false); setLoading(false); });
-      } else {
-        setPlaying(false);
-        setLoading(false);
-      }
-    };
-    a.addEventListener("loadedmetadata", onLoaded, { once: true });
-
-    audioRef.current = a;
-
-    return () => {}; // [ezo-music] global audio persists
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [current?.musicId, current?.url]);
-
-  // Sync pause/resume without reload
-  useEffect(() => {
-    if (!audioRef.current || !current) return;
-    const a = audioRef.current;
-    if (current.isPaused && !a.paused) {
-      a.pause(); setPlaying(false);
-    } else if (!current.isPaused && a.paused && (a as any)._trackId === current.musicId) {
-      a.play().then(() => setPlaying(true)).catch(() => {});
+    if (current.isPaused) {
+      pauseAudio();
+      setLoading(false);
+    } else {
+      playAudio(current.positionSec);
+      // approximate — real loading state resolved after play promise
+      setTimeout(() => setLoading(false), 300);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [current?.isPaused]);
+  }, [current?.musicId, current?.url, current?.isPaused, variant]);
 
-  // Sync mute + volume
+  // Sync mute/volume (both variants can change it; last wins)
   useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.muted = muted;
-      audioRef.current.volume = volume;
-    }
+    setMute(muted);
+    setVol(volume);
   }, [muted, volume]);
 
   if (!current) return null;
@@ -110,19 +129,25 @@ export default function MusicPlayer({ roomId, variant = "inline" }: Props) {
   const isPaused = current.isPaused;
 
   const handlePause = () => {
-    const pos = audioRef.current?.currentTime ?? 0;
-    pauseRoom({ roomId, positionSec: pos, tokenOverride: getActiveToken() ?? deviceId }).catch(() => {});
+    pauseAudio();
+    pauseRoom({
+      roomId,
+      positionSec: __audio?.currentTime ?? 0,
+      tokenOverride: getActiveToken() ?? deviceId,
+    }).catch(() => {});
   };
+
   const handleResume = () => {
     resumeRoom({ roomId, tokenOverride: getActiveToken() ?? deviceId }).catch(() => {});
   };
+
   const handleStop = () => {
+    stopAudio();
     stopRoom({ roomId, tokenOverride: getActiveToken() ?? deviceId }).catch(() => {});
   };
 
   return (
     <div className="rounded-2xl border border-purple-400/40 bg-gradient-to-br from-purple-600/30 to-pink-600/30 p-3 space-y-2.5" dir="rtl">
-      {/* Track info */}
       <div className="flex items-center gap-2">
         <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
           {loading
@@ -138,20 +163,17 @@ export default function MusicPlayer({ roomId, variant = "inline" }: Props) {
         </span>
       </div>
 
-      {/* Controls row */}
       <div className="flex items-center gap-2">
         <button
           onClick={isPaused ? handleResume : handlePause}
           className="w-9 h-9 rounded-full bg-white/20 text-white flex items-center justify-center active:scale-95"
-          title={isPaused ? "استئناف" : "إيقاف مؤقت"}
         >
           {isPaused ? <Play size={14} fill="currentColor" /> : <Pause size={14} fill="currentColor" />}
         </button>
 
         <button
-          onClick={() => setMuted((m) => !m)}
+          onClick={() => setMutedState((m) => !m)}
           className={`w-9 h-9 rounded-full flex items-center justify-center transition active:scale-95 ${muted ? "bg-red-500/50 text-white" : "bg-white/20 text-white"}`}
-          title={muted ? "تشغيل الصوت" : "كتم الصوت"}
         >
           {muted ? <VolumeX size={14} /> : <Volume2 size={14} />}
         </button>
@@ -162,16 +184,14 @@ export default function MusicPlayer({ roomId, variant = "inline" }: Props) {
           max={1}
           step={0.05}
           value={volume}
-          onChange={(e) => setVolume(Number(e.target.value))}
+          onChange={(e) => setVolumeState(Number(e.target.value))}
           className="flex-1 accent-pink-400"
           dir="ltr"
-          title="مستوى الصوت"
         />
 
         <button
           onClick={handleStop}
           className="w-9 h-9 rounded-full bg-red-500/40 text-white flex items-center justify-center active:scale-95"
-          title="إيقاف للجميع"
         >
           <X size={14} />
         </button>
