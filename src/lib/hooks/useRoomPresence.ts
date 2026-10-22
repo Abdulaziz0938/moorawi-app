@@ -40,21 +40,27 @@ export function useRoomPresence(
       leave({ roomId, tokenOverride }).catch(() => {});
     };
 
-    // 4) عند العودة للتباب → heartbeat فوري
+    // 4) عند العودة للتباب → heartbeat فوري (Doze recovery)
     const handleVisibility = () => {
       if (document.visibilityState === "visible") {
         heartbeat({ roomId, tokenOverride }).catch(() => {});
       }
     };
+    const handleFocus = () => { heartbeat({ roomId, tokenOverride }).catch(() => {}); };
+    const handlePageShow = () => { heartbeat({ roomId, tokenOverride }).catch(() => {}); };
 
     window.addEventListener("beforeunload", handleUnload);
     window.addEventListener("pagehide", handleUnload);
+    window.addEventListener("focus", handleFocus);
+    window.addEventListener("pageshow", handlePageShow);
     document.addEventListener("visibilitychange", handleVisibility);
 
     return () => {
       if (intervalRef.current) window.clearInterval(intervalRef.current);
       window.removeEventListener("beforeunload", handleUnload);
       window.removeEventListener("pagehide", handleUnload);
+      window.removeEventListener("focus", handleFocus);
+      window.removeEventListener("pageshow", handlePageShow);
       document.removeEventListener("visibilitychange", handleVisibility);
 
       // تنظيف عند unmount

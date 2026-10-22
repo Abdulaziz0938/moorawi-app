@@ -16,7 +16,7 @@ import { mutation, query, internalMutation } from "./_generated/server";
 import { requireUser } from "./lib/auth";
 
 const HEARTBEAT_INTERVAL_MS = 25_000;
-const STALE_THRESHOLD_MS = 90_000; // 3x heartbeat
+const STALE_THRESHOLD_MS = 180_000; // 3x heartbeat (extended for Android Doze)
 const MAX_SEATS = 24;
 
 // ============================================================

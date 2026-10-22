@@ -400,13 +400,17 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
   }, [roomId]);
 
   // [ezo-fix] Leave seat + release DB slot on unmount
+  // NOTE: clearMySeats via ref to avoid firing cleanup on every re-render
+  const clearMySeatsRef = useRef(clearMySeats);
+  useEffect(() => { clearMySeatsRef.current = clearMySeats; }, [clearMySeats]);
   useEffect(() => {
     return () => {
       if (myUserIdRef.current) {
-        clearMySeats({ roomId, tokenOverride: getActiveToken() ?? deviceId }).catch(() => {});
+        clearMySeatsRef.current({ roomId, tokenOverride: getActiveToken() ?? deviceId }).catch(() => {});
       }
     };
-  }, [roomId, deviceId, clearMySeats]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roomId]);
 
   const giftSinceRef = useRef(Date.now());
   const latestGift = useQuery(api.gifts.latestGiftFull, { roomId, since: giftSinceRef.current });
@@ -1022,7 +1026,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
         )}
 
         <div className="text-center py-0.5 flex-shrink-0">
-          {agoraConnected && <p className="text-[8px] text-green-300">متصل بالصوت ({remoteCount})</p>}
+          
           {error && <p className="text-[8px] text-red-300">{error}</p>}
         </div>
 
