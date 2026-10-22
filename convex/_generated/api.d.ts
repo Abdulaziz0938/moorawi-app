@@ -28,6 +28,7 @@ import type * as follows from "../follows.js";
 import type * as friends from "../friends.js";
 import type * as giftHistory from "../giftHistory.js";
 import type * as gifts from "../gifts.js";
+import type * as import_web_svga from "../import_web_svga.js";
 import type * as lib_agents from "../lib/agents.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_levels from "../lib/levels.js";
@@ -95,6 +96,7 @@ declare const fullApi: ApiFromModules<{
   friends: typeof friends;
   giftHistory: typeof giftHistory;
   gifts: typeof gifts;
+  import_web_svga: typeof import_web_svga;
   "lib/agents": typeof lib_agents;
   "lib/auth": typeof lib_auth;
   "lib/levels": typeof lib_levels;
