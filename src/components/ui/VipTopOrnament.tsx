@@ -1,42 +1,37 @@
-// [ezo-vip] قمة مزخرفة — كل القيم من DB، بدون تخمين
+// [ezo-vip] قمة مزخرفة — موضع تلقائي من الكود
+// - دائماً على الخط الفاصل (25% من أعلى الشيت)
+// - عرض 90%، ارتفاع أقصى 140px
+// - قابلة للتعديل من Tuner (يستخدم canvasSize/offsetY/offsetX/holeSize الموجودة)
 import type { AssetFull } from "../../lib/assets";
 
 interface Props {
   url: string;
   assetFull?: AssetFull | null;
-  /** موضع القمة على المحور Y بالنسبة لـ parent.top (px). سالب = فوق الحد */
-  defaultTop?: number;
   className?: string;
   fadeOut?: number;
-  /** style override (اختياري) */
-  style?: React.CSSProperties;
 }
 
 export default function VipTopOrnament({
   url,
   assetFull,
-  defaultTop = -45,
   className = "",
   fadeOut = 1,
-  style: styleOverride,
 }: Props) {
-  // القيم من DB (assets table) — أو default
-  // - canvasSize  → عرض القمة % (100 = كامل العرض)
-  // - offsetY     → موضع على Y (px) — سالب = فوق الحد، موجب = أسفل
-  // - holeSize    → scale × 100 (100 = 1x)
-  const widthPct = assetFull?.canvasSize ?? 100;
-  const yPos = assetFull?.offsetY ?? defaultTop;
-  const scalePct = assetFull?.holeSize ?? 100;
-  const scale = scalePct / 100;
+  if (!url) return null;
+
+  // إعادة استخدام الحقول الموجودة + افتراضيات ذكية
+  const widthPct = assetFull?.canvasSize ?? 90;
+  const yOffset = assetFull?.offsetY ?? 0;
+  const xOffset = assetFull?.offsetX ?? 0;
+  const scale = (assetFull?.holeSize ?? 100) / 100;
 
   return (
     <div
-      className={`absolute left-0 right-0 pointer-events-none flex justify-center ${className}`}
+      className={`absolute left-0 right-0 flex justify-center pointer-events-none ${className}`}
       style={{
-        top: 0,
-        transform: `translateY(${yPos}px)`,
+        top: "25%",
+        transform: `translateY(calc(-50% + ${yOffset}px))`,
         opacity: fadeOut,
-        ...styleOverride,
       }}
     >
       <img
@@ -45,8 +40,9 @@ export default function VipTopOrnament({
         className="object-contain"
         style={{
           width: `${widthPct}%`,
-          transform: `scale(${scale})`,
-          transformOrigin: "center top",
+          maxHeight: "140px",
+          transform: `translateX(${xOffset}px) scale(${scale})`,
+          transformOrigin: "center center",
         }}
         draggable={false}
       />

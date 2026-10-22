@@ -424,6 +424,10 @@ export default defineSchema({
     // [ezo-canvas] Canvas Standard (500x500, hole 300x300)
     canvasSize: v.optional(v.number()),
     holeSize: v.optional(v.number()),
+    topOffsetX: v.optional(v.number()),
+    topOffsetY: v.optional(v.number()),
+    topWidthPercent: v.optional(v.number()),
+    topScale: v.optional(v.number()),
     offsetX: v.optional(v.number()),
     offsetY: v.optional(v.number()),
     assetType: v.optional(v.union(

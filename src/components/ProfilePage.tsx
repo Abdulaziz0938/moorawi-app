@@ -326,7 +326,6 @@ export default function ProfilePage({
               url={vipTopUrl}
               assetFull={assetsFull[`vip.top.full.${vipLevel}`] ?? assetsFull[`vip.top.${vipLevel}`]}
               className="z-[5]"
-              style={{ top: "-45px" }}
               fadeOut={Math.max(0, 1 - scrollY / 80)}
             />
           )}
