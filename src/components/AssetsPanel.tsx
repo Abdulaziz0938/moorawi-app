@@ -120,6 +120,19 @@ const UI_SLOTS: { key: string; label: string }[] = [
 
   // ===== Badges =====
   { key: "ui.badge.verified",     label: "شارة — حساب موثق" },
+  // ===== [ezo-micstyle] Mic & Icon Style assets =====
+  { key: "ui.micstyle.default.mic",    label: "ستايل — افتراضي (مايك)" },
+  { key: "ui.micstyle.default.icon",   label: "ستايل — افتراضي (أيقونة)" },
+  { key: "ui.micstyle.cars.mic",       label: "ستايل — قطب السيارات (مايك)" },
+  { key: "ui.micstyle.cars.icon",      label: "ستايل — قطب السيارات (أيقونة)" },
+  { key: "ui.micstyle.blackrose.mic",  label: "ستايل — الوردة السوداء (مايك)" },
+  { key: "ui.micstyle.blackrose.icon", label: "ستايل — الوردة السوداء (أيقونة)" },
+  { key: "ui.micstyle.falcon.mic",     label: "ستايل — الصقر الذهبي (مايك)" },
+  { key: "ui.micstyle.falcon.icon",    label: "ستايل — الصقر الذهبي (أيقونة)" },
+  { key: "ui.micstyle.crown.mic",      label: "ستايل — التاج الملكي (مايك)" },
+  { key: "ui.micstyle.crown.icon",     label: "ستايل — التاج الملكي (أيقونة)" },
+  { key: "ui.micstyle.dragon.mic",     label: "ستايل — التنين الأسطوري (مايك)" },
+  { key: "ui.micstyle.dragon.icon",    label: "ستايل — التنين الأسطوري (أيقونة)" },
   // ===== Gift Banners =====
   { key: "ui.gift.banner.country", label: "هدايا — بانر الدولة" },
   { key: "ui.gift.banner.lucky",   label: "هدايا — بانر محظوظ" },

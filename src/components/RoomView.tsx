@@ -19,6 +19,7 @@ import SettingsSheet from "./SettingsSheet";
 import StaffSettingsSheet from "./StaffSettingsSheet";
 import MiniChatSheet from "./MiniChatSheet";
 import DiamondExchangeSheet from "./DiamondExchangeSheet";
+import MicStyleSheet from "./MicStyleSheet";
 import RoomLockSheet from "./RoomLockSheet";
 import GiftSheet from "./GiftSheet";
 import MusicSheet from "./MusicSheet";
@@ -296,6 +297,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
   const [showStaffSettings, setShowStaffSettings] = useState(false);
   const [showMiniChat, setShowMiniChat] = useState(false);
   const [showSpend, setShowSpend] = useState(false);
+  const [showMicStyle, setShowMicStyle] = useState(false);
   const [activeSubSheet, setActiveSubSheet] = useState<string | null>(null);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showMembers, setShowMembers] = useState(false);
@@ -2042,6 +2044,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
         />
       )}
 
+      {showMicStyle && <MicStyleSheet onClose={() => setShowMicStyle(false)} />}
       {showMiniChat && <MiniChatSheet roomId={roomId} onClose={() => setShowMiniChat(false)} />}
       {showSpend && <DiamondExchangeSheet onClose={() => setShowSpend(false)} />}
 
@@ -2065,7 +2068,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
             if (key === "role") { setShowStaffSettings(true); return; }
             if (key === "mini-chat") { setShowMiniChat(true); return; }
             if (key === "spend") { setShowSpend(true); return; }
-            if (key === "deco") { setShowSettings(true); return; }
+            if (key === "deco") { setShowMicStyle(true); return; }
             // باقي الميزات تحتاج مكونات خاصة - قريباً
             dialog.alert("هذه الميزة قيد التطوير — قريباً");
           }} />
