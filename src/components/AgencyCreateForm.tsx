@@ -28,7 +28,8 @@ export default function AgencyCreateForm({ onClose, onEnterRoom }: Props) {
   if (!me) return null;
 
   // حساب مستوى الثراء
-  const wealthLevel = calculateWealthLevel(me.totalSent ?? 0);
+  // [ezo-fix] استخدام totalRecharged (الثراء) بدلاً من totalSent
+  const wealthLevel = calculateWealthLevel((me as any).totalRecharged ?? (me as any).coins ?? 0);
   const isVerified = (me as any).verificationStatus === "approved";
   const canCreate = wealthLevel >= 30 && isVerified;
 
