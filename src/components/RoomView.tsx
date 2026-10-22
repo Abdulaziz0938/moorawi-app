@@ -2042,7 +2042,10 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
           micRequestsEnabled={!!room?.micRequestsEnabled}
           onClose={() => setShowSettings(false)}
           onOpenActivity={() => { setShowSettings(false); setShowActivity(true); }}
-          onOpenSubSheet={(key) => setActiveSubSheet(key)} />
+          onOpenSubSheet={(key) => {
+            if (key === "music") { setShowMusicSheet(true); return; }
+            setActiveSubSheet(key);
+          }} />
       )}
 
         {activeSubSheet === "lock" && (
