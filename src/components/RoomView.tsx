@@ -17,6 +17,8 @@ import { uploadToCloudinary } from "../lib/cloudinary";
 import { smartUpload } from "../lib/uploadAssets";
 import SettingsSheet from "./SettingsSheet";
 import StaffSettingsSheet from "./StaffSettingsSheet";
+import MiniChatSheet from "./MiniChatSheet";
+import SpendSheet from "./SpendSheet";
 import RoomLockSheet from "./RoomLockSheet";
 import GiftSheet from "./GiftSheet";
 import MusicSheet from "./MusicSheet";
@@ -292,6 +294,8 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
   const [isFavorite, setIsFavorite] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showStaffSettings, setShowStaffSettings] = useState(false);
+  const [showMiniChat, setShowMiniChat] = useState(false);
+  const [showSpend, setShowSpend] = useState(false);
   const [activeSubSheet, setActiveSubSheet] = useState<string | null>(null);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showMembers, setShowMembers] = useState(false);
@@ -2038,6 +2042,9 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
         />
       )}
 
+      {showMiniChat && <MiniChatSheet roomId={roomId} onClose={() => setShowMiniChat(false)} />}
+      {showSpend && <SpendSheet roomId={roomId} onClose={() => setShowSpend(false)} />}
+
       {showStaffSettings && (
         <StaffSettingsSheet
           roomId={roomId}
@@ -2056,6 +2063,9 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
             if (key === "lock") { setActiveSubSheet("lock"); return; }
             if (key === "gifts") { setShowGifts(true); return; }
             if (key === "role") { setShowStaffSettings(true); return; }
+            if (key === "mini-chat") { setShowMiniChat(true); return; }
+            if (key === "spend") { setShowSpend(true); return; }
+            if (key === "deco") { setShowSettings(true); return; }
             // باقي الميزات تحتاج مكونات خاصة - قريباً
             dialog.alert("هذه الميزة قيد التطوير — قريباً");
           }} />

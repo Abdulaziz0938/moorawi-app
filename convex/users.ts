@@ -224,3 +224,20 @@ export const updateAllUserIdsToSixDigits = internalMutation({
     return { updatedCount };
   },
 });
+
+// [ezo-spend] Transfer coins between users
+export const transferCoins = mutation({
+  args: { toUserId: v.id("users"), amount: v.number(), tokenOverride: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
+    if (me._id === args.toUserId) throw new Error("لا يمكنك التحويل لنفسك");
+    if (args.amount <= 0) throw new Error("المبلغ غير صحيح");
+    const myCoins = me.coins ?? 0;
+    if (myCoins < args.amount) throw new Error("رصيدك غير كافٍ");
+    const target = await ctx.db.get("users", args.toUserId);
+    if (!target) throw new Error("المستخدم غير موجود");
+    await ctx.db.patch("users", me._id, { coins: myCoins - args.amount });
+    await ctx.db.patch("users", args.toUserId, { coins: (target.coins ?? 0) + args.amount });
+    return { ok: true };
+  },
+});
