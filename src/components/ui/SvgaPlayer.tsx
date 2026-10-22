@@ -1,4 +1,10 @@
 import { useEffect, useRef, useState } from "react";
+import JSZip from "jszip";
+
+// [ezo-svga-v1] مطلوب لدعم ملفات SVGA الإصدار القديم 1.x
+if (typeof window !== "undefined") {
+  (window as any).JSZip = JSZip;
+}
 import SVGA from "svgaplayerweb";
 
 interface Props {
