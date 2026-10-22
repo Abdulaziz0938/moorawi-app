@@ -1,4 +1,5 @@
 import { mutation, query } from "./_generated/server";
+import { calculateEzoVipLevel } from "./vip";
 import { ConvexError, v } from "convex/values";
 import { requireUser } from "./lib/auth";
 
@@ -160,6 +161,7 @@ export const recharge = mutation({
       patch.totalPurchased = (user.totalPurchased ?? 0) + args.usdCents;
     }
     patch.totalRecharged = (user.totalRecharged ?? 0) + args.amount;
+    patch.vipLevel = calculateEzoVipLevel(patch.totalRecharged);
     await ctx.db.patch("users", user._id, patch);
     await recordTx(
       ctx,
@@ -336,6 +338,7 @@ export const approveRecharge = mutation({
     const patch: any = { coins: newBalance };
     if (req.priceUSD) patch.totalPurchased = (target.totalPurchased ?? 0) + req.priceUSD;
     patch.totalRecharged = (target.totalRecharged ?? 0) + req.totalCoins;
+    patch.vipLevel = calculateEzoVipLevel(patch.totalRecharged);
     await ctx.db.patch("users", target._id, patch);
     await recordTx(ctx, target._id, "recharge", req.totalCoins, newBalance, `شحن موافق عليه (${req.uid})`);
 
