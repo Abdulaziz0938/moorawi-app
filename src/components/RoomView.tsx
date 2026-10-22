@@ -45,6 +45,8 @@ import MembersSheet from "./MembersSheet";
 import GamesSheet from "./GamesSheet";
 import EmojiSheet from "./EmojiSheet";
 import ActivitySheet from "./ActivitySheet";
+import RoomEventsSheet from "./RoomEventsSheet";
+import { levelFromValue } from "../lib/levels";
 import ProfilePage from "./ProfilePage";
 import { UserName } from "./UserBadges";
 import { dialog } from "../lib/dialog";
@@ -302,6 +304,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showMembers, setShowMembers] = useState(false);
   const [showActivity, setShowActivity] = useState(false);
+  const [showEvents, setShowEvents] = useState(false);
   const [showLuckyWheel, setShowLuckyWheel] = useState(false);
   const [miniProfileUserId, setMiniProfileUserId] = useState<string | null>(null);
   const [dmConversationId, setDmConversationId] = useState<string | null>(null);
@@ -1700,6 +1703,14 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
         </div>
       )}
 
+      {showEvents && (() => {
+        const owner = (members ?? []).find((m: any) => m.role === "owner");
+        const ownerName = owner?.name ?? "صاحب الغرفة";
+        const ownerWealth = (owner as any)?.wealthValue ?? 0;
+        const ownerLevel = levelFromValue(ownerWealth);
+        return <RoomEventsSheet ownerName={ownerName} ownerWealthLevel={ownerLevel} onClose={() => setShowEvents(false)} />;
+      })()}
+
       {showActivity && (
         <ActivitySheet
           roomId={roomId}
@@ -2066,6 +2077,8 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
             if (key === "lock") { setActiveSubSheet("lock"); return; }
             if (key === "gifts") { setShowGifts(true); return; }
             if (key === "role") { setShowStaffSettings(true); return; }
+            if (key === "events") { setShowEvents(true); return; }
+            if (key === "activity-log") { setShowActivity(true); return; }
             if (key === "mini-chat") { setShowMiniChat(true); return; }
             if (key === "spend") { setShowSpend(true); return; }
             if (key === "deco") { setShowMicStyle(true); return; }

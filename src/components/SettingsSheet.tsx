@@ -156,7 +156,8 @@ export default function SettingsSheet({
     { icon: Settings, label: "تعديل الغرفة", key: "editRoom" },
     { icon: Lock, label: "قفل", key: "lock" },
     { icon: Briefcase, label: "وظيفة", key: "role" },
-    { icon: Activity, label: "نشاط الغرفة", key: "activity" },
+    { icon: Activity, label: "سجل النشاط", key: "activity-log" },
+    { icon: Sparkles, label: "نشاط الغرفة", key: "events" },
     { icon: Music, label: "موسيقى", key: "music" },
     { icon: Coins, label: "صرف", key: "spend" },
     { icon: Gift, label: "إدارة الهدايا", key: "gifts" },
@@ -198,7 +199,7 @@ export default function SettingsSheet({
     }
 
     // ==== Sub-sheets (تُفتح كـ overlay فوق كل شيء) ====
-    const subSheetKeys = ["lock", "role", "spend", "music", "deco", "car-effects", "gift-effects", "bg-process", "mini-chat", "voice-changer"];
+    const subSheetKeys = ["lock", "role", "spend", "music", "deco", "events", "activity-log", "car-effects", "gift-effects", "bg-process", "mini-chat", "voice-changer"];
     if (subSheetKeys.includes(key)) {
       if (onOpenSubSheet) {
         onClose();         // نغلق SettingsSheet ثم نفتح الـ sub-sheet
@@ -212,7 +213,7 @@ export default function SettingsSheet({
     else if (key === "editRoom") setTab("editRoom");
     else if (key === "background") setTab("background");
     else if (key === "gifts") setTab("gifts");
-    else if (key === "activity") {
+    else if (key === "activity-log") {
       if (onOpenActivity) onOpenActivity();
     }
   };
