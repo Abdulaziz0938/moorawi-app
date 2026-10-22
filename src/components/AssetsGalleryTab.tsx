@@ -11,12 +11,14 @@ export default function AssetsGalleryTab() {
 
   if (!assets) return <div className="text-white text-center py-4">جاري التحميل...</div>;
 
-  // الفئات المفيدة فقط (إخفاء الـ 527 ملف UI من مشروع shor-voice القديم)
-  const USEFUL_CATEGORIES = ["asset.gifts.", "asset.custom.", "asset.frames.", "asset.vehicles.", "asset.entries.", "asset.emojis.", "asset.banners."];
-  
+  // عرض كل الملفات المفيدة (الهدايا، الإطارات، المركبات، الدخوليات، الملفات المخصصة، إلخ)
   const filtered = assets.filter((a: any) => {
-    const isUseful = USEFUL_CATEGORIES.some(cat => a.key.startsWith(cat));
-    return isUseful && a.key.toLowerCase().includes(search.toLowerCase());
+    const isUseful = 
+      a.key.startsWith("asset.") || 
+      a.key.startsWith("vip.");
+    // إخفاء أي ملف لا يحتوي على رابط
+    const hasUrl = !!a.imageUrl && !a.imageUrl.includes("undefined");
+    return isUseful && hasUrl && a.key.toLowerCase().includes(search.toLowerCase());
   });
 
   const handleCopy = async (key: string) => {
@@ -34,7 +36,7 @@ export default function AssetsGalleryTab() {
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50" size={16} />
           <input
             type="text"
-            placeholder="بحث عن أصل..."
+            placeholder="ابحث عن أصل (مثلاً: dragon أو car)..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full bg-white/10 text-white border border-white/20 rounded-xl pl-10 pr-3 py-2 text-sm placeholder:text-white/40 focus:outline-none focus:border-purple-400"
@@ -50,7 +52,7 @@ export default function AssetsGalleryTab() {
           <div
             key={item._id}
             onClick={() => handleCopy(item.key)}
-            className="relative aspect-square bg-black/40 rounded-xl overflow-hidden border border-white/10 active:scale-95 transition cursor-pointer group"
+            className="relative aspect-square bg-black/40 rounded-xl overflow-hidden border border-white/10 active:scale-95 transition cursor-pointer group flex items-center justify-center"
           >
             <AssetVideo
               url={item.imageUrl}
@@ -62,7 +64,7 @@ export default function AssetsGalleryTab() {
               {copiedKey === item.key ? (
                 <><Check size={16} className="text-green-400 mb-1" /> تم النسخ</>
               ) : (
-                <><Copy size={16} className="mb-1" /> {item.key.replace('asset.', '')}</>
+                <><Copy size={16} className="mb-1" /> {item.key.replace('asset.', '').replace('custom.', '')}</>
               )}
             </div>
           </div>
