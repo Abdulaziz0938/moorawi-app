@@ -12,7 +12,7 @@ export default function AssetsGalleryTab() {
   if (!assets) return <div className="text-white text-center py-4">جاري التحميل...</div>;
 
   // الفئات المفيدة فقط (إخفاء الـ 527 ملف UI من مشروع shor-voice القديم)
-  const USEFUL_CATEGORIES = ["asset.gifts.", "asset.frames.", "asset.vehicles.", "asset.entries.", "asset.emojis.", "asset.banners."];
+  const USEFUL_CATEGORIES = ["asset.gifts.", "asset.custom.", "asset.frames.", "asset.vehicles.", "asset.entries.", "asset.emojis.", "asset.banners."];
   
   const filtered = assets.filter((a: any) => {
     const isUseful = USEFUL_CATEGORIES.some(cat => a.key.startsWith(cat));

@@ -149,13 +149,14 @@ export const createStream = mutation({
   },
   handler: async (ctx, args) => {
     const me = await requireUser(ctx, args.tokenOverride);
-    const check = await canGoLive(ctx, me, args.tokenOverride);
-    if (!check.ok) {
-      throw new ConvexError({
-        code: "FORBIDDEN",
-        message: check.reason ?? "غير مصرح",
-      });
-    }
+    // [ezo-live] restriction removed by owner
+    // const check = await canGoLive(ctx, me, args.tokenOverride);
+    // if (!check.ok) {
+    //   throw new ConvexError({
+    //     code: "FORBIDDEN",
+    //     message: check.reason ?? "غير مصرح",
+    //   });
+    // }
 
     // هل لدي بث نشط؟
     const active = await ctx.db

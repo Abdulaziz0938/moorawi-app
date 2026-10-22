@@ -46,10 +46,7 @@ export default function LiveSetupSheet({ onClose, onStarted }: Props) {
   };
 
   const handleStart = async () => {
-    if (!canGoLive) {
-      dialog.alert("البث المباشر متاح للإناث الموثقات فقط");
-      return;
-    }
+    // [ezo-live] restriction removed by owner
     if (!title.trim()) {
       dialog.alert("اكتبي عنوان البث");
       return;
@@ -95,22 +92,7 @@ export default function LiveSetupSheet({ onClose, onStarted }: Props) {
           </button>
         </div>
 
-        {/* Not eligible banner */}
-        {!canGoLive && (
-          <div className="mx-4 mt-4 p-3 rounded-2xl bg-red-500/10 border border-red-400/40 flex items-start gap-2">
-            <AlertCircle size={18} className="text-red-400 flex-shrink-0 mt-0.5" />
-            <div className="text-white/90 text-xs">
-              <div className="font-black mb-1">غير مؤهلة للبث المباشر</div>
-              <div className="text-white/60">
-                {me?.gender !== "female"
-                  ? "البث المباشر متاح للإناث فقط"
-                  : me?.verificationStatus !== "approved"
-                  ? "يجب توثيق حسابك أولاً"
-                  : "غير معروف"}
-              </div>
-            </div>
-          </div>
-        )}
+        {/* [ezo-live] Not eligible banner removed by owner */}
 
         {/* Cover preview */}
         <div className="mx-4 mt-4">
