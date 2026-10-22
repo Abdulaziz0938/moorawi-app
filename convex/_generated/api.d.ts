@@ -14,6 +14,7 @@ import type * as agents from "../agents.js";
 import type * as assets from "../assets.js";
 import type * as auth from "../auth.js";
 import type * as banners from "../banners.js";
+import type * as bind_dragon from "../bind_dragon.js";
 import type * as blocks from "../blocks.js";
 import type * as bubbles from "../bubbles.js";
 import type * as cleanup_junk from "../cleanup_junk.js";
@@ -84,6 +85,7 @@ declare const fullApi: ApiFromModules<{
   assets: typeof assets;
   auth: typeof auth;
   banners: typeof banners;
+  bind_dragon: typeof bind_dragon;
   blocks: typeof blocks;
   bubbles: typeof bubbles;
   cleanup_junk: typeof cleanup_junk;

@@ -162,7 +162,7 @@ export default function LiveSetupSheet({ onClose, onStarted }: Props) {
         <div className="p-4 pb-8 mt-4">
           <button
             onClick={handleStart}
-            disabled={!canGoLive || busy || uploading || !title.trim()}
+            disabled={busy || uploading || !title.trim()}
             className="w-full h-14 rounded-2xl bg-gradient-to-r from-red-500 to-pink-600 text-white font-black text-sm shadow-2xl active:scale-95 disabled:opacity-40 flex items-center justify-center gap-2"
           >
             {busy ? (
