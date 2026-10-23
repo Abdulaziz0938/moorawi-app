@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { Crown, Sparkles } from "lucide-react";
+import { Crown } from "lucide-react";
 import VipAvatar from "./ui/VipAvatar";
 import AssetVideo from "./ui/AssetVideo";
-import { useReactiveAssets } from "../lib/assets";
 import { haptic } from "../lib/haptics";
 
 interface Entry {
@@ -15,7 +14,6 @@ interface Entry {
 }
 
 export default function VipEntryOverlay({ entry }: { entry: Entry | null }) {
-  const { map: assets } = useReactiveAssets();
   const [visible, setVisible] = useState(false);
   const [active, setActive] = useState<Entry | null>(null);
 
@@ -24,44 +22,50 @@ export default function VipEntryOverlay({ entry }: { entry: Entry | null }) {
       setActive(entry);
       setVisible(true);
       haptic("heavy");
+
       const timer = setTimeout(() => {
         setVisible(false);
-      }, 4000);
+      }, 5000); // 5 ثواني عشان ياخد الأنيميشن حقه
       return () => clearTimeout(timer);
     }
   }, [entry, active]);
 
   if (!visible || !active) return null;
 
+  // مسار الأنيميشن: نستخدم الـ PAG اللي شفناه في مجلد vip_assets
   const vipPagAsset = `/vip_assets/bimo_vip${active.level}.pag`;
+  
+  // لو المستوى 7 (لأننا ما لقينا bimo_vip7.pag، بنستخدم الـ svga الخاص بيه)
+  const svgaFallback = `/vip_assets/wl_come_${active.level}.svga`;
+  const assetUrl = active.level === 7 ? svgaFallback : vipPagAsset;
 
   return (
-    <div className="fixed inset-0 pointer-events-none z-50 flex items-center justify-center overflow-hidden">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] animate-fade-in" />
-      <div className="relative flex flex-col items-center animate-scale-up">
-        <div className="absolute -inset-20 z-0 opacity-90 flex items-center justify-center pointer-events-none">
-          <AssetVideo url={vipPagAsset} className="w-[450px] h-[450px] object-contain" />
+    <div className="fixed inset-0 pointer-events-none z-[9999] flex flex-col items-center justify-center overflow-hidden bg-black/40 backdrop-blur-[2px]">
+      
+      {/* 1. الأنيميشن (PAG/SVGA) بكامل الشاشة باستخدام مشغل التطبيق */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <AssetVideo 
+          url={assetUrl} 
+          className="w-full h-full object-contain scale-125" 
+        />
+      </div>
+
+      {/* 2. الأفاتار والاسم يطيرون فوق الأنيميشن */}
+      <div className="relative z-10 flex flex-col items-center animate-scale-up mt-24">
+        <div className="relative ring-4 ring-amber-400/80 rounded-full shadow-[0_0_60px_rgba(251,191,36,0.9)]">
+          <VipAvatar src={active.avatarUrl} name={active.name} vip={active.level} size={110} />
         </div>
-        <div className="relative z-10 flex flex-col items-center bg-gradient-to-b from-purple-950/80 via-black/90 to-black/95 border border-amber-500/50 rounded-2xl p-6 shadow-2xl backdrop-blur-md min-w-[300px]">
-          <div className="absolute -top-10">
-            <div className="relative ring-4 ring-amber-400/80 rounded-full shadow-lg">
-              <VipAvatar src={active.avatarUrl} name={active.name} vip={active.level} size={64} />
-            </div>
-          </div>
-          <div className="mt-8 flex flex-col items-center">
-            <div className="flex items-center space-x-1 space-x-reverse bg-amber-500/20 px-3 py-1 rounded-full border border-amber-400/30 mb-2">
-              <Crown className="w-4 h-4 text-amber-400 animate-bounce" />
-              <span className="text-amber-300 font-bold text-xs">VIP {active.level} - أسطورة إيزو</span>
-            </div>
-            <div className="text-lg font-black text-white tracking-wide mb-1">
-              <span className="text-amber-400 font-bold">{active.name}</span>
-            </div>
-            <p className="text-xs text-purple-300 flex items-center gap-1 mt-1">
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" /> انضم إلى الغرفة بهيبة ملكية
-            </p>
-          </div>
+        
+        {/* الاسم واللقب بتصميم خفيف بدون كرت يغطي الشاشة */}
+        <div className="mt-6 flex flex-col items-center bg-black/60 px-8 py-3 rounded-2xl backdrop-blur-md border border-amber-500/50 shadow-2xl">
+           <div className="flex items-center gap-2 mb-1">
+              <Crown className="w-5 h-5 text-amber-400 animate-bounce" />
+              <span className="text-amber-300 font-black text-sm tracking-widest">VIP {active.level}</span>
+           </div>
+           <span className="text-white font-black text-2xl drop-shadow-lg">{active.name}</span>
         </div>
       </div>
+
     </div>
   );
 }
