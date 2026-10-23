@@ -404,14 +404,8 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
   // NOTE: clearMySeats via ref to avoid firing cleanup on every re-render
   const clearMySeatsRef = useRef(clearMySeats);
   useEffect(() => { clearMySeatsRef.current = clearMySeats; }, [clearMySeats]);
-  useEffect(() => {
-    return () => {
-      if (myUserIdRef.current) {
-        clearMySeatsRef.current({ roomId, tokenOverride: getActiveToken() ?? deviceId }).catch(() => {});
-      }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [roomId]);
+    // [ezo-fix] تم إلغاء تفريغ المايك التلقائي عند unmount لمنع خروج المستخدم عشوائياً
+  // التفريغ يتم فقط عند الضغط المتعمد على زر مغادرة الغرفة (onLeave)
 
   const giftSinceRef = useRef(Date.now());
   const latestGift = useQuery(api.gifts.latestGiftFull, { roomId, since: giftSinceRef.current });
