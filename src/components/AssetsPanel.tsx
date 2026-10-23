@@ -175,6 +175,7 @@ export default function AssetsPanel({ token }: Props) {
         <TabBtn active={tab === "ui"}      onClick={() => setTab("ui")}      icon={LayoutGrid}   label="الواجهة" />
         <TabBtn active={tab === "gallery"} onClick={() => setTab("gallery")} icon={ImageIcon}    label="المعرض" />
         <TabBtn active={tab === "wheel"} onClick={() => setTab("wheel")} icon={RotateCcw} label="ضبط العجلة" />
+        <TabBtn active={tab === "wheel"} onClick={() => setTab("wheel")} icon={RotateCcw} label="ضبط العجلة" />
         <TabBtn active={tab === "tuner"}   onClick={() => setTab("tuner")}   icon={Sparkles}     label="🎛️ ضبط" />
         <TabBtn active={tab === "queen"}   onClick={() => setTab("queen")}   icon={Crown}        label="الملكة" />
       </div>
@@ -191,6 +192,7 @@ export default function AssetsPanel({ token }: Props) {
       {tab === "admin" && <SimpleSlotsTab token={token} slots={ADMIN_SLOTS} />}
       {tab === "ui" && <SimpleSlotsTab token={token} slots={UI_SLOTS} />}
       {tab === "gallery" && <AssetsGalleryTab />}
+      {tab === "wheel" && <WheelTuner token={token} />}
       {tab === "wheel" && <WheelTuner token={token} />}
       {tab === "tuner" && <AssetTunerTab />}
       {tab === "queen" && <SimpleSlotsTab token={token} slots={QUEEN_SLOTS} />}
