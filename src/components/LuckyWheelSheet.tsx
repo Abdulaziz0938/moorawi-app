@@ -136,11 +136,16 @@ const [activeRankTab, setActiveRankTab] = useState<string>("VI");
       }
 
       // حساب الزاوية بحيث يتوقف السهم في منتصف القطاع بدقة
-      // [ezo-fix] حساب الزاوية الصحيح مع مراعاة إزاحة الصورة
-      const sectorSize = 360 / 9;
-      const offset = sectorSize / 2;
-      const index = state.winningIndex; // winningIndex يبدأ من 1
-      const targetStopAngle = 360 - (index * sectorSize) - offset;
+      // [ezo-fix] حساب الزاوية النهائي (مع إزاحة لتصحيح الانعكاس)
+      const numSectors = 9;
+      const sectorSize = 360 / numSectors;
+      const index = state.winningIndex;
+      
+      // بناءً على الاختبار: السهم يعطي القطاع المعاكس، لذا نضيف 180 درجة (نصف دورة)
+      // + نضبط الإزاحة لتناسب الصورة الحالية
+      const offsetCorrection = 0;
+      const baseAngle = (index - 1) * sectorSize + (sectorSize / 2);
+      const targetStopAngle = (360 - baseAngle + offsetCorrection) % 360;
       const extraSpins = 360 * 6;
       setRotation((prev) => {
         const normalizedPrev = prev % 360;

@@ -65,6 +65,7 @@ import type * as seed_apk_svga from "../seed_apk_svga.js";
 import type * as seed_cache_webp from "../seed_cache_webp.js";
 import type * as seed_custom_svga from "../seed_custom_svga.js";
 import type * as seed_extracted_svga from "../seed_extracted_svga.js";
+import type * as seed_ezo_bindings from "../seed_ezo_bindings.js";
 import type * as seed_pag from "../seed_pag.js";
 import type * as seed_rest_webp from "../seed_rest_webp.js";
 import type * as seed_svga from "../seed_svga.js";
@@ -144,6 +145,7 @@ declare const fullApi: ApiFromModules<{
   seed_cache_webp: typeof seed_cache_webp;
   seed_custom_svga: typeof seed_custom_svga;
   seed_extracted_svga: typeof seed_extracted_svga;
+  seed_ezo_bindings: typeof seed_ezo_bindings;
   seed_pag: typeof seed_pag;
   seed_rest_webp: typeof seed_rest_webp;
   seed_svga: typeof seed_svga;

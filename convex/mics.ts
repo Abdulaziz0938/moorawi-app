@@ -94,6 +94,24 @@ export const takeSeat = mutation({
   },
 });
 
+
+async function stopMusicIfUserOffMic(ctx: any, roomId: any, userId: any) {
+  const remainingSeats = await ctx.db
+    .query("micSeats")
+    .withIndex("by_room_and_seatIndex", (q: any) => q.eq("roomId", roomId))
+    .collect();
+  const stillOnMic = remainingSeats.some((s: any) => s.userId === userId);
+  if (!stillOnMic) {
+    const room = await ctx.db.get("rooms", roomId);
+    if (room && room.currentMusicStartedBy === userId) {
+      await ctx.db.patch("rooms", roomId, {
+        currentMusicId: undefined,
+        currentMusicStartedBy: undefined,
+      });
+    }
+  }
+}
+
 export const leaveSeat = mutation({
   args: { roomId: v.id("rooms"), tokenOverride: v.optional(v.string()) },
   handler: async (ctx, args) => {

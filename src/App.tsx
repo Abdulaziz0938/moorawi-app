@@ -144,7 +144,7 @@ function App() {
   // Onboarding for new users
   if (!me.profileComplete) {
     return (
-      <div className="h-[100dvh] w-full overflow-y-auto app-bg" dir="rtl">
+      <div className="h-[100dvh] w-full overflow-y-auto app-bg" dir="ltr">
         <Onboarding
             onComplete={() => setRefreshKey((k) => k + 1)}
             onBackToAuth={() => {
@@ -159,7 +159,7 @@ function App() {
 
   // Main app
   return (
-    <div key={refreshKey} className="h-[100dvh] w-full overflow-hidden app-bg" dir="rtl">
+    <div key={refreshKey} className="h-[100dvh] w-full overflow-hidden app-bg" dir="ltr">
       {currentLiveId ? (
         isLiveHost ? (
           <LiveBroadcaster
