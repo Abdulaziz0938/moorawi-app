@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import AssetVideo from "./ui/AssetVideo";
+import SvgaPlayer from "./ui/SvgaPlayer";
 import { haptic } from "../lib/haptics";
 
 interface Entry {
@@ -22,23 +22,27 @@ export default function VipEntryOverlay({ entry }: { entry: Entry | null }) {
       haptic("heavy");
       const timer = setTimeout(() => {
         setVisible(false);
-      }, 6000); // 6 ثواني عشان ياخد الأنيميشن حقه
+      }, 7000); // 7 ثواني عشان الأنيميشن ياخد راحته
       return () => clearTimeout(timer);
     }
   }, [entry, active]);
 
   if (!visible || !active) return null;
 
-  // استخدام ملفك الأصلي بدون أي إضافات
+  // استخدام ملفك الأصلي
   const assetUrl = `/vip_assets/cl_come_${active.level}.svga`;
 
   return (
     <div className="fixed inset-0 z-[9999] pointer-events-none flex items-center justify-center bg-black/40">
-      {/* الأنيميشن فقط */}
-      <AssetVideo 
-        url={assetUrl} 
-        className="w-full h-full object-contain" 
-      />
+      {/* استدعاء المشغل مباشرة مثل ما هو شغال في المعرض بالأدمن */}
+      <div className="w-full h-full relative flex items-center justify-center">
+        <SvgaPlayer 
+          src={assetUrl} 
+          className="w-full h-full" 
+          loops={0} 
+          autoPlay={true} 
+        />
+      </div>
     </div>
   );
 }
