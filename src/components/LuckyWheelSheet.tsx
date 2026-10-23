@@ -25,16 +25,16 @@ interface LuckyWheelSheetProps {
 }
 
 const SECTORS = [
-    { index: 0, item: "apple", label: "تفاح" },
-    { index: 1, item: "watermelon", label: "بطيخ" },
-    { index: 2, item: "apple", label: "تفاح" },
-    { index: 3, item: "watermelon", label: "بطيخ" },
-    { index: 4, item: "apple", label: "تفاح" },
-    { index: 5, item: "77", label: "77" },
-    { index: 6, item: "watermelon", label: "بطيخ" },
-    { index: 7, item: "apple", label: "تفاح" },
-    { index: 8, item: "watermelon", label: "بطيخ" },
-  ];
+  { index: 0, item: "watermelon", label: "بطيخ" },
+  { index: 1, item: "apple", label: "تفاح" },
+  { index: 2, item: "watermelon", label: "بطيخ" },
+  { index: 3, item: "apple", label: "تفاح" },
+  { index: 4, item: "77", label: "77" },
+  { index: 5, item: "watermelon", label: "بطيخ" },
+  { index: 6, item: "apple", label: "تفاح" },
+  { index: 7, item: "watermelon", label: "بطيخ" },
+  { index: 8, item: "apple", label: "تفاح" },
+];
 
 export default function LuckyWheelSheet({ isOpen, onClose, onOpenRecharge }: LuckyWheelSheetProps) {
   const token = getActiveToken();
@@ -150,10 +150,19 @@ const [activeRankTab, setActiveRankTab] = useState<string>("VI");
       const targetStopAngle = 360 - (state.winningIndex * (360 / 9));
       const extraSpins = 360 * 6;
       console.log(`[EZO-WHEEL] WinningIndex: ${state.winningIndex} | TargetAngle: ${targetStopAngle}`);
-      setRotation((prev) => {
-        const normalizedPrev = prev % 360;
-        const delta = (targetStopAngle - normalizedPrev + 360) % 360;
-        return prev + extraSpins + delta;
+            const winningIdx = state.winningIndex ?? 0;
+      setRotation((prevRotation) => {
+        const sectorAngle = 40; // 360 / 9
+        const targetAngle = winningIdx * sectorAngle;
+        const targetModulo = (360 - (targetAngle % 360)) % 360;
+        const currentModulo = ((prevRotation % 360) + 360) % 360;
+
+        let delta = targetModulo - currentModulo;
+        if (delta <= 0) {
+          delta += 360;
+        }
+
+        return prevRotation + (6 * 360) + delta;
       });
     }
   }, [data?.state?.status, data?.state?.winningIndex, data?.state?.roundNumber]);
