@@ -150,19 +150,16 @@ const [activeRankTab, setActiveRankTab] = useState<string>("VI");
       const targetStopAngle = 360 - (state.winningIndex * (360 / 9));
       const extraSpins = 360 * 6;
       console.log(`[EZO-WHEEL] WinningIndex: ${state.winningIndex} | TargetAngle: ${targetStopAngle}`);
-            const winningIdx = state.winningIndex ?? 0;
+                  const winningIdx = state.winningIndex ?? 0;
       setRotation((prevRotation) => {
-        const sectorAngle = 40; // 360 / 9
-        const targetAngle = winningIdx * sectorAngle;
-        const targetModulo = (360 - (targetAngle % 360)) % 360;
-        const currentModulo = ((prevRotation % 360) + 360) % 360;
+        // حساب دوران العجلة مع عقارب الساعة ليصل العنصر للسهم
+        const targetAngle = ((winningIdx * 40) % 360);
+        const currentAngle = ((prevRotation % 360) + 360) % 360;
+        
+        let diff = targetAngle - currentAngle;
+        if (diff <= 0) diff += 360;
 
-        let delta = targetModulo - currentModulo;
-        if (delta <= 0) {
-          delta += 360;
-        }
-
-        return prevRotation + (6 * 360) + delta;
+        return prevRotation + (5 * 360) + diff;
       });
     }
   }, [data?.state?.status, data?.state?.winningIndex, data?.state?.roundNumber]);
@@ -328,43 +325,7 @@ const [activeRankTab, setActiveRankTab] = useState<string>("VI");
               backfaceVisibility: "hidden",
             }}
           >
-            {/* رسم SVG تشخيصي بديل للصورة لاكتشاف الزوايا والترتيب */}
-          <svg viewBox="-100 -100 200 200" className="w-full h-full">
-            {SECTORS.map((s, i) => {
-              const startAngle = (i * 40 - 90 - 20) * (Math.PI / 180);
-              const endAngle = ((i + 1) * 40 - 90 - 20) * (Math.PI / 180);
-              const x1 = 100 * Math.cos(startAngle);
-              const y1 = 100 * Math.sin(startAngle);
-              const x2 = 100 * Math.cos(endAngle);
-              const y2 = 100 * Math.sin(endAngle);
-              const midAngle = (i * 40 - 90) * (Math.PI / 180);
-              const tx = 65 * Math.cos(midAngle);
-              const ty = 65 * Math.sin(midAngle);
-              const color = s.item === "77" ? "#eab308" : s.item === "watermelon" ? "#16a34a" : "#dc2626";
-              
-              return (
-                <g key={i}>
-                  <path
-                    d={`M 0 0 L ${x1} ${y1} A 100 100 0 0 1 ${x2} ${y2} Z`}
-                    fill={color}
-                    stroke="#ffffff"
-                    strokeWidth="1.5"
-                  />
-                  <text
-                    x={tx}
-                    y={ty}
-                    fill="#ffffff"
-                    fontSize="10"
-                    fontWeight="bold"
-                    textAnchor="middle"
-                    dominantBaseline="central"
-                  >
-                    {i}:{s.item}
-                  </text>
-                </g>
-              );
-            })}
-          </svg>
+            <img src={imgWheel} alt="wheel" className="w-full h-full object-contain pointer-events-none" />
           </div>
 
           {/* طبقة إخفاء ظل الجوهرة القديمة */}
