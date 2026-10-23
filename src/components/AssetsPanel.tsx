@@ -15,6 +15,7 @@ import AssetTunerTab from "./AssetTunerTab";
 import BannersPanel from "./BannersPanel";
 import BubbleSlicer from "./BubbleSlicer";
 import AssetsGalleryTab from "./AssetsGalleryTab";
+import WheelTuner from "./WheelTuner";
 import VipAvatar from "./ui/VipAvatar";
 import { getActiveToken } from "../lib/session";
 import { getDeviceId } from "../lib/device";
@@ -35,7 +36,7 @@ interface Props {
   token: string | null;
 }
 
-type MainTab = "vip" | "queen" | "medals" | "gifts" | "bubbles" | "shop" | "banners" | "frames" | "admin" | "ui" | "tuner" | "gallery";
+type MainTab = "vip" | "queen" | "medals" | "gifts" | "bubbles" | "shop" | "banners" | "frames" | "admin" | "ui" | "tuner" | "gallery" | "wheel";
 
 const VIP_SLOTS = [
   { key: "background", label: "الخلفية" },
@@ -173,6 +174,7 @@ export default function AssetsPanel({ token }: Props) {
         <TabBtn active={tab === "admin"}   onClick={() => setTab("admin")}   icon={Shield}       label="الأدمن" />
         <TabBtn active={tab === "ui"}      onClick={() => setTab("ui")}      icon={LayoutGrid}   label="الواجهة" />
         <TabBtn active={tab === "gallery"} onClick={() => setTab("gallery")} icon={ImageIcon}    label="المعرض" />
+        <TabBtn active={tab === "wheel"} onClick={() => setTab("wheel")} icon={RotateCcw} label="ضبط العجلة" />
         <TabBtn active={tab === "tuner"}   onClick={() => setTab("tuner")}   icon={Sparkles}     label="🎛️ ضبط" />
         <TabBtn active={tab === "queen"}   onClick={() => setTab("queen")}   icon={Crown}        label="الملكة" />
       </div>
@@ -189,6 +191,7 @@ export default function AssetsPanel({ token }: Props) {
       {tab === "admin" && <SimpleSlotsTab token={token} slots={ADMIN_SLOTS} />}
       {tab === "ui" && <SimpleSlotsTab token={token} slots={UI_SLOTS} />}
       {tab === "gallery" && <AssetsGalleryTab />}
+      {tab === "wheel" && <WheelTuner token={token} />}
       {tab === "tuner" && <AssetTunerTab />}
       {tab === "queen" && <SimpleSlotsTab token={token} slots={QUEEN_SLOTS} />}
     </div>
