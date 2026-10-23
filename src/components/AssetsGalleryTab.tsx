@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import AssetVideo from "./ui/AssetVideo";
@@ -8,6 +8,11 @@ export default function AssetsGalleryTab() {
   const assets = useQuery(api.assets.list);
   const [search, setSearch] = useState("");
   const [copied, setCopied] = useState<string | null>(null);
+  const [limit, setLimit] = useState(30); // البداية بـ 30 ملف فقط
+
+  useEffect(() => {
+    setLimit(30); // إعادة الضبط عند البحث
+  }, [search]);
 
   if (!assets) return <div className="text-white text-center py-4">جاري التحميل...</div>;
 
@@ -16,6 +21,8 @@ export default function AssetsGalleryTab() {
     const hasUrl = !!a.imageUrl && !a.imageUrl.includes("undefined");
     return isUseful && hasUrl && a.key.toLowerCase().includes(search.toLowerCase());
   });
+
+  const displayed = filtered.slice(0, limit);
 
   const handleCopy = async (text: string, type: string) => {
     try {
@@ -32,7 +39,7 @@ export default function AssetsGalleryTab() {
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50" size={16} />
           <input
             type="text"
-            placeholder="ابحث عن أصل (مثلاً: dragon أو car)..."
+            placeholder="ابحث (مثلاً: dragon أو pag)..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full bg-white/10 text-white border border-white/20 rounded-xl pl-10 pr-3 py-2 text-sm placeholder:text-white/40 focus:outline-none focus:border-purple-400"
@@ -44,7 +51,7 @@ export default function AssetsGalleryTab() {
       </div>
 
       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
-        {filtered.map((item: any) => (
+        {displayed.map((item: any) => (
           <div
             key={item._id}
             className="relative aspect-square bg-black/40 rounded-xl overflow-hidden border border-white/10 group flex flex-col"
@@ -53,7 +60,6 @@ export default function AssetsGalleryTab() {
               <AssetVideo url={item.imageUrl} type="auto" loop={true} className="w-full h-full object-contain" />
             </div>
             
-            {/* أزرار التحكم */}
             <div className="bg-black/80 p-1 flex flex-col gap-1 text-[9px] text-white">
               <button 
                 onClick={() => handleCopy(item.imageUrl, "url-")}
@@ -72,6 +78,15 @@ export default function AssetsGalleryTab() {
           </div>
         ))}
       </div>
+
+      {limit < filtered.length && (
+        <button
+          onClick={() => setLimit(limit + 30)}
+          className="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl transition"
+        >
+          تحميل المزيد (متبقي {filtered.length - limit})
+        </button>
+      )}
     </div>
   );
 }
