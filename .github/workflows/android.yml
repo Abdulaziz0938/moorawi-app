@@ -28,8 +28,7 @@ jobs:
     - name: Install Capacitor Packages
       run: npm install @capacitor/core @capacitor/cli @capacitor/android
 
-    - name: Init Capacitor
-      run: npx cap init "Ezo Group" com.ezo.app --web-dir=dist
+    # حذفنا خطوة الـ init لأننا نملك ملف capacitor.config.ts جاهز
 
     - name: Add Android Platform
       run: npx cap add android
@@ -50,14 +49,12 @@ jobs:
         cmdline-tools-version: 11076708
         packages: 'platforms;android-36 build-tools;36.0.0'
 
-    # 1. إضافة صلاحيات الميكروفون والإنترنت أوتوماتيكياً قبل البناء
     - name: Add Permissions to Manifest
       run: |
         MANIFEST="android/app/src/main/AndroidManifest.xml"
         sed -i 's|<application|<uses-permission android:name="android.permission.RECORD_AUDIO" />\n    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />\n    <uses-permission android:name="android.permission.INTERNET" />\n    <application|' $MANIFEST
         echo "✅ تم إضافة الصلاحيات"
 
-    # 2. إجبار Kotlin على نسخة موحدة
     - name: Fix Kotlin Duplicate Classes
       run: |
         cd android
