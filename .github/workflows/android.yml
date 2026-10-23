@@ -13,7 +13,6 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v4
 
-    # 1. رفع إصدار Node.js لـ 22 لأن Capacitor 8 يحتاجه
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
@@ -45,14 +44,20 @@ jobs:
         distribution: 'temurin'
         cache: gradle
 
-    # 2. تثبيت Android SDK 36 احتياطياً (عشان نضمن وجوده)
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
       with:
         cmdline-tools-version: 11076708
         packages: 'platforms;android-36 build-tools;36.0.0'
 
-    # 3. الحل المضمون لمشكلة التكرار في Kotlin
+    # 1. إضافة صلاحيات الميكروفون والإنترنت أوتوماتيكياً قبل البناء
+    - name: Add Permissions to Manifest
+      run: |
+        MANIFEST="android/app/src/main/AndroidManifest.xml"
+        sed -i 's|<application|<uses-permission android:name="android.permission.RECORD_AUDIO" />\n    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />\n    <uses-permission android:name="android.permission.INTERNET" />\n    <application|' $MANIFEST
+        echo "✅ تم إضافة الصلاحيات"
+
+    # 2. إجبار Kotlin على نسخة موحدة
     - name: Fix Kotlin Duplicate Classes
       run: |
         cd android
