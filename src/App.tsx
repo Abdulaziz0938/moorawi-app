@@ -19,6 +19,21 @@ import DailyLoginModal from "./components/DailyLoginModal";
 import InstallBanner from "./components/InstallBanner";
 
 function App() {
+  // [ezo-global] نبضة النشاط العام
+  useEffect(() => {
+    const handler = () => {
+      window.dispatchEvent(new CustomEvent('ezo-activity-ping'));
+    };
+    document.addEventListener('click', handler);
+    document.addEventListener('touchstart', handler);
+    document.addEventListener('keydown', handler);
+    return () => {
+      document.removeEventListener('click', handler);
+      document.removeEventListener('touchstart', handler);
+      document.removeEventListener('keydown', handler);
+    };
+  }, []);
+
   const [token, setToken] = useState<string>(() => getActiveToken());
   const [showAuth, setShowAuth] = useState<boolean>(() => !hasSession());
   const [currentRoomId, setCurrentRoomId] = useState<Id<"rooms"> | null>(null);

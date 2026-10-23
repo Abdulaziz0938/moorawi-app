@@ -16,7 +16,7 @@ import { mutation, query, internalMutation } from "./_generated/server";
 import { requireUser } from "./lib/auth";
 
 const HEARTBEAT_INTERVAL_MS = 25_000;
-const STALE_THRESHOLD_MS = 180_000; // 3x heartbeat (extended for Android Doze)
+const STALE_THRESHOLD_MS = 86_400_000; // 24 hours (never kick idle users) // 30 minutes (very lenient) // 10 minutes (extended for Android Doze + background)
 const MAX_SEATS = 24;
 
 // ============================================================

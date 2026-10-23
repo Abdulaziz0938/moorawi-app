@@ -104,6 +104,16 @@ export const leaveSeat = mutation({
     await ctx.db.patch("micSeats", mine._id, { userId: undefined, muted: false, adminMuted: false });
     const member = await getMember(ctx, args.roomId, user._id);
     if (member && member.role === "speaker") await ctx.db.patch("roomMembers", member._id, { role: "listener" });
+    
+    // [ezo-fix] إيقاف الموسيقى إذا كان هذا المستخدم هو من بدأها
+    const room = await ctx.db.get("rooms", args.roomId);
+    if (room && room.currentMusicStartedBy === user._id) {
+      await ctx.db.patch("rooms", args.roomId, {
+        currentMusicId: undefined,
+        currentMusicStartedBy: undefined,
+        currentMusicDurationSec: undefined,
+      });
+    }
     return null;
   },
 });
@@ -573,5 +583,25 @@ export const clearMyMic = mutation({
       }
     }
     return { ok: true, cleared };
+  },
+});
+
+
+// [ezo-cleanup] تنظيف المايكات التي انقطع أصحابها (بعد ساعة من عدم وجودهم في الغرفة)
+export const cleanupOrphanedMics = mutation({
+  args: { roomId: v.id("rooms") },
+  handler: async (ctx, args) => {
+    const seats = await ctx.db.query("micSeats").withIndex("by_room_and_seatIndex", (q) => q.eq("roomId", args.roomId)).take(MAX_SEATS);
+    const members = await ctx.db.query("roomMembers").withIndex("by_room", (q) => q.eq("roomId", args.roomId)).collect();
+    const memberUserIds = new Set(members.map(m => m.userId));
+    
+    let cleaned = 0;
+    for (const seat of seats) {
+      if (seat.userId && !memberUserIds.has(seat.userId)) {
+        await ctx.db.patch("micSeats", seat._id, { userId: undefined, muted: false, adminMuted: false });
+        cleaned++;
+      }
+    }
+    return { ok: true, cleaned };
   },
 });
