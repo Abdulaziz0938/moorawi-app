@@ -15,7 +15,7 @@ export default function LiveListScreen({ onEnter }: Props) {
   if (streams === undefined) {
     return (
       <div className="flex justify-center py-16">
-        <Loader2 className="text-slate-900/40 animate-spin" size={32} />
+        <Loader2 className="text-white/40 animate-spin" size={32} />
       </div>
     );
   }
@@ -26,8 +26,8 @@ export default function LiveListScreen({ onEnter }: Props) {
         <div className="w-20 h-20 rounded-full bg-red-500/10 border border-red-400/30 flex items-center justify-center mb-3">
           <Radio size={36} className="text-red-400/60" />
         </div>
-        <p className="text-slate-900/70 text-sm font-black">لا يوجد بث مباشر حالياً</p>
-        <p className="text-slate-900/40 text-[11px] mt-1">
+        <p className="text-white/70 text-sm font-black">لا يوجد بث مباشر حالياً</p>
+        <p className="text-white/40 text-[11px] mt-1">
           تحقق لاحقاً — قد تبث مذيعة قريباً
         </p>
       </div>

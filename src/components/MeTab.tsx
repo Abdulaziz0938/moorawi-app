@@ -108,7 +108,7 @@ export default function MeTab({ onEnterRoom }: Props) {
 
   if (!me) {
     return (
-      <div className="h-full flex items-center justify-center text-slate-900/40">
+      <div className="h-full flex items-center justify-center text-white/40">
         <Loader2 size={28} className="animate-spin" />
       </div>
     );
@@ -144,7 +144,7 @@ export default function MeTab({ onEnterRoom }: Props) {
         {/* ===== Top: user mini header ===== */}
         <button
           onClick={() => setShowFullProfile(true)}
-          className="w-full px-4 pt-4 pb-3 flex items-center gap-3 hover:bg-[#161c24] transition active:bg-white/10"
+          className="w-full px-4 pt-4 pb-3 flex items-center gap-3 hover:bg-[#161c24] transition active:bg-[#0a0514]/10"
         >
 <VipAvatar
               src={profile?.avatarUrl}
@@ -154,10 +154,10 @@ export default function MeTab({ onEnterRoom }: Props) {
               ring={true}
             />
           <div className="flex-1 min-w-0 text-right">
-            <p className="text-slate-900 font-black text-base truncate">{me.name || "—"}</p>
-            <p className="text-slate-900/60 text-xs" dir="ltr">ID:{me.userNumber}</p>
+            <p className="text-white font-black text-base truncate">{me.name || "—"}</p>
+            <p className="text-white/60 text-xs" dir="ltr">ID:{me.userNumber}</p>
           </div>
-          <ChevronLeft size={20} className="text-slate-900/40" />
+          <ChevronLeft size={20} className="text-white/40" />
         </button>
 
         {/* ===== Stats (visitors / fans / following) ===== */}

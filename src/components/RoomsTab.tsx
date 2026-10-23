@@ -172,12 +172,12 @@ export default function RoomsTab({ onEnter, onEnterLive, onStartLive }: Props) {
               <div className="w-full mb-3 rounded-2xl bg-red-500/15 border border-red-400/40 p-3 flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse flex-shrink-0" />
                 <div className="flex-1">
-                  <div className="text-slate-900 text-xs font-black">أنتِ تبثين الآن</div>
-                  <div className="text-slate-900/60 text-[10px] truncate">{myLive.title}</div>
+                  <div className="text-white text-xs font-black">أنتِ تبثين الآن</div>
+                  <div className="text-white/60 text-[10px] truncate">{myLive.title}</div>
                 </div>
                 <button
                   onClick={() => onStartLive(myLive._id)}
-                  className="px-3 py-1.5 rounded-full bg-red-500 text-slate-900 text-[10px] font-black active:scale-95"
+                  className="px-3 py-1.5 rounded-full bg-red-500 text-white text-[10px] font-black active:scale-95"
                 >
                   متابعة
                 </button>
@@ -189,7 +189,7 @@ export default function RoomsTab({ onEnter, onEnterLive, onStartLive }: Props) {
                       dialog.alert(e?.message || "فشل");
                     }
                   }}
-                  className="px-2 py-1.5 rounded-full bg-white/60 text-slate-900/70 text-[10px] font-black active:scale-95"
+                  className="px-2 py-1.5 rounded-full bg-[#0a0514]/60 text-white/70 text-[10px] font-black active:scale-95"
                 >
                   إنهاء
                 </button>
@@ -200,7 +200,7 @@ export default function RoomsTab({ onEnter, onEnterLive, onStartLive }: Props) {
             {onStartLive && !myLive && (
               <button
                 onClick={() => setShowLiveSetup(true)}
-                className="w-full mb-3 py-3 rounded-2xl bg-gradient-to-r from-red-500 to-pink-600 text-slate-900 font-black text-sm shadow-lg active:scale-95 flex items-center justify-center gap-2"
+                className="w-full mb-3 py-3 rounded-2xl bg-gradient-to-r from-red-500 to-pink-600 text-white font-black text-sm shadow-lg active:scale-95 flex items-center justify-center gap-2"
               >
                 🔴 ابدئي البث المباشر
               </button>
@@ -280,7 +280,7 @@ function MyRoomCard({ room, onEnter }: any) {
       padding="md"
     >
       {/* Cover */}
-      <div className="w-16 h-16 rounded-2xl overflow-hidden bg-white/40 flex-shrink-0 flex items-center justify-center">
+      <div className="w-16 h-16 rounded-2xl overflow-hidden bg-[#0a0514]/40 flex-shrink-0 flex items-center justify-center">
         {(room.coverUrl || room.ownerAvatarUrl) ? (
           <AssetVideo url={room.coverUrl || room.ownerAvatarUrl} type="auto" className="w-full h-full object-cover" />
         ) : (
@@ -290,8 +290,8 @@ function MyRoomCard({ room, onEnter }: any) {
 
       {/* Info */}
       <div className="flex-1 min-w-0 text-right">
-        <p className="text-slate-900 text-sm font-black truncate">{room.name}</p>
-        <p className="text-slate-900/50 text-[10px]" dir="ltr">ID:{room.roomNumber ?? "—"}</p>
+        <p className="text-white text-sm font-black truncate">{room.name}</p>
+        <p className="text-white/50 text-[10px]" dir="ltr">ID:{room.roomNumber ?? "—"}</p>
         <div className="flex items-center gap-3 mt-1 justify-end">
           <span className="text-emerald-300 text-[10px] flex items-center gap-1">
             <Users size={10} /> {room.memberCount ?? 0} متصل
@@ -299,7 +299,7 @@ function MyRoomCard({ room, onEnter }: any) {
         </div>
       </div>
 
-      <ChevronLeft size={18} className="text-slate-900/40 flex-shrink-0" />
+      <ChevronLeft size={18} className="text-white/40 flex-shrink-0" />
     </Card>
   );
 }
@@ -359,7 +359,7 @@ function BannerSlideshow() {
     return (
 <Card tone="purple" padding="lg">
           <div className="aspect-video flex items-center justify-center">
-            <p className="text-slate-900/40 text-xs">لا توجد إعلانات</p>
+            <p className="text-white/40 text-xs">لا توجد إعلانات</p>
           </div>
         </Card>
     );
@@ -368,7 +368,7 @@ function BannerSlideshow() {
   const banner = banners[idx];
 
   return (
-    <div className="relative aspect-video rounded-2xl overflow-hidden border border-slate-200 bg-white/40">
+    <div className="relative aspect-video rounded-2xl overflow-hidden border border-white/10 bg-[#0a0514]/40">
       <AssetVideo url={banner.imageUrl} type="auto" className="absolute inset-0 w-full h-full object-cover" />
 
       {/* Nav buttons */}
@@ -376,13 +376,13 @@ function BannerSlideshow() {
         <>
           <button
             onClick={() => setIdx((i) => (i - 1 + banners.length) % banners.length)}
-            className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/50 backdrop-blur flex items-center justify-center text-slate-900 active:scale-95"
+            className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-[#0a0514]/50 backdrop-blur flex items-center justify-center text-white active:scale-95"
           >
             <ChevronLeft size={16} />
           </button>
           <button
             onClick={() => setIdx((i) => (i + 1) % banners.length)}
-            className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/50 backdrop-blur flex items-center justify-center text-slate-900 active:scale-95"
+            className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-[#0a0514]/50 backdrop-blur flex items-center justify-center text-white active:scale-95"
           >
             <ChevronRight size={16} />
           </button>
@@ -395,7 +395,7 @@ function BannerSlideshow() {
           {banners.map((_, i) => (
             <span
               key={i}
-              className={`w-1.5 h-1.5 rounded-full transition ${i === idx ? "bg-white w-4" : "bg-white/50"}`}
+              className={`w-1.5 h-1.5 rounded-full transition ${i === idx ? "bg-[#0a0514] w-4" : "bg-[#0a0514]/50"}`}
             />
           ))}
         </div>
@@ -417,7 +417,7 @@ function WealthRankingBox() {
 <Card tone="gold" padding="md">
       <div className="flex items-center justify-center gap-1 mb-2">
         <Crown size={14} className="text-amber-300" />
-        <p className="text-slate-900 text-xs font-black">ترتيب الثروة</p>
+        <p className="text-white text-xs font-black">ترتيب الثروة</p>
       </div>
       <div className="flex items-end justify-center gap-2 h-24">
         {positions.map((pos, idx) => {
@@ -425,7 +425,7 @@ function WealthRankingBox() {
           const isGold = pos === "gold";
           const isSilver = pos === "silver";
           const size = isGold ? "w-14 h-14" : "w-11 h-11";
-          const borderColor = isGold ? "border-amber-300" : isSilver ? "border-slate-200" : "border-orange-500";
+          const borderColor = isGold ? "border-amber-300" : isSilver ? "border-white/10" : "border-orange-500";
           const label = isGold ? "1" : isSilver ? "2" : "3";
           return (
             <div key={pos} className={`flex flex-col items-center ${isGold ? "mb-1" : ""}`}>
@@ -433,10 +433,10 @@ function WealthRankingBox() {
                 {item?.avatarUrl ? (
                   <img src={item.avatarUrl} alt="" className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-slate-900 text-xs font-black">{item?.name?.[0] ?? "?"}</span>
+                  <span className="text-white text-xs font-black">{item?.name?.[0] ?? "?"}</span>
                 )}
               </div>
-              <span className={`text-[8px] font-black text-slate-900 mt-0.5 ${isGold ? "text-amber-200" : isSilver ? "text-slate-100" : "text-orange-300"}`}>
+              <span className={`text-[8px] font-black text-white mt-0.5 ${isGold ? "text-amber-200" : isSilver ? "text-slate-100" : "text-orange-300"}`}>
                 #{label}
               </span>
             </div>
@@ -444,7 +444,7 @@ function WealthRankingBox() {
         })}
       </div>
       {(!ranking || ranking.length === 0) && (
-        <p className="text-slate-900/40 text-[9px] text-center mt-1">لا توجد بيانات</p>
+        <p className="text-white/40 text-[9px] text-center mt-1">لا توجد بيانات</p>
       )}
     </Card>
   );
@@ -461,7 +461,7 @@ function CpRankingBox() {
 <Card tone="pink" padding="md">
       <div className="flex items-center justify-center gap-1 mb-2">
         <Heart size={14} className="text-pink-300" fill="currentColor" />
-        <p className="text-slate-900 text-xs font-black">كوبل</p>
+        <p className="text-white text-xs font-black">كوبل</p>
       </div>
       <div className="flex items-center justify-center gap-2 h-24">
         {pair ? (
@@ -471,10 +471,10 @@ function CpRankingBox() {
                 {pair.user1.avatarUrl ? (
                   <img src={pair.user1.avatarUrl} alt="" className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-slate-900 text-xs font-black">{pair.user1.name[0]}</span>
+                  <span className="text-white text-xs font-black">{pair.user1.name[0]}</span>
                 )}
               </div>
-              <p className="text-slate-900/70 text-[8px] mt-0.5 truncate max-w-[48px]">{pair.user1.name}</p>
+              <p className="text-white/70 text-[8px] mt-0.5 truncate max-w-[48px]">{pair.user1.name}</p>
             </div>
             <Heart size={16} className="text-pink-400 mb-4" fill="currentColor" />
             <div className="flex flex-col items-center">
@@ -482,14 +482,14 @@ function CpRankingBox() {
                 {pair.user2.avatarUrl ? (
                   <img src={pair.user2.avatarUrl} alt="" className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-slate-900 text-xs font-black">{pair.user2.name[0]}</span>
+                  <span className="text-white text-xs font-black">{pair.user2.name[0]}</span>
                 )}
               </div>
-              <p className="text-slate-900/70 text-[8px] mt-0.5 truncate max-w-[48px]">{pair.user2.name}</p>
+              <p className="text-white/70 text-[8px] mt-0.5 truncate max-w-[48px]">{pair.user2.name}</p>
             </div>
           </>
         ) : (
-          <p className="text-slate-900/40 text-[9px]">لا يوجد كوبل</p>
+          <p className="text-white/40 text-[9px]">لا يوجد كوبل</p>
         )}
       </div>
     </Card>
@@ -505,14 +505,14 @@ function RoomsWithStatsGrid({ onEnter }: { onEnter: (id: Id<"rooms">) => void })
   if (rooms === undefined) {
     return (
       <div className="flex justify-center py-10">
-        <Loader2 size={24} className="animate-spin text-slate-900/40" />
+        <Loader2 size={24} className="animate-spin text-white/40" />
       </div>
     );
   }
 
   if (rooms.length === 0) {
     return (
-      <div className="text-center py-10 text-slate-900/50">
+      <div className="text-center py-10 text-white/50">
         <Home size={40} className="mx-auto mb-2 opacity-30" />
         <p className="text-sm font-bold">لا توجد غرف</p>
       </div>
@@ -534,7 +534,7 @@ function RoomCardGrid({ room, onEnter }: { room: any; onEnter: (id: Id<"rooms">)
   return (
     <button
       onClick={() => onEnter(room._id)}
-      className="relative rounded-2xl overflow-hidden aspect-square bg-gradient-to-br from-purple-900/40 to-indigo-900/40 border border-slate-200 active:scale-95 transition"
+      className="relative rounded-2xl overflow-hidden aspect-square bg-gradient-to-br from-purple-900/40 to-indigo-900/40 border border-white/10 active:scale-95 transition"
     >
       {/* Cover */}
       {(room.coverUrl || room.ownerAvatarUrl) ? (
@@ -557,12 +557,12 @@ function RoomCardGrid({ room, onEnter }: { room: any; onEnter: (id: Id<"rooms">)
 
       {/* Bottom info */}
       <div className="absolute inset-x-0 bottom-0 p-2 text-right">
-        <p className="text-slate-900 text-[11px] font-black truncate">{room.name}</p>
+        <p className="text-white text-[11px] font-black truncate">{room.name}</p>
         <div className="flex items-center gap-2 mt-0.5 justify-end">
           <span className="text-emerald-300 text-[9px] flex items-center gap-0.5">
             <Users size={8} /> {room.onlineCount}
           </span>
-          <span className="text-slate-900/50 text-[9px]">ID:{room.roomNumber ?? "—"}</span>
+          <span className="text-white/50 text-[9px]">ID:{room.roomNumber ?? "—"}</span>
         </div>
       </div>
     </button>
@@ -574,12 +574,12 @@ function RoomCardGrid({ room, onEnter }: { room: any; onEnter: (id: Id<"rooms">)
 // ============================================================
 function RoomList({ rooms, onEnter, empty }: any) {
   if (rooms === undefined) {
-    return <div className="flex justify-center py-10"><Loader2 size={20} className="animate-spin text-slate-900/40" /></div>;
+    return <div className="flex justify-center py-10"><Loader2 size={20} className="animate-spin text-white/40" /></div>;
   }
   if (rooms.length === 0) {
     return (
 <Card tone="default" padding="lg">
-          <div className="text-center py-6 text-slate-900/40">
+          <div className="text-center py-6 text-white/40">
             <p className="text-xs">{empty}</p>
           </div>
         </Card>
@@ -591,9 +591,9 @@ function RoomList({ rooms, onEnter, empty }: any) {
         <button
           key={r._id}
           onClick={() => onEnter(r._id)}
-          className="w-full rounded-2xl bg-white/5 border border-slate-200 p-2 flex items-center gap-3 active:scale-95 transition"
+          className="w-full rounded-2xl bg-[#0a0514]/5 border border-white/10 p-2 flex items-center gap-3 active:scale-95 transition"
         >
-          <div className="w-14 h-14 rounded-xl overflow-hidden bg-white/40 flex-shrink-0 flex items-center justify-center">
+          <div className="w-14 h-14 rounded-xl overflow-hidden bg-[#0a0514]/40 flex-shrink-0 flex items-center justify-center">
             {(r.coverUrl || r.ownerAvatarUrl) ? (
               <AssetVideo url={r.coverUrl || r.ownerAvatarUrl} type="auto" className="w-full h-full object-cover" />
             ) : (
@@ -601,14 +601,14 @@ function RoomList({ rooms, onEnter, empty }: any) {
             )}
           </div>
           <div className="flex-1 min-w-0 text-right">
-            <p className="text-slate-900 text-xs font-black truncate">{r.name}</p>
-            <p className="text-slate-900/50 text-[10px] truncate">{r.welcomeMessage || "—"}</p>
+            <p className="text-white text-xs font-black truncate">{r.name}</p>
+            <p className="text-white/50 text-[10px] truncate">{r.welcomeMessage || "—"}</p>
           </div>
           <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
             <span className="text-emerald-300 text-[9px] flex items-center gap-0.5">
               <Users size={9} /> {r.memberCount ?? 0}
             </span>
-            <span className="text-slate-900/40 text-[9px]">ID:{r.roomNumber ?? "—"}</span>
+            <span className="text-white/40 text-[9px]">ID:{r.roomNumber ?? "—"}</span>
           </div>
         </button>
       ))}
@@ -621,11 +621,11 @@ function RoomList({ rooms, onEnter, empty }: any) {
 // ============================================================
 function CreateRoomModal({ value, onChange, onCancel, onConfirm, busy }: any) {
   return (
-    <div className="fixed inset-0 bg-white/70 backdrop-blur-sm flex items-center justify-center p-4 z-[100]" onClick={onCancel}>
-      <div className="bg-gradient-to-b from-slate-900 to-black rounded-3xl p-6 max-w-sm w-full border border-slate-200" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 bg-[#0a0514]/70 backdrop-blur-sm flex items-center justify-center p-4 z-[100]" onClick={onCancel}>
+      <div className="bg-gradient-to-b from-slate-900 to-black rounded-3xl p-6 max-w-sm w-full border border-white/10" onClick={(e) => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-slate-900 text-lg font-black">غرفة جديدة</h2>
-          <button onClick={onCancel} className="text-slate-900/60 hover:text-slate-900"><X size={20} /></button>
+          <h2 className="text-white text-lg font-black">غرفة جديدة</h2>
+          <button onClick={onCancel} className="text-white/60 hover:text-white"><X size={20} /></button>
         </div>
         <input
           autoFocus
@@ -634,12 +634,12 @@ function CreateRoomModal({ value, onChange, onCancel, onConfirm, busy }: any) {
           value={value}
           onChange={(e) => onChange(e.target.value)}
           maxLength={30}
-          className="w-full bg-white/10 border border-slate-300 rounded-2xl p-3 text-slate-900 placeholder:text-slate-900/40 focus:outline-none focus:border-purple-400 mb-4"
+          className="w-full bg-[#0a0514]/10 border border-white/20 rounded-2xl p-3 text-white placeholder:text-white/40 focus:outline-none focus:border-purple-400 mb-4"
         />
         <button
           onClick={onConfirm}
           disabled={busy || !value.trim()}
-          className="w-full bg-gradient-to-r from-pink-500 to-purple-600 text-slate-900 py-3 rounded-2xl font-black disabled:opacity-50 active:scale-95 transition"
+          className="w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white py-3 rounded-2xl font-black disabled:opacity-50 active:scale-95 transition"
         >
           {busy ? <Loader2 size={18} className="animate-spin mx-auto" /> : "إنشاء"}
         </button>
@@ -653,7 +653,7 @@ function CreateRoomModal({ value, onChange, onCancel, onConfirm, busy }: any) {
 // ============================================================
 function TopTabBtn({ active, onClick, label }: any) {
   return (
-    <button onClick={onClick} className={`relative pb-1 text-sm font-black transition ${active ? "text-slate-900" : "text-slate-900/50"}`}>
+    <button onClick={onClick} className={`relative pb-1 text-sm font-black transition ${active ? "text-white" : "text-white/50"}`}>
       {label}
       {active && <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-gradient-to-r from-pink-500 to-purple-500" />}
     </button>
@@ -662,7 +662,7 @@ function TopTabBtn({ active, onClick, label }: any) {
 
 function SubTabBtn({ active, onClick, label }: any) {
   return (
-    <button onClick={onClick} className={`relative pb-1.5 text-xs font-black transition ${active ? "text-slate-900" : "text-slate-900/45"}`}>
+    <button onClick={onClick} className={`relative pb-1.5 text-xs font-black transition ${active ? "text-white" : "text-white/45"}`}>
       {label}
       {active && <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-emerald-400" />}
     </button>
