@@ -12,6 +12,8 @@ import { useEffect, useState } from "react";
 import { Crown } from "lucide-react";
 import VipAvatar from "./ui/VipAvatar";
 import VipName from "./VipName";
+import AssetVideo from "./ui/AssetVideo";
+import { useReactiveAssets } from "../lib/assets";
 import { playVipEntry } from "../lib/sound";
 import { haptic } from "../lib/haptics";
 
@@ -33,6 +35,7 @@ const VIP_COLORS: Record<number, { main: string; accent: string; glow: string }>
 };
 
 export default function VipEntryOverlay({ entry }: { entry: Entry | null }) {
+  const { map: assets } = useReactiveAssets();
   const [visible, setVisible] = useState(false);
   const [active, setActive] = useState<Entry | null>(null);
 

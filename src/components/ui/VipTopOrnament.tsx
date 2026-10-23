@@ -3,6 +3,7 @@
 // - عرض 90%، ارتفاع أقصى 140px
 // - قابلة للتعديل من Tuner (يستخدم canvasSize/offsetY/offsetX/holeSize الموجودة)
 import type { AssetFull } from "../../lib/assets";
+import AssetVideo from "./AssetVideo";
 import SvgaPlayer from "./SvgaPlayer";
 
 interface Props {
