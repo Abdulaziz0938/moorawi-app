@@ -1,5 +1,4 @@
 import { useEffect, useRef } from "react";
-import { PAGInit } from "libpag";
 
 export default function PagPlayer({ src, className = "" }: { src: string; className?: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -8,9 +7,19 @@ export default function PagPlayer({ src, className = "" }: { src: string; classN
     let pagView: any = null;
     let isMounted = true;
 
+    const loadPag = async () => {
+      if ((window as any).libpag) return (window as any).libpag;
+      return new Promise((resolve) => {
+        const script = document.createElement("script");
+        script.src = "https://cdn.jsdelivr.net/npm/libpag@4.4.14/lib/libpag.min.js";
+        script.onload = () => resolve((window as any).libpag);
+        document.body.appendChild(script);
+      });
+    };
+
     (async () => {
       try {
-        const PAG = await PAGInit();
+        const PAG = await loadPag();
         if (!isMounted || !canvasRef.current) return;
         
         const pagFile = await PAG.PAGFile.load(src);
