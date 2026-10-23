@@ -1145,7 +1145,7 @@ export const toggleMiniChat = mutation({
 export const getUserActiveRoom = query({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
-    const threshold = Date.now() - 90_000;
+    const threshold = Date.now() - 7_200_000;
     const memberships = await ctx.db
       .query("roomMembers")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
