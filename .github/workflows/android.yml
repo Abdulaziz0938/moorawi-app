@@ -28,7 +28,7 @@ jobs:
     - name: Install Capacitor Packages
       run: npm install @capacitor/core @capacitor/cli @capacitor/android @capacitor/camera @capacitor/filesystem @capacitor/local-notifications
 
-    # شلنا أمر add android لأن المجلد موجود أصلاً
+    # شلنا أمر add android لأن المجلد موجود
     - name: Sync Capacitor
       run: npx cap sync android
 
@@ -45,14 +45,15 @@ jobs:
         cmdline-tools-version: 11076708
         packages: 'platforms;android-36 build-tools;36.0.0'
 
-    # إضافة الصلاحيات (رح تتأكد إنها مش مكررة)
-    - name: Add All Permissions to Manifest
+    # حل مشكلة التكرار وإضافة الصلاحيات الناقصة
+    - name: Fix Permissions and Manifest
       run: |
         MANIFEST="android/app/src/main/AndroidManifest.xml"
-        sed -i '/android.permission.RECORD_AUDIO/d' $MANIFEST
-        sed -i '/android.permission.INTERNET/d' $MANIFEST
-        sed -i 's|<application|<uses-permission android:name="android.permission.RECORD_AUDIO" />\n    <uses-permission android:name="android.permission.INTERNET" />\n    <uses-permission android:name="android.permission.CAMERA" />\n    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />\n    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />\n    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />\n    <application|' $MANIFEST
-        echo "✅ تم إضافة الصلاحيات"
+        # حذف سطر الـ INTERNET المكرر
+        awk '!seen[$0]++ || !/android.permission.INTERNET/' $MANIFEST > temp && mv temp $MANIFEST
+        # إضافة الصلاحيات الناقصة
+        sed -i 's|<application|<uses-permission android:name="android.permission.CAMERA" />\n    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />\n    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />\n    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />\n    <uses-feature android:name="android.hardware.camera" />\n    <application|' $MANIFEST
+        echo "✅ تم إضافة الصلاحيات وتنظيف الملف"
 
     - name: Fix Kotlin Duplicate Classes
       run: |
