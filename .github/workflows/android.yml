@@ -37,13 +37,19 @@ jobs:
     - name: Sync Capacitor
       run: npx cap sync android
 
-    # غيرنا الجافا من 17 إلى 21 هنا
     - name: Set up JDK 21
       uses: actions/setup-java@v3
       with:
         java-version: '21'
         distribution: 'temurin'
         cache: gradle
+
+    # هذا هو الحل: نجبر Gradle يستخدم نسخة موحدة من Kotlin
+    - name: Fix Kotlin Duplicate Classes
+      run: |
+        cd android
+        echo "configurations.all { resolutionStrategy { force 'org.jetbrains.kotlin:kotlin-stdlib:1.8.22' } }" >> build.gradle
+        echo "تم تعديل build.gradle بنجاح"
 
     - name: Grant execute permission for gradlew
       run: chmod +x android/gradlew
