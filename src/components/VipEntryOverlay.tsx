@@ -1,20 +1,9 @@
-// [ezo-vip] VipEntryOverlay — تأثير دخول VIP (مطابق لـ Bigo/SUGO)
-//
-// يظهر عند دخول VIP 3+ للغرفة:
-//   - خلفية معتمة خفيفة
-//   - بطاقة بألوان المستوى + هالة متوهجة
-//   - أفاتار بحجم كبير + إطار متحرك
-//   - اسم بتدرج لوني
-//   - شارة VIP + المستوى
-//   - تختفي تلقائياً بعد 3.5 ثانية
-
-import { useEffect, useState } from "react";
-import { Crown } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Crown, Sparkles } from "lucide-react";
 import VipAvatar from "./ui/VipAvatar";
 import VipName from "./VipName";
 import AssetVideo from "./ui/AssetVideo";
 import { useReactiveAssets } from "../lib/assets";
-import { playVipEntry } from "../lib/sound";
 import { haptic } from "../lib/haptics";
 
 interface Entry {
@@ -26,102 +15,61 @@ interface Entry {
   createdAt: number;
 }
 
-const VIP_COLORS: Record<number, { main: string; accent: string; glow: string }> = {
-  3: { main: "#a855f7", accent: "#c084fc", glow: "rgba(168,85,247,0.6)" },
-  4: { main: "#dc2626", accent: "#f87171", glow: "rgba(220,38,38,0.65)" },
-  5: { main: "#eab308", accent: "#facc15", glow: "rgba(234,179,8,0.7)" },
-  6: { main: "#f97316", accent: "#fb923c", glow: "rgba(249,115,22,0.75)" },
-  7: { main: "#fbbf24", accent: "#fde047", glow: "rgba(251,191,36,0.85)" },
-};
-
 export default function VipEntryOverlay({ entry }: { entry: Entry | null }) {
   const { map: assets } = useReactiveAssets();
   const [visible, setVisible] = useState(false);
   const [active, setActive] = useState<Entry | null>(null);
 
   useEffect(() => {
-    if (!entry) return;
-    if (active?._id === entry._id) return;
-    // فقط VIP 3+
-    if (entry.level < 3) return;
+    if (entry && (!active || entry._id !== active._id)) {
+      setActive(entry);
+      setVisible(true);
+      haptic("heavy");
 
-    setActive(entry);
-    setVisible(true);
-
-    // Sound + Haptic
-    playVipEntry(entry.level);
-    haptic(entry.level >= 5 ? "heavy" : "medium");
-
-    const timer = setTimeout(() => setVisible(false), 3500);
-    return () => clearTimeout(timer);
-  }, [entry?._id]);
+      const timer = setTimeout(() => {
+        setVisible(false);
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [entry, active]);
 
   if (!visible || !active) return null;
 
-  const c = VIP_COLORS[Math.min(active.level, 7)] ?? VIP_COLORS[3];
+  const vipPagAsset = `/vip_assets/bimo_vip${active.level}.pag`;
 
   return (
-    <div
-      className="fixed inset-0 z-[500] pointer-events-none flex items-center justify-center"
-      dir="rtl"
-    >
-      {/* Radial glow background */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background: `radial-gradient(circle at 50% 50%, ${c.glow} 0%, transparent 60%)`,
-          animation: "vipEntryFade 3.5s ease-out",
-        }}
-      />
-
-      {/* Card */}
-      <div
-        className="relative flex flex-col items-center px-8 py-6 rounded-3xl"
-        style={{
-          background: "linear-gradient(135deg, rgba(10,6,18,0.95), rgba(15,12,40,0.92))",
-          border: `2px solid ${c.main}`,
-          boxShadow: `0 0 40px ${c.glow}, 0 0 80px ${c.glow.replace("0.6", "0.3")}, inset 0 0 20px ${c.main}20`,
-          backdropFilter: "blur(20px)",
-          animation: "vipEntrySlideGPU 3.5s cubic-bezier(0.22, 1, 0.36, 1) forwards", willChange: "transform, opacity", transform: "translate3d(0,0,0)",
-        }}
-      >
-        {/* Crown row */}
-        <div className="flex items-center gap-1.5 mb-2">
-          <Crown size={16} style={{ color: c.accent }} fill="currentColor" />
-          <span
-            className="text-[10px] font-black tracking-wider uppercase"
-            style={{ color: c.accent }}
-          >
-            VIP {active.level}
-          </span>
-          <Crown size={16} style={{ color: c.accent }} fill="currentColor" />
-        </div>
-
-        {/* Avatar */}
-        <div className="relative mb-3">
-          <VipAvatar
-            src={active.avatarUrl}
-            name={active.name}
-            size={104}
-            vip={active.level}
-          />
-        </div>
-
-        {/* Name with VIP gradient */}
-        <VipName level={active.level} className="text-2xl font-black">
-          {active.name}
-        </VipName>
-
-        {/* Entrance text */}
-        <p
-          className="mt-2 text-[11px] font-black tracking-wider"
-          style={{ color: c.accent }}
-        >
-          انضم إلى الغرفة
-        </p>
-      </div>
-
+    <div className="fixed inset-0 pointer-events-none z-50 flex items-center justify-center overflow-hidden">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] animate-fade-in" />
       
+      <div className="relative flex flex-col items-center animate-scale-up">
+        <div className="absolute -inset-20 z-0 opacity-90 flex items-center justify-center pointer-events-none">
+          <AssetVideo url={vipPagAsset} className="w-[450px] h-[450px] object-contain" />
+        </div>
+
+        <div className="relative z-10 flex flex-col items-center bg-gradient-to-b from-purple-950/80 via-black/90 to-black/95 border border-amber-500/50 rounded-2xl p-6 shadow-2xl backdrop-blur-md min-w-[300px]">
+          <div className="absolute -top-10">
+            <div className="relative ring-4 ring-amber-400/80 rounded-full shadow-lg">
+              <VipAvatar src={active.avatarUrl} name={active.name} vip={active.level} size={64} />
+            </div>
+          </div>
+
+          <div className="mt-8 flex flex-col items-center">
+            <div className="flex items-center space-x-1 space-x-reverse bg-amber-500/20 px-3 py-1 rounded-full border border-amber-400/30 mb-2">
+              <Crown className="w-4 h-4 text-amber-400 animate-bounce" />
+              <span className="text-amber-300 font-bold text-xs">VIP {active.level} - أسطورة بينمو</span>
+            </div>
+            
+            <div className="text-lg font-black text-white tracking-wide mb-1">
+              <span className="text-amber-400 font-bold">{active.name}</span>
+            </div>
+            
+            <p className="text-xs text-purple-300 flex items-center gap-1 mt-1">
+              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              انضم إلى الغرفة بسلام وهيبة ملكية
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
