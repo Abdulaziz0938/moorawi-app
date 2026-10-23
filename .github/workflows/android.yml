@@ -25,14 +25,16 @@ jobs:
     - name: Build Web App
       run: npm run build
 
+    # تثبيت Capacitor والمكتبات المطلوبة (بدون إضافات Native وهمية)
     - name: Install Capacitor Packages
       run: npm install @capacitor/core @capacitor/cli @capacitor/android @capacitor/camera @capacitor/filesystem @capacitor/local-notifications
 
-    # إنشاء منصة الأندرويد من جديد عشان نتأكد إن ملف gradlew موجود
-    - name: Recreate Android Platform (to generate gradlew)
+    # التأكد من وجود مجلد الأندرويد، إذا مش موجود ننشئه
+    - name: Ensure Android Platform Exists
       run: |
-        rm -rf android
-        npx cap add android
+        if [ ! -d "android" ]; then
+          npx cap add android
+        fi
         npx cap sync android
 
     - name: Set up JDK 21
@@ -48,21 +50,31 @@ jobs:
         cmdline-tools-version: 11076708
         packages: 'platforms;android-36 build-tools;36.0.0'
 
-    # إضافة الصلاحيات بعد إعادة الإنشاء
-    - name: Add All Permissions to Manifest
+    # 1. إضافة الصلاحيات الناقصة (الكاميرا، الملفات، الإشعارات)
+    - name: Add Permissions to Manifest
       run: |
         MANIFEST="android/app/src/main/AndroidManifest.xml"
-        sed -i '/android.permission.RECORD_AUDIO/d' $MANIFEST
-        sed -i '/android.permission.INTERNET/d' $MANIFEST
-        sed -i 's|<application|<uses-permission android:name="android.permission.RECORD_AUDIO" />\n    <uses-permission android:name="android.permission.INTERNET" />\n    <uses-permission android:name="android.permission.CAMERA" />\n    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />\n    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />\n    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />\n    <application|' $MANIFEST
+        # إزالة التكرار
+        awk '!seen[$0]++' $MANIFEST > temp && mv temp $MANIFEST
+        # إضافة الصلاحيات
+        sed -i 's|<application|<uses-permission android:name="android.permission.CAMERA" />\n    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />\n    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />\n    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />\n    <application|' $MANIFEST
+
+    # 2. إضافة مشغل PAG الأصلي (Native) لمشروع الأندرويد
+    - name: Add Native PAG Library
+      run: |
+        GRADLE_FILE="android/app/build.gradle"
+        # إضافة مستودع Maven و المكتبة
+        sed -i "/dependencies {/a\    implementation 'com.tencent.tav:libpag:latest.release'" $GRADLE_FILE
+        sed -i "/repositories {/a\        mavenCentral()" $GRADLE_FILE
 
     - name: Fix Kotlin Duplicate Classes
       run: |
         cd android
         echo "configurations.all { resolutionStrategy { force 'org.jetbrains.kotlin:kotlin-stdlib:1.8.22' } }" >> build.gradle
 
+    # إعطاء صلاحية التنفيذ لـ gradlew (شرطي)
     - name: Grant execute permission for gradlew
-      run: chmod +x android/gradlew
+      run: chmod +x android/gradlew || true
 
     - name: Build APK with Gradle
       run: cd android && ./gradlew clean assembleDebug
