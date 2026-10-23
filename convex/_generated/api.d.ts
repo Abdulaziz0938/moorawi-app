@@ -63,6 +63,7 @@ import type * as seed_all_assets from "../seed_all_assets.js";
 import type * as seed_apk_svga from "../seed_apk_svga.js";
 import type * as seed_custom_svga from "../seed_custom_svga.js";
 import type * as seed_extracted_svga from "../seed_extracted_svga.js";
+import type * as seed_pag from "../seed_pag.js";
 import type * as seed_svga from "../seed_svga.js";
 import type * as shop from "../shop.js";
 import type * as users from "../users.js";
@@ -136,6 +137,7 @@ declare const fullApi: ApiFromModules<{
   seed_apk_svga: typeof seed_apk_svga;
   seed_custom_svga: typeof seed_custom_svga;
   seed_extracted_svga: typeof seed_extracted_svga;
+  seed_pag: typeof seed_pag;
   seed_svga: typeof seed_svga;
   shop: typeof shop;
   users: typeof users;
