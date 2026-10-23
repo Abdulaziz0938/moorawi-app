@@ -68,6 +68,7 @@ import type * as seed_extracted_svga from "../seed_extracted_svga.js";
 import type * as seed_pag from "../seed_pag.js";
 import type * as seed_rest_webp from "../seed_rest_webp.js";
 import type * as seed_svga from "../seed_svga.js";
+import type * as seed_vip_animations from "../seed_vip_animations.js";
 import type * as seed_webp from "../seed_webp.js";
 import type * as shop from "../shop.js";
 import type * as users from "../users.js";
@@ -146,6 +147,7 @@ declare const fullApi: ApiFromModules<{
   seed_pag: typeof seed_pag;
   seed_rest_webp: typeof seed_rest_webp;
   seed_svga: typeof seed_svga;
+  seed_vip_animations: typeof seed_vip_animations;
   seed_webp: typeof seed_webp;
   shop: typeof shop;
   users: typeof users;
