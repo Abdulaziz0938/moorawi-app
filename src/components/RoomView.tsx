@@ -198,6 +198,19 @@ function renderTextWithMentions(text: string | null | undefined) {
   );
 }
 
+
+// دالة مؤقتة لتجربة إطلاق الدخولية
+function triggerTestVip() {
+  const mockEntry = {
+    _id: Date.now().toString(),
+    userId: "test_user_id",
+    level: 7,
+    name: "أسطورة إيزو",
+    avatarUrl: "",
+    createdAt: Date.now()
+  };
+  window.dispatchEvent(new CustomEvent('trigger-vip-entry', { detail: mockEntry }));
+}
 export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
   const recordRoomEntry = useMutation(api.visits.recordRoomEntry);
   useEffect(() => {
