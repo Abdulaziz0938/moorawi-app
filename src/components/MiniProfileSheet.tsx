@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { getActiveToken } from "../lib/session";
-import { useAssets, useAssetsFull } from "../lib/assets";
+import { useReactiveAssets } from "../lib/assets";
 import type { Id } from "../../convex/_generated/dataModel";
 import { dialog } from "../lib/dialog";
 import { AlertTriangle,
@@ -98,8 +98,9 @@ export default function MiniProfileSheet({
   const [friendBusy, setFriendBusy] = useState(false);
   const [showReport, setShowReport] = useState(false);
   const [showActions, setShowActions] = useState(false);
-  const assets = useAssets();
-  const assetsFull = useAssetsFull();
+  const reactive = useReactiveAssets();
+  const assets = reactive.map;
+  const assetsFull = reactive.fullMap;
 
   if (profile === undefined) {
     return (

@@ -2,7 +2,7 @@ import MemberEntryEffect from "./ui/MemberEntryEffect";
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { useAssets, useAssetsFull } from "../lib/assets";
+import { useReactiveAssets } from "../lib/assets";
 import type { Id } from "../../convex/_generated/dataModel";
 import { getDeviceId } from "../lib/device";
 import { getActiveToken } from "../lib/session";
@@ -123,8 +123,9 @@ export default function ProfilePage({
   const openWith = useMutation(api.directMessages.openWith);
   const sendFriendRequest = useMutation(api.friends.sendRequest);
 
-  const assets = useAssets();
-  const assetsFull = useAssetsFull();
+  const reactive = useReactiveAssets();
+  const assets = reactive.map;
+  const assetsFull = reactive.fullMap;
   const [newName, setNewName] = useState("");
   const [uploading, setUploading] = useState(false);
   const [pendingFile, setPendingFile] = useState<File | null>(null);

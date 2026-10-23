@@ -75,3 +75,20 @@ export function resolveAsset(
 ): string {
   return assets[key] ?? fallback;
 }
+
+
+// [ezo-live-sync] Hook تفاعلي يضمن تحديث الأصول فوراً
+
+export function useReactiveAssets() {
+  const list = useQuery(api.assets.list);
+  const map: Record<string, string> = {};
+  const fullMap: Record<string, any> = {};
+  
+  if (list) {
+    for (const item of list) {
+      if (item.imageUrl) map[item.key] = item.imageUrl;
+      fullMap[item.key] = item;
+    }
+  }
+  return { map, fullMap, ready: !!list };
+}

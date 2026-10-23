@@ -12,7 +12,7 @@ import { agoraManager } from "../lib/agora";
 import { getDeviceId } from "../lib/device";
 import { getActiveToken } from "../lib/session";
 import MemberEntryEffect from "./ui/MemberEntryEffect";
-import { useAssets, useAssetsFull } from "../lib/assets";
+import { useReactiveAssets } from "../lib/assets";
 import { uploadToCloudinary } from "../lib/cloudinary";
 import { smartUpload } from "../lib/uploadAssets";
 import SettingsSheet from "./SettingsSheet";
@@ -209,8 +209,9 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomId]);
   const deviceId = getDeviceId();
-  const assets = useAssets();
-  const assetsFull = useAssetsFull();
+  const reactive = useReactiveAssets();
+  const assets = reactive.map;
+  const assetsFull = reactive.fullMap;
   const me = useQuery(api.auth.me, { tokenOverride: getActiveToken() });
   const myEquipped = useQuery(api.shop.getEquippedAssets, { userId: me?._id as Id<"users"> });
   const customBubbleUrl = myEquipped?.chatBubble?.imageUrl;
