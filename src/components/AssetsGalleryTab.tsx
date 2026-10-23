@@ -2,16 +2,17 @@ import { useState, useEffect } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import AssetVideo from "./ui/AssetVideo";
-import { Search, Copy, Check, Link as LinkIcon } from "lucide-react";
+import { Search, Copy, Check, Link as LinkIcon, X, Maximize } from "lucide-react";
 
 export default function AssetsGalleryTab() {
   const assets = useQuery(api.assets.list);
   const [search, setSearch] = useState("");
   const [copied, setCopied] = useState<string | null>(null);
-  const [limit, setLimit] = useState(30); // البداية بـ 30 ملف فقط
+  const [limit, setLimit] = useState(30);
+  const [previewAsset, setPreviewAsset] = useState<any>(null); // للمعاينة الكاملة
 
   useEffect(() => {
-    setLimit(30); // إعادة الضبط عند البحث
+    setLimit(30);
   }, [search]);
 
   if (!assets) return <div className="text-white text-center py-4">جاري التحميل...</div>;
@@ -32,6 +33,14 @@ export default function AssetsGalleryTab() {
     } catch {}
   };
 
+  // خلفية شبكية لرؤية الصور الشفافة
+  const checkerboardBg = {
+    backgroundImage: "linear-gradient(45deg, #2a2a2a 25%, transparent 25%), linear-gradient(-45deg, #2a2a2a 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #2a2a2a 75%), linear-gradient(-45deg, transparent 75%, #2a2a2a 75%)",
+    backgroundSize: "16px 16px",
+    backgroundPosition: "0 0, 0 8px, 8px -8px, -8px 0px",
+    backgroundColor: "#1a1a1a"
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex gap-2">
@@ -39,7 +48,7 @@ export default function AssetsGalleryTab() {
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50" size={16} />
           <input
             type="text"
-            placeholder="ابحث (مثلاً: dragon أو pag)..."
+            placeholder="ابحث عن أصل..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full bg-white/10 text-white border border-white/20 rounded-xl pl-10 pr-3 py-2 text-sm placeholder:text-white/40 focus:outline-none focus:border-purple-400"
@@ -54,13 +63,22 @@ export default function AssetsGalleryTab() {
         {displayed.map((item: any) => (
           <div
             key={item._id}
-            className="relative aspect-square bg-black/40 rounded-xl overflow-hidden border border-white/10 group flex flex-col"
+            className="relative aspect-square rounded-xl overflow-hidden border border-white/10 group flex flex-col"
+            style={checkerboardBg}
           >
-            <div className="flex-1 relative flex items-center justify-center overflow-hidden">
+            {/* زر المعاينة الكاملة */}
+            <button 
+              onClick={() => setPreviewAsset(item)}
+              className="absolute top-1 right-1 z-10 bg-black/60 p-1.5 rounded-full text-white/80 hover:text-white"
+            >
+              <Maximize size={12} />
+            </button>
+
+            <div className="flex-1 relative flex items-center justify-center overflow-hidden p-1">
               <AssetVideo url={item.imageUrl} type="auto" loop={true} className="w-full h-full object-contain" />
             </div>
             
-            <div className="bg-black/80 p-1 flex flex-col gap-1 text-[9px] text-white">
+            <div className="bg-black/90 p-1 flex flex-col gap-1 text-[9px] text-white z-10">
               <button 
                 onClick={() => handleCopy(item.imageUrl, "url-")}
                 className="flex items-center justify-center gap-1 bg-blue-600/50 hover:bg-blue-600 py-1 rounded transition"
@@ -86,6 +104,29 @@ export default function AssetsGalleryTab() {
         >
           تحميل المزيد (متبقي {filtered.length - limit})
         </button>
+      )}
+
+      {/* شاشة المعاينة الكاملة */}
+      {previewAsset && (
+        <div className="fixed inset-0 z-[999] bg-black/95 flex flex-col p-4" dir="rtl">
+          <div className="flex justify-between items-center mb-4">
+            <span className="text-white font-black">{previewAsset.key}</span>
+            <button onClick={() => setPreviewAsset(null)} className="p-2 bg-white/10 rounded-full text-white">
+              <X size={20} />
+            </button>
+          </div>
+          <div className="flex-1 flex items-center justify-center relative" style={checkerboardBg}>
+            <AssetVideo url={previewAsset.imageUrl} type="auto" loop={true} className="max-w-full max-h-full object-contain" />
+          </div>
+          <div className="mt-4 flex gap-2">
+            <button onClick={() => handleCopy(previewAsset.imageUrl, "url-")} className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold">
+              نسخ الرابط
+            </button>
+            <button onClick={() => handleCopy(previewAsset.key, "key-")} className="flex-1 py-3 bg-purple-600 text-white rounded-xl font-bold">
+              نسخ المفتاح
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );
