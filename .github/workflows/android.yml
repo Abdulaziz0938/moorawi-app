@@ -22,16 +22,22 @@ jobs:
     - name: Install dependencies
       run: npm install
 
-    # نثبت أداة Capacitor عالمياً على السيرفر عشان نضمن إنها تلاقيها
-    - name: Install Capacitor CLI Globally
-      run: npm install -g @capacitor/cli @capacitor/core @capacitor/android
-
     - name: Build Web App
       run: npm run build
 
+    # 1. تثبيت Capacitor بشكل عام
+    - name: Install Capacitor CLI Globally
+      run: npm install -g @capacitor/cli @capacitor/core @capacitor/android
+
+    # 2. إنشاء ملف الإعدادات من الصفر عشان نتجاوز مشكلة الـ appId
+    - name: Init Capacitor
+      run: npx cap init "Ezo Group" com.ezo.app --web-dir=dist
+
+    # 3. إضافة منصة الأندرويد
     - name: Add Android Platform
       run: npx cap add android
 
+    # 4. مزامنة الملفات
     - name: Sync Capacitor
       run: npx cap sync android
 
