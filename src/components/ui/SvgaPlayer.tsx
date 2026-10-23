@@ -37,11 +37,11 @@ export default function SvgaPlayer({ src, loops = 0, className = "", onFinish, a
             player.setVideoItem(videoItem);
             if (autoPlay) player.startAnimation();
           } catch (e: any) {
-            setError("خطأ في التشغيل");
+            setError("خطأ في التشغيل: " + e.message);
           }
         },
         (err: any) => { 
-          setError("فشل تحميل الملف"); 
+          setError("فشل تحميل الملف، تأكد من الرابط"); 
         }
       );
     } catch (e: any) {
@@ -55,18 +55,18 @@ export default function SvgaPlayer({ src, loops = 0, className = "", onFinish, a
 
   if (error) {
     return (
-      <div className="w-full h-full flex items-center justify-center">
-        <span className="text-red-500 font-bold text-sm bg-white p-2 rounded">{error}</span>
+      <div className="w-full h-full flex items-center justify-center bg-black/80">
+        <span className="text-red-500 font-bold text-sm bg-white p-2 rounded">⚠️ {error}</span>
       </div>
     );
   }
 
   return (
-    <div className="w-full h-full flex items-center justify-center">
+    <div className="w-full h-full relative flex items-center justify-center">
       <canvas
         ref={canvasRef}
         className={className}
-        style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
+        style={{ width: "100%", height: "100%", objectFit: "contain" }}
       />
     </div>
   );

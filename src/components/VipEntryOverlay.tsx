@@ -22,27 +22,24 @@ export default function VipEntryOverlay({ entry }: { entry: Entry | null }) {
       haptic("heavy");
       const timer = setTimeout(() => {
         setVisible(false);
-      }, 7000); // 7 ثواني عشان الأنيميشن ياخد راحته
+      }, 8000); // 8 ثواني عشان نلحق نشوف لو في خطأ
       return () => clearTimeout(timer);
     }
   }, [entry, active]);
 
   if (!visible || !active) return null;
 
-  // استخدام ملفك الأصلي
-  const assetUrl = `/vip_assets/cl_come_${active.level}.svga`;
+  // نستخدم نفس رابط Cloudinary اللي شغال في المعرض
+  const assetUrl = "https://res.cloudinary.com/wdicx984/raw/upload/v1792714809/ztvoqlnpvf7vuuwct3xa.svga";
 
   return (
     <div className="fixed inset-0 z-[9999] pointer-events-none flex items-center justify-center bg-black/40">
-      {/* استدعاء المشغل مباشرة مثل ما هو شغال في المعرض بالأدمن */}
-      <div className="w-full h-full relative flex items-center justify-center">
-        <SvgaPlayer 
-          src={assetUrl} 
-          className="w-full h-full" 
-          loops={0} 
-          autoPlay={true} 
-        />
-      </div>
+      <SvgaPlayer 
+        src={assetUrl} 
+        className="w-full h-full" 
+        loops={0} 
+        autoPlay={true} 
+      />
     </div>
   );
 }
