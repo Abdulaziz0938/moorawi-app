@@ -109,7 +109,7 @@ function PodiumSlot({
 
         {/* Avatar circle */}
         <div
-          className="w-full h-full rounded-full overflow-hidden flex items-center justify-center text-white font-black bg-gradient-to-br from-purple-400 to-pink-500"
+          className="w-full h-full rounded-full overflow-hidden flex items-center justify-center text-slate-900 font-black bg-gradient-to-br from-purple-400 to-pink-500"
           style={{ border: `3px solid ${ringColor}` }}
         >
           {true ? (
@@ -123,7 +123,7 @@ function PodiumSlot({
 
         {/* Rank badge (bottom of circle) */}
         <div
-          className="absolute left-1/2 -translate-x-1/2 text-white text-[11px] font-black rounded-full flex items-center justify-center border-2 border-white"
+          className="absolute left-1/2 -translate-x-1/2 text-slate-900 text-[11px] font-black rounded-full flex items-center justify-center border-2 border-white"
           style={{
             bottom: "-8px",
             width: "22px",
@@ -256,7 +256,7 @@ export default function LeaderboardSheet({ roomId, onClose, onUserClick }: Props
 
   return (
     <div className="fixed inset-0 z-[100] flex flex-col" dir="rtl">
-      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
+      <div className="absolute inset-0 bg-white/60" onClick={onClose} />
 
       <div className="relative mt-auto bg-gradient-to-b from-[#f7ecd1] via-[#f1e0b8] to-[#e8d3a0] rounded-t-3xl max-h-[92vh] flex flex-col overflow-hidden shadow-2xl">
         {/* Handle */}
@@ -409,7 +409,7 @@ export default function LeaderboardSheet({ roomId, onClose, onUserClick }: Props
                       )}
                     </div>
                     {idx < 3 && (
-                      <span className={`absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black text-white shadow-lg ${idx === 0 ? 'bg-amber-500' : idx === 1 ? 'bg-slate-400' : 'bg-amber-700'}`}>
+                      <span className={`absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black text-slate-900 shadow-lg ${idx === 0 ? 'bg-amber-500' : idx === 1 ? 'bg-slate-400' : 'bg-amber-700'}`}>
                         {idx + 1}
                       </span>
                     )}
@@ -436,7 +436,7 @@ export default function LeaderboardSheet({ roomId, onClose, onUserClick }: Props
         )}
       </div>
       {showHelp && (
-        <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/70 p-6" onClick={() => setShowHelp(false)}>
+        <div className="fixed inset-0 z-[300] flex items-center justify-center bg-white/70 p-6" onClick={() => setShowHelp(false)}>
           <div className="bg-gradient-to-b from-[#f7ecd1] to-[#e8d3a0] rounded-3xl p-6 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-lg font-black text-amber-900 mb-4 text-center">كيف يعمل التصنيف؟</h3>
             <div className="space-y-3 text-amber-900/90 text-sm">
@@ -446,7 +446,7 @@ export default function LeaderboardSheet({ roomId, onClose, onUserClick }: Props
               <p className="flex items-center gap-2"><Home size={14} className="flex-shrink-0" /> <span><b>تصنيف الغرف:</b> حسب نشاط الغرفة</span></p>
               <p className="text-xs text-amber-900/60 pt-2">يتم التحديث كل أسبوع. الفائزون الثلاثة الأوائل يحصلون على كأس ومكافآت.</p>
             </div>
-            <button onClick={() => setShowHelp(false)} className="mt-5 w-full py-3 rounded-2xl bg-amber-900 text-white font-black active:scale-95">فهمت</button>
+            <button onClick={() => setShowHelp(false)} className="mt-5 w-full py-3 rounded-2xl bg-amber-900 text-slate-900 font-black active:scale-95">فهمت</button>
           </div>
         </div>
       )}

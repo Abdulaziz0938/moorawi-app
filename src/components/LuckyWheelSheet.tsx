@@ -288,11 +288,11 @@ const [activeRankTab, setActiveRankTab] = useState<string>("VI");
 
         {/* منطقة العجلة الدوارة */}
         <div className="relative w-[265px] h-[265px] mx-auto my-1 flex items-center justify-center">
-          {/* السهم السفلي الحقيقي المفرغ (معكوس ليشير للأعلى) */}
+          {/* السهم العلوي الحقيقي المفرغ */}
           <img
             src={imgPointer}
             alt="pointer"
-            className="absolute -bottom-6 left-1/2 -translate-x-1/2 z-30 w-11 h-14 object-contain drop-shadow-[0_-4px_6px_rgba(0,0,0,0.8)] rotate-180"
+            className="absolute -top-6 left-1/2 -translate-x-1/2 z-30 w-11 h-14 object-contain drop-shadow-[0_4px_6px_rgba(0,0,0,0.8)]"
           />
 
           {/* صورة العجلة الحقيقية المفرغة التي تدور */}

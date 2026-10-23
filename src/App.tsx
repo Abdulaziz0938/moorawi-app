@@ -122,7 +122,7 @@ function App() {
   if (me === undefined) {
     return (
       <div className="h-[100dvh] w-full flex items-center justify-center app-bg overflow-hidden">
-        <Loader2 className="animate-spin text-white" size={48} />
+        <Loader2 className="animate-spin text-slate-900" size={48} />
       </div>
     );
   }
