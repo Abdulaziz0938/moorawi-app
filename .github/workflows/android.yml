@@ -44,18 +44,17 @@ jobs:
         distribution: 'temurin'
         cache: gradle
 
-    # هذا هو الحل: نجبر Gradle يستخدم نسخة موحدة من Kotlin
-    - name: Fix Kotlin Duplicate Classes
+    # الحل النهائي: إزالة المكتبات القديمة وإجبار Gradle على تجاهلها
+    - name: Remove Duplicate Kotlin Classes
       run: |
         cd android
-        echo "configurations.all { resolutionStrategy { force 'org.jetbrains.kotlin:kotlin-stdlib:1.8.22' } }" >> build.gradle
-        echo "تم تعديل build.gradle بنجاح"
+        echo "configurations.all { exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk7'; exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8' }" >> build.gradle
 
     - name: Grant execute permission for gradlew
       run: chmod +x android/gradlew
 
     - name: Build APK with Gradle
-      run: cd android && ./gradlew assembleDebug
+      run: cd android && ./gradlew clean assembleDebug
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
