@@ -23,6 +23,15 @@ export default function AssetsGalleryTab() {
     return isUseful && hasUrl && a.key.toLowerCase().includes(search.toLowerCase());
   });
 
+  // ترتيب: الحركات (PAG/SVGA) أولاً، ثم الصور الثابتة
+  filtered.sort((a: any, b: any) => {
+    const isAnimA = a.imageUrl.includes('.pag') || a.imageUrl.includes('.svga');
+    const isAnimB = b.imageUrl.includes('.pag') || b.imageUrl.includes('.svga');
+    if (isAnimA && !isAnimB) return -1;
+    if (!isAnimA && isAnimB) return 1;
+    return 0;
+  });
+
   const displayed = filtered.slice(0, limit);
 
   const handleCopy = async (text: string, type: string) => {
