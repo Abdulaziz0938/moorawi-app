@@ -20,8 +20,6 @@ export default function VipEntryOverlay({ entry }: { entry: Entry | null }) {
       setActive(entry);
       setVisible(true);
       haptic("heavy");
-      
-      // يختفي تلقائياً بعد 6 ثواني
       const timer = setTimeout(() => {
         setVisible(false);
       }, 6000); 
@@ -31,12 +29,11 @@ export default function VipEntryOverlay({ entry }: { entry: Entry | null }) {
 
   if (!visible || !active) return null;
 
-  // رابط Cloudinary الخاص بك
   const assetUrl = "https://res.cloudinary.com/wdicx984/raw/upload/v1792714809/ztvoqlnpvf7vuuwct3xa.svga";
 
   return (
-    // الشاشة كاملة، بدون خلفية سودة، وبدون أي زر
-    <div className="fixed inset-0 z-[99999] pointer-events-none flex items-center justify-center">
+    // شفاف 100%، ياخد الشاشة كاملة
+    <div className="fixed inset-0 z-[99999] pointer-events-none bg-transparent">
       <SvgaPlayer 
         src={assetUrl} 
         className="w-full h-full" 

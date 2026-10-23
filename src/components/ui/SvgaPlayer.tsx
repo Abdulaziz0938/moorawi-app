@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import SVGA from "svgaplayerweb";
 
 interface Props {
@@ -12,8 +12,6 @@ interface Props {
 export default function SvgaPlayer({ src, loops = 0, className = "", onFinish, autoPlay = true }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const playerRef = useRef<any>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!canvasRef.current || !src) return;
@@ -27,7 +25,6 @@ export default function SvgaPlayer({ src, loops = 0, className = "", onFinish, a
       parser = new (SVGA as any).Parser();
       
       playerRef.current = player;
-
       player.setContentMode("AspectFit");
       player.setClipsToBounds(false);
       player.loops = loops;
@@ -38,30 +35,30 @@ export default function SvgaPlayer({ src, loops = 0, className = "", onFinish, a
         (videoItem: any) => {
           try {
             player.setVideoItem(videoItem);
-            if (videoItem && videoItem.width && videoItem.height) {
-              canvas.width = videoItem.width;
-              canvas.height = videoItem.height;
-            }
             if (autoPlay) player.startAnimation();
-            setLoading(false);
-          } catch (e: any) { setError(e?.message || "خطأ في التشغيل"); setLoading(false); }
+          } catch (e: any) { console.error(e); }
         },
-        () => { setError("فشل تحميل الملف (تأكد من الرابط)"); setLoading(false); }
+        (err: any) => { console.error("SVGA Load Error:", err); }
       );
-    } catch (e: any) { setError("خطأ في المشغل"); setLoading(false); }
+    } catch (e: any) { console.error(e); }
 
     return () => { try { player?.clear(); } catch {} };
   }, [src, loops, autoPlay, onFinish]);
 
+  // نجبر الكانفس ياخد حجم الشاشة كاملة بالقوة
   return (
-    <div className="w-full h-full flex items-center justify-center relative bg-black/50">
-      <canvas
-        ref={canvasRef}
-        className={className}
-        style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
-      />
-      {loading && <div className="absolute inset-0 flex items-center justify-center text-white text-lg font-bold bg-black/60">جاري التحميل...</div>}
-      {error && <div className="absolute inset-0 flex items-center justify-center bg-red-600 text-white p-4 text-center font-bold">{error}</div>}
-    </div>
+    <canvas
+      ref={canvasRef}
+      className={className}
+      style={{ 
+        width: "100vw", 
+        height: "100dvh", 
+        display: "block",
+        position: "absolute",
+        top: 0,
+        left: 0,
+        objectFit: "contain"
+      }}
+    />
   );
 }
