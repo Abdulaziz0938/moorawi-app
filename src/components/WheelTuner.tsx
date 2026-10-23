@@ -66,7 +66,7 @@ export default function WheelTuner({ token }: { token: string | null }) {
         <div className="relative w-full max-w-[280px] aspect-square flex items-center justify-center">
           <div
             className="absolute inset-0 flex items-center justify-center transition-transform duration-500"
-            style={{ transform: `rotate(${360 - (angles[currentPreviewIndex] || 0)}deg)` }}
+            style={{ transform: `rotate(${angles[currentPreviewIndex] || 0}deg)` }}
           >
             <img src={imgWheel} alt="wheel" className="w-full h-full object-contain" />
           </div>
