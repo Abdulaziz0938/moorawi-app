@@ -149,6 +149,7 @@ const [activeRankTab, setActiveRankTab] = useState<string>("VI");
       // [ezo-fix] عكس اتجاه الدوران للتصحيح البصري
       const targetStopAngle = 360 - (state.winningIndex * (360 / 9));
       const extraSpins = 360 * 6;
+      console.log(`[EZO-WHEEL] WinningIndex: ${state.winningIndex} | TargetAngle: ${targetStopAngle}`);
       setRotation((prev) => {
         const normalizedPrev = prev % 360;
         const delta = (targetStopAngle - normalizedPrev + 360) % 360;
