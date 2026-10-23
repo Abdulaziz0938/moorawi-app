@@ -436,13 +436,13 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
   useEffect(() => {
     const btn = document.createElement("button");
     btn.type = "button";
-    btn.textContent = "👑 تجربة VIP 6";
+    btn.textContent = "👑 تجربة VIP 5";
     btn.style.cssText = "position:fixed;top:80px;right:12px;z-index:2147483647;background:linear-gradient(to right,#f59e0b,#eab308);color:#000;padding:10px 16px;border-radius:12px;font-weight:900;border:2px solid #fbbf24;box-shadow:0 4px 16px rgba(0,0,0,0.4);font-size:13px;cursor:pointer;font-family:inherit;";
     btn.onclick = () => {
       setCurrentEntry({
         _id: "test-" + Date.now(),
         userId: "test_user_id",
-        level: 6,
+        level: 5,
         name: "أسطورة إيزو",
         avatarUrl: undefined,
         createdAt: Date.now(),
