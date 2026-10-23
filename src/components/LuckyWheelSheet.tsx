@@ -136,10 +136,12 @@ const [activeRankTab, setActiveRankTab] = useState<string>("VI");
       }
 
       // حساب الزاوية بحيث يتوقف السهم في منتصف القطاع بدقة
-      const sectorAngle = (state.winningIndex * (360 / 9)) + (360 / 18); 
-      // إضافة إزاحة صغيرة للتأكد من أن السهم في القلب وليس على الحافة
-      const targetStopAngle = 360 - sectorAngle; 
-      const extraSpins = 360 * 6; // 6 دورات كاملة سريعة ثم تباطؤ
+      // [ezo-fix] حساب الزاوية الصحيح مع مراعاة إزاحة الصورة
+      const sectorSize = 360 / 9;
+      const offset = sectorSize / 2;
+      const index = state.winningIndex; // winningIndex يبدأ من 1
+      const targetStopAngle = 360 - (index * sectorSize) - offset;
+      const extraSpins = 360 * 6;
       setRotation((prev) => {
         const normalizedPrev = prev % 360;
         const delta = (targetStopAngle - normalizedPrev + 360) % 360;
