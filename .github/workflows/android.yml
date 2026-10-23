@@ -25,26 +25,23 @@ jobs:
     - name: Build Web App
       run: npm run build
 
-    # تثبيت الحزم محلياً بشكل صريح داخل المشروع
     - name: Install Capacitor Packages
       run: npm install @capacitor/core @capacitor/cli @capacitor/android
 
-    # إنشاء ملف الإعدادات (عشان يضمن وجود الـ appId)
     - name: Init Capacitor
       run: npx cap init "Ezo Group" com.ezo.app --web-dir=dist
 
-    # إضافة منصة الأندرويد
     - name: Add Android Platform
       run: npx cap add android
 
-    # مزامنة الملفات
     - name: Sync Capacitor
       run: npx cap sync android
 
-    - name: Set up JDK 17
+    # غيرنا الجافا من 17 إلى 21 هنا
+    - name: Set up JDK 21
       uses: actions/setup-java@v3
       with:
-        java-version: '17'
+        java-version: '21'
         distribution: 'temurin'
         cache: gradle
 
