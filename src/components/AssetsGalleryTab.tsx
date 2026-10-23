@@ -115,8 +115,10 @@ export default function AssetsGalleryTab() {
               <X size={20} />
             </button>
           </div>
-          <div className="flex-1 flex items-center justify-center relative" style={checkerboardBg}>
-            <AssetVideo url={previewAsset.imageUrl} type="auto" loop={true} className="max-w-full max-h-full object-contain" />
+          <div className="flex-1 flex items-center justify-center relative p-2" style={checkerboardBg}>
+             <div className="w-full h-full flex items-center justify-center">
+               <AssetVideo url={previewAsset.imageUrl} type="auto" loop={true} className="max-w-full max-h-full object-contain" />
+             </div>
           </div>
           <div className="mt-4 flex gap-2">
             <button onClick={() => handleCopy(previewAsset.imageUrl, "url-")} className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold">

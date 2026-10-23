@@ -1,10 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import JSZip from "jszip";
-
-// [ezo-svga-v1] مطلوب لدعم ملفات SVGA الإصدار القديم 1.x
-if (typeof window !== "undefined") {
-  (window as any).JSZip = JSZip;
-}
 import SVGA from "svgaplayerweb";
 
 interface Props {
@@ -13,24 +7,22 @@ interface Props {
   className?: string;
   onFinish?: () => void;
   autoPlay?: boolean;
-  clearOnStop?: boolean;
 }
 
 export default function SvgaPlayer({ src, loops = 0, className = "", onFinish, autoPlay = true }: Props) {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const playerRef = useRef<any>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!containerRef.current || !src) return;
-    const container = containerRef.current;
-    container.innerHTML = "";
+    if (!canvasRef.current || !src) return;
+    const canvas = canvasRef.current;
     
     let player: any = null;
     let parser: any = null;
 
     try {
-      player = new (SVGA as any).Player(container);
+      player = new (SVGA as any).Player(canvas);
       parser = new (SVGA as any).Parser();
       playerRef.current = player;
 
@@ -44,23 +36,28 @@ export default function SvgaPlayer({ src, loops = 0, className = "", onFinish, a
         (videoItem: any) => {
           try {
             player.setVideoItem(videoItem);
+            // تعيين الأبعاد الفعلية للكانفاس
+            if (videoItem && videoItem.width && videoItem.height) {
+              canvas.width = videoItem.width;
+              canvas.height = videoItem.height;
+            }
             if (autoPlay) player.startAnimation();
-          } catch (e: any) { setError(e?.message || "خطأ في التشغيل"); }
+          } catch (e: any) { setError(e?.message || "خطأ"); }
         },
-        () => { setError("فشل تحميل SVGA"); }
+        () => { setError("فشل التحميل"); }
       );
-    } catch (e: any) { setError("خطأ في التهيئة"); }
+    } catch (e: any) { setError("خطأ"); }
 
     return () => { try { player?.clear(); } catch {} };
   }, [src, loops, autoPlay, onFinish]);
 
   return (
-    <div ref={containerRef} className={className} style={{ width: "100%", height: "100%", position: "relative" }}>
-      {error && (
-        <div className="absolute inset-0 bg-black/50 text-white/50 text-[9px] flex items-center justify-center p-1 text-center rounded">
-          ⚠ فشل التحميل
-        </div>
-      )}
+    <div className="w-full h-full flex items-center justify-center">
+      <canvas 
+        ref={canvasRef} 
+        className={className} 
+        style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} 
+      />
     </div>
   );
 }
