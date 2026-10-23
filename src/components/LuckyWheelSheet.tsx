@@ -25,16 +25,16 @@ interface LuckyWheelSheetProps {
 }
 
 const SECTORS = [
-  { index: 0, item: "77", label: "77", color: "#f59e0b" },
-  { index: 1, item: "apple", label: "🍎", color: "#38bdf8" },
-  { index: 2, item: "watermelon", label: "🍉", color: "#a855f7" },
-  { index: 3, item: "apple", label: "🍎", color: "#38bdf8" },
-  { index: 4, item: "watermelon", label: "🍉", color: "#a855f7" },
-  { index: 5, item: "apple", label: "🍎", color: "#38bdf8" },
-  { index: 6, item: "watermelon", label: "🍉", color: "#a855f7" },
-  { index: 7, item: "apple", label: "🍎", color: "#38bdf8" },
-  { index: 8, item: "watermelon", label: "🍉", color: "#a855f7" },
-];
+    { index: 0, item: "apple", label: "تفاح", color: "#ef4444" },
+    { index: 1, item: "watermelon", label: "بطيخ", color: "#22c55e" },
+    { index: 2, item: "apple", label: "تفاح", color: "#ef4444" },
+    { index: 3, item: "watermelon", label: "بطيخ", color: "#22c55e" },
+    { index: 4, item: "apple", label: "تفاح", color: "#ef4444" },
+    { index: 5, item: "77", label: "77", color: "#facc15" },
+    { index: 6, item: "watermelon", label: "بطيخ", color: "#22c55e" },
+    { index: 7, item: "apple", label: "تفاح", color: "#ef4444" },
+    { index: 8, item: "watermelon", label: "بطيخ", color: "#22c55e" },
+  ];
 
 export default function LuckyWheelSheet({ isOpen, onClose, onOpenRecharge }: LuckyWheelSheetProps) {
   const token = getActiveToken();
