@@ -152,8 +152,8 @@ const [activeRankTab, setActiveRankTab] = useState<string>("VI");
       console.log(`[EZO-WHEEL] WinningIndex: ${state.winningIndex} | TargetAngle: ${targetStopAngle}`);
                   const winningIdx = state.winningIndex ?? 0;
       setRotation((prevRotation) => {
-        // حساب دوران العجلة مع عقارب الساعة ليصل العنصر للسهم
-        const targetAngle = ((winningIdx * 40) % 360);
+        // بما أن العجلة تدور مع عقارب الساعة، لجلب الشريحة winningIdx إلى السهم:
+        const targetAngle = (360 - (winningIdx * 40)) % 360;
         const currentAngle = ((prevRotation % 360) + 360) % 360;
         
         let diff = targetAngle - currentAngle;
@@ -317,10 +317,7 @@ const [activeRankTab, setActiveRankTab] = useState<string>("VI");
             style={{
               transform: `rotate(${rotation}deg)`,
               transformOrigin: "center center",
-              transition:
-                state?.status === "SPINNING"
-                  ? "transform 4.2s cubic-bezier(0.12, 0.8, 0.18, 1)"
-                  : "none",
+              transition: state?.status === "SPINNING" ? "transform 4.5s cubic-bezier(0.12, 0.8, 0.2, 1)" : "transform 0.5s ease-out",
               willChange: "transform",
               backfaceVisibility: "hidden",
             }}
