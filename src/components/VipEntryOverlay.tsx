@@ -25,44 +25,42 @@ export default function VipEntryOverlay({ entry }: { entry: Entry | null }) {
 
       const timer = setTimeout(() => {
         setVisible(false);
-      }, 5000); // 5 ثواني عشان ياخد الأنيميشن حقه
+      }, 5000); // 5 ثواني
       return () => clearTimeout(timer);
     }
   }, [entry, active]);
 
   if (!visible || !active) return null;
 
-  // مسار الأنيميشن: نستخدم الـ PAG اللي شفناه في مجلد vip_assets
-  const vipPagAsset = `/vip_assets/bimo_vip${active.level}.pag`;
-  
-  // لو المستوى 7 (لأننا ما لقينا bimo_vip7.pag، بنستخدم الـ svga الخاص بيه)
-  const svgaFallback = `/vip_assets/wl_come_${active.level}.svga`;
-  const assetUrl = active.level === 7 ? svgaFallback : vipPagAsset;
+  // رابط الـ SVGA الخاص بـ VIP 5 من Cloudinary
+  const svgaAsset = "https://res.cloudinary.com/wdicx984/raw/upload/v1792714809/ztvoqlnpvf7vuuwct3xa.svga";
 
   return (
-    <div className="fixed inset-0 pointer-events-none z-[9999] flex flex-col items-center justify-center overflow-hidden bg-black/40 backdrop-blur-[2px]">
+    <div className="fixed inset-0 pointer-events-none z-[9999] flex flex-col items-center justify-center overflow-hidden">
       
-      {/* 1. الأنيميشن (PAG/SVGA) بكامل الشاشة باستخدام مشغل التطبيق */}
+      {/* خلفية معتمة خفيفة */}
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+
+      {/* 1. الأنيميشن (SVGA) بكامل الشاشة */}
       <div className="absolute inset-0 flex items-center justify-center">
         <AssetVideo 
-          url={assetUrl} 
-          className="w-full h-full object-contain scale-125" 
+          url={svgaAsset} 
+          className="w-full h-full object-contain scale-110" 
         />
       </div>
 
-      {/* 2. الأفاتار والاسم يطيرون فوق الأنيميشن */}
-      <div className="relative z-10 flex flex-col items-center animate-scale-up mt-24">
-        <div className="relative ring-4 ring-amber-400/80 rounded-full shadow-[0_0_60px_rgba(251,191,36,0.9)]">
-          <VipAvatar src={active.avatarUrl} name={active.name} vip={active.level} size={110} />
+      {/* 2. الأفاتار والاسم */}
+      <div className="relative z-10 flex flex-col items-center animate-scale-up mt-32">
+        <div className="relative ring-4 ring-amber-400/80 rounded-full shadow-[0_0_60px_rgba(251,191,36,0.9)] bg-black/50">
+          <VipAvatar src={active.avatarUrl} name={active.name} vip={active.level} size={100} />
         </div>
         
-        {/* الاسم واللقب بتصميم خفيف بدون كرت يغطي الشاشة */}
-        <div className="mt-6 flex flex-col items-center bg-black/60 px-8 py-3 rounded-2xl backdrop-blur-md border border-amber-500/50 shadow-2xl">
+        <div className="mt-4 flex flex-col items-center bg-black/70 px-6 py-2 rounded-xl backdrop-blur-md border border-amber-500/50 shadow-2xl">
            <div className="flex items-center gap-2 mb-1">
-              <Crown className="w-5 h-5 text-amber-400 animate-bounce" />
-              <span className="text-amber-300 font-black text-sm tracking-widest">VIP {active.level}</span>
+              <Crown className="w-4 h-4 text-amber-400 animate-bounce" />
+              <span className="text-amber-300 font-black text-xs tracking-widest">VIP {active.level}</span>
            </div>
-           <span className="text-white font-black text-2xl drop-shadow-lg">{active.name}</span>
+           <span className="text-white font-black text-xl drop-shadow-lg">{active.name}</span>
         </div>
       </div>
 
