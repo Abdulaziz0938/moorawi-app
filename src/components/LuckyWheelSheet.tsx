@@ -146,7 +146,8 @@ const [activeRankTab, setActiveRankTab] = useState<string>("VI");
       const offsetCorrection = 20;
       const baseAngle = (index - 1) * sectorSize + (sectorSize / 2);
       // [ezo-fix] عكس الاتجاه بناءً على انعكاس LTR
-      const targetStopAngle = (baseAngle - offsetCorrection) % 360;
+      // [ezo-fix] عكس اتجاه الدوران للتصحيح البصري
+      const targetStopAngle = (baseAngle + 180 + offsetCorrection) % 360;
       const extraSpins = 360 * 6;
       setRotation((prev) => {
         const normalizedPrev = prev % 360;
