@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import SVGA from "svgaplayerweb";
+// @ts-ignore
+import { Player, Parser } from "svgaplayerweb";
 
 interface Props {
   src: string;
@@ -11,7 +12,6 @@ interface Props {
 
 export default function SvgaPlayer({ src, loops = 0, className = "", onFinish, autoPlay = true }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const playerRef = useRef<any>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -22,41 +22,51 @@ export default function SvgaPlayer({ src, loops = 0, className = "", onFinish, a
     let parser: any = null;
 
     try {
-      player = new (SVGA as any).Player(canvas);
-      parser = new (SVGA as any).Parser();
-      playerRef.current = player;
-
+      player = new Player(canvas);
+      parser = new Parser();
+      
       player.setContentMode("AspectFit");
       player.setClipsToBounds(false);
       player.loops = loops;
       if (onFinish) player.onFinished(() => onFinish());
-
+      
       parser.load(
         src,
         (videoItem: any) => {
           try {
             player.setVideoItem(videoItem);
-            // تعيين الأبعاد الفعلية للكانفاس
-            if (videoItem && videoItem.width && videoItem.height) {
-              canvas.width = videoItem.width;
-              canvas.height = videoItem.height;
-            }
             if (autoPlay) player.startAnimation();
-          } catch (e: any) { setError(e?.message || "خطأ"); }
+          } catch (e: any) {
+            setError("خطأ في التشغيل");
+          }
         },
-        () => { setError("فشل التحميل"); }
+        (err: any) => { 
+          setError("فشل تحميل الملف"); 
+        }
       );
-    } catch (e: any) { setError("خطأ"); }
+    } catch (e: any) {
+      setError("خطأ في المشغل");
+    }
 
-    return () => { try { player?.clear(); } catch {} };
+    return () => {
+      try { player?.clear(); } catch {}
+    };
   }, [src, loops, autoPlay, onFinish]);
+
+  if (error) {
+    return (
+      <div className="w-full h-full flex items-center justify-center">
+        <span className="text-red-500 font-bold text-sm bg-white p-2 rounded">{error}</span>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full h-full flex items-center justify-center">
-      <canvas 
-        ref={canvasRef} 
-        className={className} 
-        style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} 
+      <canvas
+        ref={canvasRef}
+        className={className}
+        style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
       />
     </div>
   );

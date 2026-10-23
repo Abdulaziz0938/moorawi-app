@@ -22,21 +22,21 @@ export default function VipEntryOverlay({ entry }: { entry: Entry | null }) {
       haptic("heavy");
       const timer = setTimeout(() => {
         setVisible(false);
-      }, 5000); // 5 ثواني
+      }, 6000); // 6 ثواني عشان ياخد الأنيميشن حقه
       return () => clearTimeout(timer);
     }
   }, [entry, active]);
 
   if (!visible || !active) return null;
 
-  // نستخدم ملف محلي موجود أصلاً بمشروعك (cl_come_5.svga)
-  const svgaAsset = "/vip_assets/cl_come_5.svga";
+  // استخدام ملفك الأصلي بدون أي إضافات
+  const assetUrl = `/vip_assets/cl_come_${active.level}.svga`;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 pointer-events-none">
-      {/* الأنيميشن فقط، بدون أي HTML أو كرت يغطيه */}
+    <div className="fixed inset-0 z-[9999] pointer-events-none flex items-center justify-center bg-black/40">
+      {/* الأنيميشن فقط */}
       <AssetVideo 
-        url={svgaAsset} 
+        url={assetUrl} 
         className="w-full h-full object-contain" 
       />
     </div>
