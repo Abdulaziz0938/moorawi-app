@@ -61,6 +61,7 @@ import type * as seedMedals from "../seedMedals.js";
 import type * as seedShop from "../seedShop.js";
 import type * as seed_all_assets from "../seed_all_assets.js";
 import type * as seed_apk_svga from "../seed_apk_svga.js";
+import type * as seed_cache_webp from "../seed_cache_webp.js";
 import type * as seed_custom_svga from "../seed_custom_svga.js";
 import type * as seed_extracted_svga from "../seed_extracted_svga.js";
 import type * as seed_pag from "../seed_pag.js";
@@ -136,6 +137,7 @@ declare const fullApi: ApiFromModules<{
   seedShop: typeof seedShop;
   seed_all_assets: typeof seed_all_assets;
   seed_apk_svga: typeof seed_apk_svga;
+  seed_cache_webp: typeof seed_cache_webp;
   seed_custom_svga: typeof seed_custom_svga;
   seed_extracted_svga: typeof seed_extracted_svga;
   seed_pag: typeof seed_pag;
