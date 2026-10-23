@@ -13,10 +13,11 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v4
 
+    # 1. رفع إصدار Node.js لـ 22 لأن Capacitor 8 يحتاجه
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '20'
+        node-version: '22'
         cache: 'npm'
 
     - name: Install dependencies
@@ -44,11 +45,18 @@ jobs:
         distribution: 'temurin'
         cache: gradle
 
-    # الحل النهائي: إزالة المكتبات القديمة وإجبار Gradle على تجاهلها
-    - name: Remove Duplicate Kotlin Classes
+    # 2. تثبيت Android SDK 36 احتياطياً (عشان نضمن وجوده)
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+      with:
+        cmdline-tools-version: 11076708
+        packages: 'platforms;android-36 build-tools;36.0.0'
+
+    # 3. الحل المضمون لمشكلة التكرار في Kotlin
+    - name: Fix Kotlin Duplicate Classes
       run: |
         cd android
-        echo "configurations.all { exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk7'; exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8' }" >> build.gradle
+        echo "configurations.all { resolutionStrategy { force 'org.jetbrains.kotlin:kotlin-stdlib:1.8.22' } }" >> build.gradle
 
     - name: Grant execute permission for gradlew
       run: chmod +x android/gradlew
