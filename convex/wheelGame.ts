@@ -5,15 +5,15 @@ import { requireUser } from "./lib/auth";
 
 // ترتيب أقسام العجلة الـ 9 بالضبط: 77 ثم تفاح وبطيخ بالتناوب
 export const SECTORS = [
-  { index: 0, item: "77", mult: 8 },
+  { index: 0, item: "watermelon", mult: 2 },
   { index: 1, item: "apple", mult: 2 },
   { index: 2, item: "watermelon", mult: 2 },
   { index: 3, item: "apple", mult: 2 },
-  { index: 4, item: "watermelon", mult: 2 },
-  { index: 5, item: "apple", mult: 2 },
-  { index: 6, item: "watermelon", mult: 2 },
-  { index: 7, item: "apple", mult: 2 },
-  { index: 8, item: "watermelon", mult: 2 },
+  { index: 4, item: "77", mult: 8 },
+  { index: 5, item: "watermelon", mult: 2 },
+  { index: 6, item: "apple", mult: 2 },
+  { index: 7, item: "watermelon", mult: 2 },
+  { index: 8, item: "apple", mult: 2 },
 ] as const;
 
 export const getState = query({
