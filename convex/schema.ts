@@ -687,6 +687,7 @@ export default defineSchema({
   // Missing key → fallback to bundled /vip/*.png or /badges/*.png
   assets: defineTable({
     key: v.string(),
+    collection: v.optional(v.string()),
     imageUrl: v.optional(v.string()),
     frameScale: v.optional(v.number()),
     frameOffsetX: v.optional(v.number()),

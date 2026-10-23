@@ -36,6 +36,7 @@ export const set = mutation({
     topWidthPercent: v.optional(v.number()),
     topScale: v.optional(v.number()),
     assetType: v.optional(v.string()),
+    collection: v.optional(v.string()),
     tokenOverride: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
@@ -93,5 +94,26 @@ export const clear = mutation({
       .unique();
     if (existing) await ctx.db.delete("assets", existing._id);
     return { ok: true };
+  },
+});
+
+
+// [ezo-collections] نقل مجموعة أصول إلى مجلد
+export const moveAssets = mutation({
+  args: {
+    ids: v.array(v.id("assets")),
+    collection: v.string(),
+    tokenOverride: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
+    if (!isAssetManager(me)) throw new Error("غير مصرح");
+    
+    let count = 0;
+    for (const id of args.ids) {
+      await ctx.db.patch(id, { collection: args.collection, updatedAt: Date.now() });
+      count++;
+    }
+    return { ok: true, moved: count };
   },
 });
