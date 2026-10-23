@@ -25,13 +25,10 @@ jobs:
     - name: Build Web App
       run: npm run build
 
-    # تثبيت Capacitor والمكتبات المطلوبة
     - name: Install Capacitor Packages
       run: npm install @capacitor/core @capacitor/cli @capacitor/android @capacitor/camera @capacitor/filesystem @capacitor/local-notifications
 
-    - name: Add Android Platform
-      run: npx cap add android
-
+    # شلنا أمر add android لأن المجلد موجود أصلاً
     - name: Sync Capacitor
       run: npx cap sync android
 
@@ -48,12 +45,14 @@ jobs:
         cmdline-tools-version: 11076708
         packages: 'platforms;android-36 build-tools;36.0.0'
 
-    # إضافة كل الصلاحيات الناقصة
+    # إضافة الصلاحيات (رح تتأكد إنها مش مكررة)
     - name: Add All Permissions to Manifest
       run: |
         MANIFEST="android/app/src/main/AndroidManifest.xml"
-        sed -i 's|<application|<uses-permission android:name="android.permission.RECORD_AUDIO" />\n    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />\n    <uses-permission android:name="android.permission.INTERNET" />\n    <uses-permission android:name="android.permission.CAMERA" />\n    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />\n    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />\n    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />\n    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />\n    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />\n    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />\n    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />\n    <uses-feature android:name="android.hardware.camera" />\n    <application|' $MANIFEST
-        echo "✅ تم إضافة جميع الصلاحيات"
+        sed -i '/android.permission.RECORD_AUDIO/d' $MANIFEST
+        sed -i '/android.permission.INTERNET/d' $MANIFEST
+        sed -i 's|<application|<uses-permission android:name="android.permission.RECORD_AUDIO" />\n    <uses-permission android:name="android.permission.INTERNET" />\n    <uses-permission android:name="android.permission.CAMERA" />\n    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />\n    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />\n    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />\n    <application|' $MANIFEST
+        echo "✅ تم إضافة الصلاحيات"
 
     - name: Fix Kotlin Duplicate Classes
       run: |
