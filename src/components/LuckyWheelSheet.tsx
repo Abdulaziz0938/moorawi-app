@@ -143,7 +143,7 @@ const [activeRankTab, setActiveRankTab] = useState<string>("VI");
       
       // بناءً على الاختبار: السهم يعطي القطاع المعاكس، لذا نضيف 180 درجة (نصف دورة)
       // + نضبط الإزاحة لتناسب الصورة الحالية
-      const offsetCorrection = 0;
+      const offsetCorrection = 20;
       const baseAngle = (index - 1) * sectorSize + (sectorSize / 2);
       // [ezo-fix] عكس الاتجاه بناءً على انعكاس LTR
       const targetStopAngle = (baseAngle - offsetCorrection) % 360;
