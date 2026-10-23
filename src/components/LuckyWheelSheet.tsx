@@ -328,7 +328,43 @@ const [activeRankTab, setActiveRankTab] = useState<string>("VI");
               backfaceVisibility: "hidden",
             }}
           >
-            <img src={imgWheel} alt="wheel" className="w-full h-full object-fill rounded-full" />
+            {/* رسم SVG تشخيصي بديل للصورة لاكتشاف الزوايا والترتيب */}
+          <svg viewBox="-100 -100 200 200" className="w-full h-full">
+            {SECTORS.map((s, i) => {
+              const startAngle = (i * 40 - 90 - 20) * (Math.PI / 180);
+              const endAngle = ((i + 1) * 40 - 90 - 20) * (Math.PI / 180);
+              const x1 = 100 * Math.cos(startAngle);
+              const y1 = 100 * Math.sin(startAngle);
+              const x2 = 100 * Math.cos(endAngle);
+              const y2 = 100 * Math.sin(endAngle);
+              const midAngle = (i * 40 - 90) * (Math.PI / 180);
+              const tx = 65 * Math.cos(midAngle);
+              const ty = 65 * Math.sin(midAngle);
+              const color = s.item === "77" ? "#eab308" : s.item === "watermelon" ? "#16a34a" : "#dc2626";
+              
+              return (
+                <g key={i}>
+                  <path
+                    d={`M 0 0 L ${x1} ${y1} A 100 100 0 0 1 ${x2} ${y2} Z`}
+                    fill={color}
+                    stroke="#ffffff"
+                    strokeWidth="1.5"
+                  />
+                  <text
+                    x={tx}
+                    y={ty}
+                    fill="#ffffff"
+                    fontSize="10"
+                    fontWeight="bold"
+                    textAnchor="middle"
+                    dominantBaseline="central"
+                  >
+                    {i}:{s.item}
+                  </text>
+                </g>
+              );
+            })}
+          </svg>
           </div>
 
           {/* طبقة إخفاء ظل الجوهرة القديمة */}
