@@ -25,15 +25,15 @@ interface LuckyWheelSheetProps {
 }
 
 const SECTORS = [
-    { index: 0, item: "apple", label: "تفاح", color: "#ef4444" },
-    { index: 1, item: "watermelon", label: "بطيخ", color: "#22c55e" },
-    { index: 2, item: "apple", label: "تفاح", color: "#ef4444" },
-    { index: 3, item: "watermelon", label: "بطيخ", color: "#22c55e" },
-    { index: 4, item: "apple", label: "تفاح", color: "#ef4444" },
-    { index: 5, item: "77", label: "77", color: "#facc15" },
-    { index: 6, item: "watermelon", label: "بطيخ", color: "#22c55e" },
-    { index: 7, item: "apple", label: "تفاح", color: "#ef4444" },
-    { index: 8, item: "watermelon", label: "بطيخ", color: "#22c55e" },
+    { index: 0, item: "apple", label: "تفاح" },
+    { index: 1, item: "watermelon", label: "بطيخ" },
+    { index: 2, item: "apple", label: "تفاح" },
+    { index: 3, item: "watermelon", label: "بطيخ" },
+    { index: 4, item: "apple", label: "تفاح" },
+    { index: 5, item: "77", label: "77" },
+    { index: 6, item: "watermelon", label: "بطيخ" },
+    { index: 7, item: "apple", label: "تفاح" },
+    { index: 8, item: "watermelon", label: "بطيخ" },
   ];
 
 export default function LuckyWheelSheet({ isOpen, onClose, onOpenRecharge }: LuckyWheelSheetProps) {
