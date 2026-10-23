@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-// @ts-ignore
-import { Player, Parser } from "svgaplayerweb";
+import SVGA from "svgaplayerweb";
 
 interface Props {
   src: string;
@@ -12,7 +11,9 @@ interface Props {
 
 export default function SvgaPlayer({ src, loops = 0, className = "", onFinish, autoPlay = true }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const playerRef = useRef<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!canvasRef.current || !src) return;
@@ -22,9 +23,11 @@ export default function SvgaPlayer({ src, loops = 0, className = "", onFinish, a
     let parser: any = null;
 
     try {
-      player = new Player(canvas);
-      parser = new Parser();
+      player = new (SVGA as any).Player(canvas);
+      parser = new (SVGA as any).Parser();
       
+      playerRef.current = player;
+
       player.setContentMode("AspectFit");
       player.setClipsToBounds(false);
       player.loops = loops;
@@ -35,39 +38,30 @@ export default function SvgaPlayer({ src, loops = 0, className = "", onFinish, a
         (videoItem: any) => {
           try {
             player.setVideoItem(videoItem);
+            if (videoItem && videoItem.width && videoItem.height) {
+              canvas.width = videoItem.width;
+              canvas.height = videoItem.height;
+            }
             if (autoPlay) player.startAnimation();
-          } catch (e: any) {
-            setError("خطأ في التشغيل: " + e.message);
-          }
+            setLoading(false);
+          } catch (e: any) { setError(e?.message || "خطأ في التشغيل"); setLoading(false); }
         },
-        (err: any) => { 
-          setError("فشل تحميل الملف، تأكد من الرابط"); 
-        }
+        () => { setError("فشل تحميل الملف (تأكد من الرابط)"); setLoading(false); }
       );
-    } catch (e: any) {
-      setError("خطأ في المشغل");
-    }
+    } catch (e: any) { setError("خطأ في المشغل"); setLoading(false); }
 
-    return () => {
-      try { player?.clear(); } catch {}
-    };
+    return () => { try { player?.clear(); } catch {} };
   }, [src, loops, autoPlay, onFinish]);
 
-  if (error) {
-    return (
-      <div className="w-full h-full flex items-center justify-center bg-black/80">
-        <span className="text-red-500 font-bold text-sm bg-white p-2 rounded">⚠️ {error}</span>
-      </div>
-    );
-  }
-
   return (
-    <div className="w-full h-full relative flex items-center justify-center">
+    <div className="w-full h-full flex items-center justify-center relative bg-black/50">
       <canvas
         ref={canvasRef}
         className={className}
-        style={{ width: "100%", height: "100%", objectFit: "contain" }}
+        style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
       />
+      {loading && <div className="absolute inset-0 flex items-center justify-center text-white text-lg font-bold bg-black/60">جاري التحميل...</div>}
+      {error && <div className="absolute inset-0 flex items-center justify-center bg-red-600 text-white p-4 text-center font-bold">{error}</div>}
     </div>
   );
 }
