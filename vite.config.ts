@@ -4,8 +4,14 @@ import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
-  base: './', // <--- هذا هو السطر السحري الذي سيحل مشكلة الشاشة السوداء
+  base: './', // <--- هذا السطر ممتاز ومطلوب للـ APK
   server: { host: "0.0.0.0", port: 5173, allowedHosts: true },
+  
+  // ✅ إضافة جديدة: إجبار Vite على تجهيز مكتبة libpag
+  optimizeDeps: {
+    include: ["libpag"],
+  },
+
   plugins: [
     react(),
     VitePWA({
@@ -75,8 +81,7 @@ export default defineConfig({
   },
   build: { 
     chunkSizeWarningLimit: 1000,
-    rolldownOptions: {
-      external: ["libpag"]
-    }
+    target: 'esnext', // ✅ إضافة هامة لـ WebAssembly (WASM) الذي تستخدمه libpag
+    // ❌ قمنا بحذف rolldownOptions بالكامل لأنها كانت سبب المشكلة
   },
 });
