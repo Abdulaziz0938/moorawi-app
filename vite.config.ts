@@ -1,7 +1,7 @@
 import path from "node:path";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
-import { VitePWA } from "vite-plugin-pwa";
+// import { VitePWA } from "vite-plugin-pwa"; // تم تعطيله مؤقتاً
 
 export default defineConfig({
   base: './', // <--- هذا السطر ممتاز ومطلوب للـ APK
@@ -14,6 +14,8 @@ export default defineConfig({
 
   plugins: [
     react(),
+    /* 
+    // ===== تم تعطيل الـ PWA مؤقتاً لحل مشكلة الكاش =====
     VitePWA({
       registerType: "autoUpdate",
       injectRegister: false,
@@ -72,6 +74,7 @@ export default defineConfig({
       },
       devOptions: { enabled: false },
     }),
+    */
   ],
   resolve: {
     alias: {
@@ -79,7 +82,7 @@ export default defineConfig({
       "@": path.resolve(import.meta.dirname, "./src"),
     },
   },
-    build: { 
+  build: { 
     chunkSizeWarningLimit: 1000,
     target: 'esnext',
     rolldownOptions: {
