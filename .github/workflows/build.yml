@@ -32,6 +32,12 @@ jobs:
       env:
         VITE_CONVEX_URL: ${{ secrets.VITE_CONVEX_URL }}
 
+    - name: Generate App Icons
+      run: |
+        mkdir -p assets
+        cp public/icon-512.png assets/icon.png
+        npx @capacitor/assets generate --android
+
     - name: Sync Capacitor
       run: npx cap sync android
 
