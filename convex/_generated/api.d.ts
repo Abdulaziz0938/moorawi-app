@@ -73,6 +73,7 @@ import type * as seed_svga from "../seed_svga.js";
 import type * as seed_vip_animations from "../seed_vip_animations.js";
 import type * as seed_webp from "../seed_webp.js";
 import type * as shop from "../shop.js";
+import type * as splash from "../splash.js";
 import type * as users from "../users.js";
 import type * as verification from "../verification.js";
 import type * as vip from "../vip.js";
@@ -154,6 +155,7 @@ declare const fullApi: ApiFromModules<{
   seed_vip_animations: typeof seed_vip_animations;
   seed_webp: typeof seed_webp;
   shop: typeof shop;
+  splash: typeof splash;
   users: typeof users;
   verification: typeof verification;
   vip: typeof vip;
