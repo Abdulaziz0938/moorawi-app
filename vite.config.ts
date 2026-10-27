@@ -4,20 +4,21 @@ import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
+  base: './', // <--- هذا هو السطر السحري الذي سيحل مشكلة الشاشة السوداء
   server: { host: "0.0.0.0", port: 5173, allowedHosts: true },
   plugins: [
     react(),
     VitePWA({
       registerType: "autoUpdate",
-      injectRegister: false, // نُسجّل يدوياً في index.html
+      injectRegister: false,
       strategies: "generateSW",
       filename: "sw.js",
       manifest: {
         name: "EZO GROUP — Voice Chat Rooms",
         short_name: "EZO GROUP",
         description: "دردشة صوتية وغرف وشات روم",
-        start_url: "/",
-        scope: "/",
+        start_url: "./",
+        scope: "./",
         display: "standalone",
         display_override: ["standalone", "minimal-ui"],
         orientation: "portrait",
@@ -40,27 +41,26 @@ export default defineConfig({
             name: "الغرف الصوتية",
             short_name: "الغرف",
             description: "تصفح الغرف الصوتية",
-            url: "/?tab=rooms",
+            url: "./?tab=rooms",
             icons: [{ src: "/icon-192.png", sizes: "192x192" }],
           },
           {
             name: "الرسائل",
             short_name: "رسائل",
             description: "المحادثات والرسائل",
-            url: "/?tab=messages",
+            url: "./?tab=messages",
             icons: [{ src: "/icon-192.png", sizes: "192x192" }],
           },
           {
             name: "ملفي",
             short_name: "أنا",
             description: "الملف الشخصي",
-            url: "/?tab=me",
+            url: "./?tab=me",
             icons: [{ src: "/icon-192.png", sizes: "192x192" }],
           },
         ],
       },
       workbox: {
-        // نُلغي precache لأن SW اليدوي يملك ذلك
         globPatterns: [],
         navigateFallback: null,
       },
