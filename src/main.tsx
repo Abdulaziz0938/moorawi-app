@@ -8,6 +8,7 @@ import './index.css'
 import { DialogHost } from './lib/dialog'
 import { AssetsProvider } from './lib/assets'
 import AppErrorBoundary from './components/AppErrorBoundary'
+import { SplashScreen } from '@capacitor/splash-screen';
 
 // [ezo-pwa] Capture beforeinstallprompt EARLY — before React mounts
 declare global {
@@ -67,3 +68,4 @@ createRoot(document.getElementById('root')!).render(
     </AppErrorBoundary>
   </StrictMode>,
 )
+SplashScreen.hide();
