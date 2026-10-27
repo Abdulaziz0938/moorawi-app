@@ -1,15 +1,7 @@
 <!doctype html>
 <html lang="ar" dir="ltr">
   <head>
-    <script>
-  window.onerror = function(msg, url, line, col, error) {
-    document.body.innerHTML += '<div style="position:fixed; top:0; left:0; width:100%; background:red; color:white; z-index:999999; padding:20px; font-size:16px; word-wrap:break-word; text-align:left;"><b>Error:</b> ' + msg + '<br><b>Line:</b> ' + line + '<br><b>Source:</b> ' + url + '</div>';
-    return false;
-  };
-  window.addEventListener('unhandledrejection', function(event) {
-    document.body.innerHTML += '<div style="position:fixed; top:100px; left:0; width:100%; background:orange; color:black; z-index:999999; padding:20px; font-size:16px; word-wrap:break-word; text-align:left;"><b>Promise Error:</b> ' + event.reason + '</div>';
-  });
-    </script>
+  
     <script type="importmap">
   {
     "imports": {
@@ -60,9 +52,6 @@
     <title>EZO GROUP — Voice Chat Rooms</title>
   </head>
   <body>
-    <div style="position: fixed; top: 50px; left: 50px; z-index: 99999; background: red; color: white; padding: 20px; font-size: 24px;">
-    اختبار: الصفحة تعمل!
-    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
       <script src="/registerSW.js" defer></script>
