@@ -1,4 +1,4 @@
-import { StrictMode } from 'react'
+import React, { StrictMode } from 'react' // <-- أضفنا React هنا
 import { createRoot } from 'react-dom/client'
 import { ConvexProvider, ConvexReactClient } from "convex/react"
 import App from './App.tsx'
