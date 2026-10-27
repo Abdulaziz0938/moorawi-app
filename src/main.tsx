@@ -33,7 +33,9 @@ createRoot(document.getElementById('root')!).render(
     <ErrorCatcher>
       <ConvexProvider client={convex}>
         <AssetsProvider>
-          <App />
+          <div style={{ color: 'white', backgroundColor: 'blue', fontSize: '30px', padding: '50px', textAlign: 'center' }}>
+  التطبيق بدأ!
+</div>
           <DialogHost />
         </AssetsProvider>
       </ConvexProvider>
