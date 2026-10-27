@@ -56,7 +56,6 @@ export default function AdminSplashUploader() {
   };
 
   const onCropComplete = useCallback((_croppedArea: any, croppedAreaPixels: any) => {
-    setCrop({ x: 0, y: 0 }); // إعادة تعيين بسيطة
     setCroppedAreaPixels(croppedAreaPixels);
   }, []);
 
