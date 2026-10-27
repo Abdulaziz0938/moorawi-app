@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { getActiveToken } from "../lib/session";
 import { dialog } from "../lib/dialog";
-import { AlertTriangle, Calendar, X, Loader2, Search, Coins, Gem, Hash, Ban, ShieldCheck, Crown, Users, Home, ShoppingBag, TrendingUp, Plus, Save, ChevronLeft, UserCheck, UserX, Image as ImageIcon, Upload, RotateCcw, Briefcase, BarChart3 } from "lucide-react";
+import { AlertTriangle, Calendar, X, Loader2, Search, Coins, Gem, Hash, Ban, ShieldCheck, Crown, Users, Home, ShoppingBag, TrendingUp, Plus, Save, ChevronLeft, UserCheck, UserX, Image as ImageIcon, Upload, RotateCcw, Briefcase, BarChart3, Smartphone } from "lucide-react";
 import { uploadToCloudinary } from "../lib/cloudinary";
 import { useAssets } from "../lib/assets";
 import AssetsPanel from "./AssetsPanel";
@@ -14,6 +14,7 @@ import AdminAgentsSheet from "./AdminAgentsSheet";
 import AdminRechargeSheet from "./AdminRechargeSheet";
 import AdminDailyLoginSheet from "./AdminDailyLoginSheet";
 import AdminReportsSheet from "./AdminReportsSheet";
+import AdminSplashUploader from "./AdminSplashUploader"; // <-- تم إضافة هذا الاستيراد
 
 interface Props {
   onClose: () => void;
@@ -30,11 +31,9 @@ function formatNum(n: number): string {
 
 export default function AdminPanelSheet({ onClose }: Props) {
   const token = getActiveToken();
-  // [ezo-perms] meData FIRST — determines access
   const meData = useQuery(api.auth.me, { tokenOverride: token });
   const isSuperAdmin = !!meData && (meData.adminRole === "super" || meData.userNumber === 1);
 
-  // stats + listUsers only run for super admins
   const stats = useQuery(
     api.adminPanel.stats,
     isSuperAdmin ? { tokenOverride: token } : "skip" as any
@@ -51,6 +50,9 @@ export default function AdminPanelSheet({ onClose }: Props) {
   const [showRechargeAdmin, setShowRechargeAdmin] = useState(false);
   const [showDailyLoginAdmin, setShowDailyLoginAdmin] = useState(false);
   const [showReportsAdmin, setShowReportsAdmin] = useState(false);
+  
+  // حالة جديدة لشاشة البداية
+  const [showSplashUploader, setShowSplashUploader] = useState(false);
 
   const [grantAmount, setGrantAmount] = useState("10000");
 
@@ -119,7 +121,6 @@ export default function AdminPanelSheet({ onClose }: Props) {
         vipLevel: parseInt(editField.vip || "0", 10),
       });
 
-      // تحديث الأيدي المخصص إذا تم تغييره
       const newUid = parseInt(editField.uid || "0", 10);
       if (newUid > 0 && newUid !== editUser.userNumber) {
         await setCustomId({
@@ -201,7 +202,11 @@ export default function AdminPanelSheet({ onClose }: Props) {
         {/* ===== Header ===== */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 flex-shrink-0">
           <div className="flex items-center gap-2">
-            {showAgencyRequests ? (
+            {showSplashUploader ? (
+              <button onClick={() => setShowSplashUploader(false)} className="p-2 -ml-2 rounded-full hover:bg-white/10 text-white">
+                <ChevronLeft size={20} className="rotate-180" />
+              </button>
+            ) : showAgencyRequests ? (
               <button onClick={() => setShowAgencyRequests(false)} className="p-2 -ml-2 rounded-full hover:bg-white/10 text-white">
                 <ChevronLeft size={20} className="rotate-180" />
               </button>
@@ -219,7 +224,7 @@ export default function AdminPanelSheet({ onClose }: Props) {
               </div>
             )}
             <h2 className="text-white text-lg font-black">
-              {showReportsAdmin ? "الإبلاغات" : showDailyLoginAdmin ? "المكافأة اليومية" : showRechargeAdmin ? "طلبات الشحن" : showAgentAdmin ? "إدارة وكلاء الشحن" : showVerifications ? "طلبات التوثيق" : showAdminReport ? "تقارير الوكالات" : showAgencyRequests ? "طلبات الوكالات" : showAssets ? "الأصول والصور" : editUser ? `تعديل: ${editUser.username}` : "لوحة المالك"}
+              {showSplashUploader ? "شاشة البداية" : showReportsAdmin ? "الإبلاغات" : showDailyLoginAdmin ? "المكافأة اليومية" : showRechargeAdmin ? "طلبات الشحن" : showAgentAdmin ? "إدارة وكلاء الشحن" : showVerifications ? "طلبات التوثيق" : showAdminReport ? "تقارير الوكالات" : showAgencyRequests ? "طلبات الوكالات" : showAssets ? "الأصول والصور" : editUser ? `تعديل: ${editUser.username}` : "لوحة المالك"}
             </h2>
           </div>
           <div className="flex items-center gap-1">
@@ -232,7 +237,7 @@ export default function AdminPanelSheet({ onClose }: Props) {
         {/* ===== Content ===== */}
 
           {/* ═══ Grid الأزرار — 3×3 ═══ */}
-          {!editUser && !showAssets && !showAgencyRequests && !showAdminReport && !showVerifications && !showAgentAdmin && !showRechargeAdmin && !showDailyLoginAdmin && (
+          {!editUser && !showAssets && !showAgencyRequests && !showAdminReport && !showVerifications && !showAgentAdmin && !showRechargeAdmin && !showDailyLoginAdmin && !showSplashUploader && (
             <div className="grid grid-cols-3 gap-2 p-3 border-b border-white/10">
               <button
                 onClick={() => setShowAgentAdmin(true)}
@@ -304,9 +309,20 @@ export default function AdminPanelSheet({ onClose }: Props) {
                 <span className="text-white text-[10px] font-black text-center leading-tight">طلبات الوكالات</span>
               </button>
 
+              {/* زر شاشة البداية الجديد */}
+              <button
+                onClick={() => setShowSplashUploader(true)}
+                className="rounded-2xl bg-gradient-to-br from-indigo-500/20 to-blue-500/20 border border-indigo-400/30 p-3 flex flex-col items-center gap-1.5 active:scale-95 transition"
+              >
+                <div className="w-10 h-10 rounded-full bg-indigo-500/30 flex items-center justify-center">
+                  <Smartphone size={18} className="text-indigo-300" />
+                </div>
+                <span className="text-white text-[10px] font-black text-center leading-tight">شاشة البداية</span>
+              </button>
+
               <button
                 onClick={() => setShowAssets(true)}
-                className="rounded-2xl bg-gradient-to-br from-fuchsia-500/20 to-purple-500/20 border border-fuchsia-400/30 p-3 flex flex-col items-center gap-1.5 active:scale-95 transition col-span-3"
+                className="rounded-2xl bg-gradient-to-br from-fuchsia-500/20 to-purple-500/20 border border-fuchsia-400/30 p-3 flex flex-col items-center gap-1.5 active:scale-95 transition col-span-2"
               >
                 <div className="w-10 h-10 rounded-full bg-fuchsia-500/30 flex items-center justify-center">
                   <ImageIcon size={18} className="text-fuchsia-300" />
@@ -319,7 +335,9 @@ export default function AdminPanelSheet({ onClose }: Props) {
         <div className="flex-1 overflow-y-auto">
 
           {/* ============ VERIFICATIONS ============ */}
-          {showReportsAdmin ? (
+          {showSplashUploader ? (
+            <AdminSplashUploader />
+          ) : showReportsAdmin ? (
             <AdminReportsSheet onClose={() => setShowReportsAdmin(false)} />
           ) : showDailyLoginAdmin ? (
             <AdminDailyLoginSheet onClose={() => setShowDailyLoginAdmin(false)} />
