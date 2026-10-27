@@ -1,7 +1,7 @@
 import React, { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { ConvexProvider, ConvexReactClient, useQuery } from "convex/react"
-import { api } from "./convex/_generated/api"
+import { api } from "../convex/_generated/api" // <--- تم تصحيح المسار هنا
 import './index.css'
 
 const convex = new ConvexReactClient("https://scrupulous-chipmunk-417.eu-west-1.convex.cloud");
