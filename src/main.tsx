@@ -8,7 +8,8 @@ import './index.css'
 import { DialogHost } from './lib/dialog'
 import { AssetsProvider } from './lib/assets'
 import AppErrorBoundary from './components/AppErrorBoundary'
-import { SplashScreen } from '@capacitor/splash-screen';
+import { Capacitor } from '@capacitor/core'
+import { SplashScreen } from '@capacitor/splash-screen'
 
 // [ezo-pwa] Capture beforeinstallprompt EARLY — before React mounts
 declare global {
@@ -37,7 +38,10 @@ if (typeof window !== "undefined") {
   console.log("[PWA] listener registered — waiting for event");
 }
 
-const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string);
+// 1. رابط احتياطي لـ Convex في حال لم يقرأه Vercel من الإعدادات
+const convexUrl = import.meta.env.VITE_CONVEX_URL || "https://scrupulous-chipmunk-417.eu-west-1.convex.cloud";
+console.log("Convex URL is:", convexUrl); 
+const convex = new ConvexReactClient(convexUrl);
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -68,4 +72,8 @@ createRoot(document.getElementById('root')!).render(
     </AppErrorBoundary>
   </StrictMode>,
 )
-SplashScreen.hide();
+
+// 2. إخفاء شاشة البداية فقط إذا كنا داخل تطبيق الهاتف (وليس المتصفح)
+if (Capacitor.isNativePlatform()) {
+  SplashScreen.hide().catch(err => console.error("Splash screen error:", err));
+}
