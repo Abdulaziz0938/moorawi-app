@@ -35,14 +35,13 @@ jobs:
     - name: Sync Capacitor
       run: npx cap sync android
 
-        - name: Decode Keystore
+    - name: Decode Keystore
       run: |
         echo "${{ secrets.KEYSTORE_BASE64 }}" | tr -d '\n\r ' | base64 --decode > android/app/moorawi-release.keystore
         echo "storeFile=app/moorawi-release.keystore" > android/key.properties
         echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" >> android/key.properties
         echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> android/key.properties
         echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/key.properties
-        echo "✅ Keystore decoded successfully!"
 
     - name: Build AAB
       run: |
