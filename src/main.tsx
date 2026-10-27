@@ -1,43 +1,45 @@
-import React, { StrictMode, useEffect, useState } from 'react'
+import React, { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { ConvexProvider, ConvexReactClient } from "convex/react"
+import { Toaster } from "sonner"
+import { Analytics } from "@vercel/analytics/react"
+import App from './App.tsx'
 import './index.css'
+import { DialogHost } from './lib/dialog'
+import { AssetsProvider } from './lib/assets'
 
-const convex = new ConvexReactClient("https://scrupulous-chipmunk-417.eu-west-1.convex.cloud");
+// رابط Convex
+const convexUrl = import.meta.env.VITE_CONVEX_URL || "https://scrupulous-chipmunk-417.eu-west-1.convex.cloud";
+const convex = new ConvexReactClient(convexUrl);
 
-function TestError() {
-  const [error, setError] = useState<any>(null);
-  const [Comp, setComp] = useState<any>(null);
-
-  useEffect(() => {
-    // نقوم بتحميل MessagesTab بشكل ديناميكي لاصطياد أي خطأ أثناء التحميل
-    import('./components/MessagesTab')
-      .then(mod => setComp(() => mod.default))
-      .catch(err => {
-        console.error("Caught error:", err);
-        setError(err);
-      });
-  }, []);
-
-  if (error) {
-    return (
-      <div style={{ color: 'white', backgroundColor: 'red', padding: '20px', zIndex: 9999, position: 'relative', wordBreak: 'break-all' }}>
-        <h3>حدث خطأ أثناء تحميل المكون:</h3>
-        <p>{error.toString()}</p>
-        <pre style={{ fontSize: '12px', whiteSpace: 'pre-wrap' }}>{error.stack}</pre>
-      </div>
-    );
+// شبكة أمان (إذا صار أي خطأ بالمستقبل، سيظهر لك بالشاشة بدل السواد)
+class ErrorCatcher extends React.Component<{children: React.ReactNode}, {hasError: boolean, error: any}> {
+  constructor(props: any) { super(props); this.state = { hasError: false, error: null }; }
+  static getDerivedStateFromError(error: any) { return { hasError: true, error }; }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ color: 'white', backgroundColor: 'red', padding: '20px', fontSize: '14px', zIndex: 99999, position: 'relative', wordBreak: 'break-all' }}>
+          <h2>حدث خطأ:</h2>
+          <pre style={{ whiteSpace: 'pre-wrap' }}>{this.state.error?.toString()}</pre>
+        </div>
+      );
+    }
+    return this.props.children;
   }
-  
-  if (!Comp) return <div style={{ color: 'white', textAlign: 'center', marginTop: '50px' }}>جاري التحميل...</div>;
-  
-  return <Comp />;
 }
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <ConvexProvider client={convex}>
-      <TestError />
-    </ConvexProvider>
+    <ErrorCatcher>
+      <ConvexProvider client={convex}>
+        <AssetsProvider>
+          <App />
+          <DialogHost />
+          <Toaster position="top-center" theme="dark" closeButton richColors />
+          <Analytics />
+        </AssetsProvider>
+      </ConvexProvider>
+    </ErrorCatcher>
   </StrictMode>,
 )
