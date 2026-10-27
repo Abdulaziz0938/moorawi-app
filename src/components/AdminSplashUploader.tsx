@@ -2,9 +2,10 @@ import React, { useState, useCallback } from "react";
 import Cropper from "react-easy-crop";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { Button } from "./ui/button"; // عدل المسار حسب مشروعك
+import { uploadToCloudinary } from "../lib/cloudinary"; // استخدام دالتك الموجودة
+import { dialog } from "../lib/dialog";
+import { Loader2, Upload } from "lucide-react";
 
-// دالة مساعدة لقص الصورة
 const getCroppedImg = async (imageSrc: string, pixelCrop: any): Promise<Blob> => {
   const image = new Image();
   image.src = imageSrc;
@@ -32,7 +33,7 @@ const getCroppedImg = async (imageSrc: string, pixelCrop: any): Promise<Blob> =>
   return new Promise((resolve) => {
     canvas.toBlob((blob) => {
       if (blob) resolve(blob);
-    }, "image/webp", 0.8); // ضغط الصورة بصيغة webp
+    }, "image/webp", 0.8); // ضغط بصيغة webp
   });
 };
 
@@ -55,6 +56,7 @@ export default function AdminSplashUploader() {
   };
 
   const onCropComplete = useCallback((_croppedArea: any, croppedAreaPixels: any) => {
+    setCrop({ x: 0, y: 0 }); // إعادة تعيين بسيطة
     setCroppedAreaPixels(croppedAreaPixels);
   }, []);
 
@@ -63,52 +65,44 @@ export default function AdminSplashUploader() {
     setIsUploading(true);
 
     try {
-      // 1. قص الصورة
       const croppedBlob = await getCroppedImg(imageSrc, croppedAreaPixels);
       
-      // 2. الرفع إلى Cloudinary (تأكد من وجود دالة الرفع في مشروعك)
-      // هنا سنستخدم FormData مباشرة إذا لم تكن هناك دالة جاهزة
-      const formData = new FormData();
-      formData.append("file", croppedBlob);
-      formData.append("upload_preset", "YOUR_CLOUDINARY_UNSIGNED_PRESET"); // ضع اسم الـ Preset الخاص بك
-
-      const response = await fetch(
-        `https://api.cloudinary.com/v1_1/YOUR_CLOUD_NAME/image/upload`,
-        { method: "POST", body: formData }
-      );
-      const data = await response.json();
-
-      if (data.secure_url) {
-        // 3. حفظ الرابط في Convex
-        await setSplashImage({ url: data.secure_url });
-        alert("✅ تم تحديث صورة شاشة البداية بنجاح!");
-        setImageSrc(null); // إغلاق أداة القص
+      // تحويل الـ Blob إلى File ليتوافق مع دالتك
+      const file = new File([croppedBlob], "splash.webp", { type: "image/webp" });
+      
+      // استخدام دالة الرفع الخاصة بك
+      const url = await uploadToCloudinary(file);
+      
+      if (url) {
+        await setSplashImage({ url });
+        dialog.alert("✅ تم تحديث صورة شاشة البداية بنجاح!");
+        setImageSrc(null);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      alert("❌ حدث خطأ أثناء الرفع");
+      dialog.alert("❌ حدث خطأ أثناء الرفع: " + (error.message || ""));
     } finally {
       setIsUploading(false);
     }
   };
 
   return (
-    <div className="p-4 bg-zinc-900 rounded-xl border border-zinc-800">
-      <h3 className="text-lg font-bold text-white mb-4">تغيير صورة شاشة البداية (Splash)</h3>
-      
+    <div className="p-4 space-y-4">
       {!imageSrc ? (
-        <div>
+        <div className="border-2 border-dashed border-white/20 rounded-2xl p-8 flex flex-col items-center justify-center bg-white/5">
+          <Upload size={32} className="text-white/40 mb-3" />
+          <p className="text-white text-sm font-bold mb-1">اختر صورة لشاشة البداية</p>
+          <p className="text-white/50 text-xs mb-4 text-center">يفضل أن تكون الصورة عمودية (9:16)</p>
           <input 
             type="file" 
             accept="image/*" 
             onChange={onFileChange} 
             className="block w-full text-sm text-zinc-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-600 file:text-white hover:file:bg-purple-700"
           />
-          <p className="text-xs text-zinc-500 mt-2">يفضل رفع صورة عمودية (9:16) بجودة متوسطة لسرعة التحميل.</p>
         </div>
       ) : (
         <div className="flex flex-col gap-4">
-          <div className="relative w-full h-[400px] bg-black rounded-lg overflow-hidden">
+          <div className="relative w-full h-[450px] bg-black rounded-2xl overflow-hidden">
             <Cropper
               image={imageSrc}
               crop={crop}
@@ -120,10 +114,20 @@ export default function AdminSplashUploader() {
             />
           </div>
           <div className="flex gap-2">
-            <Button onClick={() => setImageSrc(null)} variant="outline" className="flex-1">إلغاء</Button>
-            <Button onClick={handleUpload} disabled={isUploading} className="flex-1 bg-purple-600">
+            <button 
+              onClick={() => setImageSrc(null)} 
+              className="flex-1 py-3 rounded-xl bg-white/10 text-white font-bold text-sm"
+            >
+              إلغاء
+            </button>
+            <button 
+              onClick={handleUpload} 
+              disabled={isUploading} 
+              className="flex-1 py-3 rounded-xl bg-purple-600 text-white font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              {isUploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
               {isUploading ? "جاري الرفع..." : "حفظ الصورة"}
-            </Button>
+            </button>
           </div>
         </div>
       )}
