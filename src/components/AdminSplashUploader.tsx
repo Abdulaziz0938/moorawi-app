@@ -70,10 +70,14 @@ export default function AdminSplashUploader() {
       const file = new File([croppedBlob], "splash.webp", { type: "image/webp" });
       
       // استخدام دالة الرفع الخاصة بك
-      const url = await uploadToCloudinary(file);
+      const uploadResult: any = await uploadToCloudinary(file);
       
-      if (url) {
+      // استخراج الرابط من داخل الكائن (سواء كان secure_url أو url أو نص مباشر)
+      const url = uploadResult?.secure_url || uploadResult?.url || uploadResult;
+
+      if (url && typeof url === 'string') {
         await setSplashImage({ url });
+        
         dialog.alert("✅ تم تحديث صورة شاشة البداية بنجاح!");
         setImageSrc(null);
       }
