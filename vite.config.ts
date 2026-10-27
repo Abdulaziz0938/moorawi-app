@@ -79,9 +79,11 @@ export default defineConfig({
       "@": path.resolve(import.meta.dirname, "./src"),
     },
   },
-  build: { 
+    build: { 
     chunkSizeWarningLimit: 1000,
-    target: 'esnext', // ✅ إضافة هامة لـ WebAssembly (WASM) الذي تستخدمه libpag
-    // ❌ قمنا بحذف rolldownOptions بالكامل لأنها كانت سبب المشكلة
+    target: 'esnext',
+    rolldownOptions: {
+      external: ["libpag"] // <--- إعادة هذا السطر ضروري جداً لكي ينجح البناء
+    }
   },
 });
