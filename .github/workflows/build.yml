@@ -48,7 +48,7 @@ jobs:
         cd android
         chmod +x gradlew
         ./gradlew bundleRelease
-        ./gradlew assembleRelease
+        ./gradlew assembleDebug
 
     - name: Upload AAB Artifact (For Store)
       uses: actions/upload-artifact@v4
@@ -60,4 +60,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: app-release-apk
-        path: android/app/build/outputs/apk/release/app-release.apk
+        path: android/app/build/outputs/apk/debug/app-debug.apk
