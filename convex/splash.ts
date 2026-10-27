@@ -3,9 +3,13 @@ import { query } from "./_generated/server";
 export const getSplashImage = query({
   args: {},
   handler: async (ctx) => {
-    // نبحث عن أول سجل في جدول الإعدادات (config)
-    const config = await ctx.db.query("config").first();
-    // نعيد رابط الصورة، أو رابط افتراضي إذا لم يوجد
-    return config?.splashImageUrl || null;
+    // نبحث في جدول config عن السجل الذي يطابق المفتاح "splashImageUrl"
+    const config = await ctx.db
+      .query("config")
+      .withIndex("by_key", (q) => q.eq("key", "splashImageUrl"))
+      .first();
+    
+    // نعيد الرابط (القيمة) إذا وجد، أو null إذا لم يوجد
+    return config?.value || null;
   },
 });
