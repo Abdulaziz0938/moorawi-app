@@ -1,0 +1,269 @@
+import { useState } from "react";
+import { useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import { Loader2, User, Lock, ArrowLeft } from "lucide-react";
+import { setSession } from "../lib/session";
+import Card from "./ui/Card";
+
+interface Props {
+  onSuccess: (sessionToken: string) => void;
+}
+
+type Mode = "welcome" | "signin" | "signup";
+
+// [ezo-auth] Fixed video background for all auth screens
+function VideoBackground() {
+  return (
+    <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+      <video
+        src="/auth.mp4"
+        autoPlay
+        loop
+        muted
+        playsInline
+        preload="auto"
+        onError={(e) => console.error("[video] error:", (e.target as HTMLVideoElement).error)}
+        className="absolute inset-0 w-full h-full object-cover"
+      />
+      {/* طبقة تعتيم + تدرج بنفسجي فوق الفيديو */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-purple-950/50 to-black/70" />
+    </div>
+  );
+}
+
+
+export default function AuthScreen({ onSuccess }: Props) {
+  const [mode, setMode] = useState<Mode>("welcome");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [password2, setPassword2] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const signin = useMutation(api.auth.signin);
+  const signup = useMutation(api.auth.signup);
+  const guestSignIn = useMutation(api.auth.guestSignIn);
+
+  const deviceId =
+    typeof localStorage !== "undefined"
+      ? (() => {
+          const KEY = "ezo_device_id";
+          let id = localStorage.getItem(KEY);
+          if (!id) {
+            id = "dev-" + Math.random().toString(36).slice(2, 10);
+            localStorage.setItem(KEY, id);
+          }
+          return id;
+        })()
+      : "";
+
+  const handleGuest = async () => {
+    if (loading) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await guestSignIn({ deviceId });
+      if (res?.tokenIdentifier) {
+        onSuccess(res.tokenIdentifier);
+      } else {
+        setError("تعذر إنشاء حساب الزائر");
+      }
+    } catch (e: any) {
+      console.error("[guest] error:", e);
+      setError(e?.data?.message ?? e?.message ?? "حدث خطأ — حاول مجدداً");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetForm = () => {
+    setUsername("");
+    setPassword("");
+    setPassword2("");
+    setError(null);
+  };
+
+  const handleSignin = async () => {
+    setError(null);
+    if (!username.trim() || !password) {
+      setError("املأ جميع الحقول");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await signin({ identifier: username.trim(), password });
+      setSession(res.sessionToken, res.username);
+      onSuccess(res.sessionToken);
+    } catch (e: any) {
+      const msg = e?.data?.message || e?.message || "فشل تسجيل الدخول";
+      setError(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignup = async () => {
+    setError(null);
+    if (!username.trim() || !password) {
+      setError("املأ جميع الحقول");
+      return;
+    }
+    if (password !== password2) {
+      setError("كلمتا المرور غير متطابقتين");
+      return;
+    }
+    if (password.length < 6) {
+      setError("كلمة المرور: 6 أحرف على الأقل");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await signup({
+        username: username.trim(),
+        password,
+        deviceId,
+      });
+      setSession(res.sessionToken, res.username);
+      onSuccess(res.sessionToken);
+    } catch (e: any) {
+      const msg = e?.data?.message || e?.message || "فشل إنشاء الحساب";
+      setError(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ============ Welcome ============
+  if (mode === "welcome") {
+    return (
+      <div className="min-h-[100dvh] w-full flex flex-col items-center justify-center p-6" dir="rtl">
+        <VideoBackground />
+        <div className="w-full max-w-md flex flex-col items-center gap-8 relative z-10">
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center shadow-2xl">
+              <img src="/icon.png" alt="EZO GROUP" className="w-24 h-24 rounded-3xl object-cover shadow-2xl ring-2 ring-white/20" />
+            </div>
+            <h1 className="text-white text-3xl font-black mt-2" dir="ltr">EZO GROUP</h1>
+            <p className="text-white/70 text-sm font-bold">Voice Chat Rooms</p>
+          </div>
+
+          <div className="w-full flex flex-col gap-3 mt-4">
+<Card
+                interactive
+                onClick={() => { resetForm(); setMode("signin"); }}
+                padding="lg"
+              >
+                <div className="py-2 text-center bg-gradient-to-r from-pink-500 to-purple-600 text-white font-black text-lg rounded-xl">
+                  تسجيل الدخول
+                </div>
+              </Card>
+<Card
+                interactive
+                onClick={() => { resetForm(); setMode("signup"); }}
+                padding="lg"
+              >
+                <div className="py-2 text-center text-white font-bold text-lg">
+                  إنشاء حساب جديد
+                </div>
+              </Card>
+            <button
+              onClick={handleGuest}
+              disabled={loading}
+              className="w-full py-3 text-white/50 text-sm hover:text-white/80 transition mt-2 disabled:opacity-50"
+            >
+              {loading ? "جاري الدخول..." : "متابعة كزائر"}
+            </button>
+            {error && (
+              <p className="text-red-400 text-xs text-center mt-2">{error}</p>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ============ Signin / Signup ============
+  const isSignup = mode === "signup";
+
+  return (
+    <div className="min-h-[100dvh] w-full flex flex-col items-center justify-center p-6" dir="rtl">
+      <VideoBackground />
+      <div className="w-full max-w-md flex flex-col gap-6 relative z-10">
+        <button
+          onClick={() => { resetForm(); setMode("welcome"); }}
+          className="flex items-center gap-2 text-white/60 hover:text-white transition self-start"
+        >
+          <ArrowLeft size={20} className="rotate-180" />
+          <span className="text-sm font-bold">رجوع</span>
+        </button>
+
+        <h2 className="text-white text-2xl font-black text-center">
+          {isSignup ? "إنشاء حساب" : "تسجيل الدخول"}
+        </h2>
+
+        <div className="flex flex-col gap-4">
+          <div className="relative">
+            <User size={20} className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40" />
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder={isSignup ? "اسم المستخدم (إنجليزي)" : "اسم المستخدم أو ID"}
+              className="w-full bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl py-4 pr-12 pl-4 text-white placeholder:text-white/30 focus:outline-none focus:border-purple-400 transition"
+              autoComplete="username"
+              dir="ltr"
+            />
+          </div>
+
+          <div className="relative">
+            <Lock size={20} className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40" />
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="كلمة المرور"
+              className="w-full bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl py-4 pr-12 pl-4 text-white placeholder:text-white/30 focus:outline-none focus:border-purple-400 transition"
+              autoComplete={isSignup ? "new-password" : "current-password"}
+              dir="ltr"
+            />
+          </div>
+
+          {isSignup && (
+            <div className="relative">
+              <Lock size={20} className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40" />
+              <input
+                type="password"
+                value={password2}
+                onChange={(e) => setPassword2(e.target.value)}
+                placeholder="تأكيد كلمة المرور"
+                className="w-full bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl py-4 pr-12 pl-4 text-white placeholder:text-white/30 focus:outline-none focus:border-purple-400 transition"
+                autoComplete="new-password"
+                dir="ltr"
+              />
+            </div>
+          )}
+        </div>
+
+        {error && (
+<Card tone="danger" padding="md">
+            <p className="text-red-200 text-sm text-center">{error}</p>
+          </Card>
+        )}
+
+        <button
+          onClick={isSignup ? handleSignup : handleSignin}
+          disabled={loading}
+          className="w-full py-4 rounded-2xl bg-gradient-to-r from-pink-500 to-purple-600 text-white font-black text-lg shadow-lg active:scale-95 transition disabled:opacity-50 flex items-center justify-center gap-2"
+        >
+          {loading ? (
+            <Loader2 size={22} className="animate-spin" />
+          ) : isSignup ? (
+            "إنشاء الحساب"
+          ) : (
+            "دخول"
+          )}
+        </button>
+      </div>
+    </div>
+  );
+}

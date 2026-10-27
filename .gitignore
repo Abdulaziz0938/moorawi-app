@@ -1,0 +1,26 @@
+# Node
+node_modules/
+dist/
+build/
+.next/
+
+# Extracted assets (NOT needed for build)
+webp_extracted/
+pag_extracted/
+apk_extracted/
+all_animations/
+
+# Env files
+.env
+.env.local
+.env.production
+*.log
+
+# Android
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/key.properties
+android/app/moorawi-release.keystore
+*.keystore

@@ -1,0 +1,155 @@
+import { ConvexError, v } from "convex/values";
+import { mutation, query } from "./_generated/server";
+import { requireUser } from "./lib/auth";
+import { levelFromValue } from "./lib/levels";
+import { activeVipLevel } from "./lib/vip";
+
+const MAX_LEN = 500;
+
+export const list = query({
+  args: { roomId: v.id("rooms"), since: v.optional(v.number()) },
+  handler: async (ctx, args) => {
+    const sinceTs = args.since ?? 0;
+    const raw = await ctx.db.query("messages").withIndex("by_room", (q) => q.eq("roomId", args.roomId)).order("desc").take(60);
+    const rows = sinceTs > 0 ? raw.filter((m) => m._creationTime >= sinceTs) : raw;
+
+    // [ezo] Prefetch room members for role lookup
+    const members = await ctx.db.query("roomMembers")
+      .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
+      .take(100);
+    const roleByUser = new Map<string, string>();
+    for (const mem of members) roleByUser.set(mem.userId as string, mem.role);
+
+    // [ezo] Prefetch mic seats for mute lookup
+    const seats = await ctx.db.query("micSeats")
+      .withIndex("by_room_and_seatIndex", (q) => q.eq("roomId", args.roomId))
+      .take(24);
+    const mutedByUser = new Map<string, boolean>();
+    for (const s of seats) {
+      if (s.userId) mutedByUser.set(s.userId as string, !!s.muted);
+    }
+
+    const room = await ctx.db.get("rooms", args.roomId);
+  const roomOwnerId = room?.ownerId ?? null;
+
+  const enriched = await Promise.all(rows.map(async (m) => {
+      const sender = await ctx.db.get("users", m.senderId);
+      const avatarUrl = sender?.avatarUrl ?? (sender?.avatarId ? await ctx.storage.getUrl(sender.avatarId) : null);
+      const imageUrl = m.imageUrl ?? (m.imageId ? await ctx.storage.getUrl(m.imageId) : null);
+      const vip = activeVipLevel(sender);
+        let senderBubbleUrl: string | null = null;
+        if (sender?.equippedChatBubbleId) {
+          const bub = await ctx.db.get("shopItems", sender.equippedChatBubbleId);
+          senderBubbleUrl = bub?.imageUrl ?? null;
+        }
+      return {
+        _id: m._id,
+        senderId: m.senderId,
+        senderName: m.senderName,
+        senderNumber: sender?.userNumber ?? null,
+        senderVip: vip,
+        senderBubbleUrl,
+        senderCharmLevel: levelFromValue(sender?.totalReceived ?? 0),
+        senderCharmValue: sender?.charms ?? 0,
+        senderWealthValue: sender?.totalSent ?? 0,
+        senderAdminRole: sender?.adminRole ?? null,
+        senderVerified: sender?.verificationStatus === "approved",
+        senderCharms: sender?.charms ?? 0,
+        senderRoomRole: m.senderId === roomOwnerId ? "owner" : (roleByUser.get(m.senderId as string) ?? null),
+        senderMuted: mutedByUser.get(m.senderId as string) ?? null,
+        avatarUrl,
+        text: m.text ?? null,
+        imageUrl,
+        system: m.system ?? false,
+        createdAt: m._creationTime,
+      };
+    }));
+    return enriched.reverse();
+  },
+});
+
+// (تم حذف generateUploadUrl — نستخدم Cloudinary)
+
+export const send = mutation({
+  args: { roomId: v.id("rooms"), text: v.optional(v.string()), imageUrl: v.optional(v.string()), tokenOverride: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx, args.tokenOverride);
+    const text = args.text?.trim() ?? "";
+    if (!text && !args.imageUrl) throw new ConvexError({ code: "BAD_REQUEST", message: "الرسالة فارغة" });
+    if (text.length > MAX_LEN) throw new ConvexError({ code: "BAD_REQUEST", message: "الرسالة طويلة" });
+    await ctx.db.insert("messages", { roomId: args.roomId, senderId: user._id, senderName: user.name ?? "ضيف", text: text || undefined, imageUrl: args.imageUrl, system: false })
+
+    await recordMissionProgress(ctx, user._id, ["daily_10_messages", "weekly_500_messages"]);;
+    return null;
+  },
+});
+
+export const remove = mutation({
+  args: { messageId: v.id("messages"), tokenOverride: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx, args.tokenOverride);
+    const msg = await ctx.db.get("messages", args.messageId);
+    if (!msg) return null;
+    if (msg.senderId !== user._id) throw new ConvexError({ code: "FORBIDDEN", message: "لا يمكنك حذف" });
+    await ctx.db.delete(msg._id);
+    return null;
+  },
+});
+
+async function recordMissionProgress(ctx: any, userId: any, keys: string[], amount = 1) {
+  const dailyCycle = new Date().toISOString().slice(0, 10);
+  const onejan = new Date(new Date().getFullYear(), 0, 1);
+  const week = Math.ceil(((new Date().getTime() - onejan.getTime()) / 86400000 + onejan.getDay() + 1) / 7);
+  const weeklyCycle = `${new Date().getFullYear()}-W${week}`;
+  const missions = await ctx.db.query("missions").collect();
+  for (const key of keys) {
+    const m = missions.find((x: any) => x.key === key);
+    if (!m) continue;
+    const cycle = m.type === "weekly" ? weeklyCycle : dailyCycle;
+    const existing = await ctx.db
+      .query("userMissions")
+      .withIndex("by_user_and_mission", (q: any) => q.eq("userId", userId).eq("missionId", m._id))
+      .filter((q: any) => q.eq(q.field("cycleKey"), cycle))
+      .first();
+    if (existing) {
+      if (existing.claimedAt) continue;
+      await ctx.db.patch("userMissions", existing._id, {
+        progress: Math.min((existing.progress ?? 0) + amount, m.target),
+      });
+    } else {
+      await ctx.db.insert("userMissions", {
+        userId,
+        missionId: m._id,
+        progress: Math.min(amount, m.target),
+        cycleKey: cycle,
+      });
+    }
+  }
+}
+
+
+// ═══ [ezo-clear] مسح جميع رسائل الغرفة (للمالك/المشرف) ═══
+export const clearRoom = mutation({
+  args: { roomId: v.id("rooms"), tokenOverride: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx, args.tokenOverride);
+    const room = await ctx.db.get("rooms", args.roomId);
+    if (!room) throw new Error("الغرفة غير موجودة");
+    const member = await ctx.db
+      .query("roomMembers")
+      .withIndex("by_room_and_user", (q: any) =>
+        q.eq("roomId", args.roomId).eq("userId", me._id)
+      )
+      .unique();
+    const isOwner = room.ownerId === me._id;
+    const isMod = member?.role === "moderator";
+    const isAdmin = (me as any).adminRole === "super" || me.userNumber === 1;
+    if (!isOwner && !isMod && !isAdmin) throw new Error("للمالك/المشرف فقط");
+    const msgs = await ctx.db
+      .query("messages")
+      .withIndex("by_room", (q: any) => q.eq("roomId", args.roomId))
+      .collect();
+    for (const m of msgs) await ctx.db.delete(m._id);
+    return { ok: true, deleted: msgs.length };
+  },
+});

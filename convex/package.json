@@ -1,0 +1,9 @@
+{
+  "name": "moorawi-convex-backend",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "convex": "^1.48.0",
+    "typescript": "^5.0.0"
+  }
+}

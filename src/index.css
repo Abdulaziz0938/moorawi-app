@@ -1,0 +1,994 @@
+
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Custom thin scrollbar for chat */
+.thin-scroll::-webkit-scrollbar { width: 4px; }
+.thin-scroll::-webkit-scrollbar-track { background: transparent; }
+.thin-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+
+/* Animated gradient background for the app */
+
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+.animate-shimmer {
+  animation: shimmer 2.5s infinite;
+}
+
+/* Gift fly animation - center then fly up-right toward mic */
+@keyframes giftFlyUp {
+  0% { opacity: 0; transform: translate(0, 0) scale(0.3); }
+  20% { opacity: 1; transform: translate(0, 0) scale(1); }
+  80% { opacity: 1; transform: translate(20vw, -25vh) scale(0.6); }
+  100% { opacity: 0; transform: translate(30vw, -40vh) scale(0.4); }
+}
+.gift-fly-animation {
+  animation: giftFlyUp 3.5s ease-out forwards;
+}
+
+/* Banner slide down */
+@keyframes bannerSlideDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-banner-slide-down {
+  animation: bannerSlideDown 0.4s ease-out;
+}
+
+
+/* Solid dark underlay so mixBlendMode:screen works on bright backgrounds */
+.gift-media-overlay {
+  background: rgba(10, 5, 25, 0.55);
+  backdrop-filter: blur(4px);
+  border-radius: 12px;
+  padding: 4px;
+}
+
+
+
+
+
+/* ============ GIFT ANIMATIONS ============ */
+
+/* Emerge from bottom → center → pulse → fly to mic (curve via CSS vars) */
+
+
+/* Combo counter pulse */
+@keyframes comboPulse {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.5); }
+  100% { transform: scale(1); }
+}
+
+.combo-pulse {
+  animation: comboPulse 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Marquee global banner */
+@keyframes marqueeSlide {
+  0% { opacity: 0; transform: translateX(-100%); }
+  15% { opacity: 1; transform: translateX(0); }
+  85% { opacity: 1; transform: translateX(0); }
+  100% { opacity: 0; transform: translateX(100%); }
+}
+
+.marquee-anim {
+  animation: marqueeSlide 8s ease-in-out forwards;
+}
+
+
+/* ============ GIFT ANIMATIONS (v2) ============ */
+
+/* مسار طيران الهدية الخفيفة المباشر للمايك */
+@keyframes flyDirectToMic {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) translate(0, 20vh) scale(0.3);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -50%) translate(0, 0) scale(1.1);
+  }
+  75% {
+    opacity: 1;
+    transform: translate(calc(-50% + var(--target-x, 0px)), calc(-50% + var(--target-y, 0px))) scale(0.7);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--target-x, 0px)), calc(-50% + var(--target-y, 0px))) scale(0.2);
+  }
+}
+
+.gift-fly-anim {
+  animation: flyDirectToMic 1.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+/* شريط الإعلان الفاخر */
+
+
+/* ============ Global Marquee (≥ 30000) ============ */
+@keyframes marqueeSlide {
+  0% { transform: translateY(-50px) scale(0.9); opacity: 0; }
+  10% { transform: translateY(0) scale(1); opacity: 1; }
+  90% { transform: translateY(0) scale(1); opacity: 1; }
+  100% { transform: translateY(-50px) scale(0.9); opacity: 0; }
+}
+
+.animate-marquee-slide {
+  animation: marqueeSlide 6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Golden glow */
+@keyframes goldenGlow {
+  0%, 100% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.6); }
+  50% { box-shadow: 0 0 35px rgba(251, 191, 36, 0.9); }
+}
+.golden-glow {
+  animation: goldenGlow 2s ease-in-out infinite;
+}
+
+/* Combo Overlay Animation (new layer, center) */
+@keyframes comboPopIn {
+  0% { transform: scale(0.4); opacity: 0; }
+  50% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.combo-pop-in {
+  animation: comboPopIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes comboFadeOut {
+  0% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.7); }
+}
+
+.combo-fade-out {
+  animation: comboFadeOut 0.4s ease-out forwards;
+}
+
+/* ============ Ezo: هدايا جماعية متعددة (Batch) ============ */
+
+/* طيران هدية واحدة من مركز الشاشة إلى هدف محدد — 3 مراحل */
+@keyframes multiGiftFly {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 40vh) scale(0.3);
+  }
+  22% {
+    opacity: 1;
+    transform: translate(calc(-50% + var(--spread-x, 0px)), calc(-50% + var(--spread-y, 0px))) scale(1.15);
+  }
+  55% {
+    opacity: 1;
+    transform: translate(calc(-50% + var(--spread-x, 0px)), calc(-50% + var(--spread-y, 0px))) scale(1);
+  }
+  88% {
+    opacity: 1;
+    transform: translate(calc(-50% + var(--target-x, 0px)), calc(-50% + var(--target-y, 0px))) scale(0.7);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--target-x, 0px)), calc(-50% + var(--target-y, 0px))) scale(0.25);
+  }
+}
+
+.multi-gift-particle {
+  animation: multiGiftFly 2.2s cubic-bezier(0.22, 0.85, 0.25, 1) forwards;
+  will-change: transform, opacity;
+}
+
+/* نبضة اهتزاز على المايك عند وصول الهدية */
+@keyframes micHit {
+  0%, 100% {
+    transform: scale(1);
+    filter: none;
+  }
+  40% {
+    transform: scale(1.18);
+    filter: drop-shadow(0 0 12px #f59e0b);
+  }
+  70% {
+    transform: scale(0.95);
+    filter: drop-shadow(0 0 6px #f59e0b);
+  }
+}
+
+.mic-hit-anim {
+  animation: micHit 0.55s ease-out;
+}
+
+/* شارة تجميع المستمعين (+N) */
+@keyframes aggregateBadgePulse {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.7);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(0) scale(1.1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-20px) scale(1);
+  }
+}
+
+.aggregate-badge-anim {
+  animation: aggregateBadgePulse 2.2s ease-out forwards;
+}
+
+/* ============ Ezo: Leaderboard Podium Glow ============ */
+@keyframes podiumGlow {
+  0%, 100% {
+    filter: brightness(1) drop-shadow(0 0 0 rgba(255, 215, 0, 0));
+  }
+  50% {
+    filter: brightness(1.15) drop-shadow(0 0 14px rgba(255, 215, 0, 0.55));
+  }
+}
+
+.podium-gold {
+  animation: podiumGlow 2.8s ease-in-out infinite;
+}
+
+.podium-silver {
+  animation: podiumGlow 2.8s ease-in-out infinite;
+  animation-delay: 0.4s;
+}
+
+.podium-bronze {
+  animation: podiumGlow 2.8s ease-in-out infinite;
+  animation-delay: 0.8s;
+}
+
+/* ============ Ezo: Leaderboard composite glow ============ */
+@keyframes podiumGlowAll {
+  0%, 100% {
+    filter: brightness(1) drop-shadow(0 0 0 rgba(255, 215, 0, 0));
+  }
+  50% {
+    filter: brightness(1.1) drop-shadow(0 0 18px rgba(255, 215, 0, 0.5));
+  }
+}
+
+.podium-glow-all {
+  animation: podiumGlowAll 3s ease-in-out infinite;
+}
+
+/* ============ Ezo: Dialog animations ============ */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes dialogPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.85) translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Seat menu popup animation */
+@keyframes seatMenuPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ============ Member Row Card ============ */
+.member-avatar-ring {
+  position: relative;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  padding: 2px;
+  background: linear-gradient(135deg, #06b6d4 0%, #10b981 100%);
+  box-shadow: 0 0 12px rgba(6, 182, 212, 0.4);
+  flex-shrink: 0;
+}
+
+.member-avatar-inner {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  background: linear-gradient(135deg, #a855f7, #ec4899);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 900;
+  font-size: 20px;
+}
+
+.member-status-badge {
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  height: 17px;
+  padding: 0 7px;
+  border-radius: 9px;
+  font-size: 9px;
+  font-weight: 900;
+  color: white;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.7);
+  border: 1px solid rgba(255,255,255,0.3);
+}
+
+.member-status-badge.mic {
+  background: linear-gradient(180deg, #10b981 0%, #047857 100%);
+}
+
+.member-status-badge.room {
+  background: linear-gradient(180deg, #8b5cf6 0%, #6d28d9 100%);
+}
+
+.badge-capsule {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 900;
+  color: white;
+  gap: 4px;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.35);
+}
+
+.badge-capsule.charm {
+  background: linear-gradient(180deg, #ec4899 0%, #9d174d 100%);
+  border: 1px solid #f9a8d4;
+}
+
+.badge-capsule.wealth {
+  background: linear-gradient(180deg, #f59e0b 0%, #92400e 100%);
+  border: 1px solid #fcd34d;
+}
+
+/* ============ Badge Glow (VIP / Admin / pvip) ============ */
+.badge-glow {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6))
+          drop-shadow(0 0 6px rgba(255, 215, 0, 0.5))
+          brightness(1.1);
+  transition: filter 0.2s ease;
+}
+
+.badge-glow:hover {
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.7))
+          drop-shadow(0 0 10px rgba(255, 215, 0, 0.7))
+          brightness(1.2);
+}
+
+.badge-glow-purple {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6))
+          drop-shadow(0 0 6px rgba(168, 85, 247, 0.6))
+          brightness(1.1);
+}
+
+
+/* ============================================================
+   [ezo-animations] تأثيرات VIP + Shimmer
+   ============================================================ */
+
+/* Animated gradient text */
+.vip-gradient {
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-size: 300% 300%;
+  animation: vipGradientFlow 5s ease infinite;
+  display: inline-block;
+  font-weight: 900;
+}
+
+.vip-gradient-1 { background-image: linear-gradient(90deg, #10b981, #34d399, #6ee7b7, #34d399, #10b981); }
+.vip-gradient-2 { background-image: linear-gradient(90deg, #3b82f6, #60a5fa, #93c5fd, #60a5fa, #3b82f6); }
+.vip-gradient-3 { background-image: linear-gradient(90deg, #a855f7, #c084fc, #e9d5ff, #c084fc, #a855f7); }
+.vip-gradient-4 { background-image: linear-gradient(90deg, #dc2626, #f87171, #fca5a5, #f87171, #dc2626); }
+.vip-gradient-5 { background-image: linear-gradient(90deg, #eab308, #facc15, #fde047, #facc15, #eab308); }
+.vip-gradient-6 { background-image: linear-gradient(90deg, #f97316, #fb923c, #fdba74, #fb923c, #f97316); }
+.vip-gradient-7 { background-image: linear-gradient(90deg, #fbbf24, #fde047, #fef08a, #fde047, #fbbf24); }
+
+@keyframes vipGradientFlow {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+
+/* توهج */
+.vip-glow { filter: drop-shadow(0 0 6px currentColor); }
+
+/* Shimmer sweep */
+.shimmer { position: relative; overflow: hidden; }
+.shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.45) 50%, transparent 70%);
+  transform: translateX(-100%);
+  animation: shimmerSweep 3s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes shimmerSweep {
+  0%   { transform: translateX(-100%); }
+  60%  { transform: translateX(100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* نبض ناعم */
+@keyframes softPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.7; transform: scale(1.05); }
+}
+.soft-pulse { animation: softPulse 2s ease-in-out infinite; }
+
+/* دورانية بطيئة (لأطر VIP) */
+@keyframes slowSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.slow-spin { animation: slowSpin 8s linear infinite; }
+
+/* طفو */
+@keyframes floatY {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-4px); }
+}
+.float-y { animation: floatY 3s ease-in-out infinite; }
+
+/* تقليل الحركة */
+@media (prefers-reduced-motion: reduce) {
+  .vip-gradient, .shimmer::after, .soft-pulse, .slow-spin, .float-y {
+    animation: none !important;
+  }
+}
+
+/* ============================================================
+   [ezo-vip] VIP Visual Identity — Halos + Frames + Animations
+   المطابق لـ Bigo/Yalla: كل مستوى له هالة وإطار متدرج
+   ============================================================ */
+
+/* ===== VIP Avatar Container ===== */
+.vip-avatar-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ===== VIP Frames (ring around avatar) ===== */
+.vip-frame-1 { background: conic-gradient(from 0deg, #10b981, #34d399, #6ee7b7, #34d399, #10b981); }
+.vip-frame-2 { background: conic-gradient(from 0deg, #3b82f6, #60a5fa, #93c5fd, #60a5fa, #3b82f6); }
+.vip-frame-3 { background: conic-gradient(from 0deg, #a855f7, #c084fc, #e9d5ff, #c084fc, #a855f7); }
+.vip-frame-4 { background: conic-gradient(from 0deg, #dc2626, #f87171, #fca5a5, #f87171, #dc2626); }
+.vip-frame-5 {
+  background: conic-gradient(from 0deg, #eab308, #facc15, #fde047, #facc15, #eab308);
+  animation: vip-frame-rotate 4s linear infinite;
+}
+.vip-frame-6 {
+  background: conic-gradient(from 0deg, #f97316, #fb923c, #fdba74, #fb923c, #f97316);
+  animation: vip-frame-rotate 3s linear infinite;
+}
+.vip-frame-7 {
+  background: conic-gradient(from 0deg, #fbbf24, #fde047, #fef08a, #fde047, #fbbf24);
+  animation: vip-frame-rotate 2.5s linear infinite;
+}
+
+@keyframes vip-frame-rotate {
+  to { transform: rotate(360deg); }
+}
+
+/* ===== VIP Halos (outer glow) ===== */
+.vip-halo-1 { box-shadow: 0 0 20px 4px rgba(16, 185, 129, 0.6), 0 0 40px 8px rgba(16, 185, 129, 0.25); }
+.vip-halo-2 { box-shadow: 0 0 20px 4px rgba(59, 130, 246, 0.6), 0 0 40px 8px rgba(59, 130, 246, 0.25); }
+.vip-halo-3 { box-shadow: 0 0 20px 4px rgba(168, 85, 247, 0.6), 0 0 40px 8px rgba(168, 85, 247, 0.25); }
+.vip-halo-4 { box-shadow: 0 0 22px 5px rgba(220, 38, 38, 0.65), 0 0 45px 10px rgba(220, 38, 38, 0.3); }
+.vip-halo-5 {
+  box-shadow: 0 0 25px 6px rgba(234, 179, 8, 0.7), 0 0 50px 12px rgba(234, 179, 8, 0.3);
+  animation: vip-halo-pulse 2.4s ease-in-out infinite;
+}
+.vip-halo-6 {
+  box-shadow: 0 0 28px 7px rgba(249, 115, 22, 0.75), 0 0 55px 14px rgba(249, 115, 22, 0.35);
+  animation: vip-halo-pulse 2s ease-in-out infinite;
+}
+.vip-halo-7 {
+  box-shadow: 0 0 32px 8px rgba(251, 191, 36, 0.8), 0 0 65px 16px rgba(251, 191, 36, 0.4);
+  animation: vip-halo-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes vip-halo-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.85; }
+}
+
+/* ===== VIP Sparkle overlay (for 5-7) ===== */
+.vip-sparkle::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.4) 0%, transparent 40%);
+  pointer-events: none;
+  animation: vip-sparkle-shift 3s ease-in-out infinite;
+}
+
+@keyframes vip-sparkle-shift {
+  0%, 100% { transform: rotate(0deg); opacity: 0.6; }
+  50% { transform: rotate(180deg); opacity: 1; }
+}
+
+/* ===== Entry animation (joining a room) ===== */
+.vip-entry-1, .vip-entry-2, .vip-entry-3, .vip-entry-4,
+.vip-entry-5, .vip-entry-6, .vip-entry-7 {
+  animation: vip-entry-slide 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes vip-entry-slide {
+  0% { transform: translateX(-120%); opacity: 0; }
+  60% { transform: translateX(8%); opacity: 1; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+/* ============================================================
+   [ezo-medals] Medal tier animations
+   ============================================================ */
+
+/* SSS: نبض خفيف */
+.medal-sss-pulse {
+  animation: medal-sss-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes medal-sss-pulse {
+  0%, 100% { transform: scale(1); filter: brightness(1); }
+  50% { transform: scale(1.05); filter: brightness(1.15); }
+}
+
+/* SSS: sparkle overlay */
+.medal-sparkle::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, transparent 0%, rgba(255,255,255,0.4) 25%, transparent 50%, rgba(255,255,255,0.4) 75%, transparent 100%);
+  animation: medal-sparkle-spin 3s linear infinite;
+  opacity: 0.6;
+}
+
+@keyframes medal-sparkle-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* [ezo-emoji] Animated emoji on mic seat — Yalla/Ezo style */
+@keyframes emojiBurst {
+  0%   { transform: scale(0)    translateY(0)     rotate(-12deg); opacity: 0; }
+  12%  { transform: scale(1.35) translateY(-6px)  rotate(8deg);   opacity: 1; }
+  25%  { transform: scale(1.15) translateY(-10px) rotate(-6deg);  opacity: 1; }
+  40%  { transform: scale(1.05) translateY(-16px) rotate(4deg);   opacity: 1; }
+  60%  { transform: scale(1)    translateY(-26px) rotate(0deg);   opacity: 1; }
+  100% { transform: scale(0.85) translateY(-48px) rotate(-4deg);  opacity: 0; }
+}
+.animate-emoji-burst {
+  animation: emojiBurst 3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* [ezo-gift-banner] بانر عائم للهدايا — Yalla/Ezo style */
+@keyframes bannerFloating {
+  0%   { transform: translateY(-140%); opacity: 0; }
+  12%  { transform: translateY(0);     opacity: 1; }
+  88%  { transform: translateY(0);     opacity: 1; }
+  100% { transform: translateY(-140%); opacity: 0; }
+}
+.animate-banner-floating {
+  animation: bannerFloating 3.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* [ezo-gift-waves] عزل طبقة الشلال — منع الوميض */
+.gift-waves-layer {
+  contain: strict;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* [ezo-combo-pro] كومبو فخم — Yalla/Ezo style */
+@keyframes comboNumberPulse {
+  0%   { transform: scale(1)    rotate(0deg); }
+  20%  { transform: scale(1.45) rotate(-3deg); }
+  45%  { transform: scale(1.15) rotate(2deg); }
+  70%  { transform: scale(1.05) rotate(-1deg); }
+  100% { transform: scale(1)    rotate(0deg); }
+}
+.combo-number-pulse {
+  animation: comboNumberPulse 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* [ezo-assets] إزالة الخلفية السوداء من الأصول — mix-blend-mode: screen */
+.asset-blend {
+  mix-blend-mode: screen;
+}
+
+/* [ezo-rockets] حركات الصاروخ */
+@keyframes rocketFloat {
+  0%, 100% { transform: translateY(0)     scale(1); }
+  50%      { transform: translateY(-10px) scale(1.02); }
+}
+
+@keyframes rocketLaunch {
+  0%   { transform: translateY(0)      scale(1);   opacity: 1; }
+  15%  { transform: translateY(0)      scale(1.15); opacity: 1; filter: brightness(1.5); }
+  40%  { transform: translateY(-40px)  scale(1.1); opacity: 1; }
+  100% { transform: translateY(-400px) scale(0.6); opacity: 0; }
+}
+
+/* [ezo-rocket-sheet] Bottom sheet animations */
+@keyframes slideUp {
+  0%   { transform: translateY(100%); opacity: 0; }
+  100% { transform: translateY(0);    opacity: 1; }
+}
+.animate-slide-up {
+  animation: slideUp 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes fadeIn {
+  0%   { opacity: 0; }
+  100% { opacity: 1; }
+}
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+/* [ezo-rocket-launch] إطلاق الصاروخ — Ezo style */
+@keyframes rocketLaunchUp {
+  0%   { transform: translateY(0)      scale(1);   opacity: 1; }
+  15%  { transform: translateY(-8vh)   scale(1.1); opacity: 1; filter: brightness(1.4); }
+  100% { transform: translateY(-110vh) scale(0.5); opacity: 0.6; }
+}
+.animate-rocket-launch {
+  animation: rocketLaunchUp 2.2s cubic-bezier(0.4, 0, 0.6, 1) forwards;
+}
+
+@keyframes explosionBurst {
+  0%   { transform: scale(0);   opacity: 0; }
+  15%  { transform: scale(1.3); opacity: 1; }
+  60%  { transform: scale(2);   opacity: 0.8; }
+  100% { transform: scale(3.5); opacity: 0; }
+}
+.animate-explosion {
+  animation: explosionBurst 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes avatarPop {
+  0%   { transform: scale(0)    rotate(-180deg); opacity: 0; }
+  60%  { transform: scale(1.25) rotate(10deg);   opacity: 1; }
+  100% { transform: scale(1)    rotate(0deg);    opacity: 1; }
+}
+.animate-avatar-pop {
+  animation: avatarPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes rocketTrail {
+  0%, 100% { opacity: 0.5; transform: scaleY(1); }
+  50%      { opacity: 1;   transform: scaleY(1.3); }
+}
+.animate-rocket-trail {
+  animation: rocketTrail 0.15s ease-in-out infinite;
+}
+
+/* [ezo-explosion-ezo] انفجار الصاروخ — Ezo style */
+@keyframes flashBurst {
+  0%   { opacity: 0; }
+  15%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes shockwave {
+  0%   { transform: scale(0);   opacity: 1;   border-width: 40px; }
+  60%  { transform: scale(2.5); opacity: 0.6; border-width: 8px; }
+  100% { transform: scale(4);   opacity: 0;   border-width: 0px; }
+}
+
+@keyframes raysExpand {
+  0%   { transform: scale(0.2) rotate(0deg);   opacity: 0; }
+  20%  { transform: scale(1.2) rotate(30deg);  opacity: 1; }
+  100% { transform: scale(3)   rotate(180deg); opacity: 0; }
+}
+
+@keyframes particleFly {
+  0%   { transform: translate(0, 0) scale(0);   opacity: 0; }
+  20%  { transform: translate(var(--px), var(--py)) scale(1.2); opacity: 1; }
+  100% { transform: translate(calc(var(--px) * 1.8), calc(var(--py) * 1.8)) scale(0); opacity: 0; }
+}
+
+@keyframes screenShake {
+  0%, 100% { transform: translate(0, 0); }
+  10% { transform: translate(-8px, -4px); }
+  20% { transform: translate(8px, 4px); }
+  30% { transform: translate(-6px, 6px); }
+  40% { transform: translate(6px, -6px); }
+  50% { transform: translate(-4px, 4px); }
+  60% { transform: translate(4px, -4px); }
+  70% { transform: translate(-2px, 2px); }
+  80% { transform: translate(2px, -2px); }
+  90% { transform: translate(0, 0); }
+}
+
+.animate-flash      { animation: flashBurst 0.35s ease-out forwards; }
+.animate-shockwave  { animation: shockwave 1s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+.animate-rays       { animation: raysExpand 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+.animate-particle   { animation: particleFly 1.4s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+.animate-shake      { animation: screenShake 0.6s ease-out; }
+
+/* ═══════════════════════════════════════════════════════════
+   [ezo-anim] Animation system for VIP assets
+   ═══════════════════════════════════════════════════════════ */
+
+/* Rotate (continuous) */
+@keyframes ezo-rotate {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.ezo-anim-rotate {
+  animation: ezo-rotate var(--ezo-speed, 12s) linear infinite;
+  animation-direction: var(--ezo-dir, normal);
+}
+
+/* Pulse (scale heartbeat) */
+@keyframes ezo-pulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(calc(1 + var(--ezo-scale, 0.05))); }
+}
+.ezo-anim-pulse {
+  animation: ezo-pulse var(--ezo-speed, 2s) ease-in-out infinite;
+}
+
+/* Breathe (scale + opacity) */
+@keyframes ezo-breathe {
+  0%, 100% { transform: scale(1);   opacity: 0.9; }
+  50%      { transform: scale(1.03); opacity: 1; }
+}
+.ezo-anim-breathe {
+  animation: ezo-breathe var(--ezo-speed, 3s) ease-in-out infinite;
+}
+
+/* Shimmer (horizontal light sweep) */
+@keyframes ezo-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.ezo-anim-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.25) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: ezo-shimmer var(--ezo-speed, 3s) linear infinite;
+  -webkit-mask-image: radial-gradient(circle, black 60%, transparent 100%);
+  mask-image: radial-gradient(circle, black 60%, transparent 100%);
+}
+
+/* Float (up-down) */
+@keyframes ezo-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(calc(-1 * var(--ezo-scale, 5) * 1px)); }
+}
+.ezo-anim-float {
+  animation: ezo-float var(--ezo-speed, 3s) ease-in-out infinite;
+}
+
+/* Glow (drop-shadow pulse) */
+@keyframes ezo-glow {
+  0%, 100% { filter: drop-shadow(0 0 6px currentColor); }
+  50%      { filter: drop-shadow(0 0 20px currentColor) drop-shadow(0 0 30px currentColor); }
+}
+.ezo-anim-glow {
+  animation: ezo-glow var(--ezo-speed, 2.5s) ease-in-out infinite;
+}
+
+/* Sparkle (opacity flicker) */
+@keyframes ezo-sparkle {
+  0%, 100% { opacity: 1; }
+  25%      { opacity: 0.7; }
+  50%      { opacity: 1; filter: brightness(1.4); }
+  75%      { opacity: 0.85; }
+}
+.ezo-anim-sparkle {
+  animation: ezo-sparkle var(--ezo-speed, 1.8s) ease-in-out infinite;
+}
+
+/* Combined: rotate + pulse */
+@keyframes ezo-rotate-pulse {
+  0%   { transform: rotate(0deg)   scale(1); }
+  50%  { transform: rotate(180deg) scale(calc(1 + var(--ezo-scale, 0.05))); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+.ezo-anim-rotate-pulse {
+  animation: ezo-rotate-pulse var(--ezo-speed, 15s) linear infinite;
+}
+
+/* Combined: shimmer + rotate */
+@keyframes ezo-shimmer-rotate {
+  from { transform: rotate(0deg);   filter: brightness(1); }
+  50%  { filter: brightness(1.35); }
+  to   { transform: rotate(360deg); filter: brightness(1); }
+}
+.ezo-anim-shimmer-rotate {
+  animation: ezo-shimmer-rotate var(--ezo-speed, 15s) linear infinite;
+}
+
+/* Combined: float + glow */
+@keyframes ezo-float-glow {
+  0%, 100% {
+    transform: translateY(0);
+    filter: drop-shadow(0 0 8px currentColor);
+  }
+  50% {
+    transform: translateY(calc(-1 * var(--ezo-scale, 5) * 1px));
+    filter: drop-shadow(0 0 24px currentColor) drop-shadow(0 0 40px currentColor);
+  }
+}
+.ezo-anim-float-glow {
+  animation: ezo-float-glow var(--ezo-speed, 3s) ease-in-out infinite;
+}
+
+/* [ezo-glow] أشعة النور حول إطارات VIP */
+@keyframes ezoGlowPulse {
+  0%, 100% {
+    opacity: 0.7;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.15);
+  }
+}
+
+@keyframes ezo-rays-rotate {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to   { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* [ezo-shimmer] لمعان الإطارات — موجة ضوء تمر عبر الإطار */
+@keyframes ezoFrameShimmer {
+  0% {
+    background-position: -150% 50%;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  50% {
+    background-position: 50% 50%;
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    background-position: 250% 50%;
+    opacity: 0;
+  }
+}
+
+
+/* [ezo-live] قلوب عائمة في البث المباشر */
+@keyframes heartFloat {
+  0%   { transform: translateY(0)      scale(0.6); opacity: 0; }
+  15%  { transform: translateY(-20px)  scale(1.1); opacity: 1; }
+  100% { transform: translateY(-200px) scale(0.8); opacity: 0; }
+}
+
+/* [ezo-live-gift] ظهور هدية البث المباشر */
+@keyframes giftPopUp {
+  0%   { transform: scale(0)    translateY(40px);  opacity: 0; }
+  15%  { transform: scale(1.15) translateY(0);     opacity: 1; }
+  25%  { transform: scale(1)    translateY(0);     opacity: 1; }
+  75%  { transform: scale(1)    translateY(-10px); opacity: 1; }
+  100% { transform: scale(0.8)  translateY(-60px); opacity: 0; }
+}
+
+@keyframes winnerPulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.08); }
+}
+
+/* [optimized-vip-entry] GPU-accelerated keyframes */
+@keyframes vipEntrySlideGPU {
+  0% { transform: translate3d(0, 40px, 0) scale(0.6); opacity: 0; }
+  18% { transform: translate3d(0, 0, 0) scale(1.04); opacity: 1; }
+  28% { transform: translate3d(0, 0, 0) scale(1); opacity: 1; }
+  85% { transform: translate3d(0, 0, 0) scale(1); opacity: 1; }
+  100% { transform: translate3d(0, -10px, 0) scale(0.96); opacity: 0; }
+}
+
+@keyframes vipEntryFadeGPU {
+  0% { opacity: 0; }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+
+:root {
+  --app-dark-bg: #0d1117;
+  --card-dark-bg: #161c24;
+  --card-dark-hover: #1e2632;
+}
+
+.app-bg {
+  background-color: #0b0e14 !important;
+  background-image: radial-gradient(circle at 50% 0%, #171026 0%, #0d1117 45%, #080a0f 100%) !important;
+  color: #f1f5f9;
+  min-height: 100vh;
+}
+
+/* تنسيق كروت إيزو الفاخرة */
+.ezo-card {
+  background-color: #151b24 !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  border-radius: 14px !important;
+}
+
+
+/* تراكب الشاشات والخلفيات بنمط إيزو + EZO البنفسجي */
+.app-bg {
+  background-color: #090514 !important;
+  background-image: 
+    radial-gradient(circle at 85% 5%, rgba(126, 34, 206, 0.18) 0%, transparent 40%),
+    radial-gradient(circle at 15% 15%, rgba(88, 28, 135, 0.15) 0%, transparent 45%),
+    linear-gradient(180deg, #0f0720 0%, #090514 35%, #07040e 100%) !important;
+}
+
+
+/* === معمارية تراكب الشاشات والخلفيات (EZO x Ezo Theme) === */
+.app-bg {
+  background-color: #080411 !important;
+  background-image:
+    radial-gradient(circle at 80% 0%, rgba(139, 92, 246, 0.16) 0%, transparent 45%),
+    radial-gradient(circle at 20% 10%, rgba(168, 85, 247, 0.12) 0%, transparent 50%),
+    linear-gradient(180deg, #0e071d 0%, #090514 40%, #06030c 100%) !important;
+  color: #f8fafc;
+}

@@ -1,0 +1,627 @@
+// [ezo-live] واجهة المشاهد — Agora audience + قلوب + تعليق
+import { useEffect, useRef, useState } from "react";
+import { useAction, useMutation, useQuery } from "convex/react";
+import { api } from "../../../convex/_generated/api";
+import type { Id } from "../../../convex/_generated/dataModel";
+import { getDeviceId } from "../../lib/device";
+import { getActiveToken } from "../../lib/session";
+import { agoraManager } from "../../lib/agora";
+import { dialog } from "../../lib/dialog";
+import VipAvatar from "../ui/VipAvatar";
+import LiveGiftSheet from "./LiveGiftSheet";
+import LiveGiftAnimation from "./LiveGiftAnimation";
+import PKView from "./PKView";
+import PKWinnerModal from "./PKWinnerModal";
+import ProfilePage from "../ProfilePage";
+import {
+  X, Heart, Users, Send, Gift, Loader2, Share2, Eye, Flag,
+} from "lucide-react";
+
+interface Props {
+  streamId: string;
+  onLeave: () => void;
+}
+
+export default function LiveViewer({ streamId, onLeave }: Props) {
+  const deviceId = getDeviceId();
+  const token = getActiveToken() ?? deviceId;
+
+  const stream = useQuery(api.live.getStream, {
+    streamId: streamId as Id<"liveStreams">,
+  });
+
+  const me = useQuery(api.profiles.me, { tokenOverride: token });
+  const endStream = useMutation(api.live.endStream);
+  const isHost = !!me && !!stream && String(me._id) === String(stream.hostId);
+  const comments = useQuery(api.live.listComments, {
+    streamId: streamId as Id<"liveStreams">,
+    limit: 100,
+  });
+  const getLiveToken = useAction(api.voice.getLiveToken);
+  const joinAsViewer = useMutation(api.live.joinAsViewer);
+  const leaveViewer = useMutation(api.live.leaveViewer);
+  const sendLikes = useMutation(api.live.sendLikes);
+  const sendComment = useMutation(api.live.sendComment);
+
+
+  const hostVideoRef = useRef<HTMLDivElement>(null);
+  const coHostVideoRef = useRef<HTMLDivElement>(null);
+  const hostAgoraUidRef = useRef<string | null>(null);
+  const coHostAgoraUidRef = useRef<string | null>(null);
+  const coHostIdRef = useRef<string | null>(null);
+  const commentsRef = useRef<HTMLDivElement>(null);
+  const [connected, setConnected] = useState(false);
+  const [commentText, setCommentText] = useState("");
+  const [sending, setSending] = useState(false);
+  const [hearts, setHearts] = useState<{ id: number; x: number; color: string }[]>([]);
+  const lastTapRef = useRef(0);
+  const tapLockRef = useRef(false);
+  const [showGiftSheet, setShowGiftSheet] = useState(false);
+  const [giftTarget, setGiftTarget] = useState<{ id: string; name: string } | null>(null);
+  const [profileUserId, setProfileUserId] = useState<string | null>(null);
+  const toggleFollow = useMutation(api.follows.toggle);
+  const checkKicked = useQuery(api.live.checkKicked, { streamId: streamId as Id<"liveStreams">, tokenOverride: token });
+  const streamTarget = useQuery(api.live.getStreamTarget, { streamId: streamId as Id<"liveStreams"> });
+  const getNextLiveStream = useQuery(api.live.getNextLiveStream, { currentStreamId: streamId as Id<"liveStreams"> });
+  const followStatus = useQuery(
+    api.follows.isFollowing,
+    stream && !isHost ? { tokenOverride: token, targetUserId: stream.hostId } : ("skip" as any)
+  );
+
+  // ═══ Join as audience — ينتظر stream ═══
+  useEffect(() => {
+    if (!stream?.channelName) return;
+    let mounted = true;
+    (async () => {
+      try {
+        const { appId, token: rtcToken, account } = await getLiveToken({
+          streamId: streamId as Id<"liveStreams">,
+          asHost: false,
+          tokenOverride: token,
+        });
+        if (!mounted) return;
+        await agoraManager.join(
+          appId,
+          stream.channelName,
+          rtcToken,
+          account,
+          (user) => {
+            if (!user.videoTrack) return;
+            const uid = String(user.uid);
+            if (hostAgoraUidRef.current === uid) {
+              if (hostVideoRef.current) user.videoTrack.play(hostVideoRef.current);
+              return;
+            }
+            if (coHostAgoraUidRef.current === uid) {
+              if (coHostVideoRef.current) user.videoTrack.play(coHostVideoRef.current);
+              return;
+            }
+            if (!hostAgoraUidRef.current) {
+              hostAgoraUidRef.current = uid;
+              if (hostVideoRef.current) user.videoTrack.play(hostVideoRef.current);
+              return;
+            }
+            if (!coHostAgoraUidRef.current && coHostIdRef.current) {
+              coHostAgoraUidRef.current = uid;
+              if (coHostVideoRef.current) user.videoTrack.play(coHostVideoRef.current);
+            }
+          },
+          (user, mediaType) => {
+            if (mediaType === "audio") return;
+            const uid = String(user.uid);
+            if (hostAgoraUidRef.current === uid) {
+              if (hostVideoRef.current) hostVideoRef.current.innerHTML = "";
+              hostAgoraUidRef.current = null;
+              return;
+            }
+            if (coHostAgoraUidRef.current === uid) {
+              if (coHostVideoRef.current) coHostVideoRef.current.innerHTML = "";
+              coHostAgoraUidRef.current = null;
+            }
+          },
+          { asHost: false }
+        );
+        if (mounted) setConnected(true);
+        joinAsViewer({
+          streamId: streamId as Id<"liveStreams">,
+          tokenOverride: token,
+        }).catch(() => {});
+      } catch (e: any) {
+        console.error("[live-viewer] join error:", e);
+      }
+    })();
+
+    return () => {
+      mounted = false;
+      leaveViewer({
+        streamId: streamId as Id<"liveStreams">,
+        tokenOverride: token,
+      }).catch(() => {});
+      agoraManager.leave();
+    };
+  }, [streamId, stream?.channelName]);
+
+  // ═══ مزامنة coHostIdRef + ربط slot الضيفة عند التغيير ═══
+  useEffect(() => {
+    coHostIdRef.current = stream?.coHostId ?? null;
+    if (!stream?.coHostId) {
+      if (coHostVideoRef.current) coHostVideoRef.current.innerHTML = "";
+      coHostAgoraUidRef.current = null;
+      return;
+    }
+    const t = setTimeout(() => {
+      const remotes = agoraManager.getRemoteUsers();
+      for (const u of remotes) {
+        const uid = String(u.uid);
+        if (!u.videoTrack) continue;
+        if (hostAgoraUidRef.current === uid) continue;
+        if (coHostAgoraUidRef.current === uid) continue;
+        coHostAgoraUidRef.current = uid;
+        if (coHostVideoRef.current) u.videoTrack.play(coHostVideoRef.current);
+        break;
+      }
+    }, 150);
+    return () => clearTimeout(t);
+  }, [stream?.coHostId]);
+
+  // ═══ Check Kick ═══
+  useEffect(() => {
+    if (checkKicked) {
+      dialog.alert("تم طردك من هذا البث");
+      onLeave();
+    }
+  }, [checkKicked]);
+
+  // ═══ Viewer Migration (PK) ═══
+  useEffect(() => {
+    if (streamTarget) {
+      // إذا كان هذا البث هو بث الضيفة، انتقل لبث المضيف
+      // نستخدم onLeave ليقوم App.tsx بتحديث currentLiveId
+      // لكننا نحتاج دالة من App.tsx، لذا سنستخدم window.location.reload أو نمرر دالة
+      // بما أننا لا نستطيع تعديل App.tsx هنا، سنستخدم حدث مخصص
+      window.dispatchEvent(new CustomEvent('switch-live', { detail: String(streamTarget.streamId) }));
+    }
+  }, [streamTarget]);
+
+  // ═══ Swipe Up (Next Stream) ═══
+  const touchStartY = useRef(0);
+  const handleTouchStart = (e: React.TouchEvent) => { touchStartY.current = e.touches[0].clientY; };
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    const deltaY = touchStartY.current - e.changedTouches[0].clientY;
+    if (deltaY > 100 && getNextLiveStream) {
+      window.dispatchEvent(new CustomEvent('switch-live', { detail: String(getNextLiveStream._id) }));
+    }
+  };
+
+  // ═══ Auto-scroll comments ═══
+  useEffect(() => {
+    if (commentsRef.current) {
+      commentsRef.current.scrollTop = commentsRef.current.scrollHeight;
+    }
+  }, [comments?.length]);
+
+  // ═══ Double tap for hearts ═══
+  const handleScreenTap = (targetId?: string) => {
+    if (tapLockRef.current) return; // قفل لمنع التكرار
+    const now = Date.now();
+    if (now - lastTapRef.current < 300) {
+      tapLockRef.current = true;
+      spawnHeart();
+      sendLikes({
+        streamId: streamId as Id<"liveStreams">,
+        count: 1,
+        targetId: targetId ? (targetId as Id<"users">) : undefined,
+        tokenOverride: token,
+      }).catch(() => {});
+      lastTapRef.current = 0;
+      setTimeout(() => { tapLockRef.current = false; }, 500); // فتح القفل بعد نصف ثانية
+    } else {
+      lastTapRef.current = now;
+    }
+  };
+
+  const spawnHeart = () => {
+    const colors = ["#ef4444", "#f97316", "#ec4899", "#a855f7", "#3b82f6"];
+    const id = Date.now() + Math.random();
+    const x = 20 + Math.random() * 60;
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    setHearts((h) => [...h, { id, x, color }].slice(-20));
+    setTimeout(() => {
+      setHearts((h) => h.filter((x) => x.id !== id));
+    }, 3000);
+  };
+
+  // ═══ Send comment ═══
+  const handleSendComment = async () => {
+    const text = commentText.trim();
+    if (!text || sending) return;
+    setSending(true);
+    try {
+      await sendComment({
+        streamId: streamId as Id<"liveStreams">,
+        text,
+        tokenOverride: token,
+      });
+      setCommentText("");
+    } catch (e: any) {
+      dialog.alert(e?.message || "فشل الإرسال");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleClose = () => {
+    leaveViewer({
+      streamId: streamId as Id<"liveStreams">,
+      tokenOverride: token,
+    }).catch(() => {});
+    onLeave();
+  };
+
+  if (!stream) {
+    return (
+      <div className="fixed inset-0 z-[300] bg-black flex items-center justify-center">
+        <Loader2 className="text-white/40 animate-spin" size={40} />
+      </div>
+    );
+  }
+
+  if (stream.status === "ended") {
+    return (
+      <div className="fixed inset-0 z-[300] bg-black flex flex-col items-center justify-center gap-4 text-white">
+        <div className="text-5xl">👋</div>
+        <div className="text-lg font-black">انتهى البث</div>
+        <button
+          onClick={handleClose}
+          className="px-6 py-2.5 rounded-full bg-white/10 border border-white/20 text-sm font-black"
+        >
+          عودة
+        </button>
+      </div>
+    );
+  }
+
+    // حساب الانقسام الديناميكي (TikTok Style)
+  const hostScore = stream.hostScore ?? 0;
+  const coHostScore = stream.coHostScore ?? 0;
+  const totalScore = hostScore + coHostScore;
+  let hostWidth = 50;
+  if (stream.pkActive && totalScore > 0) {
+    const diff = (hostScore - coHostScore) / totalScore;
+    hostWidth = 50 + (diff * 20); // الحد الأقصى 70% والأدنى 30%
+  }
+  const coHostWidth = 100 - hostWidth;
+
+  return (
+    <div className="fixed inset-0 z-[300] bg-black overflow-hidden flex flex-col" dir="rtl" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+      {/* ═══ VIDEO AREA (65%) ═══ */}
+      <div className="relative w-full overflow-hidden" style={{ height: "65%" }}>
+      {/* Video area — split عندما PK نشط */}
+      {stream.coHostId ? (
+        <div className="absolute inset-0 flex">
+          {/* Host half — top (TikTok-style horizontal split) */}
+          <div
+            ref={hostVideoRef}
+            onClick={() => handleScreenTap(String(stream.hostId))}
+            className="relative bg-gradient-to-br from-cyan-900/40 to-black border-b border-white/20"
+            style={{ width: `${hostWidth}%`, transition: "width 500ms cubic-bezier(0.22, 1, 0.36, 1)" }}
+          >
+            <div className="absolute top-20 right-2 z-20 bg-cyan-500/90 px-2 py-0.5 rounded-full">
+              <span className="text-white text-[9px] font-black">
+                {stream.hostName}
+              </span>
+            </div>
+          </div>
+          {/* CoHost half — bottom */}
+          <div ref={coHostVideoRef} onClick={() => stream.coHostId && handleScreenTap(String(stream.coHostId))} className="relative bg-gradient-to-br from-pink-900/40 to-black"
+            style={{ width: `${coHostWidth}%`, transition: "width 500ms cubic-bezier(0.22, 1, 0.36, 1)" }}>
+            <div className="absolute bottom-2 left-2 z-20 bg-pink-500/90 px-2 py-0.5 rounded-full">
+              <span className="text-white text-[9px] font-black">
+                {stream.coHostName ?? "مذيعة"}
+              </span>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div
+          ref={hostVideoRef}
+          onClick={() => handleScreenTap(String(stream.hostId))}
+          className="absolute inset-0 bg-gradient-to-br from-purple-900/30 to-black flex items-center justify-center"
+        >
+          {!connected && (
+            <div className="text-white/40 flex flex-col items-center gap-3">
+              <Loader2 className="animate-spin" size={40} />
+              <div className="text-xs font-black">جاري الاتصال...</div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ═══ TOP BAR — host info ═══ */}
+      <div className="absolute top-0 left-0 right-0 z-30 p-3 pt-5 bg-gradient-to-b from-black/70 to-transparent">
+        <div className="flex items-center gap-2">
+          {/* Close */}
+          <button
+            onClick={handleClose}
+            className="w-9 h-9 rounded-full bg-black/60 backdrop-blur border border-white/20 flex items-center justify-center text-white active:scale-95"
+          >
+            <X size={18} />
+          </button>
+
+          {/* End stream button — if I am the host */}
+          {isHost && (
+            <button
+              onClick={async () => {
+                try {
+                  await endStream({ streamId: streamId as Id<"liveStreams">, tokenOverride: token });
+                  agoraManager.leave();
+                  onLeave();
+                } catch (e: any) {
+                  dialog.alert(e?.message || "فشل الإنهاء");
+                }
+              }}
+              className="px-3 h-9 rounded-full bg-red-500 text-white text-[10px] font-black flex items-center gap-1 active:scale-95 shadow-lg"
+            >
+              🔴 إنهاء البث
+            </button>
+          )}
+
+          {/* Host card — clickable to open profile */}
+          <button
+            onClick={() => setProfileUserId(String(stream.hostId))}
+            className="flex items-center gap-2 bg-black/50 backdrop-blur rounded-full pl-1 pr-3 py-1 border border-white/15 active:scale-95"
+          >
+            <VipAvatar
+              src={stream.hostAvatarUrl}
+              name={stream.hostName}
+              size={28}
+              vip={stream.hostVipLevel}
+              ring={stream.hostVipLevel === 0}
+            />
+            <div className="flex flex-col text-right">
+              <span className="text-white text-[11px] font-black">
+                {stream.hostName}
+              </span>
+              <span className="text-white/60 text-[8px]">
+                {stream.viewerCount.toLocaleString()} مشاهد
+              </span>
+            </div>
+          </button>
+
+          {/* Follow button */}
+          {!isHost && (
+            <button
+              onClick={async () => {
+                try {
+                  await toggleFollow({ targetUserId: stream.hostId, tokenOverride: token });
+                } catch (e: any) {
+                  dialog.alert(e?.message || "فشل");
+                }
+              }}
+              className={`px-3 h-7 rounded-full text-[10px] font-black active:scale-95 ${
+                followStatus
+                  ? "bg-white/15 text-white border border-white/20"
+                  : "bg-rose-500 text-white"
+              }`}
+            >
+              {followStatus ? "متابع" : "+ متابعة"}
+            </button>
+          )}
+
+          <div className="flex-1" />
+
+          {/* Share */}
+          <button
+            onClick={async () => {
+              const url = `https://rawi-app.vercel.app/live/${streamId}`;
+              if (navigator.share) {
+                try { await navigator.share({ title: `بث ${stream.hostName}`, url }); } catch {}
+              } else {
+                await navigator.clipboard.writeText(url);
+                dialog.alert("تم نسخ رابط البث");
+              }
+            }}
+            className="w-8 h-8 rounded-full bg-black/60 backdrop-blur border border-white/20 flex items-center justify-center text-white active:scale-95"
+          >
+            <Share2 size={14} />
+          </button>
+
+          {/* Report */}
+          <button
+            onClick={() => dialog.confirm("إبلاغ عن البث؟", async () => dialog.alert("تم الإبلاغ، شكراً لك"), "إبلاغ", "إبلاغ")}
+            className="w-8 h-8 rounded-full bg-black/60 backdrop-blur border border-white/20 flex items-center justify-center text-white active:scale-95"
+          >
+            <Flag size={14} />
+          </button>
+
+          {/* LIVE badge */}
+          <div className="flex items-center gap-1 bg-red-500 px-2 py-1 rounded-full">
+            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+            <span className="text-white text-[10px] font-black">LIVE</span>
+          </div>
+        </div>
+      </div>
+
+      {/* ═══ Floating hearts ═══ */}
+      <div className="absolute inset-x-0 bottom-0 h-40 pointer-events-none overflow-hidden z-20">
+        {hearts.map((h) => (
+          <div
+            key={h.id}
+            className="absolute animate-[heartFloat_3s_ease-out_forwards]"
+            style={{ left: `${h.x}%`, bottom: 0, color: h.color }}
+          >
+            <Heart size={28} fill="currentColor" />
+          </div>
+        ))}
+      </div>
+
+      </div>
+      {/* ═══ CHAT AREA (35%) ═══ */}
+      <div className="w-full bg-black flex flex-col border-t border-white/10 min-h-0" style={{ height: "35%" }}>
+      <div
+        ref={commentsRef}
+        className="flex-1 overflow-y-auto px-3 py-2 thin-scroll flex flex-col gap-1 min-h-0"
+        style={{ WebkitOverflowScrolling: "touch" }}
+      >
+        {(comments ?? []).map((c: any, idx: number, arr: any[]) => {
+          const total = arr.length;
+          const fromEnd = total - 1 - idx;
+          let opacity = 0.25;
+          if (fromEnd === 0) opacity = 1;
+          else if (fromEnd === 1) opacity = 0.9;
+          else if (fromEnd === 2) opacity = 0.7;
+          else if (fromEnd === 3) opacity = 0.5;
+          else if (fromEnd === 4) opacity = 0.3;
+
+          return (
+            <div
+              key={c._id}
+              className="flex items-center gap-2 bg-black/60 backdrop-blur rounded-full px-3 py-1.5 border border-white/10 max-w-full self-start flex-shrink-0"
+              style={{ opacity, transition: "opacity 300ms ease" }}
+            >
+              <div className="w-6 h-6 rounded-full overflow-hidden bg-purple-700 flex-shrink-0 flex items-center justify-center text-white text-[10px] font-black">
+                {c.userAvatarUrl ? (
+                  <img src={c.userAvatarUrl} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  (c.userName?.[0] ?? "?").toUpperCase()
+                )}
+              </div>
+              <span className="text-cyan-300 text-xs font-black flex-shrink-0 max-w-[80px] truncate">
+                {c.userName}
+              </span>
+              <span className="text-white text-xs truncate flex-1 text-right" dir="rtl">
+                {c.text}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* ═══ BOTTOM ACTIONS ═══ */}
+      <div className="p-3 border-t border-white/10 bg-black">
+        <div className="flex items-center gap-2">
+          {/* Comment input */}
+          <div className="flex-1 flex items-center gap-2 bg-black/60 backdrop-blur border border-white/20 rounded-full pl-3 pr-2 py-1.5">
+            <input
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSendComment()}
+              placeholder="اكتب تعليقاً..."
+              maxLength={200}
+              className="flex-1 bg-transparent text-white text-xs outline-none placeholder:text-white/30"
+            />
+            <button
+              onClick={handleSendComment}
+              disabled={!commentText.trim() || sending}
+              className="w-7 h-7 rounded-full bg-purple-600 flex items-center justify-center text-white disabled:opacity-40 active:scale-95"
+            >
+              {sending ? (
+                <Loader2 size={12} className="animate-spin" />
+              ) : (
+                <Send size={12} />
+              )}
+            </button>
+          </div>
+
+          {/* Like button */}
+          <button
+            onClick={spawnHeart}
+            className="w-11 h-11 rounded-full bg-pink-500/90 flex items-center justify-center text-white active:scale-95"
+          >
+            <Heart size={20} fill="currentColor" />
+          </button>
+
+          {/* Gift(s) */}
+          {stream.coHostId ? (
+            <div className="flex gap-1">
+              <button
+                onClick={() => { setGiftTarget({ id: String(stream.hostId), name: stream.hostName }); setShowGiftSheet(true); }}
+                className="w-10 h-11 rounded-full bg-cyan-500/90 flex flex-col items-center justify-center text-white active:scale-95"
+              >
+                <Gift size={16} />
+                <span className="text-[7px] font-black mt-0.5">المضيف</span>
+              </button>
+              <button
+                onClick={() => { setGiftTarget({ id: String(stream.coHostId), name: stream.coHostName ?? "مذيعة" }); setShowGiftSheet(true); }}
+                className="w-10 h-11 rounded-full bg-pink-500/90 flex flex-col items-center justify-center text-white active:scale-95"
+              >
+                <Gift size={16} />
+                <span className="text-[7px] font-black mt-0.5">الضيفة</span>
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => { setGiftTarget({ id: String(stream.hostId), name: stream.hostName }); setShowGiftSheet(true); }}
+              className="w-11 h-11 rounded-full bg-amber-500/90 flex items-center justify-center text-black active:scale-95"
+            >
+              <Gift size={20} />
+            </button>
+          )}
+        </div>
+      </div>
+      </div>
+
+      {/* Gift value badge */}
+      {stream.totalGiftValue > 0 && (
+        <div className="absolute top-20 right-3 z-30 flex items-center gap-1 bg-amber-500/90 px-2 py-1 rounded-full">
+          <Gift size={11} className="text-black" />
+          <span className="text-black text-[10px] font-black tabular-nums">
+            {stream.totalGiftValue.toLocaleString()}
+          </span>
+        </div>
+      )}
+      {profileUserId && (
+        <ProfilePage
+          userId={profileUserId}
+          isMe={false}
+          onClose={() => setProfileUserId(null)}
+        />
+      )}
+
+      {/* Gift Sheet */}
+
+      {/* PK Score Bar */}
+      {stream.pkActive && stream.coHostId && (
+        <PKView
+          hostName={stream.hostName}
+          hostAvatarUrl={stream.hostAvatarUrl}
+          hostVipLevel={stream.hostVipLevel}
+          hostScore={stream.hostScore}
+          coHostName={stream.coHostName ?? "مذيعة"}
+          coHostAvatarUrl={stream.coHostAvatarUrl}
+          coHostVipLevel={stream.coHostVipLevel ?? 0}
+          coHostScore={stream.coHostScore}
+          pkStartedAt={stream.pkStartedAt ?? Date.now()}
+          pkDurationSec={stream.pkDurationSec ?? 300}
+        />
+      )}
+
+      {/* Gift Animation */}
+      <LiveGiftAnimation streamId={streamId} />
+
+
+      {showGiftSheet && stream && giftTarget && (
+        <LiveGiftSheet
+          streamId={streamId}
+          toUserId={giftTarget.id}
+          toName={giftTarget.name}
+          onClose={() => setShowGiftSheet(false)}
+        />
+      )}
+      {/* ═══ PK Winner Modal للجمهور ═══ */}
+      {stream?.pkResult && (Date.now() - (stream.pkResult.endedAt || 0) < 6500) && (
+        <PKWinnerModal
+          hostName={stream.pkResult.hostName}
+          hostAvatarUrl={stream.pkResult.hostAvatarUrl}
+          hostVipLevel={stream.pkResult.hostVipLevel}
+          hostScore={stream.pkResult.hostScore}
+          coHostName={stream.pkResult.coHostName}
+          coHostAvatarUrl={stream.pkResult.coHostAvatarUrl}
+          coHostVipLevel={stream.pkResult.coHostVipLevel}
+          coHostScore={stream.pkResult.coHostScore}
+          onClose={() => {}}
+        />
+      )}
+    </div>
+  );
+}
