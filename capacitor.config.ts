@@ -2,7 +2,7 @@
 
 const config: CapacitorConfig = {
   appId: 'com.moorawi.app',
-  appName: 'Moorawi',
+  appName: 'Ezo Group',
   webDir: 'dist',
   bundledWebRuntime: false,
   android: {
