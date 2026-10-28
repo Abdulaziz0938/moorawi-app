@@ -1,21 +1,13 @@
 import path from "node:path";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
-// import { VitePWA } from "vite-plugin-pwa"; // تم تعطيله مؤقتاً
+import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
-  base: './', // <--- هذا السطر ممتاز ومطلوب للـ APK
+  base: './', // ضروري جداً لـ APK
   server: { host: "0.0.0.0", port: 5173, allowedHosts: true },
-  
-  // ✅ إضافة جديدة: إجبار Vite على تجهيز مكتبة libpag
-  optimizeDeps: {
-    include: ["libpag"],
-  },
-
   plugins: [
     react(),
-    /* 
-    // ===== تم تعطيل الـ PWA مؤقتاً لحل مشكلة الكاش =====
     VitePWA({
       registerType: "autoUpdate",
       injectRegister: false,
@@ -39,33 +31,7 @@ export default defineConfig({
         icons: [
           { src: "/favicon-32.png", sizes: "32x32", type: "image/png", purpose: "any" },
           { src: "/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
-          { src: "/icon-192.png", sizes: "192x192", type: "image/png", purpose: "maskable" },
           { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
-          { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
-          { src: "/apple-touch-icon.png", sizes: "180x180", type: "image/png", purpose: "any" },
-        ],
-        shortcuts: [
-          {
-            name: "الغرف الصوتية",
-            short_name: "الغرف",
-            description: "تصفح الغرف الصوتية",
-            url: "./?tab=rooms",
-            icons: [{ src: "/icon-192.png", sizes: "192x192" }],
-          },
-          {
-            name: "الرسائل",
-            short_name: "رسائل",
-            description: "المحادثات والرسائل",
-            url: "./?tab=messages",
-            icons: [{ src: "/icon-192.png", sizes: "192x192" }],
-          },
-          {
-            name: "ملفي",
-            short_name: "أنا",
-            description: "الملف الشخصي",
-            url: "./?tab=me",
-            icons: [{ src: "/icon-192.png", sizes: "192x192" }],
-          },
         ],
       },
       workbox: {
@@ -74,7 +40,6 @@ export default defineConfig({
       },
       devOptions: { enabled: false },
     }),
-    */
   ],
   resolve: {
     alias: {
@@ -84,9 +49,6 @@ export default defineConfig({
   },
   build: { 
     chunkSizeWarningLimit: 1000,
-    target: 'esnext',
-    rolldownOptions: {
-      external: ["libpag"] // <--- إعادة هذا السطر ضروري جداً لكي ينجح البناء
-    }
+    target: 'esnext', // مهم جداً لمكتبة libpag
   },
 });
