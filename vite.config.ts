@@ -4,8 +4,14 @@ import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
-  base: './', // ضروري جداً لـ APK
+  base: './',
   server: { host: "0.0.0.0", port: 5173, allowedHosts: true },
+  
+  // ✅ إعدادات لضمان الحفاظ على ترميز UTF-8 للنصوص العربية
+  esbuild: {
+    charset: 'utf8',
+  },
+
   plugins: [
     react(),
     VitePWA({
@@ -75,8 +81,17 @@ export default defineConfig({
   },
   build: { 
     chunkSizeWarningLimit: 1000,
-    target: 'esnext', 
-    // ✅ التعديل السحري: إجبار Vite على تجاهل مكتبة libpag لكي ينجح البناء
+    target: 'esnext',
+    
+    // ✅ 1. الحل السحري لحل مشكلة اللغة العربية
+    minify: 'terser', 
+    terserOptions: {
+      format: {
+        ascii_only: false,
+      },
+    },
+    
+    // ✅ 2. السطر الذي كنا نتحدث عنه لتجاهل libpag
     rolldownOptions: {
       external: ["libpag"]
     }
