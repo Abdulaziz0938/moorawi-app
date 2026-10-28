@@ -5,7 +5,7 @@ export const syncUserAndRoomIds = internalMutation({
   handler: async (ctx) => {
     const users = await ctx.db.query("users").collect();
     
-    // ط¥ظٹط¬ط§ط¯ ط£ط¹ظ„ظ‰ ط±ظ‚ظ… ظ…ط³طھط®ط¯ظ… ظ…ظ† 6 ط®ط§ظ†ط§طھ
+    // إيجاد أعلى رقم مستخدم من 6 خانات
     let maxUserNum = 100000;
     for (const u of users) {
       if (u.userNumber && u.userNumber >= 100000 && u.userNumber > maxUserNum) {
@@ -17,19 +17,19 @@ export const syncUserAndRoomIds = internalMutation({
     const userMap = new Map();
 
     for (const u of users) {
-      // ط§ظ„ط­ظپط§ط¸ ط¹ظ„ظ‰ ط¢ظٹط¯ظٹ 1 (ط³ظˆط¨ط± ط£ط¯ظ…ظ†) ظˆط¢ظٹط¯ظٹ 10 (ط£ط¯ظ…ظ†)
+      // الحفاظ على آيدي 1 (سوبر أدمن) وآيدي 10 (أدمن)
       if (u.userNumber === 1 || u.userNumber === 10) {
         userMap.set(u._id, u.userNumber);
         continue;
       }
-      // ط¥ط°ط§ ظƒط§ظ† ط§ظ„ط­ط³ط§ط¨ super admin ظˆظ„ظƒظ† ط±ظ‚ظ…ظ‡ طھط؛ظٹط± ط¨ط§ظ„ط®ط·ط£طŒ ظ†ط¹ظٹط¯ظ‡ ط¥ظ„ظ‰ 1 ط¥ط°ط§ ظ„ظ… ظٹظƒظ† 1 ظ…ط­ط¬ظˆط²ط§ظ‹
+      // إذا كان الحساب super admin ولكن رقمه تغير بالخطأ، نعيده إلى 1 إذا لم يكن 1 محجوزاً
       if (u.adminRole === "super" && !users.some(other => other._id !== u._id && other.userNumber === 1)) {
         await ctx.db.patch("users", u._id, { userNumber: 1 });
         userMap.set(u._id, 1);
         fixedUsers++;
         continue;
       }
-      // ط¨ط§ظ‚ظٹ ط§ظ„ط­ط³ط§ط¨ط§طھ ظٹط¬ط¨ ط£ظ† طھظƒظˆظ† 6 ط®ط§ظ†ط§طھ (>= 100000)
+      // باقي الحسابات يجب أن تكون 6 خانات (>= 100000)
       if (!u.userNumber || u.userNumber < 100000) {
         maxUserNum += 1;
         await ctx.db.patch("users", u._id, { userNumber: maxUserNum });
@@ -40,7 +40,7 @@ export const syncUserAndRoomIds = internalMutation({
       }
     }
 
-    // طھط­ط¯ظٹط« ط¹ط¯ط§ط¯ ط§ظ„ظ…ط³طھط®ط¯ظ…ظٹظ† ظ„ظٹط¨ط¯ط£ ط¯ط§ط¦ظ…ط§ظ‹ ظ…ظ† 6 ط®ط§ظ†ط§طھ ط¨ط¹ط¯ ط¢ط®ط± ط±ظ‚ظ…
+    // تحديث عداد المستخدمين ليبدأ دائماً من 6 خانات بعد آخر رقم
     const userCounter = await ctx.db
       .query("counters")
       .withIndex("by_name", (q) => q.eq("name", "userNumber"))
@@ -52,7 +52,7 @@ export const syncUserAndRoomIds = internalMutation({
       await ctx.db.insert("counters", { name: "userNumber", value: Math.max(100000, maxUserNum) + 1 });
     }
 
-    // ظ…ط·ط§ط¨ظ‚ط© ط¢ظٹط¯ظٹ ظƒظ„ ط؛ط±ظپط© (roomNumber) ظ…ط¹ ط¢ظٹط¯ظٹ طµط§ط­ط¨ظ‡ط§ (userNumber) ط¨ط§ظ„ط¶ط¨ط·
+    // مطابقة آيدي كل غرفة (roomNumber) مع آيدي صاحبها (userNumber) بالضبط
     const rooms = await ctx.db.query("rooms").collect();
     let syncedRooms = 0;
     for (const r of rooms) {

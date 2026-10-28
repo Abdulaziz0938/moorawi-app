@@ -1,4 +1,4 @@
-﻿// [ezo-music] MusicPlayer â€” ONE audio element, shared across all instances
+﻿// [ezo-music] MusicPlayer — ONE audio element, shared across all instances
 // - variant="hidden" (RoomView): drives the actual playback
 // - variant="inline" (MusicSheet): UI only, reads state from the global audio
 
@@ -10,7 +10,7 @@ import { getDeviceId } from "../lib/device";
 import { Music, Volume2, VolumeX, Pause, Play, X, Loader2 } from "lucide-react";
 import { getActiveToken } from "../lib/session";
 
-// â•گâ•گâ•گ MODULE SINGLETON â€” exactly ONE <audio> in the entire app â•گâ•گâ•گ
+// ═══ MODULE SINGLETON — exactly ONE <audio> in the entire app ═══
 let __audio: HTMLAudioElement | null = null;
 let __audioTrackId: string | null = null;
 let __isPlaying = false;
@@ -111,7 +111,7 @@ export default function MusicPlayer({ roomId, variant = "inline" }: Props) {
       setLoading(false);
     } else {
       playAudio(current.positionSec);
-      // approximate â€” real loading state resolved after play promise
+      // approximate — real loading state resolved after play promise
       setTimeout(() => setLoading(false), 300);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -156,10 +156,10 @@ export default function MusicPlayer({ roomId, variant = "inline" }: Props) {
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-white text-xs font-black truncate">{current.name}</p>
-          <p className="text-white/70 text-[10px] truncate">ط¨ط¯ط£ظ‡ {current.startedByName}</p>
+          <p className="text-white/70 text-[10px] truncate">بدأه {current.startedByName}</p>
         </div>
         <span className="text-white/60 text-[9px] px-2 py-0.5 rounded-full bg-white/10">
-          {isPaused ? "ظ…طھظˆظ‚ظپ" : playing ? "ظٹط¹ظ…ظ„" : "..."}
+          {isPaused ? "متوقف" : playing ? "يعمل" : "..."}
         </span>
       </div>
 

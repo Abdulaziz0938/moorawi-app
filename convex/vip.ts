@@ -1,18 +1,18 @@
 ﻿
-// [custom-vip-tiers] ط¹طھط¨ط§طھ ظ…ط³طھظˆظٹط§طھ ط§ظ„ظ€ VIP ظ…طھظˆط§ظپظ‚ط© ظ…ط¹ ط³ط¹ط± ط§ظ„طµط±ظپ (700 coins = $1)
+// [custom-vip-tiers] عتبات مستويات الـ VIP متوافقة مع سعر الصرف (700 coins = $1)
 export const EZO_VIP_LEVELS = [
-  { level: 0, minCoins: 0, usd: 0, name: "ط¹ط§ط¯ظٹ" },
-  { level: 1, minCoins: 7000, usd: 10, name: "ظپط§ط±ط³" },       // 7K Coins (~$10)
-  { level: 2, minCoins: 35000, usd: 50, name: "ظ†ط¨ظٹظ„" },      // 35K Coins (~$50)
-  { level: 3, minCoins: 105000, usd: 150, name: "ظپظٹظƒظˆظ†طھ" },  // 105K Coins (~$150)
-  { level: 4, minCoins: 350000, usd: 500, name: "ط¯ظˆظ‚" },     // 350K Coins (~$500)
-  { level: 5, minCoins: 1050000, usd: 1500, name: "ط§ظ„ظ…ظ„ظƒ" },  // 1.05M Coins (~$1,500) - King
-  { level: 6, minCoins: 3500000, usd: 5000, name: "ط§ظ„ط¥ظ…ط¨ط±ط§ط·ظˆط±" }, // 3.5M Coins (~$5,000) - Emperor
-  { level: 7, minCoins: 10500000, usd: 15000, name: "ط§ظ„ط£ط³ط·ظˆط±ط©" }, // 10.5M Coins (~$15,000) - SVIP Legend
+  { level: 0, minCoins: 0, usd: 0, name: "عادي" },
+  { level: 1, minCoins: 7000, usd: 10, name: "فارس" },       // 7K Coins (~$10)
+  { level: 2, minCoins: 35000, usd: 50, name: "نبيل" },      // 35K Coins (~$50)
+  { level: 3, minCoins: 105000, usd: 150, name: "فيكونت" },  // 105K Coins (~$150)
+  { level: 4, minCoins: 350000, usd: 500, name: "دوق" },     // 350K Coins (~$500)
+  { level: 5, minCoins: 1050000, usd: 1500, name: "الملك" },  // 1.05M Coins (~$1,500) - King
+  { level: 6, minCoins: 3500000, usd: 5000, name: "الإمبراطور" }, // 3.5M Coins (~$5,000) - Emperor
+  { level: 7, minCoins: 10500000, usd: 15000, name: "الأسطورة" }, // 10.5M Coins (~$15,000) - SVIP Legend
 ];
 
 /**
- * ط­ط³ط§ط¨ ظ…ط³طھظˆظ‰ ط§ظ„ظ€ VIP ط§ظ„طھظ„ظ‚ط§ط¦ظٹ ط¨ظ†ط§ط،ظ‹ ط¹ظ„ظ‰ ط¥ط¬ظ…ط§ظ„ظٹ ط§ظ„ط¹ظ…ظ„ط§طھ ط§ظ„ظ…ط´ط­ظˆظ†ط© ط¨ط³ط¹ط± طµط±ظپظƒ
+ * حساب مستوى الـ VIP التلقائي بناءً على إجمالي العملات المشحونة بسعر صرفك
  */
 export function calculateEzoVipLevel(totalRechargedCoins: number = 0): number {
   let currentLevel = 0;
@@ -39,7 +39,7 @@ export function calculateEzoVipLevel(totalRechargedCoins: number = 0): number {
 // - Buying the SAME or LOWER level while active: extend expiry by 30 days.
 // - Buying when expired: activate from now.
 // - Admin can grant for free via `grantVip`.
-// - `checkAndExpire` is a lazy sweep â€” called by myVip() and profileFull.
+// - `checkAndExpire` is a lazy sweep — called by myVip() and profileFull.
 
 import { v } from "convex/values"
 import { ConvexError } from "convex/values";
@@ -48,7 +48,7 @@ import { requireUser, isFullAdmin } from "./lib/auth";
 import { activeVipLevel } from "./lib/vip";
 
 // ============================================================
-// Config â€” 7 VIP levels. Price in Coins (1 Coin = 1 Diamond).
+// Config — 7 VIP levels. Price in Coins (1 Coin = 1 Diamond).
 // All visuals (color, icon name, imageUrl) are DATA, not hardcoded in UI.
 // Admin can later upload real images via adminPanel and update imageUrl.
 // ============================================================
@@ -57,16 +57,16 @@ export const VIP_LEVELS = [
   { level: 2, name: "VIP 2",  priceCoins: 60_000,    color: "#3b82f6", accent: "#60a5fa", exclusive: false, exclusiveReason: null },
   { level: 3, name: "VIP 3",  priceCoins: 240_000,   color: "#a855f7", accent: "#c084fc", exclusive: false, exclusiveReason: null },
   { level: 4, name: "VIP 4",  priceCoins: 599_998,   color: "#dc2626", accent: "#f87171", exclusive: false, exclusiveReason: null },
-  { level: 5, name: "VIP 5",  priceCoins: null,      color: "#eab308", accent: "#facc15", exclusive: true,  exclusiveReason: "ط­طµط±ظٹ â€” ظٹظڈط­طµظ„ ط¹ظ„ظٹظ‡ ط¹ط¨ط± ط§ظ„ط´ط­ظ† ط§ظ„طھط±ظƒظٹ" },
-  { level: 6, name: "VIP 6",  priceCoins: null,      color: "#f97316", accent: "#fb923c", exclusive: true,  exclusiveReason: "ط­طµط±ظٹ â€” ظٹظڈط­طµظ„ ط¹ظ„ظٹظ‡ ط¹ط¨ط± ط§ظ„ط´ط­ظ† ط§ظ„طھط±ظƒظٹ" },
-  { level: 7, name: "VIP 7",  priceCoins: null,      color: "#fbbf24", accent: "#fde047", exclusive: true,  exclusiveReason: "ط­طµط±ظٹ â€” ظٹظڈط­طµظ„ ط¹ظ„ظٹظ‡ ط¹ط¨ط± ط§ظ„ط´ط­ظ† ط§ظ„طھط±ظƒظٹ" },
+  { level: 5, name: "VIP 5",  priceCoins: null,      color: "#eab308", accent: "#facc15", exclusive: true,  exclusiveReason: "حصري — يُحصل عليه عبر الشحن التركي" },
+  { level: 6, name: "VIP 6",  priceCoins: null,      color: "#f97316", accent: "#fb923c", exclusive: true,  exclusiveReason: "حصري — يُحصل عليه عبر الشحن التركي" },
+  { level: 7, name: "VIP 7",  priceCoins: null,      color: "#fbbf24", accent: "#fde047", exclusive: true,  exclusiveReason: "حصري — يُحصل عليه عبر الشحن التركي" },
 ] as const;
 
 const VIP_DAYS = 30;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 // ============================================================
-// Query: myVip â€” current user's VIP state (lazy expiring first)
+// Query: myVip — current user's VIP state (lazy expiring first)
 // ============================================================
 export const myVip = query({
   args: { tokenOverride: v.optional(v.string()) },
@@ -83,7 +83,7 @@ export const myVip = query({
 });
 
 // ============================================================
-// Query: getVipStatus(userId) â€” for viewing others
+// Query: getVipStatus(userId) — for viewing others
 // ============================================================
 export const getVipStatus = query({
   args: { userId: v.id("users") },
@@ -96,22 +96,22 @@ export const getVipStatus = query({
 });
 
 // ============================================================
-// Mutation: buyVip(level) â€” deduct coins, activate/extend
+// Mutation: buyVip(level) — deduct coins, activate/extend
 // ============================================================
 export const buyVip = mutation({
   args: { level: v.number(), tokenOverride: v.optional(v.string()) },
   handler: async (ctx, args) => {
     const me = await requireUser(ctx, args.tokenOverride);
     const plan = VIP_LEVELS.find((p) => p.level === args.level);
-    if (!plan) throw new ConvexError({ code: "BAD_REQUEST", message: "ظ…ط³طھظˆظ‰ VIP ط؛ظٹط± طµط§ظ„ط­" });
+    if (!plan) throw new ConvexError({ code: "BAD_REQUEST", message: "مستوى VIP غير صالح" });
     if (plan.exclusive || plan.priceCoins === null) {
-      throw new ConvexError({ code: "FORBIDDEN", message: "ظ‡ط°ط§ ط§ظ„ظ…ط³طھظˆظ‰ ط­طµط±ظٹ â€” ظٹظڈط­طµظ„ ط¹ظ„ظٹظ‡ ط¹ط¨ط± ط§ظ„ط´ط­ظ† ط§ظ„طھط±ظƒظٹ" });
+      throw new ConvexError({ code: "FORBIDDEN", message: "هذا المستوى حصري — يُحصل عليه عبر الشحن التركي" });
     }
     const price = plan.priceCoins; // narrowed to number
 
     const balance = me.coins ?? 0;
     if (balance < price) {
-      throw new ConvexError({ code: "INSUFFICIENT_BALANCE", message: `طھط­طھط§ط¬ ${price.toLocaleString()} ط¹ظ…ظ„ط© â€” ط±طµظٹط¯ظƒ ${balance.toLocaleString()}` });
+      throw new ConvexError({ code: "INSUFFICIENT_BALANCE", message: `تحتاج ${price.toLocaleString()} عملة — رصيدك ${balance.toLocaleString()}` });
     }
 
     const now = Date.now();
@@ -122,15 +122,15 @@ export const buyVip = mutation({
     let newExpiry: number;
 
     if (currentLevel === 0) {
-      // expired or none â€” activate fresh
+      // expired or none — activate fresh
       newLevel = args.level;
       newExpiry = now + VIP_DAYS * DAY_MS;
     } else if (args.level > currentLevel) {
-      // upgrade â€” start the new level now, extend expiry by 30d (keep leftover if any)
+      // upgrade — start the new level now, extend expiry by 30d (keep leftover if any)
       newLevel = args.level;
       newExpiry = Math.max(currentExpiry, now) + VIP_DAYS * DAY_MS;
     } else {
-      // same or lower â€” keep level, extend expiry
+      // same or lower — keep level, extend expiry
       newLevel = currentLevel;
       newExpiry = currentExpiry + VIP_DAYS * DAY_MS;
     }
@@ -159,7 +159,7 @@ export const buyVip = mutation({
       type: "spend",
       amount: -price,
       balanceAfter: balance - price,
-      meta: `ط´ط±ط§ط، ${plan.name}`,
+      meta: `شراء ${plan.name}`,
       createdAt: now,
     });
 
@@ -168,7 +168,7 @@ export const buyVip = mutation({
 });
 
 // ============================================================
-// Mutation: grantVip(userId, level, days) â€” ADMIN ONLY (or future gift)
+// Mutation: grantVip(userId, level, days) — ADMIN ONLY (or future gift)
 // ============================================================
 export const grantVip = mutation({
   args: {
@@ -178,13 +178,13 @@ export const grantVip = mutation({
   },
   handler: async (ctx, args) => {
     const me = await requireUser(ctx);
-    if (!isFullAdmin(me)) throw new ConvexError({ code: "FORBIDDEN", message: "ط؛ظٹط± ظ…طµط±ط­" });
+    if (!isFullAdmin(me)) throw new ConvexError({ code: "FORBIDDEN", message: "غير مصرح" });
     const plan = VIP_LEVELS.find((p) => p.level === args.level);
-    if (!plan) throw new ConvexError({ code: "BAD_REQUEST", message: "ظ…ط³طھظˆظ‰ VIP ط؛ظٹط± طµط§ظ„ط­" });
+    if (!plan) throw new ConvexError({ code: "BAD_REQUEST", message: "مستوى VIP غير صالح" });
     const days = args.days ?? VIP_DAYS;
 
     const target = await ctx.db.get("users", args.userId);
-    if (!target) throw new ConvexError({ code: "NOT_FOUND", message: "ط§ظ„ظ…ط³طھط®ط¯ظ… ط؛ظٹط± ظ…ظˆط¬ظˆط¯" });
+    if (!target) throw new ConvexError({ code: "NOT_FOUND", message: "المستخدم غير موجود" });
 
     const now = Date.now();
     const currentExpiry = (target.vipExpiresAt && target.vipExpiresAt > now) ? target.vipExpiresAt : now;
@@ -210,7 +210,7 @@ export const grantVip = mutation({
 });
 
 // ============================================================
-// Mutation: checkAndExpire â€” lazy sweep (called from myVip / cron)
+// Mutation: checkAndExpire — lazy sweep (called from myVip / cron)
 // ============================================================
 export const checkAndExpire = internalMutation({
   args: {},
@@ -232,7 +232,7 @@ export const checkAndExpire = internalMutation({
 });
 
 // ============================================================
-// Query: getPlans â€” public (for VipShopSheet)
+// Query: getPlans — public (for VipShopSheet)
 // ============================================================
 export const getPlans = query({
   args: {},
@@ -240,7 +240,7 @@ export const getPlans = query({
 });
 
 // ============================================================
-// [ezo-vip] Benefits â€” per-level features (DB-driven)
+// [ezo-vip] Benefits — per-level features (DB-driven)
 // ============================================================
 export const getBenefits = query({
   args: { level: v.number() },
@@ -275,14 +275,14 @@ export const setVipBenefit = mutation({
   },
   handler: async (ctx, args) => {
     const me = await requireUser(ctx, args.tokenOverride);
-    if (!isFullAdmin(me)) throw new ConvexError({ code: "FORBIDDEN", message: "ط؛ظٹط± ظ…طµط±ط­" });
-    if (args.level < 1 || args.level > 7) throw new ConvexError({ code: "BAD_REQUEST", message: "ظ…ط³طھظˆظ‰ ط؛ظٹط± طµط§ظ„ط­" });
+    if (!isFullAdmin(me)) throw new ConvexError({ code: "FORBIDDEN", message: "غير مصرح" });
+    if (args.level < 1 || args.level > 7) throw new ConvexError({ code: "BAD_REQUEST", message: "مستوى غير صالح" });
     const trimmed = args.textAr.trim();
-    if (trimmed.length < 1) throw new ConvexError({ code: "BAD_REQUEST", message: "ظ†طµ ظپط§ط±ط؛" });
+    if (trimmed.length < 1) throw new ConvexError({ code: "BAD_REQUEST", message: "نص فارغ" });
 
     if (args.id) {
       const existing = await ctx.db.get("vipBenefits", args.id);
-      if (!existing) throw new ConvexError({ code: "NOT_FOUND", message: "ط§ظ„ظ…ظٹط²ط© ط؛ظٹط± ظ…ظˆط¬ظˆط¯ط©" });
+      if (!existing) throw new ConvexError({ code: "NOT_FOUND", message: "الميزة غير موجودة" });
       await ctx.db.patch("vipBenefits", args.id, {
         level: args.level,
         order: args.order,
@@ -308,75 +308,75 @@ export const removeVipBenefit = mutation({
   args: { id: v.id("vipBenefits"), tokenOverride: v.optional(v.string()) },
   handler: async (ctx, args) => {
     const me = await requireUser(ctx, args.tokenOverride);
-    if (!isFullAdmin(me)) throw new ConvexError({ code: "FORBIDDEN", message: "ط؛ظٹط± ظ…طµط±ط­" });
+    if (!isFullAdmin(me)) throw new ConvexError({ code: "FORBIDDEN", message: "غير مصرح" });
     await ctx.db.delete("vipBenefits", args.id);
     return { ok: true };
   },
 });
 
-// Seed once â€” populate default VIP benefits.
+// Seed once — populate default VIP benefits.
 // Skips if any benefits already exist for that level.
 export const seedBenefits = internalMutation({
   args: {},
   handler: async (ctx) => {
-    // ط§ظ„ظ‚ط§ط¦ظ…ط© ط§ظ„ظ…ظˆط­ظ‘ط¯ط© (ط¨ط¯ظˆظ† level) â€” ظ†ظˆط²ظ‘ط¹ظ‡ط§ ط­ط³ط¨ ط§ظ„ظ…ط³طھظˆظ‰
+    // القائمة الموحّدة (بدون level) — نوزّعها حسب المستوى
     const BASE = [
-      // â”€â”€â”€ Tier 1 (14 items â€” ظ„ظƒظ„ VIP) â”€â”€â”€
-      { icon: "Gift",           textAr: "ظ‡ط¯ط§ظٹط§ VIP ط§ظ„ط­طµط±ظٹط©" },
-      { icon: "Type",           textAr: "ط§ظ„ط§ط³ظ… ط°ظ‡ط¨ظٹ" },
-      { icon: "Coins",          textAr: "ط¹ظ…ظ„ط§طھ ظٹظˆظ…ظٹط©" },
-      { icon: "Eye",            textAr: "ط¹ط±ط¶ ط§ظ„ط²ظˆط§ط±" },
-      { icon: "Heart",          textAr: "ظ…طھط§ط¨ط¹ط© ط؛ظٹط± ظ…ط­ط¯ظˆط¯ط©" },
-      { icon: "Percent",        textAr: "ط®طµظ… ظ„ظ„طھط±ظ‚ظٹط© ط£ظˆ ط§ظ„طھط¬ط¯ظٹط¯" },
-      { icon: "TrendingUp",     textAr: "ط§ظ„ط£ط¹ظ„ظ‰ ظپظٹ ط§ظ„ظ‚ط§ط¦ظ…ط©" },
+      // ─── Tier 1 (14 items — لكل VIP) ───
+      { icon: "Gift",           textAr: "هدايا VIP الحصرية" },
+      { icon: "Type",           textAr: "الاسم ذهبي" },
+      { icon: "Coins",          textAr: "عملات يومية" },
+      { icon: "Eye",            textAr: "عرض الزوار" },
+      { icon: "Heart",          textAr: "متابعة غير محدودة" },
+      { icon: "Percent",        textAr: "خصم للترقية أو التجديد" },
+      { icon: "TrendingUp",     textAr: "الأعلى في القائمة" },
       { icon: "MessageCircle",  textAr: "Private chat" },
-      { icon: "Zap",            textAr: "طھظ‚ط¯ظ… ط£ط³ط±ط¹ ظپظٹ ط§ظ„ظ…ط³طھظˆظٹط§طھ" },
-      { icon: "ShoppingBag",    textAr: "ط®طµظ… ط§ظ„ظ…طھط¬ط±" },
-      { icon: "Wand2",          textAr: "طھطµظ…ظٹظ… طھط£ط«ظٹط± ط§ظ„ط¯ط®ظˆظ„" },
-      { icon: "Award",          textAr: "ظ…ظ‚ط¹ط¯ ط§ظ„ط´ط±ظپ" },
-      { icon: "Ban",            textAr: "ظٹط­ط¸ط± ط§ظ„ظ…طھط§ط¨ط¹ط©" },
-      { icon: "Ghost",          textAr: "طھط®ظپظٹ" },
+      { icon: "Zap",            textAr: "تقدم أسرع في المستويات" },
+      { icon: "ShoppingBag",    textAr: "خصم المتجر" },
+      { icon: "Wand2",          textAr: "تصميم تأثير الدخول" },
+      { icon: "Award",          textAr: "مقعد الشرف" },
+      { icon: "Ban",            textAr: "يحظر المتابعة" },
+      { icon: "Ghost",          textAr: "تخفي" },
 
-      // â”€â”€â”€ Tier 2 (2 more â€” VIP2+ = 16) â”€â”€â”€
-      { icon: "IdCard",         textAr: "ط´ط±ط§ط، ط§ظٹط¯ظٹ ظ…ظ…ظٹط²" },
-      { icon: "Share2",         textAr: "ط´ط§ط±ظƒ ط§ظ„ VIP ط§ظ„ط®ط§طµ ط¨ظƒ" },
+      // ─── Tier 2 (2 more — VIP2+ = 16) ───
+      { icon: "IdCard",         textAr: "شراء ايدي مميز" },
+      { icon: "Share2",         textAr: "شارك ال VIP الخاص بك" },
 
-      // â”€â”€â”€ Tier 3 (2 more â€” VIP3+ = 18) â”€â”€â”€
-      { icon: "Megaphone",      textAr: "ط¥ط¹ظ„ط§ظ† ط§ظ„ظ…ظ†طµط©" },
-      { icon: "ShieldOff",      textAr: "طھط¬ظ†ط¨ ط§ظ„ط·ط±ط¯" },
+      // ─── Tier 3 (2 more — VIP3+ = 18) ───
+      { icon: "Megaphone",      textAr: "إعلان المنصة" },
+      { icon: "ShieldOff",      textAr: "تجنب الطرد" },
 
-      // â”€â”€â”€ Tier 4 (4 more â€” VIP4+ = 22) â”€â”€â”€
-      { icon: "BadgeCheck",     textAr: "ط´ط±ط§ط، ط§ظ…طھظٹط§ط²ط§طھ VIP" },
-      { icon: "Users",          textAr: "ط§ظ„ط´ط®طµ ط§ظ„ط؛ط§ظ…ط¶" },
-      { icon: "Mic",            textAr: "طھط؛ظٹظٹط± ط§ظ„طµظˆطھ ط§ظ„ط­طµط±ظٹ" },
-      { icon: "UserCircle",     textAr: "ط¯ظٹظƒظˆط± ط§ظ„ط±ط¬ظ„ ط§ظ„ط؛ط§ظ…ط¶" },
+      // ─── Tier 4 (4 more — VIP4+ = 22) ───
+      { icon: "BadgeCheck",     textAr: "شراء امتيازات VIP" },
+      { icon: "Users",          textAr: "الشخص الغامض" },
+      { icon: "Mic",            textAr: "تغيير الصوت الحصري" },
+      { icon: "UserCircle",     textAr: "ديكور الرجل الغامض" },
 
-      // â”€â”€â”€ Tier 5 (6 more â€” VIP5+ = 28) â”€â”€â”€
-      { icon: "Car",            textAr: "ط§ظ„ظ…ط±ظƒط¨ط© ط§ظ„ط­طµط±ظٹط©" },
+      // ─── Tier 5 (6 more — VIP5+ = 28) ───
+      { icon: "Car",            textAr: "المركبة الحصرية" },
       { icon: "Home",           textAr: "Home Decorate Ar" },
-      { icon: "AudioLines",     textAr: "طھط£ط«ظٹط± طھظپط¹ظٹظ„ ط§ظ„ظ…ظٹظƒط±ظˆظپظˆظ†" },
+      { icon: "AudioLines",     textAr: "تأثير تفعيل الميكروفون" },
       { icon: "MicVocal",       textAr: "Mic Ar" },
-      { icon: "Bell",           textAr: "ط¥ط´ط¹ط§ط± ظ„ظƒظ„ ط§ظ„ط³ظٹط³طھظ…" },
-      { icon: "Music",          textAr: "ط§ط³طھط®ط¯ط§ظ… ط§ظ„ظ…ظٹظƒط±ظˆظپظˆظ† ظ…ط¬ط§ظ†ط§ظ‹" },
+      { icon: "Bell",           textAr: "إشعار لكل السيستم" },
+      { icon: "Music",          textAr: "استخدام الميكروفون مجاناً" },
 
-      // â”€â”€â”€ Tier 6 (3 more â€” VIP6+ = 31) â”€â”€â”€
-      { icon: "Gift",           textAr: "ط´ط±ظٹط· ظ‡ط¯ط§ظٹط§ ط­طµط±ظٹ" },
+      // ─── Tier 6 (3 more — VIP6+ = 31) ───
+      { icon: "Gift",           textAr: "شريط هدايا حصري" },
       { icon: "Palette",        textAr: "App Skin Ar" },
-      { icon: "LayoutGrid",     textAr: "طھط®ط·ظٹط· ط§ظ„ط؛ط±ظپط©" },
+      { icon: "LayoutGrid",     textAr: "تخطيط الغرفة" },
 
-      // â”€â”€â”€ Tier 7 (9 more â€” VIP7 = 40) â”€â”€â”€
-      { icon: "ScrollText",     textAr: "ط§ظ„ط´ظ‡ط§ط¯ط©" },
-      { icon: "Crown",          textAr: "ط§ظ„ظ…ظ„ظƒظٹط© ط§ظ„ظƒط§ظ…ظ„ط© ظ„ظ„ط؛ط±ظپط©" },
-      { icon: "Sparkles",       textAr: "طھط£ط«ظٹط±ط§طھ ط¯ط®ظˆظ„ ط­طµط±ظٹط©" },
-      { icon: "Shield",         textAr: "ط­ظ…ط§ظٹط© ظ…ظ† ط§ظ„ط·ط±ط¯ ط§ظ„طھظ„ظ‚ط§ط¦ظٹ" },
-      { icon: "Trophy",         textAr: "طھط§ط¬ ط§ظ„ظ…ظ„ظٹظˆظ†ظٹط±" },
-      { icon: "Star",           textAr: "ظ†ط¬ظ…ط© ط¹ظ„ظ‰ ط§ظ„ط¨ط±ظˆظپط§ظٹظ„" },
-      { icon: "Zap",            textAr: "ط·ط§ظ‚ط© ظ…ط¶ط§ط¹ظپط©" },
-      { icon: "Eye",            textAr: "ط²ظٹط§ط¯ط© ط§ظ„ط²ظˆط§ط± 3x" },
-      { icon: "Gem",            textAr: "ط§ظ„ط£ظ„ظ…ط§ط³ط© ط§ظ„ط­ظ…ط±ط§ط،" },
+      // ─── Tier 7 (9 more — VIP7 = 40) ───
+      { icon: "ScrollText",     textAr: "الشهادة" },
+      { icon: "Crown",          textAr: "الملكية الكاملة للغرفة" },
+      { icon: "Sparkles",       textAr: "تأثيرات دخول حصرية" },
+      { icon: "Shield",         textAr: "حماية من الطرد التلقائي" },
+      { icon: "Trophy",         textAr: "تاج المليونير" },
+      { icon: "Star",           textAr: "نجمة على البروفايل" },
+      { icon: "Zap",            textAr: "طاقة مضاعفة" },
+      { icon: "Eye",            textAr: "زيادة الزوار 3x" },
+      { icon: "Gem",            textAr: "الألماسة الحمراء" },
     ];
 
-    // [ezo-vip] ط¹ط¯ط¯ ط§ظ„ظ…ط²ط§ظٹط§ ظ„ظƒظ„ ظ…ط³طھظˆظ‰ (Ezo-style)
+    // [ezo-vip] عدد المزايا لكل مستوى (Ezo-style)
     const COUNTS: Record<number, number> = {
       1: 14, 2: 16, 3: 18, 4: 22, 5: 28, 6: 31, 7: 40,
     };
@@ -393,7 +393,7 @@ export const seedBenefits = internalMutation({
 
       const count = COUNTS[level];
       for (let i = 0; i < count; i++) {
-        if (i >= BASE.length) break; // [ezo-vip-fix] ظ„ط§ طھظƒط±ط§ط±
+        if (i >= BASE.length) break; // [ezo-vip-fix] لا تكرار
         const base = BASE[i];
         await ctx.db.insert("vipBenefits", {
           level,
@@ -415,17 +415,17 @@ export const seedBenefits = internalMutation({
 
 
 /**
- * ط¹ظ…ظ„ظٹط© ط´ط­ظ† ط±طµظٹط¯ ط§ظ„ظ…ط³طھط®ط¯ظ… ظˆطھط­ط¯ظٹط« ظ…ط³طھظˆظ‰ ط§ظ„ظ€ VIP طھظ„ظ‚ط§ط¦ظٹط§ظ‹ (ط·ط±ظٹظ‚ط© Ezo)
+ * عملية شحن رصيد المستخدم وتحديث مستوى الـ VIP تلقائياً (طريقة Ezo)
  */
 export const rechargeAndUpgradeUser = internalMutation({
   args: {
     userId: v.id("users"),
     addedCoins: v.number(),
-    usdAmount: v.optional(v.number()), // ط§ظ„ظ‚ظٹظ…ط© ط¨ط§ظ„ط¯ظˆظ„ط§ط± ط¥ظ† ظˆط¬ط¯طھ
+    usdAmount: v.optional(v.number()), // القيمة بالدولار إن وجدت
   },
   handler: async (ctx, args) => {
     const user = await ctx.db.get(args.userId);
-    if (!user) throw new Error("ط§ظ„ظ…ط³طھط®ط¯ظ… ط؛ظٹط± ظ…ظˆط¬ظˆط¯");
+    if (!user) throw new Error("المستخدم غير موجود");
 
     const currentRecharged = user.totalRecharged || 0;
     const newTotalRecharged = currentRecharged + args.addedCoins;
@@ -437,10 +437,10 @@ export const rechargeAndUpgradeUser = internalMutation({
     const addedCents = args.usdAmount ? Math.round(args.usdAmount * 100) : Math.round((args.addedCoins / 700) * 100);
     const newTotalPurchased = currentPurchased + addedCents;
 
-    // ط­ط³ط§ط¨ ظ…ط³طھظˆظ‰ ط§ظ„ظ€ VIP ط§ظ„ط¬ط¯ظٹط¯ ط¨ظ†ط§ط،ظ‹ ط¹ظ„ظ‰ ط§ظ„ط¹طھط¨ط§طھ ط§ظ„طھط±ط§ظƒظ…ظٹط©
+    // حساب مستوى الـ VIP الجديد بناءً على العتبات التراكمية
     const newVipLevel = calculateEzoVipLevel(newTotalRecharged);
 
-    // طھط­ط¯ظٹط« ط¨ظٹط§ظ†ط§طھ ط§ظ„ظ…ط³طھط®ط¯ظ… ظپظٹ ظ‚ط§ط¹ط¯ط© ط§ظ„ط¨ظٹط§ظ†ط§طھ
+    // تحديث بيانات المستخدم في قاعدة البيانات
     await ctx.db.patch(args.userId, {
       coins: newCoins,
       totalRecharged: newTotalRecharged,
@@ -461,14 +461,14 @@ export const rechargeAndUpgradeUser = internalMutation({
 
 
 /**
- * ط§ظ„طھط­ظ‚ظ‚ ظ…ظ…ط§ ط¥ط°ط§ ظƒط§ظ† ط§ظ„ظ…ط³طھط®ط¯ظ… ظٹظ…طھظ„ظƒ ط­طµط§ظ†ط© ط¶ط¯ ط§ظ„ط·ط±ط¯ (VIP 5 ظپظ…ط§ ظپظˆظ‚ ط¹ظ„ظ‰ ط·ط±ظٹظ‚ط© Ezo)
+ * التحقق مما إذا كان المستخدم يمتلك حصانة ضد الطرد (VIP 5 فما فوق على طريقة Ezo)
  */
 export function hasAntiKickImmunity(vipLevel: number = 0): boolean {
   return vipLevel >= 5;
 }
 
 /**
- * ط§ظ„طھط­ظ‚ظ‚ ظ…ظ…ط§ ط¥ط°ط§ ظƒط§ظ† ط§ظ„ظ…ط³طھط®ط¯ظ… ظٹظ…طھظ„ظƒ ظ…ظٹط²ط© ط§ظ„طھط®ظپظٹ (VIP 6 ظپظ…ط§ ظپظˆظ‚)
+ * التحقق مما إذا كان المستخدم يمتلك ميزة التخفي (VIP 6 فما فوق)
  */
 export function hasInvisibleEntry(vipLevel: number = 0): boolean {
   return vipLevel >= 6;

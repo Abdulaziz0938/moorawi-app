@@ -8,7 +8,7 @@ import { weekKey } from "./lib/week";
 import { checkAndGrantMedals } from "./medals";
 
 
-// [ezo-charms] ظٹط²ظٹط¯ sessionCharms ط¹ظ„ظ‰ ظ…ط§ظٹظƒ ط§ظ„ظ…ط³طھظ„ظ… (ط¥ظ† ظƒط§ظ† ط¹ظ„ظ‰ ظ…ط§ظٹظƒ)
+// [ezo-charms] يزيد sessionCharms على مايك المستلم (إن كان على مايك)
 async function bumpSeatCharms(
   ctx: any,
   roomId: any,
@@ -32,7 +32,7 @@ async function bumpSeatCharms(
 
 
 
-// [ezo-agency] ط­ط³ط§ط¨ ظ…ط³طھظˆظ‰ ط§ظ„ظ…ط¶ظٹظپ ظ…ظ† ط¯ط®ظ„ظ‡ ط§ظ„ط´ظ‡ط±ظٹ
+// [ezo-agency] حساب مستوى المضيف من دخله الشهري
 function levelFromAchieved(achieved: number): number {
   const T = [0, 20_000, 40_000, 80_000, 126_000, 220_000, 320_000,
     460_000, 580_000, 850_000, 1_250_000, 1_850_000, 3_500_000,
@@ -46,7 +46,7 @@ function levelFromAchieved(achieved: number): number {
 }
 
 
-// (طھظ… ط­ط°ظپ generateGiftUploadUrl â€” ظ†ط³طھط®ط¯ظ… Cloudinary)
+// (تم حذف generateGiftUploadUrl — نستخدم Cloudinary)
 
 // ============ ADMIN: Create gift ============
 // [ezo-trophy] Update room weekly total (lazy reset)
@@ -80,14 +80,14 @@ export const createGift = mutation({
   handler: async (ctx, args) => {
     const user = await requireUser(ctx, args.tokenOverride);
     if (!user.isAdmin && user.adminRole !== "super" && user.adminRole !== "moderator") {
-      throw new ConvexError({ code: "FORBIDDEN", message: "ط؛ظٹط± ظ…طµط±ط­" });
+      throw new ConvexError({ code: "FORBIDDEN", message: "غير مصرح" });
     }
     const name = args.name.trim();
     if (name.length < 1 || name.length > 30) {
-      throw new ConvexError({ code: "BAD_REQUEST", message: "ط§ط³ظ… ط§ظ„ظ‡ط¯ظٹط© ط؛ظٹط± طµط§ظ„ط­" });
+      throw new ConvexError({ code: "BAD_REQUEST", message: "اسم الهدية غير صالح" });
     }
     if (args.price < 1 || args.price > 1000000) {
-      throw new ConvexError({ code: "BAD_REQUEST", message: "ط§ظ„ط³ط¹ط± ط؛ظٹط± طµط§ظ„ط­" });
+      throw new ConvexError({ code: "BAD_REQUEST", message: "السعر غير صالح" });
     }
     const isVideo = args.mediaType === "video";
     const isRelationship = args.category === "relation";
@@ -119,7 +119,7 @@ export const removeGift = mutation({
   handler: async (ctx, args) => {
     const user = await requireUser(ctx, args.tokenOverride);
     if (!user.isAdmin && user.adminRole !== "super") {
-      throw new ConvexError({ code: "FORBIDDEN", message: "ط؛ظٹط± ظ…طµط±ط­" });
+      throw new ConvexError({ code: "FORBIDDEN", message: "غير مصرح" });
     }
     const gift = await ctx.db.get("gifts", args.giftId);
     if (!gift) return null;
@@ -140,7 +140,7 @@ export const listActive = query({
   },
 });
 
-// ============ LIST: Admin â€” all gifts ============
+// ============ LIST: Admin — all gifts ============
 export const listAllAdmin = query({
   args: { tokenOverride: v.optional(v.string()) },
   handler: async (ctx, args) => {
@@ -176,30 +176,30 @@ export const send = mutation({
   handler: async (ctx, args) => {
     const user = await requireUser(ctx, args.tokenOverride);
     if (args.quantity < 1 || args.quantity > 999) {
-      throw new ConvexError({ code: "BAD_REQUEST", message: "ط¹ط¯ط¯ ط؛ظٹط± طµط§ظ„ط­" });
+      throw new ConvexError({ code: "BAD_REQUEST", message: "عدد غير صالح" });
     }
     const gift = await ctx.db.get("gifts", args.giftId);
-    if (!gift) throw new ConvexError({ code: "NOT_FOUND", message: "ط§ظ„ظ‡ط¯ظٹط© ط؛ظٹط± ظ…ظˆط¬ظˆط¯ط©" });
+    if (!gift) throw new ConvexError({ code: "NOT_FOUND", message: "الهدية غير موجودة" });
 
-    // [VIP-Lock] ظپط­طµ ط­طµط±ظٹط© ظ‡ط¯ط§ظٹط§ VIP
+    // [VIP-Lock] فحص حصرية هدايا VIP
     if (gift.category === "vip") {
       const senderVip = activeVipLevel(user);
       if (senderVip <= 0) {
         throw new ConvexError({
           code: "FORBIDDEN",
-          message: "ظ‡ط°ظ‡ ط§ظ„ظ‡ط¯ظٹط© ط­طµط±ظٹط© ظ„ط£ط¹ط¶ط§ط، VIP ظپظ‚ط·! ط§ط´طھط±ظƒ ظپظٹ VIP ظ„ط¥ط±ط³ط§ظ„ظ‡ط§.",
+          message: "هذه الهدية حصرية لأعضاء VIP فقط! اشترك في VIP لإرسالها.",
         });
       }
     }
 
     const target = await ctx.db.get("users", args.toUserId);
-    if (!target) throw new ConvexError({ code: "NOT_FOUND", message: "ط§ظ„ظ…ط³طھظ„ظ… ط؛ظٹط± ظ…ظˆط¬ظˆط¯" });
+    if (!target) throw new ConvexError({ code: "NOT_FOUND", message: "المستلم غير موجود" });
     
 
     const totalPrice = gift.price * args.quantity;
     const myCoins = user.coins ?? 0;
     if (myCoins < totalPrice) {
-      throw new ConvexError({ code: "BAD_REQUEST", message: "ط±طµظٹط¯ظƒ ط؛ظٹط± ظƒط§ظپظچ" });
+      throw new ConvexError({ code: "BAD_REQUEST", message: "رصيدك غير كافٍ" });
     }
 
     await ctx.db.patch("users", user._id, {
@@ -212,10 +212,10 @@ export const send = mutation({
       charms: (target.charms ?? 0) + totalPrice,
       totalReceived: (target.totalReceived ?? 0) + totalPrice,
     });
-    // [ezo-charms] ط²ظٹط§ط¯ط© ط¹ط¯ظ‘ط§ط¯ ط§ظ„ط¬ظ„ط³ط© ط¹ظ„ظ‰ ط§ظ„ظ…ط§ظٹظƒ
+    // [ezo-charms] زيادة عدّاد الجلسة على المايك
     await bumpSeatCharms(ctx, args.roomId, args.toUserId, totalPrice);
 
-    // ط§ظپط­طµ ط¢ط®ط± transaction â€” ظ‡ظ„ ظ‡ظٹ combo continuationطں
+    // افحص آخر transaction — هل هي combo continuation؟
     const lastTx = await ctx.db
       .query("giftTransactions")
       .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
@@ -229,9 +229,9 @@ export const send = mutation({
     await ctx.db.insert("giftTransactions", {
       roomId: args.roomId,
       fromUserId: user._id,
-      fromName: user.name ?? "ط¶ظٹظپ",
+      fromName: user.name ?? "ضيف",
       toUserId: args.toUserId,
-      toName: target.name ?? "ط¶ظٹظپ",
+      toName: target.name ?? "ضيف",
       giftId: gift._id,
       giftName: gift.name,
       giftIcon: gift.mediaUrl ?? "",
@@ -246,13 +246,13 @@ export const send = mutation({
     await checkAndGrantMedals(ctx, user._id);
     await checkAndGrantMedals(ctx, args.toUserId);
 
-    // ظ„ط§ طھظ†ط´ط¦ ط±ط³ط§ظ„ط© ط¬ط¯ظٹط¯ط© ط¥ط°ط§ ظƒط§ظ†طھ ط§ط³طھظ…ط±ط§ط± ظƒظˆظ…ط¨ظˆ
+    // لا تنشئ رسالة جديدة إذا كانت استمرار كومبو
     if (!isComboContinuation) {
       await ctx.db.insert("messages", {
         roomId: args.roomId,
         senderId: user._id,
-        senderName: user.name ?? "ط¶ظٹظپ",
-        text: `${user.name ?? "ط¶ظٹظپ"} ط£ط±ط³ظ„ ${gift.name} أ— ${args.quantity} ط¥ظ„ظ‰ ${target.name ?? "ط¶ظٹظپ"}`,
+        senderName: user.name ?? "ضيف",
+        text: `${user.name ?? "ضيف"} أرسل ${gift.name} × ${args.quantity} إلى ${target.name ?? "ضيف"}`,
         system: true,
       });
     }
@@ -261,7 +261,7 @@ export const send = mutation({
   },
 });
 
-// ============ ط¥ط±ط³ط§ظ„ ظ‡ط¯ظٹط© ظ„ط¹ط¯ط© ظ…ط³طھط®ط¯ظ…ظٹظ† ط¯ظپط¹ط© ظˆط§ط­ط¯ط© (Batch) ============
+// ============ إرسال هدية لعدة مستخدمين دفعة واحدة (Batch) ============
 export const sendBatch = mutation({
   args: {
     roomId: v.id("rooms"),
@@ -273,55 +273,55 @@ export const sendBatch = mutation({
   handler: async (ctx, args) => {
     const user = await requireUser(ctx, args.tokenOverride);
 
-    // طھط­ظ‚ظ‚ط§طھ ط§ظ„ط¥ط¯ط®ط§ظ„
+    // تحققات الإدخال
     if (!args.toUserIds.length) {
-      throw new ConvexError({ code: "BAD_REQUEST", message: "ظ„ظ… ظٹطھظ… ط§ط®طھظٹط§ط± ط£ظٹ ظ…ط³طھظ„ظ…" });
+      throw new ConvexError({ code: "BAD_REQUEST", message: "لم يتم اختيار أي مستلم" });
     }
     if (args.toUserIds.length > 500) {
-      throw new ConvexError({ code: "BAD_REQUEST", message: "ط¹ط¯ط¯ ط§ظ„ظ…ط³طھظ„ظ…ظٹظ† ظƒط¨ظٹط± ط¬ط¯ط§ظ‹ (500 ظƒط­ط¯ ط£ظ‚طµظ‰)" });
+      throw new ConvexError({ code: "BAD_REQUEST", message: "عدد المستلمين كبير جداً (500 كحد أقصى)" });
     }
     if (args.quantity < 1 || args.quantity > 999) {
-      throw new ConvexError({ code: "BAD_REQUEST", message: "ط¹ط¯ط¯ ط؛ظٹط± طµط§ظ„ط­" });
+      throw new ConvexError({ code: "BAD_REQUEST", message: "عدد غير صالح" });
     }
 
     const gift = await ctx.db.get("gifts", args.giftId);
-    if (!gift) throw new ConvexError({ code: "NOT_FOUND", message: "ط§ظ„ظ‡ط¯ظٹط© ط؛ظٹط± ظ…ظˆط¬ظˆط¯ط©" });
-    // [VIP-Lock] ظپط­طµ ط­طµط±ظٹط© ظ‡ط¯ط§ظٹط§ VIP ظپظٹ ط§ظ„ط¥ط±ط³ط§ظ„ ط§ظ„ط¬ظ…ط§ط¹ظٹ
+    if (!gift) throw new ConvexError({ code: "NOT_FOUND", message: "الهدية غير موجودة" });
+    // [VIP-Lock] فحص حصرية هدايا VIP في الإرسال الجماعي
     if (gift.category === "vip") {
       const myVip = activeVipLevel(user);
       if (myVip <= 0) {
         throw new ConvexError({
           code: "FORBIDDEN",
-          message: "ظ‡ط°ظ‡ ط§ظ„ظ‡ط¯ظٹط© ط­طµط±ظٹط© ظ„ط£ط¹ط¶ط§ط، VIP ظپظ‚ط·! ط§ط´طھط±ظƒ ظپظٹ VIP ظ„ط¥ط±ط³ط§ظ„ظ‡ط§.",
+          message: "هذه الهدية حصرية لأعضاء VIP فقط! اشترك في VIP لإرسالها.",
         });
       }
     }
 
-    // ط¥ط²ط§ظ„ط© ط§ظ„طھظƒط±ط§ط± (ط­ظ…ط§ظٹط© ظ…ظ† ط¥ط±ط³ط§ظ„ ظ†ظپط³ ط§ظ„ظ€ ID ظ…ط±طھظٹظ†)
+    // إزالة التكرار (حماية من إرسال نفس الـ ID مرتين)
     const uniqueIds = Array.from(new Set(args.toUserIds));
 
-    // ط¬ظ„ط¨ ط¬ظ…ظٹط¹ ط§ظ„ظ…ط³طھظ„ظ…ظٹظ† ط¯ظپط¹ط© ظˆط§ط­ط¯ط©
+    // جلب جميع المستلمين دفعة واحدة
     const targetDocs = await Promise.all(uniqueIds.map((id) => ctx.db.get("users", id)));
     const targets = targetDocs.filter((t): t is NonNullable<typeof t> => t !== null);
 
     if (targets.length === 0) {
-      throw new ConvexError({ code: "NOT_FOUND", message: "ط§ظ„ظ…ط³طھظ„ظ…ظˆظ† ط؛ظٹط± ظ…ظˆط¬ظˆط¯ظٹظ†" });
+      throw new ConvexError({ code: "NOT_FOUND", message: "المستلمون غير موجودين" });
     }
 
     const totalPrice = gift.price * args.quantity * targets.length;
     const myCoins = user.coins ?? 0;
     if (myCoins < totalPrice) {
-      throw new ConvexError({ code: "BAD_REQUEST", message: "ط±طµظٹط¯ظƒ ط؛ظٹط± ظƒط§ظپظچ" });
+      throw new ConvexError({ code: "BAD_REQUEST", message: "رصيدك غير كافٍ" });
     }
 
-    // batchId ظ…ظˆط­ط¯ ظ„ظƒظ„ ظ…ط¹ط§ظ…ظ„ط§طھ ط§ظ„ط¯ظپط¹ط© (ظ„ظ„طھط¬ظ…ظٹط¹ ظپظٹ ط§ظ„ظˆط§ط¬ظ‡ط©)
+    // batchId موحد لكل معاملات الدفعة (للتجميع في الواجهة)
     const batchId = `b_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
-    // ط§ظ„طھط­ظ‚ظ‚ ظ…ظ…ط§ ط¥ط°ط§ ظƒط§ظ† ط§ظ„ظ…ط±ط³ظ„ ظٹظ‡ط¯ظٹ ظ†ظپط³ظ‡ ط¶ظ…ظ† ط§ظ„ط¯ظپط¹ط©
+    // التحقق مما إذا كان المرسل يهدي نفسه ضمن الدفعة
     const isSelfIncluded = targets.some((t) => t._id === user._id);
     const perTarget = gift.price * args.quantity;
 
-    // ط®طµظ… ظ…ط±ط© ظˆط§ط­ط¯ط© ظ…ظ† ط§ظ„ظ…ط±ط³ظ„ ظ…ط¹ ط¯ظ…ط¬ ط­طµطھظ‡ ط¥ظ† ظƒط§ظ† ط¶ظ…ظ† ط§ظ„ظ…ط³طھظ„ظ…ظٹظ† (Self-Gift Safe)
+    // خصم مرة واحدة من المرسل مع دمج حصته إن كان ضمن المستلمين (Self-Gift Safe)
     const selfDiamondRatio = user.agencyId ? 0.3 : 0.7;
     await ctx.db.patch("users", user._id, {
       coins: myCoins - totalPrice,
@@ -334,13 +334,13 @@ export const sendBatch = mutation({
       } : {}),
     });
 
-    // ظ„ظƒظ„ ظ…ط³طھظ„ظ… ط¢ط®ط±: ط²ظٹط§ط¯ط© charms + totalReceived + insert transaction
+    // لكل مستلم آخر: زيادة charms + totalReceived + insert transaction
     for (const target of targets) {
       if (target._id !== user._id) {
         await ctx.db.patch("users", target._id, {
           charms: (target.charms ?? 0) + perTarget,
           totalReceived: (target.totalReceived ?? 0) + perTarget,
-          // [ezo-agency] 30% ظ…ط§ط³ ظ„ظ„ظ…ط¶ظٹظپطŒ 70% ظ„ط¹ط¶ظˆ ط¹ط§ط¯ظٹ
+          // [ezo-agency] 30% ماس للمضيف، 70% لعضو عادي
           ...(target.agencyId ? {
             diamonds: (target.diamonds ?? 0) + Math.floor(perTarget * 0.3),
             hostIncomeMonth: (target.hostIncomeMonth ?? 0) + perTarget,
@@ -349,14 +349,14 @@ export const sendBatch = mutation({
           }),
         });
       }
-      // [ezo-charms] ط²ظٹط§ط¯ط© ط¹ط¯ظ‘ط§ط¯ ط§ظ„ط¬ظ„ط³ط© ط¹ظ„ظ‰ ط§ظ„ظ…ط§ظٹظƒ
+      // [ezo-charms] زيادة عدّاد الجلسة على المايك
       await bumpSeatCharms(ctx, args.roomId, target._id, perTarget);
       await ctx.db.insert("giftTransactions", {
         roomId: args.roomId,
         fromUserId: user._id,
-        fromName: user.name ?? "ط¶ظٹظپ",
+        fromName: user.name ?? "ضيف",
         toUserId: target._id,
-        toName: target.name ?? "ط¶ظٹظپ",
+        toName: target.name ?? "ضيف",
         giftId: gift._id,
         giftName: gift.name,
         giftIcon: gift.mediaUrl ?? "",
@@ -375,19 +375,19 @@ export const sendBatch = mutation({
       await checkAndGrantMedals(ctx, target._id);
     }
 
-    // ط±ط³ط§ظ„ط© ظˆط§ط­ط¯ط© ظپظ‚ط· (ط¨ط¯ظ„ N)
+    // رسالة واحدة فقط (بدل N)
     const summary = targets.length === 1
-      ? `ط¥ظ„ظ‰ ${targets[0]?.name ?? "ط¶ظٹظپ"}`
-      : `ط¥ظ„ظ‰ ${targets.length} ظ…ط³طھط®ط¯ظ…ظٹظ†`;
+      ? `إلى ${targets[0]?.name ?? "ضيف"}`
+      : `إلى ${targets.length} مستخدمين`;
     await ctx.db.insert("messages", {
       roomId: args.roomId,
       senderId: user._id,
-      senderName: user.name ?? "ط¶ظٹظپ",
-      text: `${user.name ?? "ط¶ظٹظپ"} ط£ط±ط³ظ„ ${gift.name} أ— ${args.quantity} ${summary}`,
+      senderName: user.name ?? "ضيف",
+      text: `${user.name ?? "ضيف"} أرسل ${gift.name} × ${args.quantity} ${summary}`,
       system: true,
     });
 
-    // [ezo-rocket] ط´ط­ظ† ط§ظ„طµط§ط±ظˆط® ط¹ظ†ط¯ ظƒظ„ ط¯ظپط¹ط© ظ‡ط¯ط§ظٹط§
+    // [ezo-rocket] شحن الصاروخ عند كل دفعة هدايا
     try {
       await ctx.scheduler.runAfter(0, internal.rockets.addEnergy, {
         roomId: args.roomId,
@@ -416,7 +416,7 @@ export const roomLeaderboard = query({
     period: v.union(v.literal("daily"), v.literal("weekly"), v.literal("monthly")),
   },
   handler: async (ctx, args) => {
-    // ط­ط³ط§ط¨ since ط­ط³ط¨ ط§ظ„ظپطھط±ط©
+    // حساب since حسب الفترة
     const now = new Date();
     let since: number;
     if (args.period === "daily") {
@@ -436,7 +436,7 @@ export const roomLeaderboard = query({
     const filtered = txs.filter((t) => t._creationTime >= since);
     const isWealth = args.type === "wealth";
 
-    // طھط¬ظ…ظٹط¹ ط­ط³ط¨ ط§ظ„ظ…ط³طھط®ط¯ظ…
+    // تجميع حسب المستخدم
     const totals: Record<string, { userId: any; total: number }> = {};
     for (const t of filtered) {
       const key = isWealth ? t.fromUserId : t.toUserId;
@@ -446,7 +446,7 @@ export const roomLeaderboard = query({
 
     const sorted = Object.values(totals).sort((a, b) => b.total - a.total).slice(0, 20);
 
-    // ط¬ظ„ط¨ ط¨ظٹط§ظ†ط§طھ ظƒظ„ ظ…ط³طھط®ط¯ظ…
+    // جلب بيانات كل مستخدم
     const enriched = await Promise.all(
       sorted.map(async (item) => {
         const u = await ctx.db.get("users", item.userId);
@@ -456,7 +456,7 @@ export const roomLeaderboard = query({
         return {
           userId: item.userId as string,
           userNumber: u?.userNumber ?? null,
-          name: u?.name ?? "ط¶ظٹظپ",
+          name: u?.name ?? "ضيف",
           avatarUrl,
           vip,
           charmLevel: levelFromValue(u?.totalReceived ?? 0),
@@ -522,7 +522,7 @@ export const latestGiftFull = query({
       fromUser?.avatarId ? ctx.storage.getUrl(fromUser.avatarId) : Promise.resolve(null),
       toUser?.avatarId ? ctx.storage.getUrl(toUser.avatarId) : Promise.resolve(null),
     ]);
-    // ============ ط¯ط¹ظ… ط§ظ„ط¯ظپط¹ط§طھ (batch): ط¬ظ„ط¨ ظƒظ„ ط§ظ„ط£ظ‡ط¯ط§ظپ ============
+    // ============ دعم الدفعات (batch): جلب كل الأهداف ============
     let batchTargets: Array<{ toUserId: string; toName: string; toAvatar: string | null }> = [];
     if (recent.batchId) {
       const batchTxs = await ctx.db
@@ -590,7 +590,7 @@ export const migrateGiftBadges = mutation({
   },
 });
 
-// ط§ط³طھط¹ظ„ط§ظ… ط¹ط§ظ… ظ„ط¬ظ…ظٹط¹ ط§ظ„ط؛ط±ظپ ظ„ظ„ط§ط³طھظ…ط§ط¹ ظ„ظ„ط´ط±ظٹط· ط§ظ„ط°ظ‡ط¨ظٹ (â‰¥ 30000)
+// استعلام عام لجميع الغرف للاستماع للشريط الذهبي (≥ 30000)
 export const latestGlobalBroadcast = query({
   args: { since: v.number() },
   handler: async (ctx, args) => {
@@ -620,7 +620,7 @@ export const latestGlobalBroadcast = query({
       quantity: recent.quantity,
       price: gift.price,
       roomId: recent.roomId,
-      roomName: room?.name ?? "ط؛ط±ظپط©",
+      roomName: room?.name ?? "غرفة",
       fromName: recent.fromName,
       fromAvatar,
       toName: recent.toName,
@@ -630,7 +630,7 @@ export const latestGlobalBroadcast = query({
   },
 });
 
-// [ezo-missions] Helper ظ„طھط³ط¬ظٹظ„ طھظ‚ط¯ظ… ط§ظ„ظ…ظ‡ط§ظ…
+// [ezo-missions] Helper لتسجيل تقدم المهام
 async function recordMissionProgress(ctx: any, userId: any, keys: string[], amount = 1) {
   const dailyCycle = new Date().toISOString().slice(0, 10);
   const onejan = new Date(new Date().getFullYear(), 0, 1);

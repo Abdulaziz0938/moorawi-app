@@ -106,7 +106,7 @@ function calculateTargetCoords(
     .sort(() => Math.random() - 0.5)
     .slice(0, MAX_LISTENER_PARTICLES);
 
-  // [ezo-waterfall] ط­ط³ط§ط¨ ط¹ط¯ط¯ ط§ظ„ط¬ط³ظٹظ…ط§طھ ظ„ظƒظ„ ظ…ط³طھظ„ظ… (ط¨ط³ظ‚ظپ ط¥ط¬ظ…ط§ظ„ظٹ 80)
+  // [ezo-waterfall] حساب عدد الجسيمات لكل مستلم (بسقف إجمالي 80)
   const visibleCount = visibleMicTargets.length + sampledListeners.length;
   const particlesPerRecipient = visibleCount > 0
     ? Math.max(1, Math.min(quantity, Math.floor(MAX_TOTAL_PARTICLES / visibleCount)))
@@ -114,7 +114,7 @@ function calculateTargetCoords(
 
   const particles: FlyingTarget[] = [];
 
-  // 1) Mic targets â€” ط´ظ„ط§ظ„ ظ…ظ† ط§ظ„ط¬ط³ظٹظ…ط§طھ ظ„ظƒظ„ ظ…ط§ظٹظƒ
+  // 1) Mic targets — شلال من الجسيمات لكل مايك
   visibleMicTargets.forEach((t, idx) => {
     let targetX = 0;
     let targetY = 0;
@@ -141,7 +141,7 @@ function calculateTargetCoords(
     }
   });
 
-  // 2) Listener targets â€” ط´ظ„ط§ظ„ طµط§ط¹ط¯ ظ„ظ„ط£ط¹ظ„ظ‰
+  // 2) Listener targets — شلال صاعد للأعلى
   sampledListeners.forEach((id, idx) => {
     const angle = (idx / Math.max(1, sampledListeners.length)) * 2 * Math.PI;
     const spread = Math.min(40, 8 + sampledListeners.length * 3);
@@ -171,7 +171,7 @@ interface Props { roomId: Id<"rooms">; onLeave: () => void; onMinimizeChange?: (
 
 // [ezo] Chat bubble style
 function bubbleClass(vip: number, customUrl?: string): string {
-  if (customUrl) return ""; // ط¥ط°ط§ ظƒط§ظ† ظ‡ظ†ط§ظƒ طµظˆط±ط© ظ…ط®طµطµط©طŒ ط³ظ†ط¹ط±ط¶ظ‡ط§ ظƒط®ظ„ظپظٹط© ظˆظ„ظ† ظ†ط³طھط®ط¯ظ… ط§ظ„ظƒظ„ط§ط³ط§طھ ط§ظ„ط§ظپطھط±ط§ط¶ظٹط©
+  if (customUrl) return ""; // إذا كان هناك صورة مخصصة، سنعرضها كخلفية ولن نستخدم الكلاسات الافتراضية
   if (vip <= 0) return "bg-white/5 border border-white/10";
   const g = [
     "bg-gradient-to-br from-sky-500/25 to-sky-700/25 border border-sky-400/40",
@@ -185,7 +185,7 @@ function bubbleClass(vip: number, customUrl?: string): string {
   return g[Math.min(vip - 1, g.length - 1)];
 }
 
-// [ezo-mention] ظٹظ„ظˆظ‘ظ† @name ط¨ظ„ظˆظ† ط°ظ‡ط¨ظٹ
+// [ezo-mention] يلوّن @name بلون ذهبي
 function renderTextWithMentions(text: string | null | undefined) {
   if (!text) return null;
   const parts = text.split(/(@\S+)/g);
@@ -199,13 +199,13 @@ function renderTextWithMentions(text: string | null | undefined) {
 }
 
 
-// ط¯ط§ظ„ط© ظ…ط¤ظ‚طھط© ظ„طھط¬ط±ط¨ط© ط¥ط·ظ„ط§ظ‚ ط§ظ„ط¯ط®ظˆظ„ظٹط©
+// دالة مؤقتة لتجربة إطلاق الدخولية
 function triggerTestVip() {
   const mockEntry = {
     _id: Date.now().toString(),
     userId: "test_user_id",
     level: 7,
-    name: "ط£ط³ط·ظˆط±ط© ط¥ظٹط²ظˆ",
+    name: "أسطورة إيزو",
     avatarUrl: "",
     createdAt: Date.now()
   };
@@ -233,11 +233,11 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
   const seats = useQuery(api.mics.state, { roomId });
   const members = useQuery(api.rooms.members, { roomId });
   const myInfo = useQuery(api.mics.myInfo, { roomId, tokenOverride: getActiveToken() ?? deviceId });
-  // [ezo-notif-badge] ظ†ظپط³ ط§ط³طھط¹ظ„ط§ظ… SystemNotifSheet â€” Convex dedupe طھظ„ظ‚ط§ط¦ظٹ
+  // [ezo-notif-badge] نفس استعلام SystemNotifSheet — Convex dedupe تلقائي
   const _notifs = useQuery(api.notifications.listMine, { tokenOverride: getActiveToken() ?? deviceId });
   const unreadNotifs = (_notifs ?? []).filter((n: any) => !n.readAt).length;
 
-  // [ezo-rocket-launch] ظƒط´ظپ ط¥ط·ظ„ط§ظ‚ ط¬ط¯ظٹط¯ â€” ط¹ط±ط¶ Overlay ظپظٹ RoomView
+  // [ezo-rocket-launch] كشف إطلاق جديد — عرض Overlay في RoomView
   const recentLaunch = useQuery(api.rockets.listRoomHistory, { roomId, limit: 1 });
   const rocketStates = useQuery(api.rockets.getState, { roomId });
   const activeRocket = rocketStates?.find((r: any) => !r.launched) ?? rocketStates?.[rocketStates.length - 1];
@@ -246,7 +246,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
   const seenLaunchesRef = useRef<Set<string>>(new Set());
   const launchInitRef = useRef(false);
 
-  // [ezo-room-emoji] ط¨ط« ط§ظ„ط¥ظٹظ…ظˆط¬ظٹ ظ„ظƒظ„ ظ…ظ† ظپظٹ ط§ظ„ط؛ط±ظپط©
+  // [ezo-room-emoji] بث الإيموجي لكل من في الغرفة
   const activeEmojis = useQuery(api.roomEmojis.listActive, { roomId });
   const sendEmoji = useMutation(api.roomEmojis.sendEmoji);
   const emojiByUser: Record<string, { url: string; id: string }> = {};
@@ -297,7 +297,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
 
   const [agoraConnected, setAgoraConnected] = useState(false);
 
-  // [ezo-presence] heartbeat + leave طھظ„ظ‚ط§ط¦ظٹ
+  // [ezo-presence] heartbeat + leave تلقائي
   const { leave: leavePresence } = useRoomPresence(roomId, deviceId);
   const [isMuted, setIsMuted] = useState(false);
   // sync from server (see useEffect below)
@@ -371,7 +371,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
 
   // Gift queue + combo
   const [activeGift, setActiveGift] = useState<any>(null);
-  const [videoReady, setVideoReady] = useState(false); // [ezo-gift-fix] ظٹظ†طھط¸ط± ط§ظ†طھظ‡ط§ط، ط·ظٹط±ط§ظ† ط§ظ„ظ‡ط¯ظٹط©
+  const [videoReady, setVideoReady] = useState(false); // [ezo-gift-fix] ينتظر انتهاء طيران الهدية
   const [giftTarget, setGiftTarget] = useState<{x: number; y: number} | null>(null);
   const [giftQueue, setGiftQueue] = useState<any[]>([]);
   const [comboCount, setComboCount] = useState(1);
@@ -389,9 +389,9 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
   const [flyingTargets, setFlyingTargets] = useState<FlyingTarget[]>([]);
   const [aggregateBadge, setAggregateBadge] = useState<{ count: number; x: number; y: number } | null>(null);
 
-  // [ezo-waterfall] Combo stacked waves (ط´ظ„ط§ظ„)
+  // [ezo-waterfall] Combo stacked waves (شلال)
   const [stackedWaves, setStackedWaves] = useState<StackedWave[]>([]);
-  // [ezo-gifts-pro] imperative wave spawner ref â€” ظ„ط§ React re-render
+  // [ezo-gifts-pro] imperative wave spawner ref — لا React re-render
   const wavesRef = useRef<GiftWavesHandle>(null);
 
   // [ezo-fix] Track latest userId for cleanup on unmount
@@ -417,13 +417,13 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
   // NOTE: clearMySeats via ref to avoid firing cleanup on every re-render
   const clearMySeatsRef = useRef(clearMySeats);
   useEffect(() => { clearMySeatsRef.current = clearMySeats; }, [clearMySeats]);
-    // [ezo-fix] طھظ… ط¥ظ„ط؛ط§ط، طھظپط±ظٹط؛ ط§ظ„ظ…ط§ظٹظƒ ط§ظ„طھظ„ظ‚ط§ط¦ظٹ ط¹ظ†ط¯ unmount ظ„ظ…ظ†ط¹ ط®ط±ظˆط¬ ط§ظ„ظ…ط³طھط®ط¯ظ… ط¹ط´ظˆط§ط¦ظٹط§ظ‹
-  // ط§ظ„طھظپط±ظٹط؛ ظٹطھظ… ظپظ‚ط· ط¹ظ†ط¯ ط§ظ„ط¶ط؛ط· ط§ظ„ظ…طھط¹ظ…ط¯ ط¹ظ„ظ‰ ط²ط± ظ…ط؛ط§ط¯ط±ط© ط§ظ„ط؛ط±ظپط© (onLeave)
+    // [ezo-fix] تم إلغاء تفريغ المايك التلقائي عند unmount لمنع خروج المستخدم عشوائياً
+  // التفريغ يتم فقط عند الضغط المتعمد على زر مغادرة الغرفة (onLeave)
 
   const giftSinceRef = useRef(Date.now());
   const latestGift = useQuery(api.gifts.latestGiftFull, { roomId, since: giftSinceRef.current });
 
-  // [ezo-vip] entry animation â€” ظپظ‚ط· ظ„ظ„ط£ط­ط¯ط§ط« ط¨ط¹ط¯ ط¯ط®ظˆظ„ظٹ ظ„ظ„ط؛ط±ظپط©
+  // [ezo-vip] entry animation — فقط للأحداث بعد دخولي للغرفة
   const mountTimeRef = useRef<number>(Date.now());
   const entrySinceRef = useRef<number>(Date.now() - 3000);
   const recentEntries = useQuery(
@@ -437,7 +437,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
 
   useEffect(() => {
     if (!recentEntries || recentEntries.length === 0) return;
-    // ط£ط­ط¯ط« ط­ط¯ط« ظ„ظ… ظٹظڈط¹ط±ط¶ ط¨ط¹ط¯
+    // أحدث حدث لم يُعرض بعد
     const latest = recentEntries[0];
     if (latest._id === currentEntry?._id) return;
     setCurrentEntry(latest);
@@ -456,7 +456,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
   const seenMembersRef = useRef<Set<string>>(new Set());
   const myEntryPlayedRef = useRef(false);
   const publishedRef = useRef(false);
-  // [ezo-agora] UID ظپط±ظٹط¯ ظ„ظƒظ„ ط¬ظ„ط³ط© ط¯ط®ظˆظ„ (deviceId + timestamp + random)
+  // [ezo-agora] UID فريد لكل جلسة دخول (deviceId + timestamp + random)
   const sessionUidRef = useRef<string>(
     `${deviceId}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`
   );
@@ -466,7 +466,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
     joinedRef.current = true;
     let cancelled = false;
     (async () => {
-      // [ezo-agora] Retry on UID_CONFLICT â€” ظ…ط·ط§ط¨ظ‚ ظ„ظ€ Binmo/Yalla
+      // [ezo-agora] Retry on UID_CONFLICT — مطابق لـ Binmo/Yalla
       const maxAttempts = 3;
       for (let attempt = 0; attempt < maxAttempts; attempt++) {
         if (cancelled) return;
@@ -499,7 +499,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
             await new Promise((r) => setTimeout(r, 800 * (attempt + 1)));
             continue;
           }
-          if (!cancelled) setError(errMsg || "ظپط´ظ„ ط§ظ„ط§طھطµط§ظ„");
+          if (!cancelled) setError(errMsg || "فشل الاتصال");
           break;
         }
       }
@@ -519,7 +519,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
     if (!agoraConnected) return;
     if (isOnMic && !publishedRef.current) {
       publishedRef.current = true;
-      agoraManager.publishMicrophone().catch(() => setError("ظپط´ظ„ ط§ظ„ظ…ظٹظƒط±ظˆظپظˆظ†"));
+      agoraManager.publishMicrophone().catch(() => setError("فشل الميكروفون"));
     } else if (!isOnMic && publishedRef.current) {
       publishedRef.current = false;
       agoraManager.unpublishMicrophone().catch(console.error);
@@ -540,10 +540,10 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
     if (status && status !== lastReqStatusRef.current) {
       lastReqStatusRef.current = status;
       if (status === "accepted") {
-        setMyRequestToast("âœ… طھظ… ظ‚ط¨ظˆظ„ ط·ظ„ط¨ ط§ظ„ظ…ط§ظٹظƒ");
+        setMyRequestToast("✅ تم قبول طلب المايك");
         cancelMyRequestMutation({ roomId, tokenOverride: getActiveToken() ?? deviceId }).catch(() => {});
       } else if (status === "rejected") {
-        setMyRequestToast("طھظ… ط±ظپط¶ ط·ظ„ط¨ ط§ظ„ظ…ط§ظٹظƒ");
+        setMyRequestToast("تم رفض طلب المايك");
         cancelMyRequestMutation({ roomId, tokenOverride: getActiveToken() ?? deviceId }).catch(() => {});
       }
     }
@@ -554,7 +554,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
     if (!latestGift) return;
     const giftKey = `${latestGift.fromUserId}_${latestGift.giftId}`;
     if (activeGift && `${activeGift.fromUserId}_${activeGift.giftId}` === giftKey) {
-      // [ezo-waterfall] ط§ط­ط³ط¨ ط§ظ„ط¹ط¯ط¯ ط§ظ„ظپط¹ظ„ظٹ = ظ…ط³طھظ‚ط¨ظ„ظˆظ† أ— ظƒظ…ظٹط©
+      // [ezo-waterfall] احسب العدد الفعلي = مستقبلون × كمية
       const recipientIds: string[] = Array.isArray(latestGift.batchTargets) && latestGift.batchTargets.length > 0
         ? latestGift.batchTargets.map((t: any) => t.toUserId).filter(Boolean)
         : (latestGift.toUserId ? [latestGift.toUserId] : []);
@@ -567,13 +567,13 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
       setShowComboPulse(true);
       setTimeout(() => setShowComboPulse(false), 350);
 
-      // ط£ط·ظ„ظ‚ ظ…ظˆط¬ط© ط¬ط¯ظٹط¯ط© ظ„ظ„ط´ظ„ط§ظ„
-      if (latestGift.mediaUrl && recipientIds.length > 0) { // [ezo-gift-fix] ط·ظٹط±ط§ظ† ظ„ظƒظ„ ط§ظ„ظ‡ط¯ط§ظٹط§ ط¨ظ„ط§ ط§ط³طھط«ظ†ط§ط،
+      // أطلق موجة جديدة للشلال
+      if (latestGift.mediaUrl && recipientIds.length > 0) { // [ezo-gift-fix] طيران لكل الهدايا بلا استثناء
         const waveId = Date.now() + Math.random();
         const { particles } = calculateTargetCoords(recipientIds, seats, qty);
         const waveGift = latestGift;
 
-        // [ezo-pro] imperative spawn â€” ظ„ط§ re-render
+        // [ezo-pro] imperative spawn — لا re-render
         wavesRef.current?.spawn(waveGift, particles);
       }
 
@@ -588,22 +588,22 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
     }
   }, [latestGift]);
 
-  // [ezo-rocket-launch] ظƒط´ظپ ط§ظ„ط¥ط·ظ„ط§ظ‚ ط§ظ„ط¬ط¯ظٹط¯
+  // [ezo-rocket-launch] كشف الإطلاق الجديد
   useEffect(() => {
-    // ط§ظ†طھط¸ط± ط­طھظ‰ طھطµظ„ ط£ظˆظ„ ط§ط³طھط¬ط§ط¨ط© ظپط¹ظ„ظٹط© ظ…ظ† ط§ظ„ط³ظٹط±ظپط±
+    // انتظر حتى تصل أول استجابة فعلية من السيرفر
     if (recentLaunch === undefined) return;
 
-    // ط£ظˆظ„ ط§ط³طھط¬ط§ط¨ط© â€” ط¶ط¹ ط§ظ„طھظ‡ظٹط¦ط© (ط­طھظ‰ ظ„ظˆ ظپط§ط±ط؛ط©)
+    // أول استجابة — ضع التهيئة (حتى لو فارغة)
     if (!launchInitRef.current) {
       launchInitRef.current = true;
-      // ط¹ظ„ظ‘ظ… ظƒظ„ ط§ظ„ط£ط­ط¯ط§ط« ط§ظ„ظ‚ط¯ظٹظ…ط© ظƒظ€ "ظ…ظڈط´ط§ظ‡ط¯ط©"
+      // علّم كل الأحداث القديمة كـ "مُشاهدة"
       for (const evt of recentLaunch) {
         seenLaunchesRef.current.add(evt._id);
       }
       return;
     }
 
-    // ط§ط³طھط¬ط§ط¨ط© ظ„ط§ط­ظ‚ط© â€” ط§ظپط­طµ ط§ظ„ط£ط­ط¯ط«
+    // استجابة لاحقة — افحص الأحدث
     const latest = recentLaunch[0];
     if (latest && !seenLaunchesRef.current.has(latest._id)) {
       seenLaunchesRef.current.add(latest._id);
@@ -611,18 +611,18 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
     }
   }, [recentLaunch]);
 
-  // [ezo-gift-fix] طھط£ط®ظٹط± ط§ظ„ظپظٹط¯ظٹظˆ ط­طھظ‰ ط§ظ†طھظ‡ط§ط، ط·ظٹط±ط§ظ† ط§ظ„ظ‡ط¯ظٹط© (~1.1s)
+  // [ezo-gift-fix] تأخير الفيديو حتى انتهاء طيران الهدية (~1.1s)
   useEffect(() => {
     if (!activeGift) { setVideoReady(false); return; }
     const isBigVideo =
       (activeGift.price ?? 0) >= 1000 && activeGift.mediaType === "video";
     if (!isBigVideo) { setVideoReady(true); return; }
     setVideoReady(false);
-    const t = setTimeout(() => setVideoReady(true), 2400); // [ezo-gift] ظٹظ†طھط¸ط± ط§ظ†طھظ‡ط§ط، ط·ظٹط±ط§ظ† ط§ظ„ظ‡ط¯ظٹط© (2.2s)
+    const t = setTimeout(() => setVideoReady(true), 2400); // [ezo-gift] ينتظر انتهاء طيران الهدية (2.2s)
     return () => clearTimeout(t);
   }, [activeGift?._id]);
 
-  // Global broadcast effect (â‰¥ 30000 in any room)
+  // Global broadcast effect (≥ 30000 in any room)
   useEffect(() => {
     if (!globalBroadcast) return;
     if (globalBroadcast.roomId === roomId && activeGift) return;
@@ -641,7 +641,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
     if (comboOverlayTimerRef.current) clearTimeout(comboOverlayTimerRef.current);
     comboOverlayTimerRef.current = setTimeout(() => {
       setComboOverlay(null);
-    }, 2600); // [ezo-combo-pro] ظٹط¨ظ‚ظ‰ 2.6s ط¨ط¹ط¯ ط¢ط®ط± ظ‡ط¯ظٹط©
+    }, 2600); // [ezo-combo-pro] يبقى 2.6s بعد آخر هدية
   }, [comboCount, activeGift]);
 
   // Gift: queue processor
@@ -650,13 +650,13 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
     const next = giftQueue[0];
     setGiftQueue((q) => q.slice(1));
 
-    // [ezo-batch] ط­ط³ط§ط¨ ظƒظ„ ط§ظ„ط¬ط³ظٹظ…ط§طھ ط¨ظ†ط§ط،ظ‹ ط¹ظ„ظ‰ ظ‚ط§ط¦ظ…ط© ط§ظ„ظ…ط³طھظ‚ط¨ظ„ظٹظ†
-    // batchTargets â†’ ظ‡ط¯ظٹط© ط¬ظ…ط§ط¹ظٹط© | toUserId â†’ ظ‡ط¯ظٹط© ظپط±ط¯ظٹط©
+    // [ezo-batch] حساب كل الجسيمات بناءً على قائمة المستقبلين
+    // batchTargets → هدية جماعية | toUserId → هدية فردية
     const recipientIds: string[] = Array.isArray(next.batchTargets) && next.batchTargets.length > 0
       ? next.batchTargets.map((t: any) => t.toUserId).filter(Boolean)
       : (next.toUserId ? [next.toUserId] : []);
 
-    // ظ†ظ†طھط¸ط± ط¥ط·ط§ط± ظˆط§ط­ط¯ ظ„ط¶ظ…ط§ظ† ظˆط¬ظˆط¯ ط¹ظ†ط§طµط± data-mic-seat ظپظٹ DOM
+    // ننتظر إطار واحد لضمان وجود عناصر data-mic-seat في DOM
     const qty = next.quantity || 1;
     requestAnimationFrame(() => {
       const { particles, aggregateBadge: badge } = calculateTargetCoords(recipientIds, seats, qty);
@@ -664,7 +664,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
       setAggregateBadge(badge);
     });
 
-    // ظ†ط¨ط¶ط© ط§ظ„ظ…ط§ظٹظƒ ظ„ط§ط­ظ‚ط§ظ‹ (ط¨ط¹ط¯ ظˆطµظˆظ„ ط§ظ„ط¬ط³ظٹظ…ط§طھ)
+    // نبضة المايك لاحقاً (بعد وصول الجسيمات)
     if (recipientIds.length > 0 && next.mediaType !== "video") {
       setTimeout(() => {
         recipientIds.forEach((uid: string) => {
@@ -679,19 +679,19 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
     }
 
     setActiveGift(next);
-    // [ezo-waterfall] ط§ظ„ط¹ط¯ظ‘ط§ط¯ = ط¹ط¯ط¯ ط§ظ„ظ…ط³طھظ‚ط¨ظ„ظٹظ† أ— ط§ظ„ظƒظ…ظٹط©
+    // [ezo-waterfall] العدّاد = عدد المستقبلين × الكمية
     const totalQtyInit = recipientIds.length * qty;
     setComboCount(totalQtyInit);
     setTotalQuantity(totalQtyInit);
     setComboValue(totalQtyInit * (next.price ?? 0));
     setIsGlobalBanner(next.isGlobal && (next.price ?? 0) >= 30000);
 
-    // ط¥ط®ظپط§ط، ط§ظ„ظ‡ط¯ظٹط© â€” ظ…ط¯ط¯ظ†ط§ ط§ظ„ظˆظ‚طھ ظ„ط£ظ†ظٹظ…ظٹط´ظ† multiGiftFly (2.2s)
+    // إخفاء الهدية — مددنا الوقت لأنيميشن multiGiftFly (2.2s)
     if (next.mediaType !== "video") {
       comboTimeoutRef.current = setTimeout(() => finishActiveGift(), 2400);
     } else {
-      // ظ…ط¤ظ‚طھ ط£ظ…ط§ظ† ظ„ظ„ظپظٹط¯ظٹظˆ (12s) ظپظٹ ط­ط§ظ„ ظپط´ظ„ onEnded
-      comboTimeoutRef.current = setTimeout(() => finishActiveGift(), 60000); // [ezo-gift-fix] fallback ظپظ‚ط· â€” onEnded ظٹظڈظ†ظ‡ظٹ ط¹ط§ط¯ط©ظ‹
+      // مؤقت أمان للفيديو (12s) في حال فشل onEnded
+      comboTimeoutRef.current = setTimeout(() => finishActiveGift(), 60000); // [ezo-gift-fix] fallback فقط — onEnded يُنهي عادةً
     }
   }, [giftQueue, activeGift, seats]);
 
@@ -720,7 +720,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
     if (chatBoxRef.current) chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
   }, [messages?.length, showChatInput]);
 
-  // [ezo-keepalive] ظ…ظ†ط¹ ط§ظ„ظ…طھطµظپط­ ظ…ظ† طھط¹ظ„ظٹظ‚ ط§ظ„ط¬ظ„ط³ط© ط§ظ„طµظˆطھظٹط©
+  // [ezo-keepalive] منع المتصفح من تعليق الجلسة الصوتية
   useEffect(() => {
     let wakeLock: any = null;
     let silentAudio: HTMLAudioElement | null = null;
@@ -738,7 +738,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
 
     const startSilentAudio = () => {
       try {
-        // ظ…ظ„ظپ طµظˆطھظٹ طµط§ظ…طھ ظ‚طµظٹط± ط¬ط¯ط§ظ‹ (Base64) ظ„ط¥ط¨ظ‚ط§ط، ط§ظ„ط¬ظ„ط³ط© ظ†ط´ط·ط©
+        // ملف صوتي صامت قصير جداً (Base64) لإبقاء الجلسة نشطة
         const silentDataUri = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
         silentAudio = new Audio(silentDataUri);
         silentAudio.loop = true;
@@ -778,7 +778,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
   }, []);
 
     useEffect(() => {
-    // [ezo-back] ط§ط¹طھط±ط§ط¶ ط²ط± ط§ظ„ط±ط¬ظˆط¹ ظپظٹ ط§ظ„ظ…طھطµظپط­ (ظ†ظ…ط· ط§ظ„طھط·ط¨ظٹظ‚ط§طھ ط§ظ„ط£طµظ„ظٹط©)
+    // [ezo-back] اعتراض زر الرجوع في المتصفح (نمط التطبيقات الأصلية)
     window.history.pushState({ inRoom: true }, "", window.location.href);
     const onBackPress = () => {
       setShowBackMenu(true);
@@ -795,12 +795,12 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
     };
   }, []);
 
-  // [ezo-entry] طھط´ط؛ظٹظ„ ط¯ط®ظˆظ„ظٹط© (ظ…ط±ظƒط¨ط©) ط§ظ„ظ…ط³طھط®ط¯ظ… ظ†ظپط³ظ‡ ط¹ظ†ط¯ طھط­ظ…ظٹظ„ ط¨ظٹط§ظ†ط§طھظ‡
+  // [ezo-entry] تشغيل دخولية (مركبة) المستخدم نفسه عند تحميل بياناته
   useEffect(() => {
     if (!myInfo?.userId || myEntryPlayedRef.current) return;
     myEntryPlayedRef.current = true;
     
-    // طھط£ط®ظٹط± ط¨ط³ظٹط· ظ„ظ„طھط£ظƒط¯ ظ…ظ† ط£ظ† ط§ظ„ط؛ط±ظپط© ط¸ظ‡ط±طھ ط¨ط§ظ„ظƒط§ظ…ظ„
+    // تأخير بسيط للتأكد من أن الغرفة ظهرت بالكامل
     const timer = setTimeout(() => {
       setActiveEntryUserId(myInfo.userId);
     }, 800);
@@ -812,7 +812,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
     if (!members) return;
     if (seenMembersRef.current.size === 0) {
       members.forEach((m: any) => seenMembersRef.current.add(String(m.userId)));
-      // ط´ط؛ظ„ طھط£ط«ظٹط± ط¯ط®ظˆظ„ ط§ظ„ظ…ط³طھط®ط¯ظ… ظ†ظپط³ظ‡ (ط§ظ„ظ…ط±ظƒط¨ط©) ظپظˆط± ط¯ط®ظˆظ„ظ‡ ظ„ظ„ط؛ط±ظپط©
+      // شغل تأثير دخول المستخدم نفسه (المركبة) فور دخوله للغرفة
       if (myInfo?.userId) {
         setActiveEntryUserId(myInfo.userId);
       }
@@ -821,7 +821,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
     const newMembers = members.filter((m: any) => !seenMembersRef.current.has(String(m.userId)));
     if (newMembers.length > 0) {
       newMembers.forEach((m: any) => seenMembersRef.current.add(String(m.userId)));
-      // ط´ط؛ظ„ طھط£ط«ظٹط± ط§ظ„ط¯ط®ظˆظ„ ظ„ط£ظˆظ„ ط¹ط¶ظˆ ط¬ط¯ظٹط¯
+      // شغل تأثير الدخول لأول عضو جديد
       setActiveEntryUserId(newMembers[0].userId);
     }
   }, [members]);
@@ -866,7 +866,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
     const seat = seats?.find((s) => s.seatIndex === seatIndex);
     const isMine = userId && myInfo?.userId && userId === myInfo.userId;
 
-    // ط§ط­ط³ط¨ ظ…ظˆط¶ط¹ ط§ظ„ظ…ط§ظٹظƒ ط£ظˆظ„ط§ظ‹ (ظ„ظƒظ„ ط§ظ„ط­ط§ظ„ط§طھ)
+    // احسب موضع المايك أولاً (لكل الحالات)
     const seatEl = document.querySelector(`[data-mic-seat="${seatIndex}"]`) as HTMLElement | null;
     let menuPos: { x: number; y: number } | null = null;
     if (seatEl) {
@@ -874,7 +874,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
       menuPos = { x: r.left + r.width / 2, y: r.bottom + 4 };
     }
 
-    // 1) ظ…ط§ظٹظƒ ظپط§ط¶ظٹ (ط³ظˆط§ط، ظ…ظ‚ظپظ„ ط£ظˆ ظ„ط§)
+    // 1) مايك فاضي (سواء مقفل أو لا)
     if (!userId) {
       // [ezo-fix] Owner/Mod: always show menu (even locked/empty)
       if (isOwnerOrMod) {
@@ -883,27 +883,27 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
         return;
       }
       if (seat?.locked) {
-        dialog.alert("ط§ظ„ظ…ط§ظٹظƒ ظ…ظ‚ظپظ„");
+        dialog.alert("المايك مقفل");
         return;
       }
       if (room?.micRequestsEnabled) {
         requestMicMutation({ roomId, tokenOverride: getActiveToken() ?? deviceId })
-          .then(() => setMyRequestToast("âڈ³ طھظ… ط¥ط±ط³ط§ظ„ ط·ظ„ط¨ظƒ"))
-          .catch((e: any) => dialog.alert(e?.message || "ط®ط·ط£"));
+          .then(() => setMyRequestToast("⏳ تم إرسال طلبك"))
+          .catch((e: any) => dialog.alert(e?.message || "خطأ"));
       } else {
-        takeSeat({ roomId, seatIndex, tokenOverride: getActiveToken() ?? deviceId }).catch((e: any) => dialog.alert(e?.message || "ط®ط·ط£"));
+        takeSeat({ roomId, seatIndex, tokenOverride: getActiveToken() ?? deviceId }).catch((e: any) => dialog.alert(e?.message || "خطأ"));
       }
       return;
     }
 
-    // 2) ظ…ط§ظٹظƒظٹ ط£ظ†ط§ â†’ MiniProfile (isMySeat)
+    // 2) مايكي أنا → MiniProfile (isMySeat)
     if (isMine) {
       setMiniProfileUserId(userId!);
       setMySeatIndexForMiniProfile(seatIndex);
       return;
     }
 
-    // 3) ط´ط®طµ ط¢ط®ط± â†’ Mini Profile
+    // 3) شخص آخر → Mini Profile
     setMiniProfileUserId(userId);
     setMySeatIndexForMiniProfile(null);
   };
@@ -921,13 +921,13 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
         // Rollback local state + Agora on server failure
         setIsMuted(!next);
         agoraManager.muteMicrophone(!next);
-        dialog.alert(e?.message || "ظپط´ظ„ ط§ظ„ظƒطھظ…");
+        dialog.alert(e?.message || "فشل الكتم");
       }
     }
   };
 
   const handleLeave = async () => {
-    // [ezo-presence] ط¥ط¨ظ„ط§ط؛ ط§ظ„ظ€ server ط¨ط§ظ„ط®ط±ظˆط¬ ظپظˆط±ط§ظ‹
+    // [ezo-presence] إبلاغ الـ server بالخروج فوراً
     try { await leavePresence({ roomId, tokenOverride: getActiveToken() ?? deviceId }); } catch {}
     try { await clearMySeats({ roomId, tokenOverride: getActiveToken() ?? deviceId }); } catch {}
     await agoraManager.leave();
@@ -939,7 +939,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
   const handleSendMsg = async (text: string) => {
     setSending(true);
     try { await sendMsg({ roomId, text, tokenOverride: getActiveToken() ?? deviceId }); }
-    catch (e: any) { dialog.alert(e?.message || "ط®ط·ط£"); }
+    catch (e: any) { dialog.alert(e?.message || "خطأ"); }
     finally { setSending(false); }
   };
 
@@ -948,7 +948,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
     try {
       const result = await smartUpload(file, { allowVideo: false });
       await sendMsg({ roomId, imageUrl: result.url, tokenOverride: getActiveToken() ?? deviceId });
-    } catch (e: any) { dialog.alert(e?.message || "ظپط´ظ„ ط±ظپط¹ ط§ظ„طµظˆط±ط©"); }
+    } catch (e: any) { dialog.alert(e?.message || "فشل رفع الصورة"); }
     finally { setUploading(false); }
   };
 
@@ -973,7 +973,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
   }
 
 
-  // [ezo-gift-waves] useMemo ظ„ط¹ط²ظ„ JSX ط§ظ„ط´ظ„ط§ظ„ â€” ظ…ظ†ط¹ ط§ظ„ظˆظ…ظٹط¶ ط¹ظ†ط¯ ط§ظ„ط¥ط±ط³ط§ظ„ ط§ظ„ط³ط±ظٹط¹
+  // [ezo-gift-waves] useMemo لعزل JSX الشلال — منع الوميض عند الإرسال السريع
   const wavesJsx = null; // [ezo-pro] replaced by <GiftWavesLayer ref={wavesRef} />
 
   return (
@@ -1019,14 +1019,14 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
                     <Home size={10} className="text-purple-300 flex-shrink-0" strokeWidth={1.5} />
                   </div>
                   <span className="text-[9px] text-white/50 font-bold" dir="ltr">
-                    ID:{owner?.userNumber ?? "â€”"} â€¢ Lv.0
+                    ID:{owner?.userNumber ?? "—"} • Lv.0
                   </span>
                 </div>
                   <button
                     type="button"
                     onClick={() => setShowRoomInfo(true)}
                     className="w-8 h-8 rounded-full overflow-hidden bg-purple-500 flex items-center justify-center text-[11px] font-bold text-white flex-shrink-0 ring-2 ring-purple-400/40 hover:ring-purple-300 transition active:scale-95"
-                    title={owner?.name || "ط§ظ„ط؛ط±ظپط©"}
+                    title={owner?.name || "الغرفة"}
                   >
                     <img src={owner?.avatarUrl || roomAvatar || "/avatar.png"} alt="" className="w-full h-full object-cover" />
                   </button>
@@ -1097,28 +1097,28 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
                     className="absolute top-20 right-4 flex items-center gap-3 p-3 rounded-3xl bg-black/60 backdrop-blur-xl border border-white/10 shadow-2xl animate-in fade-in slide-in-from-top-4"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    {/* ط²ط± ط§ظ„ط®ط±ظˆط¬ */}
+                    {/* زر الخروج */}
                     <button onClick={handleLeave} className="flex flex-col items-center gap-1 group">
                       <div className="w-14 h-14 rounded-full bg-white/10 group-hover:bg-red-500/20 flex items-center justify-center transition-colors">
                         <LogOut size={22} className="text-red-400" />
                       </div>
-                      <span className="text-[10px] text-white/80 font-bold group-hover:text-white">ط®ط±ظˆط¬</span>
+                      <span className="text-[10px] text-white/80 font-bold group-hover:text-white">خروج</span>
                     </button>
                     
-                    {/* ط²ط± ط§ظ„طھطµط؛ظٹط± */}
+                    {/* زر التصغير */}
                     <button onClick={() => { setShowBackMenu(false); setIsMinimized(true); }} className="flex flex-col items-center gap-1 group">
                       <div className="w-14 h-14 rounded-full bg-white/10 group-hover:bg-emerald-500/20 flex items-center justify-center transition-colors">
                         <Minimize2 size={22} className="text-emerald-400" />
                       </div>
-                      <span className="text-[10px] text-white/80 font-bold group-hover:text-white">طھطµط؛ظٹط±</span>
+                      <span className="text-[10px] text-white/80 font-bold group-hover:text-white">تصغير</span>
                     </button>
 
-                    {/* ط²ط± ط§ظ„ظ…ط´ط§ط±ظƒط© */}
+                    {/* زر المشاركة */}
                     <button onClick={() => { navigator.clipboard.writeText(window.location.href); setShowBackMenu(false); setShareToast(true); setTimeout(() => setShareToast(false), 1800); }} className="flex flex-col items-center gap-1 group">
                       <div className="w-14 h-14 rounded-full bg-white/10 group-hover:bg-blue-500/20 flex items-center justify-center transition-colors">
                         <Share2 size={22} className="text-blue-400" />
                       </div>
-                      <span className="text-[10px] text-white/80 font-bold group-hover:text-white">ظ…ط´ط§ط±ظƒط©</span>
+                      <span className="text-[10px] text-white/80 font-bold group-hover:text-white">مشاركة</span>
                     </button>
                   </div>
                 </div>
@@ -1255,43 +1255,43 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
               >
                 {/* Top glow line */}
                 <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-purple-400/60 to-transparent" />
-                <p className="text-white/60 text-[10px] px-3 py-1">ط§ظ„ظ…ط§ظٹظƒ ط±ظ‚ظ… {currentSeatMenuData.seatIndex + 1}</p>
+                <p className="text-white/60 text-[10px] px-3 py-1">المايك رقم {currentSeatMenuData.seatIndex + 1}</p>
                 {isMySeat ? (
                   <>
                     <button
                       disabled={currentSeatMenuData.adminMuted === true}
-                      onClick={() => { toggleMuteSeat({ roomId, seatIndex: currentSeatMenuData.seatIndex, tokenOverride: getActiveToken() ?? deviceId }).catch((e: any) => dialog.alert(e?.message || "ط®ط·ط£")); setOpenSeatMenu(null); setOpenSeatMenuPos(null); }}
+                      onClick={() => { toggleMuteSeat({ roomId, seatIndex: currentSeatMenuData.seatIndex, tokenOverride: getActiveToken() ?? deviceId }).catch((e: any) => dialog.alert(e?.message || "خطأ")); setOpenSeatMenu(null); setOpenSeatMenuPos(null); }}
                       className={`w-full flex items-center gap-2 px-3 py-2 text-xs ${currentSeatMenuData.adminMuted ? "text-red-400/60 cursor-not-allowed" : "text-white hover:bg-white/10"}`}
                     >
                       <MicOff size={14} />
                       {currentSeatMenuData.adminMuted
-                        ? "ظ…ظƒطھظˆظ… ظ…ظ† ط§ظ„ط¥ط¯ط§ط±ط©"
-                        : currentSeatMenuData.muted ? "ط¥ظ„ط؛ط§ط، ط§ظ„ظƒطھظ…" : "ظƒطھظ…"}
+                        ? "مكتوم من الإدارة"
+                        : currentSeatMenuData.muted ? "إلغاء الكتم" : "كتم"}
                     </button>
                     <button onClick={() => { leaveSeat({ roomId, tokenOverride: getActiveToken() ?? deviceId }).then(() => agoraManager.unpublishMicrophone()); setOpenSeatMenu(null); setOpenSeatMenuPos(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-red-400 hover:bg-white/10 text-xs">
-                      <LogOut size={14} /> ط§ظ†ط²ظ„ ظ…ظ† ط§ظ„ظ…ط§ظٹظƒ
+                      <LogOut size={14} /> انزل من المايك
                     </button>
                   </>
                 ) : (
                   <>
-                    {/* ط¯ط¹ظˆط© ط´ط®طµ â€” ظ…طھط§ط­ ظ„ظ„ط¬ظ…ظٹط¹ */}
+                    {/* دعوة شخص — متاح للجميع */}
                     <button onClick={() => { setInviteSeatIndex(currentSeatMenuData.seatIndex); setOpenSeatMenu(null); setOpenSeatMenuPos(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs">
-                      <UserPlus size={14} /> ط¯ط¹ظˆط© ط´ط®طµ ظ„ظ„ط¬ظ„ظˆط³
+                      <UserPlus size={14} /> دعوة شخص للجلوس
                     </button>
                     {isOwnerOrMod && (
                       <>
-                        {/* ظپظƒ/ظ‚ظپظ„ ط§ظ„ظ…ط§ظٹظƒ */}
+                        {/* فك/قفل المايك */}
                         <button onClick={() => { toggleLock({ roomId, seatIndex: currentSeatMenuData.seatIndex, tokenOverride: getActiveToken() ?? deviceId }); setOpenSeatMenu(null); setOpenSeatMenuPos(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs">
-                          {currentSeatMenuData.locked ? <Unlock size={14} /> : <Lock size={14} />} {currentSeatMenuData.locked ? "ظپظƒ ط§ظ„ظ‚ظپظ„" : "ظ‚ظپظ„ ط§ظ„ظ…ط§ظٹظƒ"}
+                          {currentSeatMenuData.locked ? <Unlock size={14} /> : <Lock size={14} />} {currentSeatMenuData.locked ? "فك القفل" : "قفل المايك"}
                         </button>
-                        {/* [ezo] ط§ظ„ظƒطھظ… ط§ظ„ط¥ط¯ط§ط±ظٹ â€” ظٹظ…ظ†ط¹ ط§ظ„ظ…ط³طھط®ط¯ظ… ظ…ظ† ط¥ظ„ط؛ط§ط، ط§ظ„ظƒطھظ… */}
+                        {/* [ezo] الكتم الإداري — يمنع المستخدم من إلغاء الكتم */}
                         <button onClick={() => { toggleAdminMute({ roomId, seatIndex: currentSeatMenuData.seatIndex, tokenOverride: getActiveToken() ?? deviceId }); setOpenSeatMenu(null); setOpenSeatMenuPos(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs">
                           <MicOff size={14} />
-                          {currentSeatMenuData.adminMuted ? "ط¥ظ„ط؛ط§ط، ط§ظ„ظƒطھظ… ط§ظ„ط¥ط¯ط§ط±ظٹ" : "ظƒطھظ… ط§ظ„ظ…ط§ظٹظƒ (ط¥ط¯ط§ط±ظٹ)"}
+                          {currentSeatMenuData.adminMuted ? "إلغاء الكتم الإداري" : "كتم المايك (إداري)"}
                         </button>
                       </>
                     )}
-                    {/* ط§ط¬ظ„ط³ ظ‡ظ†ط§ â€” ظٹظپطھط­ ط§ظ„ظ‚ظپظ„ طھظ„ظ‚ط§ط¦ظٹط§ظ‹ ط¥ط°ط§ ظƒط§ظ† ظ…ظ‚ظپظ„ */}
+                    {/* اجلس هنا — يفتح القفل تلقائياً إذا كان مقفل */}
                     {!currentSeatMenuData.userId && isOwnerOrMod && (
                       <button
                         onClick={async () => {
@@ -1301,14 +1301,14 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
                             }
                             await takeSeat({ roomId, seatIndex: currentSeatMenuData.seatIndex, tokenOverride: getActiveToken() ?? deviceId });
                           } catch (e: any) {
-                            dialog.alert(e?.message || "ط®ط·ط£");
+                            dialog.alert(e?.message || "خطأ");
                           }
                           setOpenSeatMenu(null);
                           setOpenSeatMenuPos(null);
                         }}
                         className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs"
                       >
-                        <Move size={14} /> ط§ط¬ظ„ط³ ظ‡ظ†ط§ {currentSeatMenuData.locked && "(ظٹظپطھط­ ط§ظ„ظ‚ظپظ„)"}
+                        <Move size={14} /> اجلس هنا {currentSeatMenuData.locked && "(يفتح القفل)"}
                       </button>
                     )}
                   </>
@@ -1323,7 +1323,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
             onClick={() => setChatTab("system")}
             className="relative pb-1.5 text-xs font-black transition"
           >
-            <span className={chatTab === "system" ? "text-white" : "text-white/50"}>ط§ظ„ظ†ط¸ط§ظ…</span>
+            <span className={chatTab === "system" ? "text-white" : "text-white/50"}>النظام</span>
             {chatTab === "system" && (
               <span className="absolute bottom-0 right-0 left-0 h-0.5 rounded-full bg-emerald-400" />
             )}
@@ -1332,7 +1332,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
             onClick={() => setChatTab("chat")}
             className="relative pb-1.5 text-xs font-black transition"
           >
-            <span className={chatTab === "chat" ? "text-white" : "text-white/50"}>ط§ظ„ط¯ط±ط¯ط´ط©</span>
+            <span className={chatTab === "chat" ? "text-white" : "text-white/50"}>الدردشة</span>
             {chatTab === "chat" && (
               <span className="absolute bottom-0 right-0 left-0 h-0.5 rounded-full bg-emerald-400" />
             )}
@@ -1343,16 +1343,16 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
           {messages === undefined ? (
             <div className="flex justify-center py-6"><Loader2 className="animate-spin text-white/40" size={18} /></div>
           ) : messages.length === 0 ? (
-            <p className="text-white/40 text-xs text-center py-6">{room.welcomeMessage || "ظ„ط§ طھظˆط¬ط¯ ط±ط³ط§ط¦ظ„ ط¨ط¹ط¯"}</p>
+            <p className="text-white/40 text-xs text-center py-6">{room.welcomeMessage || "لا توجد رسائل بعد"}</p>
           ) : (
             <div className="space-y-2">
               {messages
               .filter((m: any) => (m.createdAt ?? 0) >= enteredAt || m.system)
               .filter((m: any) => chatTab === "chat" ? !m.system : m.system)
               .map((m: any) => {
-                // [ezo-chat] System messages (entry/announcement) â€” centered pill
+                // [ezo-chat] System messages (entry/announcement) — centered pill
                 if (m.system || !m.senderId) {
-                  const isAnnouncement = (m.text ?? "").includes("ط§ط¹ظ„ط§ظ†") || (m.text ?? "").includes("ط¥ط¹ظ„ط§ظ†");
+                  const isAnnouncement = (m.text ?? "").includes("اعلان") || (m.text ?? "").includes("إعلان");
                   return (
                     <div key={m._id} className="flex justify-center py-0.5">
                       <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border backdrop-blur-md ${
@@ -1360,7 +1360,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
                           ? "bg-amber-500/10 border-amber-400/30"
                           : "bg-white/5 border-white/10"
                       }`}>
-                        {isAnnouncement && <span className="text-amber-200 text-[10px]">ًں“¢</span>}
+                        {isAnnouncement && <span className="text-amber-200 text-[10px]">📢</span>}
                         <span className={`text-[10px] font-bold ${isAnnouncement ? "text-amber-200" : "text-white/60"}`}>
                           {renderTextWithMentions(m.text)}
                         </span>
@@ -1426,7 +1426,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
         )}
 
         <footer className="px-2 py-2 flex items-center justify-around flex-shrink-0">
-          {/* 1. Chat â€” RIGHT in RTL (reversed) */}
+          {/* 1. Chat — RIGHT in RTL (reversed) */}
           <button
             onClick={() => { const next = !showChatInput; setShowChatInput(next); if (next) markChatSeen(); }}
             className="relative w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center active:scale-90 transition text-white/90"
@@ -1508,7 +1508,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
             </svg>
           </button>
 
-          {/* 7. Gift â€” LEFT in RTL (reversed) */}
+          {/* 7. Gift — LEFT in RTL (reversed) */}
           <button
             onClick={() => setShowGifts(true)}
             className="w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center active:scale-90 transition"
@@ -1517,12 +1517,12 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
           </button>
         </footer>
 
-        {/* [ezo-rocket] ط²ط± ط§ظ„طµط§ط±ظˆط® ط§ظ„ط¹ط§ط¦ظ… */}
+        {/* [ezo-rocket] زر الصاروخ العائم */}
         {activeRocket && (
           <button
             onClick={() => setShowRocketSheet(true)}
             className="fixed bottom-20 left-2 z-[72] flex flex-col items-center active:scale-90 transition-transform"
-            title="ط§ظ„طµط§ط±ظˆط®"
+            title="الصاروخ"
           >
             <img
               src={activeRocket.img}
@@ -1543,7 +1543,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
         )}
       </div>
 
-      {/* ==================== GLOBAL MARQUEE (â‰¥ 30000) ==================== */}
+      {/* ==================== GLOBAL MARQUEE (≥ 30000) ==================== */}
       {activeGlobalBanner && !(isGlobalBanner && activeGift?.roomId === roomId) && (
         <div className="fixed top-2 left-0 right-0 z-[100] flex justify-center pointer-events-none animate-marquee-slide">
           <div className="max-w-[360px] w-[calc(100%-16px)] bg-gradient-to-r from-amber-600 via-yellow-400 to-amber-600 p-[1.5px] rounded-full golden-glow">
@@ -1559,8 +1559,8 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
                 <span className="text-[11px] font-black text-yellow-300 truncate max-w-[65px]">{activeGlobalBanner.fromName}</span>
               </div>
               <div className="flex flex-col items-center px-1">
-                <span className="text-[9px] font-bold text-white/90 truncate">ط£ظ‡ط¯ظ‰ {activeGlobalBanner.giftName}</span>
-                <span className="text-xs font-black text-yellow-400">أ—{activeGlobalBanner.quantity}</span>
+                <span className="text-[9px] font-bold text-white/90 truncate">أهدى {activeGlobalBanner.giftName}</span>
+                <span className="text-xs font-black text-yellow-400">×{activeGlobalBanner.quantity}</span>
               </div>
               <div className="flex items-center gap-1 min-w-0">
                 <span className="text-[11px] font-black text-yellow-300 truncate max-w-[65px]">{activeGlobalBanner.toName}</span>
@@ -1579,7 +1579,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
 
       {activeGift && (
         <>
-          {/* ============ VIDEO FULLSCREEN (â‰¥ 1000) ============ */}
+          {/* ============ VIDEO FULLSCREEN (≥ 1000) ============ */}
           {(activeGift.price ?? 0) >= 1000 && activeGift.mediaType === "video" && activeGift.mediaUrl && videoReady && (
             <div className="fixed inset-0 z-[80] pointer-events-none flex items-center justify-center">
               <video
@@ -1645,7 +1645,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
                     )}
                     <span className="text-purple-300 text-[10px] font-bold truncate max-w-[80px]">{activeGift.giftName}</span>
                   </div>
-                  <span className={`text-yellow-300 text-xs font-black ${showComboPulse ? "combo-pulse" : ""}`}>أ—{totalQuantity}</span>
+                  <span className={`text-yellow-300 text-xs font-black ${showComboPulse ? "combo-pulse" : ""}`}>×{totalQuantity}</span>
                 </div>
                 <div className="flex items-center gap-1.5 truncate">
                   <span className="text-white text-xs font-bold truncate max-w-[60px]">{activeGift.toName}</span>
@@ -1661,7 +1661,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
             </div>
           )}
 
-          {/* ============ GLOBAL GOLDEN BANNER (â‰¥ 30000 â€” in-room) ============ */}
+          {/* ============ GLOBAL GOLDEN BANNER (≥ 30000 — in-room) ============ */}
           {isGlobalBanner && (
             <div className="fixed top-2 left-0 right-0 z-[95] flex justify-center pointer-events-none">
               <div className="max-w-[360px] w-[calc(100%-16px)] bg-gradient-to-r from-amber-600 via-yellow-400 to-amber-600 p-[1.5px] rounded-full golden-glow">
@@ -1693,9 +1693,9 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
                           />
                         )
                       )}
-                      <span className="text-[9px] font-bold text-white/90 truncate max-w-[90px]">ط£ظ‡ط¯ظ‰ {activeGift.giftName}</span>
+                      <span className="text-[9px] font-bold text-white/90 truncate max-w-[90px]">أهدى {activeGift.giftName}</span>
                     </div>
-                    <span className={`text-xs font-black text-yellow-400 ${showComboPulse ? "combo-pulse" : ""}`}>أ—{totalQuantity}</span>
+                    <span className={`text-xs font-black text-yellow-400 ${showComboPulse ? "combo-pulse" : ""}`}>×{totalQuantity}</span>
                   </div>
                   <div className="flex items-center gap-1 min-w-0">
                     <span className="text-[11px] font-black text-yellow-300 truncate max-w-[65px]">{activeGift.toName}</span>
@@ -1712,7 +1712,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
             </div>
           )}
 
-          {/* ============ MICRO GIFT (< 1000) â€” multi-particle flies to mics/listeners ============ */}
+          {/* ============ MICRO GIFT (< 1000) — multi-particle flies to mics/listeners ============ */}
           {(activeGift.price ?? 0) < 1000 && activeGift.mediaUrl && (
             <div className="fixed inset-0 z-[75] pointer-events-none">
               {flyingTargets.map((target, idx) => (
@@ -1737,7 +1737,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
                 </div>
               ))}
 
-              {/* ط´ط§ط±ط© طھط¬ظ…ظٹط¹ ط§ظ„ظ…ط³طھظ…ط¹ظٹظ† ط§ظ„ظ…ط®ظپظٹظٹظ† */}
+              {/* شارة تجميع المستمعين المخفيين */}
               {aggregateBadge && (
                 <div
                   className="fixed pointer-events-none aggregate-badge-anim"
@@ -1749,7 +1749,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
                 >
                   <div className="bg-gradient-to-r from-pink-500/90 to-purple-600/90 rounded-full px-3 py-1 shadow-2xl border border-white/30">
                     <span className="text-white text-xs font-black">
-                      +{aggregateBadge.count} ظ…ط³طھظ…ط¹ <Gift size={10} className="inline text-pink-400" />
+                      +{aggregateBadge.count} مستمع <Gift size={10} className="inline text-pink-400" />
                     </span>
                   </div>
                 </div>
@@ -1774,9 +1774,9 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
                 </div>
                 <div className="flex flex-col text-right min-w-0">
                   <span className="text-white text-[10px] font-bold truncate max-w-[70px]">{activeGift.fromName}</span>
-                  <span className="text-white/60 text-[8px] truncate max-w-[70px]">ط£ط±ط³ظ„ ط¥ظ„ظ‰ {activeGift.toName}</span>
+                  <span className="text-white/60 text-[8px] truncate max-w-[70px]">أرسل إلى {activeGift.toName}</span>
                 </div>
-                <span className="text-yellow-300 text-xl font-black italic drop-shadow-[0_0_10px_rgba(250,204,21,0.7)]">أ—{totalQuantity}</span>
+                <span className="text-yellow-300 text-xl font-black italic drop-shadow-[0_0_10px_rgba(250,204,21,0.7)]">×{totalQuantity}</span>
               </div>
             </div>
           )}
@@ -1808,7 +1808,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
 
       {showEvents && (() => {
         const owner = (members ?? []).find((m: any) => m.role === "owner");
-        const ownerName = owner?.name ?? "طµط§ط­ط¨ ط§ظ„ط؛ط±ظپط©";
+        const ownerName = owner?.name ?? "صاحب الغرفة";
         const ownerWealth = (owner as any)?.wealthValue ?? 0;
         const ownerLevel = levelFromValue(ownerWealth);
         return <RoomEventsSheet ownerName={ownerName} ownerWealthLevel={ownerLevel} onClose={() => setShowEvents(false)} />;
@@ -1896,14 +1896,14 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
               setMySeatIndexForMiniProfile(null);
               setDmConversationId(res.conversationId);
             } catch (e: any) {
-              dialog.alert(e?.message || "ظپط´ظ„");
+              dialog.alert(e?.message || "فشل");
             }
           }}
           onFollowToggle={() => {
             if (!miniProfileUserId) return;
             toggleFollow({ targetUserId: miniProfileUserId as any, tokenOverride: getActiveToken() ?? deviceId })
-              .then(() => dialog.alert("طھظ… ط§ظ„طھط­ط¯ظٹط«"))
-              .catch((e: any) => dialog.alert(e?.message || "ظپط´ظ„"));
+              .then(() => dialog.alert("تم التحديث"))
+              .catch((e: any) => dialog.alert(e?.message || "فشل"));
           }}
           onOpenFullProfile={() => {
             setFullProfileUserId(miniProfileUserId);
@@ -1922,7 +1922,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
             (() => {
             const seatItem = seats?.find((s: any) => s.userId === miniProfileUserId);
             if (seatItem && (seatItem.userVip || 0) >= 5) {
-              alert("ط¹ط°ط±ط§ظ‹طŒ ظ‡ط°ط§ ط§ظ„ط¹ط¶ظˆ ظٹطھظ…طھط¹ ط¨ط­طµط§ظ†ط© ظ…ظ„ظƒظٹط© (VIP 5+) ط¶ط¯ ط§ظ„ط·ط±ط¯");
+              alert("عذراً، هذا العضو يتمتع بحصانة ملكية (VIP 5+) ضد الطرد");
               return Promise.reject(new Error("VIP immunity"));
             }
             return kickFromRoom({ roomId, toUserId: miniProfileUserId as any, tokenOverride: getActiveToken() ?? deviceId });
@@ -1931,7 +1931,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
                 setMiniProfileUserId(null);
                 setMySeatIndexForMiniProfile(null);
               })
-              .catch((e: any) => dialog.alert(e?.message || "ط®ط·ط£"));
+              .catch((e: any) => dialog.alert(e?.message || "خطأ"));
           }}
           onBan={() => {
             if (!miniProfileUserId) return;
@@ -1940,7 +1940,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
                 setMiniProfileUserId(null);
                 setMySeatIndexForMiniProfile(null);
               })
-              .catch((e: any) => dialog.alert(e?.message || "ط®ط·ط£"));
+              .catch((e: any) => dialog.alert(e?.message || "خطأ"));
           }}
           onMute={() => {
             const targetSeat = mySeatIndexForMiniProfile !== null
@@ -1957,21 +1957,21 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
               ? mySeatIndexForMiniProfile
               : seats?.find((s: any) => s.userId === miniProfileUserId)?.seatIndex;
             if (targetSeat === undefined || targetSeat === null) return;
-            // ط¥ط°ط§ ظƒط§ظ† ظ…ط§ظٹظƒظٹ ط£ظ†ط§ â†’ leaveSeat
+            // إذا كان مايكي أنا → leaveSeat
             if (mySeatIndexForMiniProfile !== null) {
               leaveSeat({ roomId, tokenOverride: getActiveToken() ?? deviceId })
                 .then(() => agoraManager.unpublishMicrophone())
                 .then(() => { setMiniProfileUserId(null); setMySeatIndexForMiniProfile(null); })
                 .catch(() => {});
             } else {
-              // ط¥ظ†ط²ط§ظ„ ط´ط®طµ ط¢ط®ط±
+              // إنزال شخص آخر
               if (!miniProfileUserId) return;
               removeFromSeat({ roomId, toUserId: miniProfileUserId as any, tokenOverride: getActiveToken() ?? deviceId })
                 .then(() => {
                   setMiniProfileUserId(null);
                   setMySeatIndexForMiniProfile(null);
                 })
-                .catch((e: any) => dialog.alert(e?.message || "ط®ط·ط£"));
+                .catch((e: any) => dialog.alert(e?.message || "خطأ"));
             }
           }}
           onPromote={() => {
@@ -1981,7 +1981,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
                 setMiniProfileUserId(null);
                 setMySeatIndexForMiniProfile(null);
               })
-              .catch((e: any) => dialog.alert(e?.message || "ط®ط·ط£"));
+              .catch((e: any) => dialog.alert(e?.message || "خطأ"));
           }}
           onDemote={() => {
             if (!miniProfileUserId) return;
@@ -1990,7 +1990,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
                 setMiniProfileUserId(null);
                 setMySeatIndexForMiniProfile(null);
               })
-              .catch((e: any) => dialog.alert(e?.message || "ط®ط·ط£"));
+              .catch((e: any) => dialog.alert(e?.message || "خطأ"));
           }}
           onInviteToMic={() => {
             const targetSeat = seats?.find((s: any) => s.userId === miniProfileUserId)?.seatIndex;
@@ -2007,11 +2007,11 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
           <div className="fixed inset-0 bg-black/60 z-[75]" onClick={() => setInviteSeatIndex(null)} />
           <div className="fixed bottom-0 left-0 right-0 z-[80] max-w-md mx-auto bg-gray-950 rounded-t-2xl max-h-[70vh] flex flex-col" dir="rtl">
             <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
-              <h2 className="text-white font-bold text-sm">ط¯ط¹ظˆط© ظ„ظ„ظ…ط§ظٹظƒ {inviteSeatIndex + 1}</h2>
+              <h2 className="text-white font-bold text-sm">دعوة للمايك {inviteSeatIndex + 1}</h2>
               <button onClick={() => setInviteSeatIndex(null)} className="text-white/70"><X size={20} /></button>
             </div>
             <div className="flex-1 overflow-y-auto p-3 space-y-2">
-              {listeners.length === 0 ? <p className="text-white/40 text-center py-8 text-sm">ظ„ط§ ظٹظˆط¬ط¯ ظ…ط³طھظ…ط¹ظˆظ†</p> : listeners.map((l) => (
+              {listeners.length === 0 ? <p className="text-white/40 text-center py-8 text-sm">لا يوجد مستمعون</p> : listeners.map((l) => (
                 <button key={l._id} onClick={() => { inviteToSeat({ roomId, toUserId: l.userId, seatIndex: inviteSeatIndex, tokenOverride: getActiveToken() ?? deviceId }); setInviteSeatIndex(null); }} className="w-full flex items-center gap-3 p-2 bg-white/5 hover:bg-white/10 rounded-xl transition">
                   <div className="w-10 h-10 rounded-full overflow-hidden bg-purple-500 flex items-center justify-center text-sm font-bold text-white">
                     {true ? <img src={l?.avatarUrl || "/avatar.png"} alt="" className="w-full h-full object-cover" /> : (l.name?.[0] || "?")}
@@ -2031,7 +2031,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
       {myInvite && (
         <div className="fixed bottom-20 left-3 right-3 z-[90] max-w-md mx-auto bg-gradient-to-r from-purple-600 to-purple-800 rounded-2xl p-3 shadow-2xl border border-white/20" dir="rtl">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-white text-sm font-bold flex-1">{myInvite.fromName} ظٹط¯ط¹ظˆظƒ ظ„ظ„ظ…ط§ظٹظƒ {myInvite.seatIndex + 1}</p>
+            <p className="text-white text-sm font-bold flex-1">{myInvite.fromName} يدعوك للمايك {myInvite.seatIndex + 1}</p>
             <div className="flex gap-2">
               <button onClick={() => respondInvite({ inviteId: myInvite._id, accept: true, tokenOverride: getActiveToken() ?? deviceId })} className="bg-white text-purple-800 p-2 rounded-full"><Check size={16} /></button>
               <button onClick={() => respondInvite({ inviteId: myInvite._id, accept: false, tokenOverride: getActiveToken() ?? deviceId })} className="bg-red-500 text-white p-2 rounded-full"><X size={16} /></button>
@@ -2042,7 +2042,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
 
 
 
-      {/* Combo Overlay (new layer, center) â€” doesn't affect anything */}
+      {/* Combo Overlay (new layer, center) — doesn't affect anything */}
       {comboOverlay && comboOverlay.gift?.mediaUrl && (
         <div className="fixed inset-0 z-[72] pointer-events-none flex items-center justify-center" dir="rtl">
           <div
@@ -2070,11 +2070,11 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
               className="combo-number-pulse relative"
             >
               <span className="text-6xl font-black italic tracking-tighter bg-gradient-to-br from-yellow-200 via-yellow-400 to-amber-500 bg-clip-text text-transparent drop-shadow-[0_4px_16px_rgba(250,204,21,0.8)]">
-                أ—{comboOverlay.count}
+                ×{comboOverlay.count}
               </span>
             </div>
 
-            {/* Sender â†’ Recipient */}
+            {/* Sender → Recipient */}
             <div className="bg-black/85 backdrop-blur-xl rounded-full px-5 py-2 border border-yellow-400/50 shadow-[0_0_24px_rgba(250,204,21,0.35)] flex items-center gap-2">
               {comboOverlay.gift.fromAvatar && (
                 <img
@@ -2086,7 +2086,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
               <span className="text-white text-xs font-black truncate max-w-[80px]">
                 {comboOverlay.gift.fromName}
               </span>
-              <span className="text-white/50 text-[10px]">â†’</span>
+              <span className="text-white/50 text-[10px]">→</span>
               <span className="text-white text-xs font-black truncate max-w-[80px]">
                 {comboOverlay.gift.toName}
               </span>
@@ -2115,11 +2115,11 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
           rocket={{
             img: `/rockets/rocket-${["green", "blue", "purple", "red", "gold"][launchAnimEvent.levelIndex] ?? "green"}.png`,
             color: launchAnimEvent.levelColor ?? "#10b981",
-            name: launchAnimEvent.levelName ?? "ط£ط®ط¶ط±",
+            name: launchAnimEvent.levelName ?? "أخضر",
           }}
           launcher={{
             avatarUrl: launchAnimEvent.lastHitAvatarUrl ?? undefined,
-            name: launchAnimEvent.lastHitUserName ?? "ظ„ط§ط¹ط¨",
+            name: launchAnimEvent.lastHitUserName ?? "لاعب",
           }}
           onComplete={() => {
             setLaunchAnimEvent(null);
@@ -2185,8 +2185,8 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
             if (key === "mini-chat") { setShowMiniChat(true); return; }
             if (key === "spend") { setShowSpend(true); return; }
             if (key === "deco") { setShowMicStyle(true); return; }
-            // ط¨ط§ظ‚ظٹ ط§ظ„ظ…ظٹط²ط§طھ طھط­طھط§ط¬ ظ…ظƒظˆظ†ط§طھ ط®ط§طµط© - ظ‚ط±ظٹط¨ط§ظ‹
-            dialog.alert("ظ‡ط°ظ‡ ط§ظ„ظ…ظٹط²ط© ظ‚ظٹط¯ ط§ظ„طھط·ظˆظٹط± â€” ظ‚ط±ظٹط¨ط§ظ‹");
+            // باقي الميزات تحتاج مكونات خاصة - قريباً
+            dialog.alert("هذه الميزة قيد التطوير — قريباً");
           }} />
       )}
 
@@ -2198,7 +2198,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
         )}
       {shareToast && (
         <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[400] bg-black/85 backdrop-blur-xl rounded-2xl px-6 py-4 shadow-2xl border border-white/20">
-          <p className="text-white text-sm font-black">طھظ… ظ†ط³ط® ط±ط§ط¨ط· ط§ظ„ط؛ط±ظپط©</p>
+          <p className="text-white text-sm font-black">تم نسخ رابط الغرفة</p>
         </div>
       )}
       <VipEntryOverlay entry={currentEntry} />

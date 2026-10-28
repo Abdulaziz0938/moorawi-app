@@ -1,27 +1,27 @@
-﻿// [ezo-presence] ظ†ط¸ط§ظ… ط­ط¶ظˆط± ط§ظ„ظ…ط³طھط®ط¯ظ…ظٹظ† â€” ظ…ط·ط§ط¨ظ‚ ظ„ظ€ Yalla/Bigo/SUGO
+﻿// [ezo-presence] نظام حضور المستخدمين — مطابق لـ Yalla/Bigo/SUGO
 //
-// ط§ظ„ظ…ط¹ظ…ط§ط±:
-//   - ط§ظ„ط¹ظ…ظٹظ„ ظٹظڈط±ط³ظ„ heartbeat ظƒظ„ 25 ط«ط§ظ†ظٹط©
-//   - Member ظٹظڈط¹طھط¨ط± ظ†ط´ط·ط§ظ‹ ط¥ط°ط§ lastSeenAt > now - 90_000 (3x interval)
-//   - ط¹ظ†ط¯ ط§ظ„ط®ط±ظˆط¬: leave mutation ط£ظˆ sendBeacon (ظپظˆط±ظٹ)
-//   - ظƒظ„ ط¯ظ‚ظٹظ‚ط©: sweepInactive ظٹط­ط°ظپ ط§ظ„ط£ط¹ط¶ط§ط، ط§ظ„ظ…ظٹطھظٹظ† + ظٹظپط±ظ‘ط؛ ظ…ط§ظٹظƒط§طھظ‡ظ…
+// المعمار:
+//   - العميل يُرسل heartbeat كل 25 ثانية
+//   - Member يُعتبر نشطاً إذا lastSeenAt > now - 90_000 (3x interval)
+//   - عند الخروج: leave mutation أو sendBeacon (فوري)
+//   - كل دقيقة: sweepInactive يحذف الأعضاء الميتين + يفرّغ مايكاتهم
 //
 // Session:
-//   - ظƒظ„ ط¯ط®ظˆظ„ ظ„ط؛ط±ظپط© = sessionId ط¬ط¯ظٹط¯
-//   - ط§ظ„ط¬ظ„ط³ط© طھظ†طھظ‡ظٹ ط¹ظ†ط¯ ط§ظ„ط®ط±ظˆط¬ ط£ظˆ sweep
-//   - sessionCharms = ط§ظ„ط¬ط§ط°ط¨ظٹط© ظپظٹ ط§ظ„ط¬ظ„ط³ط© ط§ظ„ط­ط§ظ„ظٹط© ظپظ‚ط·
+//   - كل دخول لغرفة = sessionId جديد
+//   - الجلسة تنتهي عند الخروج أو sweep
+//   - sessionCharms = الجاذبية في الجلسة الحالية فقط
 
 import { v } from "convex/values";
 import { mutation, query, internalMutation } from "./_generated/server";
 import { requireUser } from "./lib/auth";
 
 const HEARTBEAT_INTERVAL_MS = 25_000;
-const STALE_THRESHOLD_MS = 600_000; // 3 minutes â€” ظƒط§ظپظچ ظ„ظ€ Android Doze + reconnect
+const STALE_THRESHOLD_MS = 600_000; // 3 minutes — كافٍ لـ Android Doze + reconnect
 const MAX_SEATS = 24;
 
 // ============================================================
-// heartbeat â€” ظٹظڈط­ط¯ظ‘ط« lastSeenAt ظ„ظ„ظ…ط³طھط®ط¯ظ… ظپظٹ ط§ظ„ط؛ط±ظپط©
-// ظٹظڈط³طھط¯ط¹ظ‰ ظ…ظ† ط§ظ„ط¹ظ…ظٹظ„ ظƒظ„ 25 ط«ط§ظ†ظٹط©
+// heartbeat — يُحدّث lastSeenAt للمستخدم في الغرفة
+// يُستدعى من العميل كل 25 ثانية
 // ============================================================
 export const heartbeat = mutation({
   args: {
@@ -41,7 +41,7 @@ export const heartbeat = mutation({
 
     const now = Date.now();
     if (!member) {
-      // [ezo-fix] Self-Healing: ط¥ط¹ط§ط¯ط© ط¥ظ†ط´ط§ط، ط§ظ„ط¹ط¶ظˆظٹط© ط¥ط°ط§ ط§ظ†ظ…ط³ط­طھ
+      // [ezo-fix] Self-Healing: إعادة إنشاء العضوية إذا انمسحت
       const room = await ctx.db.get("rooms", args.roomId);
       if (!room) return { ok: false, reason: "room_not_found" };
       
@@ -64,12 +64,12 @@ export const heartbeat = mutation({
 
     await ctx.db.patch("roomMembers", member._id, {
       lastSeenAt: now,
-      // ظ„ظˆ ط§ظ„ط¬ظ„ط³ط© ط§ظ†طھظ‡طھ (sweep ط£ظˆ ط؛ظٹط§ط¨ ط·ظˆظٹظ„)طŒ ظ†ط¨ط¯ط£ ط¬ظ„ط³ط© ط¬ط¯ظٹط¯ط©
+      // لو الجلسة انتهت (sweep أو غياب طويل)، نبدأ جلسة جديدة
       sessionId: wasStale ? `${me._id}_${now}` : (member.sessionId ?? `${me._id}_${now}`),
       sessionStartedAt: wasStale ? now : (member.sessionStartedAt ?? now),
     });
 
-    // [ezo-vip] طھط³ط¬ظٹظ„ entry ط¹ظ†ط¯ ط£ظˆظ„ heartbeat (ط£ظˆ ط¨ط¹ط¯ ط§ظ†ظ‚ط·ط§ط¹ ط·ظˆظٹظ„) ظ„ظ…ط³طھط®ط¯ظ… VIP 3+
+    // [ezo-vip] تسجيل entry عند أول heartbeat (أو بعد انقطاع طويل) لمستخدم VIP 3+
     if (wasStale) {
       const { activeVipLevel } = await import("./lib/vip");
       const vip = activeVipLevel(me);
@@ -78,7 +78,7 @@ export const heartbeat = mutation({
           roomId: args.roomId,
           userId: me._id,
           level: vip,
-          name: me.name ?? "ط¶ظٹظپ",
+          name: me.name ?? "ضيف",
           avatarUrl: me.avatarUrl,
           createdAt: now,
         });
@@ -94,7 +94,7 @@ export const heartbeat = mutation({
 });
 
 // ============================================================
-// leave â€” ط®ط±ظˆط¬ ظپظˆط±ظٹ (ط¹ظ†ط¯ ط²ط± ط§ظ„ط®ط±ظˆط¬ ط£ظˆ sendBeacon)
+// leave — خروج فوري (عند زر الخروج أو sendBeacon)
 // ============================================================
 export const leave = mutation({
   args: { roomId: v.id("rooms"), tokenOverride: v.optional(v.string()) },
@@ -102,7 +102,7 @@ export const leave = mutation({
     try {
       const me = await requireUser(ctx, args.tokenOverride);
       
-      // 1. ط­ط°ظپ ط§ظ„ط¹ط¶ظˆظٹط©
+      // 1. حذف العضوية
       const member = await ctx.db.query("roomMembers")
         .withIndex("by_room_and_user", (q) => q.eq("roomId", args.roomId).eq("userId", me._id))
         .unique();
@@ -115,7 +115,7 @@ export const leave = mutation({
         }
       }
 
-      // 2. طھظپط±ظٹط؛ ط§ظ„ظ…ط§ظٹظƒ ظپظˆط±ط§ظ‹
+      // 2. تفريغ المايك فوراً
       const seats = await ctx.db.query("micSeats")
         .withIndex("by_room_and_seatIndex", (q) => q.eq("roomId", args.roomId))
         .take(40);
@@ -134,14 +134,14 @@ export const leave = mutation({
 });
 
 // ============================================================
-// activeMembers â€” ط§ظ„ط£ط¹ط¶ط§ط، ط§ظ„ظ†ط´ط·ظˆظ† ظپظ‚ط· (lastSeenAt > now - 90s)
-// ظƒظ„ ط§ظ„ط؛ط±ظپ طھظڈط³طھط¯ط¹ظٹ ظ‡ط°ط§ ط¨ط¯ظ„ members
+// activeMembers — الأعضاء النشطون فقط (lastSeenAt > now - 90s)
+// كل الغرف تُستدعي هذا بدل members
 // ============================================================
 export const activeMembers = query({
   args: { roomId: v.id("rooms") },
   handler: async (ctx, args) => {
     const threshold = Date.now() - STALE_THRESHOLD_MS;
-    // [ezo-fix] ط¬ظ„ط¨ ط§ظ„ظƒظ„ ط«ظ… ظپظ„طھط±ط© ط§ظ„ظ„ظٹ ظ„ظٹط³ظˆط§ ط¹ظ„ظ‰ ظ…ط§ظٹظƒ
+    // [ezo-fix] جلب الكل ثم فلترة اللي ليسوا على مايك
     const rows = await ctx.db
       .query("roomMembers")
       .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
@@ -158,7 +158,7 @@ export const activeMembers = query({
           userId: m.userId,
           role: m.role,
           banned: m.banned ?? false,
-          name: user?.name ?? "ط¶ظٹظپ",
+          name: user?.name ?? "ضيف",
           userNumber: user?.userNumber ?? null,
           avatarUrl,
           vip: user?.vipLevel ?? 0,
@@ -170,13 +170,13 @@ export const activeMembers = query({
 });
 
 // ============================================================
-// activeCount â€” ط¹ط¯ط¯ ط§ظ„ظ…طھطµظ„ظٹظ† ظپظٹ ط§ظ„ط؛ط±ظپط© (ط³ط±ظٹط¹)
+// activeCount — عدد المتصلين في الغرفة (سريع)
 // ============================================================
 export const activeCount = query({
   args: { roomId: v.id("rooms") },
   handler: async (ctx, args) => {
     const threshold = Date.now() - STALE_THRESHOLD_MS;
-    // [ezo-fix] ط¬ظ„ط¨ ط§ظ„ظƒظ„ ط«ظ… ظپظ„طھط±ط© ط§ظ„ظ„ظٹ ظ„ظٹط³ظˆط§ ط¹ظ„ظ‰ ظ…ط§ظٹظƒ
+    // [ezo-fix] جلب الكل ثم فلترة اللي ليسوا على مايك
     const rows = await ctx.db
       .query("roomMembers")
       .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
@@ -186,17 +186,17 @@ export const activeCount = query({
 });
 
 // ============================================================
-// sweepInactive â€” طھظ†ط¸ظٹظپ ط¯ظˆط±ظٹ (ظƒظ„ 60 ط«ط§ظ†ظٹط© ط¹ط¨ط± cron)
-// ظٹط­ط°ظپ ط§ظ„ط£ط¹ط¶ط§ط، ط§ظ„ظ…ظٹطھظٹظ† + ظٹظپط±ظ‘ط؛ ظ…ط§ظٹظƒط§طھظ‡ظ…
+// sweepInactive — تنظيف دوري (كل 60 ثانية عبر cron)
+// يحذف الأعضاء الميتين + يفرّغ مايكاتهم
 // ============================================================
 export const sweepInactive = internalMutation({
   args: {},
   handler: async (ctx) => {
     const threshold = Date.now() - STALE_THRESHOLD_MS;
 
-    // 1) ط§ظ„ط£ط¹ط¶ط§ط، ط§ظ„ظ…ظٹطھظˆظ† â€” ظ…ط±طھظٹظ†:
-    //    (ط£) ط¹ط¨ط± index (lastSeenAt < threshold) â€” ط³ط±ظٹط¹ ظˆظپط¹ظ‘ط§ظ„
-    //    (ط¨) ط§ظ„طھظ‚ط§ط· ط§ظ„ط³ط¬ظ„ط§طھ ط¨ط¯ظˆظ† lastSeenAt (ط¨ظٹط§ظ†ط§طھ ظ…ط§ ظ‚ط¨ظ„ presence)
+    // 1) الأعضاء الميتون — مرتين:
+    //    (أ) عبر index (lastSeenAt < threshold) — سريع وفعّال
+    //    (ب) التقاط السجلات بدون lastSeenAt (بيانات ما قبل presence)
     const staleIndexed = await ctx.db
       .query("roomMembers")
       .withIndex("by_lastSeen", (q) => q.lt("lastSeenAt", threshold))
@@ -215,7 +215,7 @@ export const sweepInactive = internalMutation({
       if (processedIds.has(m._id)) continue;
       processedIds.add(m._id);
 
-      // ط§ظ„ظ…ط§ظ„ظƒ ظٹط¨ظ‚ظ‰ â€” ظ„ظƒظ† ظ†ظڈط¹ط·ظٹظ‡ lastSeenAt ط¬ط¯ظٹط¯ (ط´ط±ط· ط£ط³ط§ط³ظٹ)
+      // المالك يبقى — لكن نُعطيه lastSeenAt جديد (شرط أساسي)
       const room = await ctx.db.get("rooms", m.roomId);
       if (room && room.ownerId === m.userId) {
         if (!m.lastSeenAt) {
@@ -223,7 +223,7 @@ export const sweepInactive = internalMutation({
         }
         continue;
       }
-      // [ezo-fix] ط¥ط°ط§ ظƒط§ظ† ط§ظ„ظ…ط³طھط®ط¯ظ… ظ‚ط§ط¹ط¯ ط¹ظ„ظ‰ ظ…ط§ظٹظƒطŒ ظ„ط§ ظ†ظ…ط³ط­ظ‡ ظ…ظ† ط§ظ„ط؛ط±ظپط© ط£ط¨ط¯ط§ظ‹
+      // [ezo-fix] إذا كان المستخدم قاعد على مايك، لا نمسحه من الغرفة أبداً
       const isOnMic = await ctx.db
         .query("micSeats")
         .withIndex("by_room_and_seatIndex", (q) => q.eq("roomId", m.roomId))
@@ -244,7 +244,7 @@ export const sweepInactive = internalMutation({
       removed++;
     }
 
-    // 2) ظپط±ظ‘ط؛ ط§ظ„ظ…ط§ظٹظƒط§طھ ط§ظ„طھظٹ ط£طµط­ط§ط¨ظ‡ط§ ط®ط±ط¬ظˆط§
+    // 2) فرّغ المايكات التي أصحابها خرجوا
     const deadSeats = await ctx.db
       .query("micSeats")
       .take(500);
@@ -252,7 +252,7 @@ export const sweepInactive = internalMutation({
     let clearedSeats = 0;
     for (const s of deadSeats) {
       if (!s.userId) continue;
-      // ظ‡ظ„ ظ‡ط°ط§ ط§ظ„ظ…ط³طھط®ط¯ظ… ظ†ط´ط· ظپظٹ ظ‡ط°ظ‡ ط§ظ„ط؛ط±ظپط©طں
+      // هل هذا المستخدم نشط في هذه الغرفة؟
       const stillIn = await ctx.db
         .query("roomMembers")
         .withIndex("by_room_and_user", (q) =>
@@ -275,7 +275,7 @@ export const sweepInactive = internalMutation({
       }
     }
 
-    // 3) ظ†ط¸ظ‘ظپ roomEntries ط§ظ„ط£ظ‚ط¯ظ… ظ…ظ† ط³ط§ط¹ط©
+    // 3) نظّف roomEntries الأقدم من ساعة
     const oldEntries = await ctx.db
       .query("roomEntries")
       .filter((q) => q.lt(q.field("createdAt"), Date.now() - 60 * 60 * 1000))
@@ -287,7 +287,7 @@ export const sweepInactive = internalMutation({
 });
 
 // ============================================================
-// roomCharmTotals â€” ط¹ط¯ظ‘ط§ط¯ ط§ظ„ط¬ط§ط°ط¨ظٹط© ظپظٹ ط§ظ„ط¬ظ„ط³ط© ظ„ظƒظ„ ظ…ط§ظٹظƒ
+// roomCharmTotals — عدّاد الجاذبية في الجلسة لكل مايك
 // ============================================================
 export const roomCharmTotals = query({
   args: { roomId: v.id("rooms") },
@@ -297,7 +297,7 @@ export const roomCharmTotals = query({
       .withIndex("by_room_and_seatIndex", (q) => q.eq("roomId", args.roomId))
       .take(MAX_SEATS);
 
-    // map: seatIndex â†’ sessionCharms
+    // map: seatIndex → sessionCharms
     const totals: Record<number, number> = {};
     for (const s of seats) {
       totals[s.seatIndex] = s.sessionCharms ?? 0;
@@ -307,7 +307,7 @@ export const roomCharmTotals = query({
 });
 
 // ============================================================
-// recentEntries â€” ط£ط­ط¯ط§ط« ط¯ط®ظˆظ„ VIP ط­ط¯ظٹط«ط© (ط®ظ„ط§ظ„ ط¢ط®ط± 10 ط«ظˆط§ظ†ظچ)
+// recentEntries — أحداث دخول VIP حديثة (خلال آخر 10 ثوانٍ)
 // ============================================================
 export const recentEntries = query({
   args: {

@@ -25,15 +25,15 @@ interface LuckyWheelSheetProps {
 }
 
 const SECTORS = [
-  { index: 0, item: "watermelon", label: "ط¨ط·ظٹط®" },
-  { index: 1, item: "apple", label: "طھظپط§ط­" },
-  { index: 2, item: "watermelon", label: "ط¨ط·ظٹط®" },
-  { index: 3, item: "apple", label: "طھظپط§ط­" },
+  { index: 0, item: "watermelon", label: "بطيخ" },
+  { index: 1, item: "apple", label: "تفاح" },
+  { index: 2, item: "watermelon", label: "بطيخ" },
+  { index: 3, item: "apple", label: "تفاح" },
   { index: 4, item: "77", label: "77" },
-  { index: 5, item: "watermelon", label: "ط¨ط·ظٹط®" },
-  { index: 6, item: "apple", label: "طھظپط§ط­" },
-  { index: 7, item: "watermelon", label: "ط¨ط·ظٹط®" },
-  { index: 8, item: "apple", label: "طھظپط§ط­" },
+  { index: 5, item: "watermelon", label: "بطيخ" },
+  { index: 6, item: "apple", label: "تفاح" },
+  { index: 7, item: "watermelon", label: "بطيخ" },
+  { index: 8, item: "apple", label: "تفاح" },
 ];
 
 export default function LuckyWheelSheet({ isOpen, onClose, onOpenRecharge }: LuckyWheelSheetProps) {
@@ -63,7 +63,7 @@ const [activeRankTab, setActiveRankTab] = useState<string>("VI");
     apple: 0,
   });
 
-  // ط§ظ„ط¹ظ…ظ„ط§طھ ط§ظ„ط°ظ‡ط¨ظٹط© ط§ظ„ظ…طھط·ط§ظٹط±ط© ط¯ط§ط®ظ„ ط§ظ„طµظ†ط§ط¯ظٹظ‚ ط§ظ„ط«ظ„ط§ط«ط©
+  // العملات الذهبية المتطايرة داخل الصناديق الثلاثة
   const [coinsPile, setCoinsPile] = useState<{
 
 
@@ -79,17 +79,17 @@ const [activeRankTab, setActiveRankTab] = useState<string>("VI");
     setTimeout(() => {
       setScreen("game");
       setIsLoading(false);
-    }, 1500); // ط«ط§ظ†ظٹط© ظˆظ†طµظپ طھط­ظ…ظٹظ„
+    }, 1500); // ثانية ونصف تحميل
   };
 
-  // ط§ظ„طھط£ظƒط¯ ظ…ظ† ط£ظ† ظ…ط­ط±ظƒ ط§ظ„ط³ظٹط±ظپط± ظٹط¹ظ…ظ„ ظپظˆط± ظپطھط­ ط§ظ„ظ„ط¹ط¨ط©
+  // التأكد من أن محرك السيرفر يعمل فور فتح اللعبة
   useEffect(() => {
     if (isOpen) {
       ensureRunning().catch(() => {});
     }
   }, [isOpen]);
 
-  // ط­ط³ط§ط¨ ط§ظ„ط¹ط¯ط§ط¯ ط§ظ„طھظ†ط§ط²ظ„ظٹ ط¨ط§ظ„ط«ظˆط§ظ†ظٹ ط¨ط¯ظ‚ط© ظˆظ…ط²ط§ظ…ظ†طھظ‡ ظ…ط¹ ط§ظ„ط³ظٹط±ظپط±
+  // حساب العداد التنازلي بالثواني بدقة ومزامنته مع السيرفر
   useEffect(() => {
     if (!data?.state) return;
     const state = data.state;
@@ -111,13 +111,13 @@ const [activeRankTab, setActiveRankTab] = useState<string>("VI");
     return () => clearInterval(interval);
   }, [data?.state?.status, data?.state?.endTime, data?.state?.roundNumber]);
 
-  // ط§ظ„طھط­ظƒظ… ط¨ط¯ظˆط±ط§ظ† ط§ظ„ط¹ط¬ظ„ط© ط¹ظ†ط¯ طھط­ظˆظ„ ط§ظ„ط­ط§ظ„ط© ط¥ظ„ظ‰ SPINNING
+  // التحكم بدوران العجلة عند تحول الحالة إلى SPINNING
   useEffect(() => {
     if (!data?.state) return;
     const state = data.state;
 
     if (state.status === "BETTING") {
-      // طھطµظپظٹط± ط§ظ„ط¹ظ…ظ„ط§طھ ط§ظ„ظ…ط±ط¦ظٹط© ط¹ظ†ط¯ ط¨ط¯ط§ظٹط© ط¬ظˆظ„ط© ط¬ط¯ظٹط¯ط©
+      // تصفير العملات المرئية عند بداية جولة جديدة
       if (lastSpunRound.current !== null && lastSpunRound.current !== state.roundNumber) {
         setCoinsPile({ watermelon: [], "77": [], apple: [] });
       }
@@ -130,23 +130,23 @@ const [activeRankTab, setActiveRankTab] = useState<string>("VI");
     ) {
       lastSpunRound.current = state.roundNumber;
 
-      // ط­ظپط¸ ط±ظ‡ط§ظ†ط§طھ ط§ظ„ظ…ط³طھط®ط¯ظ… ظ„ط§ط³طھط®ط¯ط§ظ…ظ‡ط§ ظپظٹ ط²ط± "ظƒط±ط±"
+      // حفظ رهانات المستخدم لاستخدامها في زر "كرر"
       if (data.myTotalBet > 0) {
         setLastRoundBets(data.myBets);
       }
 
-      // ط­ط³ط§ط¨ ط§ظ„ط²ط§ظˆظٹط© ط¨ط­ظٹط« ظٹطھظˆظ‚ظپ ط§ظ„ط³ظ‡ظ… ظپظٹ ظ…ظ†طھطµظپ ط§ظ„ظ‚ط·ط§ط¹ ط¨ط¯ظ‚ط©
-      // [ezo-fix] ط­ط³ط§ط¨ ط§ظ„ط²ط§ظˆظٹط© ط§ظ„ظ†ظ‡ط§ط¦ظٹ (ظ…ط¹ ط¥ط²ط§ط­ط© ظ„طھطµط­ظٹط­ ط§ظ„ط§ظ†ط¹ظƒط§ط³)
+      // حساب الزاوية بحيث يتوقف السهم في منتصف القطاع بدقة
+      // [ezo-fix] حساب الزاوية النهائي (مع إزاحة لتصحيح الانعكاس)
       const numSectors = 9;
       const sectorSize = 360 / numSectors;
       const index = state.winningIndex;
       
-      // ط¨ظ†ط§ط،ظ‹ ط¹ظ„ظ‰ ط§ظ„ط§ط®طھط¨ط§ط±: ط§ظ„ط³ظ‡ظ… ظٹط¹ط·ظٹ ط§ظ„ظ‚ط·ط§ط¹ ط§ظ„ظ…ط¹ط§ظƒط³طŒ ظ„ط°ط§ ظ†ط¶ظٹظپ 180 ط¯ط±ط¬ط© (ظ†طµظپ ط¯ظˆط±ط©)
-      // + ظ†ط¶ط¨ط· ط§ظ„ط¥ط²ط§ط­ط© ظ„طھظ†ط§ط³ط¨ ط§ظ„طµظˆط±ط© ط§ظ„ط­ط§ظ„ظٹط©
+      // بناءً على الاختبار: السهم يعطي القطاع المعاكس، لذا نضيف 180 درجة (نصف دورة)
+      // + نضبط الإزاحة لتناسب الصورة الحالية
       const offsetCorrection = 20;
       const baseAngle = (index - 1) * sectorSize + (sectorSize / 2);
-      // [ezo-fix] ط¹ظƒط³ ط§ظ„ط§طھط¬ط§ظ‡ ط¨ظ†ط§ط،ظ‹ ط¹ظ„ظ‰ ط§ظ†ط¹ظƒط§ط³ LTR
-      // [ezo-fix] ط¹ظƒط³ ط§طھط¬ط§ظ‡ ط§ظ„ط¯ظˆط±ط§ظ† ظ„ظ„طھطµط­ظٹط­ ط§ظ„ط¨طµط±ظٹ
+      // [ezo-fix] عكس الاتجاه بناءً على انعكاس LTR
+      // [ezo-fix] عكس اتجاه الدوران للتصحيح البصري
       const targetStopAngle = 360 - (state.winningIndex * (360 / 9));
       const extraSpins = 360 * 6;
       console.log(`[EZO-WHEEL] WinningIndex: ${state.winningIndex} | TargetAngle: ${targetStopAngle}`);
@@ -164,7 +164,7 @@ const [activeRankTab, setActiveRankTab] = useState<string>("VI");
     }
   }, [data?.state?.status, data?.state?.winningIndex, data?.state?.roundNumber]);
 
-  // ظ…ط±ط§ظ‚ط¨ط© ط§ظ„ط±ظ‡ط§ظ†ط§طھ ط§ظ„ط­ظ‚ظٹظ‚ظٹط© ظˆطھط·ط§ظٹط± ط§ظ„ظپظٹط´ط§طھ
+  // مراقبة الرهانات الحقيقية وتطاير الفيشات
   const processedBets = useRef<Set<string>>(new Set());
   useEffect(() => {
     if (!liveBets || data?.state?.status !== "BETTING") return;
@@ -173,7 +173,7 @@ const [activeRankTab, setActiveRankTab] = useState<string>("VI");
       if (!processedBets.current.has(bet._id)) {
         processedBets.current.add(bet._id);
         
-        // طھط­ط¯ظٹط¯ طµظˆط±ط© ط§ظ„ظپظٹط´ط© ط¨ظ†ط§ط،ظ‹ ط¹ظ„ظ‰ ط§ظ„ظ…ط¨ظ„ط؛ ط§ظ„ط­ظ‚ظٹظ‚ظٹ
+        // تحديد صورة الفيشة بناءً على المبلغ الحقيقي
         let chipImg = img100;
         if (bet.amount >= 50000) chipImg = img50k;
         else if (bet.amount >= 10000) chipImg = img10k;
@@ -249,7 +249,7 @@ const [activeRankTab, setActiveRankTab] = useState<string>("VI");
     return <img src={imgApple} alt="apple" className="w-8 h-8 object-contain drop-shadow" />;
   };
 
-  // ط­ط³ط§ط¨ ط§ظ„ظ†ط³ط¨ ط§ظ„ظ…ط¦ظˆظٹط© ظ„ظ„ط¥ط­طµط§ط¦ظٹط§طھ
+  // حساب النسب المئوية للإحصائيات
   const historyList = data?.state?.history ?? [];
   const totalHistory = historyList.length || 1;
   const appleCount = historyList.filter((h: string) => h === "apple").length;
@@ -263,7 +263,7 @@ const [activeRankTab, setActiveRankTab] = useState<string>("VI");
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-xs select-none" dir="rtl">
       <div className="relative w-full max-w-[430px] h-[85vh] rounded-t-3xl border-t-2 border-yellow-400 bg-gradient-to-b from-[#4c1d95] via-[#2e1065] to-[#170536] p-3 flex flex-col justify-between overflow-hidden shadow-2xl text-white">
         
-        {/* ط²ط± ط§ظ„ط¥ط؛ظ„ط§ظ‚ ط§ظ„ط¹ظ„ظˆظٹ */}
+        {/* زر الإغلاق العلوي */}
         <button
           onClick={onClose}
           className="absolute top-2.5 left-2.5 z-30 w-8 h-8 rounded-full bg-white/15 border border-yellow-400/60 flex items-center justify-center active:scale-90"
@@ -271,7 +271,7 @@ const [activeRankTab, setActiveRankTab] = useState<string>("VI");
           <X size={18} />
         </button>
 
-        {/* ط§ظ„ط´ط±ظٹط· ط§ظ„ط¹ظ„ظˆظٹ ظˆط§ظ„ط¬ط§ظƒط¨ظˆطھ */}
+        {/* الشريط العلوي والجاكبوت */}
         <div className="flex items-center justify-between px-1 z-20">
           <div className="flex items-center gap-1.5">
             <button
@@ -302,16 +302,16 @@ const [activeRankTab, setActiveRankTab] = useState<string>("VI");
           </div>
         </div>
 
-        {/* ظ…ظ†ط·ظ‚ط© ط§ظ„ط¹ط¬ظ„ط© ط§ظ„ط¯ظˆط§ط±ط© */}
+        {/* منطقة العجلة الدوارة */}
         <div className="relative w-[265px] h-[265px] mx-auto my-1 flex items-center justify-center">
-          {/* ط§ظ„ط³ظ‡ظ… ط§ظ„ط¹ظ„ظˆظٹ ط§ظ„ط­ظ‚ظٹظ‚ظٹ ط§ظ„ظ…ظپط±ط؛ */}
+          {/* السهم العلوي الحقيقي المفرغ */}
           <img
             src={imgPointer}
             alt="pointer"
             className="absolute -top-6 left-1/2 -translate-x-1/2 z-30 w-11 h-14 object-contain drop-shadow-[0_4px_6px_rgba(0,0,0,0.8)]"
           />
 
-          {/* طµظˆط±ط© ط§ظ„ط¹ط¬ظ„ط© ط§ظ„ط­ظ‚ظٹظ‚ظٹط© ط§ظ„ظ…ظپط±ط؛ط© ط§ظ„طھظٹ طھط¯ظˆط± */}
+          {/* صورة العجلة الحقيقية المفرغة التي تدور */}
           <div
             className="w-full h-full aspect-square rounded-full relative flex items-center justify-center"
             style={{
@@ -325,19 +325,19 @@ const [activeRankTab, setActiveRankTab] = useState<string>("VI");
             <img src={imgWheel} alt="wheel" className="w-full h-full object-contain pointer-events-none" />
           </div>
 
-          {/* ط·ط¨ظ‚ط© ط¥ط®ظپط§ط، ط¸ظ„ ط§ظ„ط¬ظˆظ‡ط±ط© ط§ظ„ظ‚ط¯ظٹظ…ط© */}
+          {/* طبقة إخفاء ظل الجوهرة القديمة */}
           <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
-            {/* ط¯ط§ط¦ط±ط© ط³ظˆط¯ط§ط، طµظ„ط¨ط© طھط؛ط·ظٹ ط¸ظ„ ط§ظ„ط¬ظˆظ‡ط±ط© ط§ظ„ظ‚ط¯ظٹظ…ط© طھظ…ط§ظ…ط§ظ‹ */}
+            {/* دائرة سوداء صلبة تغطي ظل الجوهرة القديمة تماماً */}
             <div className="absolute w-[28%] h-[28%] rounded-full bg-[#120a1f] shadow-[inset_0_0_10px_rgba(0,0,0,0.8)]" />
             
-            {/* ط§ظ„ط¬ظˆظ‡ط±ط© ط§ظ„ط«ط§ط¨طھط© (ظپظˆظ‚ ط§ظ„ط¯ط§ط¦ط±ط©) */}
+            {/* الجوهرة الثابتة (فوق الدائرة) */}
             <img
               src={imgCenterGem}
               alt=""
               className="absolute w-[26%] h-[26%] rounded-full object-fill z-10"
             />
             
-            {/* ط§ظ„ط¹ط¯ط§ط¯ (ظپظٹ ط§ظ„ط£ظ…ط§ظ… ط¨ظˆط¶ظˆط­) */}
+            {/* العداد (في الأمام بوضوح) */}
             <span
               className="relative z-20 text-4xl font-black text-white"
               style={{
@@ -349,18 +349,18 @@ const [activeRankTab, setActiveRankTab] = useState<string>("VI");
             </span>
           </div>
 
-          {/* ط±ظ‚ظ… ط§ظ„ط¬ظˆظ„ط© */}
+          {/* رقم الجولة */}
           <div className="absolute -bottom-1 right-1 text-[11px] text-purple-200 font-semibold">
-            {state?.roundNumber ?? 2774} ط§ظ„ط¬ظˆظ„ط©
+            {state?.roundNumber ?? 2774} الجولة
           </div>
         </div>
 
-        {/* ط´ط±ظٹط· ط³ط¬ظ„ ط§ظ„ظ†طھط§ط¦ط¬ (History Bar) - ظ‚ط§ط¨ظ„ ظ„ظ„ظ†ظ‚ط± */}
+        {/* شريط سجل النتائج (History Bar) - قابل للنقر */}
         <div 
           onClick={() => setShowStats(true)}
           className="bg-black/45 border border-purple-500/60 rounded-full px-3 py-1.5 flex items-center gap-2 cursor-pointer active:scale-95 transition hover:bg-black/60"
         >
-          <span className="text-xs font-bold text-purple-200 shrink-0">ظ†طھظٹط¬ط©</span>
+          <span className="text-xs font-bold text-purple-200 shrink-0">نتيجة</span>
           <div className="flex items-center gap-2 overflow-hidden flex-1 pointer-events-none">
             {(state?.history ?? []).slice(0, 9).map((h, i) => (
               <div key={i} className="relative flex items-center justify-center text-lg shrink-0">
@@ -375,7 +375,7 @@ const [activeRankTab, setActiveRankTab] = useState<string>("VI");
           </div>
         </div>
 
-        {/* طµظ†ط§ط¯ظٹظ‚ ط§ظ„ظ…ط±ط§ظ‡ظ†ط© ط§ظ„ط«ظ„ط§ط«ط© (ط¨ط·ظٹط® x2 | 77 x8 | طھظپط§ط­ x2) */}
+        {/* صناديق المراهنة الثلاثة (بطيخ x2 | 77 x8 | تفاح x2) */}
         <div className="grid grid-cols-3 gap-2 my-1">
           {[
             { key: "watermelon" as const, img: imgWatermelon, mult: "x2" },
@@ -394,7 +394,7 @@ const [activeRankTab, setActiveRankTab] = useState<string>("VI");
                     : "border-purple-400/70 bg-gradient-to-b from-purple-800/60 to-indigo-950/90 active:scale-95"
                 } ${!isBetting ? "opacity-80 cursor-not-allowed" : ""}`}
               >
-                {/* ط§ظ„ط¹ظ…ظ„ط§طھ ط§ظ„ط°ظ‡ط¨ظٹط© ط§ظ„ظ…طھط·ط§ظٹط±ط© ط¯ط§ط®ظ„ ط§ظ„طµظ†ط¯ظˆظ‚ */}
+                {/* العملات الذهبية المتطايرة داخل الصندوق */}
                 <div className="absolute inset-0 pointer-events-none">
                   {coinsPile[box.key].map((c) => (
                     <img
@@ -420,7 +420,7 @@ const [activeRankTab, setActiveRankTab] = useState<string>("VI");
           })}
         </div>
 
-        {/* ط§ظ„ط´ط±ظٹط· ط§ظ„ط³ظپظ„ظٹ: ط§ظ„ظپظٹط´ + ط²ط± ظƒط±ط± + ط§ظ„ظ…ط­ظپط¸ط© */}
+        {/* الشريط السفلي: الفيش + زر كرر + المحفظة */}
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -450,17 +450,17 @@ const [activeRankTab, setActiveRankTab] = useState<string>("VI");
               onClick={handleRepeatBet}
               className="px-6 py-2 rounded-full bg-gradient-to-b from-amber-400 to-amber-600 border border-yellow-200 font-black text-sm shadow-md active:scale-95 disabled:opacity-50"
             >
-              ظƒط±ط±
+              كرر
             </button>
           </div>
 
           <div className="flex items-center justify-between">
             <div className="text-[11px] text-purple-300">
-              {isBetting ? "ط§ظ„ظ…ط±ط§ظ‡ظ†ط© ظ…ظپطھظˆط­ط© ط§ظ„ط¢ظ†" : "ط§ظ„ط±ظ‡ط§ظ† ظ…ط؛ظ„ظ‚ - ط§ظ„ط¹ط¬ظ„ط© طھط¯ظˆط±..."}
+              {isBetting ? "المراهنة مفتوحة الآن" : "الرهان مغلق - العجلة تدور..."}
             </div>
             <div className="flex items-center gap-2 bg-black/50 border border-purple-500/60 rounded-full px-3 py-1">
               <span className="text-yellow-400 font-black text-sm">{data?.userCoins ?? 0}</span>
-              <span>ًںھ™</span>
+              <span>🪙</span>
               <button
                 onClick={() => (onOpenRecharge ? onOpenRecharge() : setShowLowBalance(true))}
                 className="w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center font-bold text-xs"
@@ -471,15 +471,15 @@ const [activeRankTab, setActiveRankTab] = useState<string>("VI");
           </div>
         </div>
 
-        {/* 1. ظ†ط§ظپط°ط© ط¥ط¹ظ„ط§ظ† ط§ظ„ظپط§ط¦ط²ظٹظ† ط¨ط¹ط¯ ظƒظ„ ط¬ظˆظ„ط© (ط­ط¸ط§ظ‹ ط³ط¹ظٹط¯ط§ظ‹) */}
+        {/* 1. نافذة إعلان الفائزين بعد كل جولة (حظاً سعيداً) */}
         {isResultModal && (
           <div className="absolute inset-0 z-40 bg-black/75 flex items-center justify-center p-4 animate-fade-in">
             <div className="w-full rounded-2xl border-2 border-yellow-400 bg-gradient-to-b from-purple-900 via-indigo-950 to-slate-950 p-4 text-center shadow-2xl">
               <div className="inline-block px-6 py-1 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 font-black text-sm mb-1">
-                ط­ط¸ط§ظ‹ ط³ط¹ظٹط¯ط§ظ‹
+                حظاً سعيداً
               </div>
-              <div className="text-xs text-purple-200">{state?.roundNumber} ط§ظ„ط¬ظˆظ„ط©</div>
-              <div className="text-yellow-300 font-bold text-sm my-2">طھظ‡ط§ظ†ظٹظ†ط§ ظ„ظ„ظپط§ط¦ط²ظٹظ† ط§ظ„طھط§ظ„ظٹظٹظ†</div>
+              <div className="text-xs text-purple-200">{state?.roundNumber} الجولة</div>
+              <div className="text-yellow-300 font-bold text-sm my-2">تهانينا للفائزين التاليين</div>
 
               <div className="grid grid-cols-3 gap-2 my-3">
                 {(state?.topWinners ?? []).slice(0, 3).map((w: any, idx: number) => (
@@ -492,21 +492,21 @@ const [activeRankTab, setActiveRankTab] = useState<string>("VI");
                         onError={(e) => { (e.target as HTMLImageElement).src = "/avatar.png"; }}
                       />
                     </div>
-                    <div className="font-bold truncate w-full text-center">{w.name || "ظ…ط³طھط®ط¯ظ…"}</div>
-                    <div className="text-slate-300">ط§ظ„ط±ظ‡ط§ظ†: {w.bet?.toLocaleString() ?? 0}</div>
-                    <div className="text-yellow-300 font-bold">ظپظˆط²: {w.win?.toLocaleString() ?? 0}</div>
+                    <div className="font-bold truncate w-full text-center">{w.name || "مستخدم"}</div>
+                    <div className="text-slate-300">الرهان: {w.bet?.toLocaleString() ?? 0}</div>
+                    <div className="text-yellow-300 font-bold">فوز: {w.win?.toLocaleString() ?? 0}</div>
                   </div>
                 ))}
               </div>
 
               <div className="bg-black/40 rounded-xl p-2.5 flex items-center justify-between text-xs border border-purple-500/30">
-                <span className="font-bold">ًں’ھ ظ†طھظٹط¬طھظƒ ظپظٹ ط§ظ„ط¬ظˆظ„ط©</span>
+                <span className="font-bold">💪 نتيجتك في الجولة</span>
                 <div className="flex gap-3">
                   <span>
-                    ط§ظ„ط±ظ‡ط§ظ†: <b className="text-white">{data?.myTotalBet ?? 0}</b>
+                    الرهان: <b className="text-white">{data?.myTotalBet ?? 0}</b>
                   </span>
                   <span>
-                    ظپظˆط²: <b className="text-yellow-300">{data?.myWin ?? 0}</b>
+                    فوز: <b className="text-yellow-300">{data?.myWin ?? 0}</b>
                   </span>
                 </div>
               </div>
@@ -514,13 +514,13 @@ const [activeRankTab, setActiveRankTab] = useState<string>("VI");
           </div>
         )}
 
-        {/* 2. ظ†ط§ظپط°ط© ط§ظ„ط±طµظٹط¯ ط؛ظٹط± ظƒط§ظپظچ */}
+        {/* 2. نافذة الرصيد غير كافٍ */}
         {showLowBalance && (
           <div className="absolute inset-0 z-50 bg-black/70 flex items-center justify-center p-6">
             <div className="bg-white text-slate-800 rounded-2xl p-5 w-full max-w-xs text-center shadow-2xl">
-              <div className="text-blue-600 font-black text-sm mb-2">ًں”¥ HOT GAMES</div>
-              <div className="text-4xl my-3">ًں‘›</div>
-              <p className="font-bold text-sm mb-4">ط±طµظٹط¯ظƒ ط؛ظٹط± ظƒط§ظپظٹطŒ ظ‡ظ„ طھط±ظٹط¯ ط§ظ„ط´ط­ظ† ط§ظ„ط¢ظ†طں</p>
+              <div className="text-blue-600 font-black text-sm mb-2">🔥 HOT GAMES</div>
+              <div className="text-4xl my-3">👛</div>
+              <p className="font-bold text-sm mb-4">رصيدك غير كافي، هل تريد الشحن الآن؟</p>
               <div className="flex justify-around gap-3">
                 <button
                   onClick={() => {
@@ -529,25 +529,25 @@ const [activeRankTab, setActiveRankTab] = useState<string>("VI");
                   }}
                   className="flex-1 py-2 rounded-full bg-emerald-500 text-white font-bold text-sm"
                 >
-                  طھط£ظƒظٹط¯
+                  تأكيد
                 </button>
                 <button
                   onClick={() => setShowLowBalance(false)}
                   className="flex-1 py-2 rounded-full bg-slate-400 text-white font-bold text-sm"
                 >
-                  ط¥ظ„ط؛ط§ط،
+                  إلغاء
                 </button>
               </div>
             </div>
           </div>
         )}
 
-        {/* 3. ظ†ط§ظپط°ط© ظ„ظˆط­ط© ط§ظ„ظ…طھطµط¯ط±ظٹظ† ط¨ط§ظ„ظ…ط³طھظˆظٹط§طھ I ط¥ظ„ظ‰ VI ظƒظ…ط§ ظپظٹ ط§ظ„ظپظٹط¯ظٹظˆ */}
+        {/* 3. نافذة لوحة المتصدرين بالمستويات I إلى VI كما في الفيديو */}
         {showLeaderboard && (
           <div className="absolute inset-0 z-50 bg-black/80 flex items-center justify-center p-3">
             <div className="w-full h-[78%] rounded-2xl border-2 border-yellow-400 bg-[#2a0b4e] flex flex-col overflow-hidden">
               <div className="flex items-center justify-between px-3 py-2 bg-purple-950 border-b border-yellow-400/40">
-                <span className="text-yellow-300 font-black text-sm">ًںڈ† ظ‚ط§ط¦ظ…ط© ط§ظ„ظ…طھطµط¯ط±ظٹظ†</span>
+                <span className="text-yellow-300 font-black text-sm">🏆 قائمة المتصدرين</span>
                 <button onClick={() => setShowLeaderboard(false)} className="text-white/80">
                   <X size={18} />
                 </button>
@@ -569,23 +569,23 @@ const [activeRankTab, setActiveRankTab] = useState<string>("VI");
                 ))}
               </div>
 
-              {/* طھط¨ظˆظٹط¨ط§طھ ط§ظ„ظپطھط±ط§طھ ط§ظ„ط²ظ…ظ†ظٹط© */}
+              {/* تبويبات الفترات الزمنية */}
               <div className="flex justify-center gap-2 p-2 bg-purple-950/50">
-                <button onClick={() => setLeaderboardTab("day")} className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition ${leaderboardTab === "day" ? "bg-yellow-500 text-black" : "bg-white/5 text-white/60"}`}>ط§ظ„ظٹظˆظ…</button>
-                <button onClick={() => setLeaderboardTab("week")} className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition ${leaderboardTab === "week" ? "bg-yellow-500 text-black" : "bg-white/5 text-white/60"}`}>ط§ظ„ط£ط³ط¨ظˆط¹</button>
-                <button onClick={() => setLeaderboardTab("all")} className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition ${leaderboardTab === "all" ? "bg-yellow-500 text-black" : "bg-white/5 text-white/60"}`}>ط¯ط§ط¦ظ…</button>
+                <button onClick={() => setLeaderboardTab("day")} className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition ${leaderboardTab === "day" ? "bg-yellow-500 text-black" : "bg-white/5 text-white/60"}`}>اليوم</button>
+                <button onClick={() => setLeaderboardTab("week")} className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition ${leaderboardTab === "week" ? "bg-yellow-500 text-black" : "bg-white/5 text-white/60"}`}>الأسبوع</button>
+                <button onClick={() => setLeaderboardTab("all")} className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition ${leaderboardTab === "all" ? "bg-yellow-500 text-black" : "bg-white/5 text-white/60"}`}>دائم</button>
               </div>
 
               <div className="bg-[#2a1b54] rounded-t-xl overflow-hidden">
                 <div className="grid grid-cols-4 text-[11px] font-bold text-white bg-[#1a0b36] py-2 px-2 text-center border-b border-purple-500/30">
-                  <span>ط§ظ„طھط±طھظٹط¨</span>
-                  <span className="text-right pr-2 col-span-2">ط§ط³ظ… ط§ظ„ظ…ط³طھط®ط¯ظ…</span>
-                  <span>ظ…ظƒط§ظپط¢طھ</span>
+                  <span>الترتيب</span>
+                  <span className="text-right pr-2 col-span-2">اسم المستخدم</span>
+                  <span>مكافآت</span>
                 </div>
 
                 <div className="flex-1 overflow-y-auto divide-y divide-purple-800/50 text-xs min-h-[300px]">
                   {(leaderboard ?? []).map((u: any, i: number) => {
-                    // طھط­ط¯ظٹط¯ ط£ظ„ظˆط§ظ† ط§ظ„ظ…ط±ط§ظƒط² ط§ظ„ط«ظ„ط§ط«ط© ط§ظ„ط£ظˆظ„ظ‰
+                    // تحديد ألوان المراكز الثلاثة الأولى
                     const bgClass = i === 0 ? "bg-gradient-to-r from-[#8e6b16] to-[#5c4306]" : i === 1 ? "bg-gradient-to-r from-[#5f6773] to-[#3b4048]" : i === 2 ? "bg-gradient-to-r from-[#6e361e] to-[#442012]" : "bg-[#120724] hover:bg-white/5";
                     const textClass = i < 3 ? "text-white" : "text-gray-300";
 
@@ -609,17 +609,17 @@ const [activeRankTab, setActiveRankTab] = useState<string>("VI");
                     );
                   })}
                   {leaderboard.length === 0 && (
-                    <div className="text-center py-10 text-white/40">ظ„ط§ طھظˆط¬ط¯ ط£ط±ط¨ط§ط­ ظ…ط³ط¬ظ„ط© ظپظٹ ظ‡ط°ظ‡ ط§ظ„ظپطھط±ط©</div>
+                    <div className="text-center py-10 text-white/40">لا توجد أرباح مسجلة في هذه الفترة</div>
                   )}
                 </div>
               </div>
               
-              {/* طھط±طھظٹط¨ظٹ */}
+              {/* ترتيبي */}
               {myRank && (
                 <div className="p-2 bg-black/40 border-t border-yellow-500/30">
                   <div className="grid grid-cols-3 items-center py-2 px-2 text-center rounded-xl bg-purple-500/20 border border-purple-400/40">
                     <span className="font-black text-white text-sm">#{myRank.rank}</span>
-                    <span className="font-black text-yellow-300">ط£ظ†طھ</span>
+                    <span className="font-black text-yellow-300">أنت</span>
                     <span className="text-green-400 font-bold">{myRank.points.toLocaleString()}</span>
                   </div>
                 </div>
@@ -629,14 +629,14 @@ const [activeRankTab, setActiveRankTab] = useState<string>("VI");
         )}
       </div>
     
-      {/* ظ†ط§ظپط°ط© ط§ظ„ط¥ط­طµط§ط¦ظٹط§طھ (Stats Modal) */}
+      {/* نافذة الإحصائيات (Stats Modal) */}
       {showStats && (
         <div className="fixed inset-0 z-[200] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm" dir="rtl">
           <div className="w-full max-w-md bg-[#3b1157] border-2 border-yellow-500 rounded-2xl shadow-[0_0_30px_rgba(234,179,8,0.3)] overflow-hidden">
             
             {/* Header */}
             <div className="bg-[#4b1a6e] p-3 flex items-center justify-between border-b border-yellow-500/30">
-              <h3 className="text-yellow-400 font-black text-lg">ظ†طھظٹط¬ط© ط§ظ„ط³ط­ط¨</h3>
+              <h3 className="text-yellow-400 font-black text-lg">نتيجة السحب</h3>
               <button onClick={() => setShowStats(false)} className="w-8 h-8 rounded-full bg-black/30 flex items-center justify-center text-white hover:bg-black/50">
                 <X size={18} />
               </button>
@@ -662,7 +662,7 @@ const [activeRankTab, setActiveRankTab] = useState<string>("VI");
               </div>
             </div>
 
-            {/* Footer Percentages (ط¨ط§ط³طھط®ط¯ط§ظ… ط§ظ„طµظˆط± ط§ظ„ط­ظ‚ظٹظ‚ظٹط©) */}
+            {/* Footer Percentages (باستخدام الصور الحقيقية) */}
             <div className="bg-[#2d0d44] p-3 flex justify-around items-center border-t border-yellow-500/30">
               <div className="flex items-center gap-2 bg-black/30 px-3 py-1.5 rounded-full border border-white/10 text-white font-bold text-sm">
                 <img src={imgApple} alt="apple" className="w-5 h-5 object-contain" /> 
