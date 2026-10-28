@@ -1,4 +1,3 @@
-// [ezo-recharge] لوحة الأدمن لمراجعة طلبات الشحن
 import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
@@ -7,7 +6,7 @@ import { getActiveToken } from "../lib/session";
 import { dialog } from "../lib/dialog";
 import VipAvatar from "./ui/VipAvatar";
 import ProfilePage from "./ProfilePage";
-import { Loader2, ChevronLeft, Coins, Receipt, Check, X, Clock, CheckCircle, XCircle, User } from "lucide-react";
+import { Loader2, ChevronLeft, Coins, Receipt, Check, X, Clock, CheckCircle, XCircle, User, Info } from "lucide-react";
 
 interface Props {
   onClose: () => void;
@@ -71,7 +70,6 @@ export default function AdminRechargeSheet({ onClose }: Props) {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 flex-shrink-0">
         <div className="flex items-center gap-2">
           <button onClick={onClose} className="p-2 -ml-2 rounded-full hover:bg-white/10 text-white">
@@ -86,7 +84,14 @@ export default function AdminRechargeSheet({ onClose }: Props) {
         </div>
       </div>
 
-      {/* Tabs */}
+      {/* ✅ تنبيه سعر الصرف للمشرف */}
+      <div className="mx-3 mt-3 rounded-xl bg-blue-500/10 border border-blue-400/30 p-2 flex items-center gap-2">
+        <Info size={14} className="text-blue-400 flex-shrink-0" />
+        <p className="text-blue-200 text-[10px] font-bold">
+          سعر الصرف المعتمد: <span className="font-black text-white" dir="ltr">1$ = 1000 Coins</span>
+        </p>
+      </div>
+
       <div className="grid grid-cols-3 gap-2 p-3 border-b border-white/10 flex-shrink-0">
         {tabs.map((t) => {
           const Icon = t.icon;
@@ -106,7 +111,6 @@ export default function AdminRechargeSheet({ onClose }: Props) {
         })}
       </div>
 
-      {/* List */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {requests === undefined ? (
           <div className="flex justify-center py-16">
@@ -120,7 +124,6 @@ export default function AdminRechargeSheet({ onClose }: Props) {
         ) : (
           requests.map((r: any) => (
             <div key={r._id} className="rounded-2xl bg-white/5 border border-white/10 p-4">
-              {/* Row 1: user + time */}
               <div className="flex items-center justify-between mb-3">
                 <button
                   onClick={() => setOpenProfile(r.userId)}
@@ -139,7 +142,6 @@ export default function AdminRechargeSheet({ onClose }: Props) {
                 </span>
               </div>
 
-              {/* Row 2: package + txnRef */}
               <div className="grid grid-cols-2 gap-2 mb-3">
                 <div className="rounded-xl bg-black/30 p-2.5">
                   <p className="text-white/50 text-[10px]">العملات</p>
@@ -155,7 +157,6 @@ export default function AdminRechargeSheet({ onClose }: Props) {
                 </div>
               </div>
 
-              {/* txnRef */}
               {r.txnRef && (
                 <div className="rounded-xl bg-black/40 border border-white/10 p-2.5 mb-3">
                   <p className="text-white/50 text-[10px] mb-1">رقم عملية التحويل</p>
@@ -163,14 +164,12 @@ export default function AdminRechargeSheet({ onClose }: Props) {
                 </div>
               )}
 
-              {/* Admin note (if processed) */}
               {r.adminNote && (
                 <div className="rounded-xl bg-white/5 p-2.5 mb-3">
                   <p className="text-white/60 text-[10px]">{r.adminNote}</p>
                 </div>
               )}
 
-              {/* Actions */}
               {tab === "pending" && (
                 <div className="grid grid-cols-2 gap-2">
                   <button
