@@ -2,12 +2,10 @@ import path from "node:path";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
-import { viteStaticCopy } from 'vite-plugin-static-copy'; // إضافة جديدة
 
 export default defineConfig({
   base: './', // ضروري جداً لـ APK
   server: { host: "0.0.0.0", port: 5173, allowedHosts: true },
-  
   plugins: [
     react(),
     VitePWA({
@@ -68,15 +66,6 @@ export default defineConfig({
       },
       devOptions: { enabled: false },
     }),
-    // ✅ إضافة جديدة: نسخ ملف wasm الخاص بـ libpag
-    viteStaticCopy({
-      targets: [
-        {
-          src: 'node_modules/libpag/lib/libpag.wasm',
-          dest: 'assets' // سيتم نسخه إلى مجلد assets في الإخراج
-        }
-      ]
-    })
   ],
   resolve: {
     alias: {
@@ -86,7 +75,6 @@ export default defineConfig({
   },
   build: { 
     chunkSizeWarningLimit: 1000,
-    target: 'esnext', // مهم جداً
-    // تم إزالة rolldownOptions بالكامل
+    target: 'esnext', // مهم جداً لـ libpag
   },
 });
