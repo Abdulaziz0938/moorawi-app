@@ -50,6 +50,14 @@ function App() {
   const [refreshKey, setRefreshKey] = useState(0);
 
   const me = useQuery(api.auth.me, { tokenOverride: token });
+    // [ezo-splash] جلب صورة شاشة البداية وعرضها لمدة 5 ثوان
+  const splashImageUrl = useQuery(api.splash.getSplashImage);
+  const [showSplash, setShowSplash] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowSplash(false), 5000);
+    return () => clearTimeout(timer);
+  }, []);
   const notifs = useQuery(
     api.notifications.listMine,
     me ? { tokenOverride: token } : "skip" as any
@@ -118,6 +126,19 @@ function App() {
     setRefreshKey((k) => k + 1);
   };
 
+  // [ezo-splash] عرض الصورة إذا كانت موجودة ولم تنتهِ الـ 5 ثواني
+  if (showSplash) {
+    return (
+      <div className="h-[100dvh] w-full bg-black flex items-center justify-center relative">
+        {splashImageUrl ? (
+          <img src={splashImageUrl} alt="Splash" className="w-full h-full object-cover" />
+        ) : (
+          <Loader2 className="animate-spin text-white" size={48} />
+        )}
+      </div>
+    );
+  }
+  
   // Loading state
   if (me === undefined) {
     return (
