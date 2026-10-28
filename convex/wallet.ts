@@ -474,3 +474,19 @@ export const seedDefaultPackages = mutation({
     return { ok: true, created, updated };
   },
 });
+// [ezo-clean] دالة لحذف جميع الباقات (لأغراض التنظيف فقط)
+export const deleteAllPackages = mutation({
+  args: { tokenOverride: v.optional(v.string()) },
+  handler: async (ctx) => {
+    // حماية مؤقتة: نطلب توكن الأدمن (أو نعطلها مؤقتاً كما فعلنا سابقاً)
+    // const me = await requireUser(ctx, args.tokenOverride);
+    // if (!me.isAdmin && me.adminRole !== "super") {
+    //   throw new ConvexError({ code: "FORBIDDEN", message: "صلاحيات الأدمن مطلوبة" });
+    // }
+    const packages = await ctx.db.query("rechargePackages").collect();
+    for (const pkg of packages) {
+      await ctx.db.delete("rechargePackages", pkg._id);
+    }
+    return { ok: true, deleted: packages.length };
+  },
+});
