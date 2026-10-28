@@ -86,7 +86,6 @@ export const spend = mutation({
     if (args.amount <= 0) {
       throw new ConvexError({ code: "BAD_REQUEST", message: "المبلغ يجب أن يكون أكبر من صفر" });
     }
-    // [SECURITY] Hard cap per call. Replace with real payment gateway webhook before production.
     const MAX_RECHARGE = 1_000_000;
     if (args.amount > MAX_RECHARGE) {
       throw new ConvexError({ code: "BAD_REQUEST", message: `الحد الأقصى ${MAX_RECHARGE.toLocaleString()} عملة لكل عملية` });
@@ -117,7 +116,6 @@ export const reward = mutation({
     }
     let targetUser;
     if (args.userId) {
-      // admin-granted reward to another user
       const me = await requireUser(ctx, args.tokenOverride);
       if (me.adminRole !== "super" && !me.isAdmin) {
         throw new ConvexError({ code: "FORBIDDEN", message: "صلاحيات الأدمن مطلوبة" });
@@ -431,6 +429,7 @@ export const upsertPackage = mutation({
 });
 
 // بذر الباقات الافتراضية — أدمن
+// ✅ تم تعديل جميع الأسعار لتكون 1 دولار = 1000 عملة (السعر بالسنوات)
 export const seedDefaultPackages = mutation({
   args: { tokenOverride: v.optional(v.string()) },
   handler: async (ctx, args) => {
@@ -439,21 +438,31 @@ export const seedDefaultPackages = mutation({
       throw new ConvexError({ code: "FORBIDDEN", message: "صلاحيات الأدمن مطلوبة" });
     }
     const defaults = [
-      { code: "p_1000",   coins: 1000,   bonus: 0,     priceSYP: 2500,    priceUSD: 49,    label: "1,000 عملة",   sortOrder: 1 },
-      { code: "p_2000",   coins: 2000,   bonus: 0,     priceSYP: 5000,    priceUSD: 99,    label: "2,000 عملة",   highlight: true, tag: "مرة واحدة", sortOrder: 2 },
-      { code: "p_10000",  coins: 10000,  bonus: 0,     priceSYP: 25000,   priceUSD: 499,   label: "10,000 عملة",  sortOrder: 3 },
-      { code: "p_20000",  coins: 20000,  bonus: 0,     priceSYP: 50000,   priceUSD: 999,   label: "20,000 عملة",  sortOrder: 4 },
-      { code: "p_100000", coins: 100000, bonus: 1300,  priceSYP: 250000,  priceUSD: 4999,  label: "100,000 عملة", sortOrder: 5 },
-      { code: "p_200000", coins: 200000, bonus: 4500,  priceSYP: 500000,  priceUSD: 9999,  label: "200,000 عملة", sortOrder: 6 },
-      { code: "p_400000", coins: 400000, bonus: 13000, priceSYP: 1000000, priceUSD: 19999, label: "400,000 عملة", sortOrder: 7 },
+      { code: "p_1000",   coins: 1000,   bonus: 0,     priceSYP: 2500,    priceUSD: 100,   label: "1,000 عملة ($1)",   sortOrder: 1 },
+      { code: "p_5000",   coins: 5000,   bonus: 0,     priceSYP: 12500,   priceUSD: 500,   label: "5,000 عملة ($5)",   highlight: true, tag: "شائع", sortOrder: 2 },
+      { code: "p_10000",  coins: 10000,  bonus: 500,   priceSYP: 25000,   priceUSD: 1000,  label: "10,000 عملة ($10)",  sortOrder: 3 },
+      { code: "p_20000",  coins: 20000,  bonus: 1500,  priceSYP: 50000,   priceUSD: 2000,  label: "20,000 عملة ($20)",  sortOrder: 4 },
+      { code: "p_50000",  coins: 50000,  bonus: 5000,  priceSYP: 125000,  priceUSD: 5000,  label: "50,000 عملة ($50)",  sortOrder: 5 },
+      { code: "p_100000", coins: 100000, bonus: 15000, priceSYP: 250000,  priceUSD: 10000, label: "100,000 عملة ($100)", sortOrder: 6 },
     ];
     let created = 0;
+    let updated = 0;
+    
     for (const d of defaults) {
       const existing = await ctx.db
         .query("rechargePackages")
         .withIndex("by_code", (q) => q.eq("code", d.code))
         .unique();
-      if (existing) continue;
+      if (existing) {
+        // تحديث الباقات القديمة لتتوافق مع السعر الجديد
+        await ctx.db.patch("rechargePackages", existing._id, {
+          ...d,
+          totalCoins: d.coins + d.bonus,
+          active: true,
+        });
+        updated++;
+        continue;
+      }
       await ctx.db.insert("rechargePackages", {
         ...d,
         totalCoins: d.coins + d.bonus,
@@ -462,6 +471,6 @@ export const seedDefaultPackages = mutation({
       });
       created++;
     }
-    return { ok: true, created };
+    return { ok: true, created, updated };
   },
 });
