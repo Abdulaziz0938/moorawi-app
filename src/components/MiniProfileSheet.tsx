@@ -17,6 +17,7 @@ import VipAvatar from "./ui/VipAvatar";
 import VipTopOrnament from "./ui/VipTopOrnament";
 import ReportSheet from "./ReportSheet";
 import ProfileActionsSheet from "./ProfileActionsSheet";
+import ChatThreadSheet from "./ChatThreadSheet"; // ✅ تم إضافة الاستيراد الناقص هنا
 
 interface Props {
   userId: string;
