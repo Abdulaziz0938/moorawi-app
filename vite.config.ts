@@ -75,6 +75,10 @@ export default defineConfig({
   },
   build: { 
     chunkSizeWarningLimit: 1000,
-    target: 'esnext', // مهم جداً لـ libpag
+    target: 'esnext', 
+    // ✅ التعديل السحري: إجبار Vite على تجاهل مكتبة libpag لكي ينجح البناء
+    rolldownOptions: {
+      external: ["libpag"]
+    }
   },
 });
