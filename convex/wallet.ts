@@ -433,10 +433,10 @@ export const upsertPackage = mutation({
 export const seedDefaultPackages = mutation({
   args: { tokenOverride: v.optional(v.string()) },
   handler: async (ctx, args) => {
-   // const me = await requireUser(ctx, args.tokenOverride);
- //   if (!me.isAdmin && me.adminRole !== "super") {
- //     throw new ConvexError({ code: "FORBIDDEN", message: "صلاحيات الأدمن مطلوبة" });
-  //  }
+    const me = await requireUser(ctx, args.tokenOverride);
+    if (!me.isAdmin && me.adminRole !== "super") {
+      throw new ConvexError({ code: "FORBIDDEN", message: "صلاحيات الأدمن مطلوبة" });
+    }
     const defaults = [
       { code: "p_1000",   coins: 1000,   bonus: 0,     priceSYP: 2500,    priceUSD: 100,   label: "1,000 عملة ($1)",   sortOrder: 1 },
       { code: "p_5000",   coins: 5000,   bonus: 0,     priceSYP: 12500,   priceUSD: 500,   label: "5,000 عملة ($5)",   highlight: true, tag: "شائع", sortOrder: 2 },
