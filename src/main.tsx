@@ -43,7 +43,9 @@ createRoot(document.getElementById('root')!).render(
     <ErrorCatcher>
       <ConvexProvider client={convex}>
         <AssetsProvider>
-          <App />
+          <div style={{ color: 'yellow', backgroundColor: 'black', fontSize: '30px', padding: '50px', textAlign: 'center', zIndex: 9999 }}>
+  اختبار: ملف App لا يعمل!
+</div>
           <DialogHost />
           <Toaster position="top-center" theme="dark" closeButton richColors />
           <Analytics />
