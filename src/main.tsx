@@ -38,10 +38,16 @@ if (typeof window !== "undefined") {
   console.log("[PWA] listener registered — waiting for event");
 }
 
-// رابط احتياطي لـ Convex في حال لم يقرأه Vercel من الإعدادات
-const convexUrl = import.meta.env.VITE_CONVEX_URL || "https://quixotic-squid-253.convex.cloud";
-const convex = new ConvexReactClient(convexUrl);
+// إجبار التطبيق على استخدام رابط الإنتاج
+const convexUrl = "https://quixotic-squid-253.convex.cloud";
 
+// رسالة تأكيد عشان نتأكد شو الرابط اللي عم يشتغل
+if (typeof window !== "undefined") {
+  console.log("🔥 CONVEX URL IS:", convexUrl);
+  alert("رابط الداتا بيس: " + convexUrl); 
+}
+
+const convex = new ConvexReactClient(convexUrl);
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AppErrorBoundary>
