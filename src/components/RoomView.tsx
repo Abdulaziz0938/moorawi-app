@@ -51,7 +51,6 @@ import ProfilePage from "./ProfilePage";
 import { UserName } from "./UserBadges";
 import { dialog } from "../lib/dialog";
 
-// [ezo-batch] Flying particle data for batch gifts
 type FlyingTarget = {
   userId: string;
   targetX: number;
@@ -63,21 +62,17 @@ type FlyingTarget = {
   delay?: number;
 };
 
-// [ezo-batch] Limits to keep animation smooth on all devices
 const MAX_MIC_PARTICLES = 24;
 const MAX_LISTENER_PARTICLES = 8;
 const MAX_TOTAL_PARTICLES = 80;
-// [ezo-waterfall] Max stacked waves during combo (prevents runaway)
 const MAX_STACKED_WAVES = 12;
 
-// [ezo-waterfall] A single combo wave (part of the waterfall)
 type StackedWave = {
   id: number;
   particles: FlyingTarget[];
   gift: any;
 };
 
-// [ezo-batch] Compute particle positions for batch gifts
 function calculateTargetCoords(
   recipientIds: string[],
   seats: any[] | undefined,
@@ -106,7 +101,6 @@ function calculateTargetCoords(
     .sort(() => Math.random() - 0.5)
     .slice(0, MAX_LISTENER_PARTICLES);
 
-  // [ezo-waterfall] حساب عدد الجسيمات لكل مستلم (بسقف إجمالي 80)
   const visibleCount = visibleMicTargets.length + sampledListeners.length;
   const particlesPerRecipient = visibleCount > 0
     ? Math.max(1, Math.min(quantity, Math.floor(MAX_TOTAL_PARTICLES / visibleCount)))
@@ -114,7 +108,6 @@ function calculateTargetCoords(
 
   const particles: FlyingTarget[] = [];
 
-  // 1) Mic targets — شلال من الجسيمات لكل مايك
   visibleMicTargets.forEach((t, idx) => {
     let targetX = 0;
     let targetY = 0;
@@ -141,7 +134,6 @@ function calculateTargetCoords(
     }
   });
 
-  // 2) Listener targets — شلال صاعد للأعلى
   sampledListeners.forEach((id, idx) => {
     const angle = (idx / Math.max(1, sampledListeners.length)) * 2 * Math.PI;
     const spread = Math.min(40, 8 + sampledListeners.length * 3);
@@ -169,9 +161,8 @@ function calculateTargetCoords(
 
 interface Props { roomId: Id<"rooms">; onLeave: () => void; onMinimizeChange?: (v: boolean) => void; }
 
-// [ezo] Chat bubble style
 function bubbleClass(vip: number, customUrl?: string): string {
-  if (customUrl) return ""; // إذا كان هناك صورة مخصصة، سنعرضها كخلفية ولن نستخدم الكلاسات الافتراضية
+  if (customUrl) return ""; 
   if (vip <= 0) return "bg-white/5 border border-white/10";
   const g = [
     "bg-gradient-to-br from-sky-500/25 to-sky-700/25 border border-sky-400/40",
@@ -185,7 +176,6 @@ function bubbleClass(vip: number, customUrl?: string): string {
   return g[Math.min(vip - 1, g.length - 1)];
 }
 
-// [ezo-mention] يلوّن @name بلون ذهبي
 function renderTextWithMentions(text: string | null | undefined) {
   if (!text) return null;
   const parts = text.split(/(@\S+)/g);
@@ -198,8 +188,6 @@ function renderTextWithMentions(text: string | null | undefined) {
   );
 }
 
-
-// دالة مؤقتة لتجربة إطلاق الدخولية
 function triggerTestVip() {
   const mockEntry = {
     _id: Date.now().toString(),
@@ -219,7 +207,6 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
         .then(() => console.log("[visit] room recorded"))
         .catch((err) => console.error("[visit] error:", err));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomId]);
   const deviceId = getDeviceId();
   const reactive = useReactiveAssets();
@@ -233,11 +220,9 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
   const seats = useQuery(api.mics.state, { roomId });
   const members = useQuery(api.rooms.members, { roomId });
   const myInfo = useQuery(api.mics.myInfo, { roomId, tokenOverride: getActiveToken() ?? deviceId });
-  // [ezo-notif-badge] نفس استعلام SystemNotifSheet — Convex dedupe تلقائي
   const _notifs = useQuery(api.notifications.listMine, { tokenOverride: getActiveToken() ?? deviceId });
   const unreadNotifs = (_notifs ?? []).filter((n: any) => !n.readAt).length;
 
-  // [ezo-rocket-launch] كشف إطلاق جديد — عرض Overlay في RoomView
   const recentLaunch = useQuery(api.rockets.listRoomHistory, { roomId, limit: 1 });
   const rocketStates = useQuery(api.rockets.getState, { roomId });
   const activeRocket = rocketStates?.find((r: any) => !r.launched) ?? rocketStates?.[rocketStates.length - 1];
@@ -246,7 +231,6 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
   const seenLaunchesRef = useRef<Set<string>>(new Set());
   const launchInitRef = useRef(false);
 
-  // [ezo-room-emoji] بث الإيموجي لكل من في الغرفة
   const activeEmojis = useQuery(api.roomEmojis.listActive, { roomId });
   const sendEmoji = useMutation(api.roomEmojis.sendEmoji);
   const emojiByUser: Record<string, { url: string; id: string }> = {};
@@ -267,14 +251,12 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
   const toggleMuteSeat = useMutation(api.mics.toggleMuteSeat);
   const toggleAdminMute = useMutation(api.mics.toggleAdminMute);
 
-  // [ezo-mute] sync initial state
   useEffect(() => {
     const mySeat = seats?.find((s: any) => myInfo?.userId && s.userId === myInfo.userId);
     if (mySeat) {
       setIsMuted(!!mySeat.muted);
       agoraManager.muteMicrophone(!!mySeat.muted);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [seats, myInfo?.userId]);
   const kickFromRoom = useMutation(api.mics.kickFromRoom);
   const toggleBanUser = useMutation(api.mics.toggleBanUser);
@@ -284,7 +266,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
   const inviteToSeat = useMutation(api.mics.inviteToSeat);
   const respondInvite = useMutation(api.mics.respondInvite);
   const sendMsg = useMutation(api.messages.send);
-    const getToken = useAction(api.voice.getToken);
+  const getToken = useAction(api.voice.getToken);
 
   const [enteredAt] = useState(() => {
     const key = `entered_${roomId}`;
@@ -297,10 +279,8 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
 
   const [agoraConnected, setAgoraConnected] = useState(false);
 
-  // [ezo-presence] heartbeat + leave تلقائي
   const { leave: leavePresence } = useRoomPresence(roomId, deviceId);
   const [isMuted, setIsMuted] = useState(false);
-  // sync from server (see useEffect below)
   const [error, setError] = useState<string | null>(null);
   const [remoteCount, setRemoteCount] = useState(0);
 
@@ -330,7 +310,6 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
   const [showMicRequests, setShowMicRequests] = useState(false);
   const [myRequestToast, setMyRequestToast] = useState<string | null>(null);
 
-  // [ezo] mic requests queries
   const micRequestsList = useQuery(api.mics.listRequests, { roomId });
   const micRequestsCount = micRequestsList?.length ?? 0;
   const myMicRequest = useQuery(api.mics.myRequestStatus, { roomId, tokenOverride: getActiveToken() ?? deviceId });
@@ -341,7 +320,6 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
   const [showGamesSheet, setShowGamesSheet] = useState(false);
   const [showChatInput, setShowChatInput] = useState(false);
   const [chatTab, setChatTab] = useState<"chat" | "system">("chat");
-  // [ezo-unread] Red dot on chat button when new user messages arrive
   const [seenChatMsgId, setSeenChatMsgId] = useState<string | null>(() => {
     try { return localStorage.getItem(`ezo:chat:seen:${roomId}`); } catch { return null; }
   });
@@ -369,9 +347,8 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
 
-  // Gift queue + combo
   const [activeGift, setActiveGift] = useState<any>(null);
-  const [videoReady, setVideoReady] = useState(false); // [ezo-gift-fix] ينتظر انتهاء طيران الهدية
+  const [videoReady, setVideoReady] = useState(false); 
   const [giftTarget, setGiftTarget] = useState<{x: number; y: number} | null>(null);
   const [giftQueue, setGiftQueue] = useState<any[]>([]);
   const [comboCount, setComboCount] = useState(1);
@@ -385,20 +362,15 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
   const [comboOverlay, setComboOverlay] = useState<{gift: any; count: number; id: number} | null>(null);
   const comboOverlayTimerRef = useRef<any>(null);
 
-  // [ezo-batch] Flying particles for batch gifts
   const [flyingTargets, setFlyingTargets] = useState<FlyingTarget[]>([]);
   const [aggregateBadge, setAggregateBadge] = useState<{ count: number; x: number; y: number } | null>(null);
 
-  // [ezo-waterfall] Combo stacked waves (شلال)
   const [stackedWaves, setStackedWaves] = useState<StackedWave[]>([]);
-  // [ezo-gifts-pro] imperative wave spawner ref — لا React re-render
   const wavesRef = useRef<GiftWavesHandle>(null);
 
-  // [ezo-fix] Track latest userId for cleanup on unmount
   const myUserIdRef = useRef<Id<"users"> | undefined>(undefined);
   useEffect(() => { myUserIdRef.current = myInfo?.userId; }, [myInfo?.userId]);
 
-  // [ezo-fix] Reset room-local state whenever roomId changes
   useEffect(() => {
     setActiveGift(null);
     setGiftQueue([]);
@@ -413,17 +385,12 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
     if (comboOverlayTimerRef.current) clearTimeout(comboOverlayTimerRef.current);
   }, [roomId]);
 
-  // [ezo-fix] Leave seat + release DB slot on unmount
-  // NOTE: clearMySeats via ref to avoid firing cleanup on every re-render
   const clearMySeatsRef = useRef(clearMySeats);
   useEffect(() => { clearMySeatsRef.current = clearMySeats; }, [clearMySeats]);
-    // [ezo-fix] تم إلغاء تفريغ المايك التلقائي عند unmount لمنع خروج المستخدم عشوائياً
-  // التفريغ يتم فقط عند الضغط المتعمد على زر مغادرة الغرفة (onLeave)
 
   const giftSinceRef = useRef(Date.now());
   const latestGift = useQuery(api.gifts.latestGiftFull, { roomId, since: giftSinceRef.current });
 
-  // [ezo-vip] entry animation — فقط للأحداث بعد دخولي للغرفة
   const mountTimeRef = useRef<number>(Date.now());
   const entrySinceRef = useRef<number>(Date.now() - 3000);
   const recentEntries = useQuery(
@@ -432,12 +399,8 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
   );
   const [currentEntry, setCurrentEntry] = useState<any>(null);
 
-  
-
-
   useEffect(() => {
     if (!recentEntries || recentEntries.length === 0) return;
-    // أحدث حدث لم يُعرض بعد
     const latest = recentEntries[0];
     if (latest._id === currentEntry?._id) return;
     setCurrentEntry(latest);
@@ -448,7 +411,6 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
   const chatBoxRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const joinedRef = useRef(false);
-  // [ezo-fix] Keep getToken in a ref so we don't reconnect Agora when it changes
   const getTokenRef = useRef(getToken);
   useEffect(() => { getTokenRef.current = getToken; }, [getToken]);
 
@@ -456,7 +418,6 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
   const seenMembersRef = useRef<Set<string>>(new Set());
   const myEntryPlayedRef = useRef(false);
   const publishedRef = useRef(false);
-  // [ezo-agora] UID فريد لكل جلسة دخول (deviceId + timestamp + random)
   const sessionUidRef = useRef<string>(
     `${deviceId}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`
   );
@@ -466,7 +427,6 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
     joinedRef.current = true;
     let cancelled = false;
     (async () => {
-      // [ezo-agora] Retry on UID_CONFLICT — مطابق لـ Binmo/Yalla
       const maxAttempts = 3;
       for (let attempt = 0; attempt < maxAttempts; attempt++) {
         if (cancelled) return;
@@ -526,14 +486,12 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
     }
   }, [agoraConnected, isOnMic]);
 
-  // [ezo] Auto-hide my request toast
   useEffect(() => {
     if (!myRequestToast) return;
     const t = setTimeout(() => setMyRequestToast(null), 3000);
     return () => clearTimeout(t);
   }, [myRequestToast]);
 
-  // [ezo] Watch my request status change
   const lastReqStatusRef = useRef<string | null>(null);
   useEffect(() => {
     const status = myMicRequest?.status ?? null;
@@ -549,12 +507,10 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
     }
   }, [myMicRequest?.status, roomId, deviceId, cancelMyRequestMutation]);
 
-  // Gift: combo detection
   useEffect(() => {
     if (!latestGift) return;
     const giftKey = `${latestGift.fromUserId}_${latestGift.giftId}`;
     if (activeGift && `${activeGift.fromUserId}_${activeGift.giftId}` === giftKey) {
-      // [ezo-waterfall] احسب العدد الفعلي = مستقبلون × كمية
       const recipientIds: string[] = Array.isArray(latestGift.batchTargets) && latestGift.batchTargets.length > 0
         ? latestGift.batchTargets.map((t: any) => t.toUserId).filter(Boolean)
         : (latestGift.toUserId ? [latestGift.toUserId] : []);
@@ -567,13 +523,11 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
       setShowComboPulse(true);
       setTimeout(() => setShowComboPulse(false), 350);
 
-      // أطلق موجة جديدة للشلال
-      if (latestGift.mediaUrl && recipientIds.length > 0) { // [ezo-gift-fix] طيران لكل الهدايا بلا استثناء
+      if (latestGift.mediaUrl && recipientIds.length > 0) { 
         const waveId = Date.now() + Math.random();
         const { particles } = calculateTargetCoords(recipientIds, seats, qty);
         const waveGift = latestGift;
 
-        // [ezo-pro] imperative spawn — لا re-render
         wavesRef.current?.spawn(waveGift, particles);
       }
 
@@ -588,22 +542,17 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
     }
   }, [latestGift]);
 
-  // [ezo-rocket-launch] كشف الإطلاق الجديد
   useEffect(() => {
-    // انتظر حتى تصل أول استجابة فعلية من السيرفر
     if (recentLaunch === undefined) return;
 
-    // أول استجابة — ضع التهيئة (حتى لو فارغة)
     if (!launchInitRef.current) {
       launchInitRef.current = true;
-      // علّم كل الأحداث القديمة كـ "مُشاهدة"
       for (const evt of recentLaunch) {
         seenLaunchesRef.current.add(evt._id);
       }
       return;
     }
 
-    // استجابة لاحقة — افحص الأحدث
     const latest = recentLaunch[0];
     if (latest && !seenLaunchesRef.current.has(latest._id)) {
       seenLaunchesRef.current.add(latest._id);
@@ -611,52 +560,44 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
     }
   }, [recentLaunch]);
 
-  // [ezo-gift-fix] تأخير الفيديو حتى انتهاء طيران الهدية (~1.1s)
   useEffect(() => {
     if (!activeGift) { setVideoReady(false); return; }
     const isBigVideo =
       (activeGift.price ?? 0) >= 1000 && activeGift.mediaType === "video";
     if (!isBigVideo) { setVideoReady(true); return; }
     setVideoReady(false);
-    const t = setTimeout(() => setVideoReady(true), 2400); // [ezo-gift] ينتظر انتهاء طيران الهدية (2.2s)
+    const t = setTimeout(() => setVideoReady(true), 2400); 
     return () => clearTimeout(t);
   }, [activeGift?._id]);
 
-  // Global broadcast effect (≥ 30000 in any room)
   useEffect(() => {
     if (!globalBroadcast) return;
     if (globalBroadcast.roomId === roomId && activeGift) return;
     setActiveGlobalBanner(globalBroadcast);
     const timer = setTimeout(() => setActiveGlobalBanner(null), 6000);
     return () => clearTimeout(timer);
-    // eslint-disable-next-line
   }, [globalBroadcast]);
 
-  // Combo Overlay effect (new layer, doesn't affect anything)
   useEffect(() => {
     if (!activeGift || comboCount < 2) return;
-    if ((activeGift.price ?? 0) >= 1000) return; // Only for Micro gifts
+    if ((activeGift.price ?? 0) >= 1000) return; 
 
     setComboOverlay({ gift: activeGift, count: totalQuantity, id: Date.now() });
     if (comboOverlayTimerRef.current) clearTimeout(comboOverlayTimerRef.current);
     comboOverlayTimerRef.current = setTimeout(() => {
       setComboOverlay(null);
-    }, 2600); // [ezo-combo-pro] يبقى 2.6s بعد آخر هدية
+    }, 2600); 
   }, [comboCount, activeGift]);
 
-  // Gift: queue processor
   useEffect(() => {
     if (activeGift || giftQueue.length === 0) return;
     const next = giftQueue[0];
     setGiftQueue((q) => q.slice(1));
 
-    // [ezo-batch] حساب كل الجسيمات بناءً على قائمة المستقبلين
-    // batchTargets → هدية جماعية | toUserId → هدية فردية
     const recipientIds: string[] = Array.isArray(next.batchTargets) && next.batchTargets.length > 0
       ? next.batchTargets.map((t: any) => t.toUserId).filter(Boolean)
       : (next.toUserId ? [next.toUserId] : []);
 
-    // ننتظر إطار واحد لضمان وجود عناصر data-mic-seat في DOM
     const qty = next.quantity || 1;
     requestAnimationFrame(() => {
       const { particles, aggregateBadge: badge } = calculateTargetCoords(recipientIds, seats, qty);
@@ -664,7 +605,6 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
       setAggregateBadge(badge);
     });
 
-    // نبضة المايك لاحقاً (بعد وصول الجسيمات)
     if (recipientIds.length > 0 && next.mediaType !== "video") {
       setTimeout(() => {
         recipientIds.forEach((uid: string) => {
@@ -679,25 +619,20 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
     }
 
     setActiveGift(next);
-    // [ezo-waterfall] العدّاد = عدد المستقبلين × الكمية
     const totalQtyInit = recipientIds.length * qty;
     setComboCount(totalQtyInit);
     setTotalQuantity(totalQtyInit);
     setComboValue(totalQtyInit * (next.price ?? 0));
     setIsGlobalBanner(next.isGlobal && (next.price ?? 0) >= 30000);
 
-    // إخفاء الهدية — مددنا الوقت لأنيميشن multiGiftFly (2.2s)
     if (next.mediaType !== "video") {
       comboTimeoutRef.current = setTimeout(() => finishActiveGift(), 2400);
     } else {
-      // مؤقت أمان للفيديو (12s) في حال فشل onEnded
-      comboTimeoutRef.current = setTimeout(() => finishActiveGift(), 60000); // [ezo-gift-fix] fallback فقط — onEnded يُنهي عادةً
+      comboTimeoutRef.current = setTimeout(() => finishActiveGift(), 60000); 
     }
   }, [giftQueue, activeGift, seats]);
 
-  // (mic target position now handled via targetCoordsRef in queue processor)
-
-    const finishActiveGift = () => {
+  const finishActiveGift = () => {
     if (videoRef.current) {
       try {
         videoRef.current.pause();
@@ -720,7 +655,6 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
     if (chatBoxRef.current) chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
   }, [messages?.length, showChatInput]);
 
-  // [ezo-keepalive] منع المتصفح من تعليق الجلسة الصوتية
   useEffect(() => {
     let wakeLock: any = null;
     let silentAudio: HTMLAudioElement | null = null;
@@ -738,7 +672,6 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
 
     const startSilentAudio = () => {
       try {
-        // ملف صوتي صامت قصير جداً (Base64) لإبقاء الجلسة نشطة
         const silentDataUri = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
         silentAudio = new Audio(silentDataUri);
         silentAudio.loop = true;
@@ -777,8 +710,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
     };
   }, []);
 
-    useEffect(() => {
-    // [ezo-back] اعتراض زر الرجوع في المتصفح (نمط التطبيقات الأصلية)
+  useEffect(() => {
     window.history.pushState({ inRoom: true }, "", window.location.href);
     const onBackPress = () => {
       setShowBackMenu(true);
@@ -795,16 +727,12 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
     };
   }, []);
 
-  // [ezo-entry] تشغيل دخولية (مركبة) المستخدم نفسه عند تحميل بياناته
   useEffect(() => {
     if (!myInfo?.userId || myEntryPlayedRef.current) return;
     myEntryPlayedRef.current = true;
-    
-    // تأخير بسيط للتأكد من أن الغرفة ظهرت بالكامل
     const timer = setTimeout(() => {
       setActiveEntryUserId(myInfo.userId);
     }, 800);
-    
     return () => clearTimeout(timer);
   }, [myInfo?.userId]);
 
@@ -812,7 +740,6 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
     if (!members) return;
     if (seenMembersRef.current.size === 0) {
       members.forEach((m: any) => seenMembersRef.current.add(String(m.userId)));
-      // شغل تأثير دخول المستخدم نفسه (المركبة) فور دخوله للغرفة
       if (myInfo?.userId) {
         setActiveEntryUserId(myInfo.userId);
       }
@@ -821,7 +748,6 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
     const newMembers = members.filter((m: any) => !seenMembersRef.current.has(String(m.userId)));
     if (newMembers.length > 0) {
       newMembers.forEach((m: any) => seenMembersRef.current.add(String(m.userId)));
-      // شغل تأثير الدخول لأول عضو جديد
       setActiveEntryUserId(newMembers[0].userId);
     }
   }, [members]);
@@ -866,7 +792,6 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
     const seat = seats?.find((s) => s.seatIndex === seatIndex);
     const isMine = userId && myInfo?.userId && userId === myInfo.userId;
 
-    // احسب موضع المايك أولاً (لكل الحالات)
     const seatEl = document.querySelector(`[data-mic-seat="${seatIndex}"]`) as HTMLElement | null;
     let menuPos: { x: number; y: number } | null = null;
     if (seatEl) {
@@ -874,9 +799,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
       menuPos = { x: r.left + r.width / 2, y: r.bottom + 4 };
     }
 
-    // 1) مايك فاضي (سواء مقفل أو لا)
     if (!userId) {
-      // [ezo-fix] Owner/Mod: always show menu (even locked/empty)
       if (isOwnerOrMod) {
         setOpenSeatMenuPos(menuPos);
         setOpenSeatMenu(seatIndex);
@@ -896,14 +819,12 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
       return;
     }
 
-    // 2) مايكي أنا → MiniProfile (isMySeat)
     if (isMine) {
       setMiniProfileUserId(userId!);
       setMySeatIndexForMiniProfile(seatIndex);
       return;
     }
 
-    // 3) شخص آخر → Mini Profile
     setMiniProfileUserId(userId);
     setMySeatIndexForMiniProfile(null);
   };
@@ -912,13 +833,11 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
     const next = !isMuted;
     setIsMuted(next);
     agoraManager.muteMicrophone(next);
-    // [ezo-mute] Sync server state (so others see mute icon on my seat)
     const mySeat = seats?.find((s: any) => myInfo?.userId && s.userId === myInfo.userId);
     if (mySeat) {
       try {
         await toggleMuteSeat({ roomId, seatIndex: mySeat.seatIndex, tokenOverride: getActiveToken() ?? deviceId });
       } catch (e: any) {
-        // Rollback local state + Agora on server failure
         setIsMuted(!next);
         agoraManager.muteMicrophone(!next);
         dialog.alert(e?.message || "فشل الكتم");
@@ -927,7 +846,6 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
   };
 
   const handleLeave = async () => {
-    // [ezo-presence] إبلاغ الـ server بالخروج فوراً
     try { await leavePresence({ roomId, tokenOverride: getActiveToken() ?? deviceId }); } catch {}
     try { await clearMySeats({ roomId, tokenOverride: getActiveToken() ?? deviceId }); } catch {}
     await agoraManager.leave();
@@ -972,9 +890,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
     );
   }
 
-
-  // [ezo-gift-waves] useMemo لعزل JSX الشلال — منع الوميض عند الإرسال السريع
-  const wavesJsx = null; // [ezo-pro] replaced by <GiftWavesLayer ref={wavesRef} />
+  const wavesJsx = null; 
 
   return (
     <div className="flex flex-col overflow-hidden fixed inset-0 mx-auto z-[100] bg-[#0a0a0a]" dir="rtl"
@@ -984,9 +900,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
       <div className="relative z-10 flex flex-col h-full min-h-0">
         <header className="flex flex-col gap-1.5 px-2 py-2 flex-shrink-0 bg-black/40 backdrop-blur-md border-b border-white/10">
 
-          {/* Row 1: Exit (right) | Favorite + Room Capsule (left) */}
           <div className="flex items-center justify-between gap-2">
-            {/* Exit button (right in RTL) */}
             <button
               onClick={() => setShowBackMenu((v) => !v)}
               className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white flex-shrink-0 active:scale-90 transition"
@@ -994,7 +908,6 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
               <LogOut size={16} />
             </button>
 
-            {/* Favorite + Room Capsule (left in RTL) */}
             <div className="flex items-center gap-2 flex-shrink-0">
               <button
                 onClick={() => setIsFavorite(!isFavorite)}
@@ -1003,7 +916,6 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
                 <Heart size={15} className={isFavorite ? "fill-red-500 text-red-500" : "text-white"} />
               </button>
 
-              {/* Unified room capsule: room name + owner ID + avatar */}
               <div
                 className="flex items-center gap-2 pl-1 pr-3 h-10 rounded-full flex-shrink-0"
                 style={{
@@ -1034,9 +946,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
             </div>
           </div>
 
-          {/* Row 2: Members + Avatars (right) | Leaderboard + Bell (left) */}
           <div className="flex items-center justify-between gap-2">
-            {/* Members + Avatars (right side in RTL) */}
             <div className="flex items-center gap-1.5 min-w-0">
               <button
                 onClick={() => setShowMembers(true)}
@@ -1054,7 +964,6 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
               </div>
             </div>
 
-            {/* Leaderboard + Bell (left side in RTL) */}
             <div className="flex items-center gap-1.5 flex-shrink-0">
               {isOwnerOrMod && room?.micRequestsEnabled && (
                 <button
@@ -1097,7 +1006,6 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
                     className="absolute top-20 right-4 flex items-center gap-3 p-3 rounded-3xl bg-black/60 backdrop-blur-xl border border-white/10 shadow-2xl animate-in fade-in slide-in-from-top-4"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    {/* زر الخروج */}
                     <button onClick={handleLeave} className="flex flex-col items-center gap-1 group">
                       <div className="w-14 h-14 rounded-full bg-white/10 group-hover:bg-red-500/20 flex items-center justify-center transition-colors">
                         <LogOut size={22} className="text-red-400" />
@@ -1105,7 +1013,6 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
                       <span className="text-[10px] text-white/80 font-bold group-hover:text-white">خروج</span>
                     </button>
                     
-                    {/* زر التصغير */}
                     <button onClick={() => { setShowBackMenu(false); setIsMinimized(true); }} className="flex flex-col items-center gap-1 group">
                       <div className="w-14 h-14 rounded-full bg-white/10 group-hover:bg-emerald-500/20 flex items-center justify-center transition-colors">
                         <Minimize2 size={22} className="text-emerald-400" />
@@ -1113,7 +1020,6 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
                       <span className="text-[10px] text-white/80 font-bold group-hover:text-white">تصغير</span>
                     </button>
 
-                    {/* زر المشاركة */}
                     <button onClick={() => { navigator.clipboard.writeText(window.location.href); setShowBackMenu(false); setShareToast(true); setTimeout(() => setShareToast(false), 1800); }} className="flex flex-col items-center gap-1 group">
                       <div className="w-14 h-14 rounded-full bg-white/10 group-hover:bg-blue-500/20 flex items-center justify-center transition-colors">
                         <Share2 size={22} className="text-blue-400" />
@@ -1253,7 +1159,6 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
                   border: "1px solid rgba(255,255,255,0.18)",
                 }}
               >
-                {/* Top glow line */}
                 <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-purple-400/60 to-transparent" />
                 <p className="text-white/60 text-[10px] px-3 py-1">المايك رقم {currentSeatMenuData.seatIndex + 1}</p>
                 {isMySeat ? (
@@ -1274,24 +1179,20 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
                   </>
                 ) : (
                   <>
-                    {/* دعوة شخص — متاح للجميع */}
                     <button onClick={() => { setInviteSeatIndex(currentSeatMenuData.seatIndex); setOpenSeatMenu(null); setOpenSeatMenuPos(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs">
                       <UserPlus size={14} /> دعوة شخص للجلوس
                     </button>
                     {isOwnerOrMod && (
                       <>
-                        {/* فك/قفل المايك */}
                         <button onClick={() => { toggleLock({ roomId, seatIndex: currentSeatMenuData.seatIndex, tokenOverride: getActiveToken() ?? deviceId }); setOpenSeatMenu(null); setOpenSeatMenuPos(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs">
                           {currentSeatMenuData.locked ? <Unlock size={14} /> : <Lock size={14} />} {currentSeatMenuData.locked ? "فك القفل" : "قفل المايك"}
                         </button>
-                        {/* [ezo] الكتم الإداري — يمنع المستخدم من إلغاء الكتم */}
                         <button onClick={() => { toggleAdminMute({ roomId, seatIndex: currentSeatMenuData.seatIndex, tokenOverride: getActiveToken() ?? deviceId }); setOpenSeatMenu(null); setOpenSeatMenuPos(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 text-xs">
                           <MicOff size={14} />
                           {currentSeatMenuData.adminMuted ? "إلغاء الكتم الإداري" : "كتم المايك (إداري)"}
                         </button>
                       </>
                     )}
-                    {/* اجلس هنا — يفتح القفل تلقائياً إذا كان مقفل */}
                     {!currentSeatMenuData.userId && isOwnerOrMod && (
                       <button
                         onClick={async () => {
@@ -1350,7 +1251,6 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
               .filter((m: any) => (m.createdAt ?? 0) >= enteredAt || m.system)
               .filter((m: any) => chatTab === "chat" ? !m.system : m.system)
               .map((m: any) => {
-                // [ezo-chat] System messages (entry/announcement) — centered pill
                 if (m.system || !m.senderId) {
                   const isAnnouncement = (m.text ?? "").includes("اعلان") || (m.text ?? "").includes("إعلان");
                   return (
@@ -1369,7 +1269,6 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
                   );
                 }
 
-                // Regular chat message
                 return (
                   <div key={m._id} className="flex gap-2 items-start">
                     <button
@@ -1426,7 +1325,6 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
         )}
 
         <footer className="px-2 py-2 flex items-center justify-around flex-shrink-0">
-          {/* 1. Chat — RIGHT in RTL (reversed) */}
           <button
             onClick={() => { const next = !showChatInput; setShowChatInput(next); if (next) markChatSeen(); }}
             className="relative w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center active:scale-90 transition text-white/90"
@@ -1439,7 +1337,6 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
             )}
           </button>
 
-          {/* 2. Mic (mic-only) */}
           {isOnMic && (
             <button
               onClick={handleToggleMute}
@@ -1454,7 +1351,6 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
             </button>
           )}
 
-          {/* 3. Emoji (mic-only) */}
           {isOnMic && (
             <button
               onClick={() => setShowEmojiSheet(true)}
@@ -1469,7 +1365,6 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
             </button>
           )}
 
-          {/* 4. Apps / Settings (4-squares) */}
           <button
             onClick={() => setShowSettings(true)}
             className="w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center active:scale-90 transition text-white/90"
@@ -1482,7 +1377,6 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
             </svg>
           </button>
 
-          {/* 5. Mail */}
           <button
             onClick={() => setShowNotifSheet(true)}
             className="relative w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center active:scale-90 transition text-white/90"
@@ -1498,7 +1392,6 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
             )}
           </button>
 
-          {/* 6. Games */}
           <button
             onClick={() => setShowGamesSheet(true)}
             className="w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center active:scale-90 transition text-amber-300"
@@ -1508,7 +1401,6 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
             </svg>
           </button>
 
-          {/* 7. Gift — LEFT in RTL (reversed) */}
           <button
             onClick={() => setShowGifts(true)}
             className="w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center active:scale-90 transition"
@@ -1517,7 +1409,6 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
           </button>
         </footer>
 
-        {/* [ezo-rocket] زر الصاروخ العائم */}
         {activeRocket && (
           <button
             onClick={() => setShowRocketSheet(true)}
@@ -1543,7 +1434,6 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
         )}
       </div>
 
-      {/* ==================== GLOBAL MARQUEE (≥ 30000) ==================== */}
       {activeGlobalBanner && !(isGlobalBanner && activeGift?.roomId === roomId) && (
         <div className="fixed top-2 left-0 right-0 z-[100] flex justify-center pointer-events-none animate-marquee-slide">
           <div className="max-w-[360px] w-[calc(100%-16px)] bg-gradient-to-r from-amber-600 via-yellow-400 to-amber-600 p-[1.5px] rounded-full golden-glow">
@@ -1579,7 +1469,6 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
 
       {activeGift && (
         <>
-          {/* ============ VIDEO FULLSCREEN (≥ 1000) ============ */}
           {(activeGift.price ?? 0) >= 1000 && activeGift.mediaType === "video" && activeGift.mediaUrl && videoReady && (
             <div className="fixed inset-0 z-[80] pointer-events-none flex items-center justify-center">
               <video
@@ -1612,7 +1501,6 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
             </div>
           )}
 
-          {/* ============ ROOM BANNER (1000 - 29999) ============ */}
           {((activeGift.price ?? 0) >= 1000 || comboValue >= 950) && (activeGift.price ?? 0) < 30000 && (
             <div key={activeGift._id} className="fixed top-4 left-0 right-0 z-[85] flex justify-center pointer-events-none animate-banner-floating">
               <div className={`max-w-[360px] w-[calc(100%-20px)] bg-gradient-to-r from-purple-900/95 via-black/95 to-purple-900/95 backdrop-blur-xl rounded-2xl px-4 py-2.5 border border-purple-400/60 shadow-[0_0_30px_rgba(168,85,247,0.4)] flex items-center justify-between transition-transform duration-300 ${showComboPulse ? "scale-[1.06]" : "scale-100"}`}>
@@ -1661,7 +1549,6 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
             </div>
           )}
 
-          {/* ============ GLOBAL GOLDEN BANNER (≥ 30000 — in-room) ============ */}
           {isGlobalBanner && (
             <div className="fixed top-2 left-0 right-0 z-[95] flex justify-center pointer-events-none">
               <div className="max-w-[360px] w-[calc(100%-16px)] bg-gradient-to-r from-amber-600 via-yellow-400 to-amber-600 p-[1.5px] rounded-full golden-glow">
@@ -1712,7 +1599,6 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
             </div>
           )}
 
-          {/* ============ MICRO GIFT (< 1000) — multi-particle flies to mics/listeners ============ */}
           {(activeGift.price ?? 0) < 1000 && activeGift.mediaUrl && (
             <div className="fixed inset-0 z-[75] pointer-events-none">
               {flyingTargets.map((target, idx) => (
@@ -1737,7 +1623,6 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
                 </div>
               ))}
 
-              {/* شارة تجميع المستمعين المخفيين */}
               {aggregateBadge && (
                 <div
                   className="fixed pointer-events-none aggregate-badge-anim"
@@ -1757,10 +1642,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
             </div>
           )}
 
-          {/* ============ [ezo-waterfall] STACKED COMBO WAVES ============ */}
           <GiftWavesLayer ref={wavesRef} />
-
-           
 
           {(
             <div className={`fixed left-3 z-[70] pointer-events-none flex items-center transition-transform duration-200 ${showComboPulse ? "scale-110" : "scale-100"}`} style={{ bottom: "42vh" }}>
@@ -1867,8 +1749,6 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
         />
       )}
 
-
-
       {miniProfileUserId && (
         <MiniProfileSheet
           userId={miniProfileUserId}
@@ -1957,14 +1837,12 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
               ? mySeatIndexForMiniProfile
               : seats?.find((s: any) => s.userId === miniProfileUserId)?.seatIndex;
             if (targetSeat === undefined || targetSeat === null) return;
-            // إذا كان مايكي أنا → leaveSeat
             if (mySeatIndexForMiniProfile !== null) {
               leaveSeat({ roomId, tokenOverride: getActiveToken() ?? deviceId })
                 .then(() => agoraManager.unpublishMicrophone())
                 .then(() => { setMiniProfileUserId(null); setMySeatIndexForMiniProfile(null); })
                 .catch(() => {});
             } else {
-              // إنزال شخص آخر
               if (!miniProfileUserId) return;
               removeFromSeat({ roomId, toUserId: miniProfileUserId as any, tokenOverride: getActiveToken() ?? deviceId })
                 .then(() => {
@@ -2040,9 +1918,6 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
         </div>
       )}
 
-
-
-      {/* Combo Overlay (new layer, center) — doesn't affect anything */}
       {comboOverlay && comboOverlay.gift?.mediaUrl && (
         <div className="fixed inset-0 z-[72] pointer-events-none flex items-center justify-center" dir="rtl">
           <div
@@ -2064,7 +1939,6 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
                 />
               )}
             </div>
-            {/* Big italic glowing number */}
             <div
               key={`num_${comboOverlay.count}`}
               className="combo-number-pulse relative"
@@ -2074,7 +1948,6 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
               </span>
             </div>
 
-            {/* Sender → Recipient */}
             <div className="bg-black/85 backdrop-blur-xl rounded-full px-5 py-2 border border-yellow-400/50 shadow-[0_0_24px_rgba(250,204,21,0.35)] flex items-center gap-2">
               {comboOverlay.gift.fromAvatar && (
                 <img
@@ -2096,7 +1969,16 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
       )}
 
       <MusicPlayer roomId={roomId} variant="hidden" />
-      {showGamesSheet && <GamesSheet onClose={() => setShowGamesSheet(false)} />}
+      
+      {/* 👇👇👇 هذا هو السطر اللي تم تعديله 👇👇👇 */}
+      {showGamesSheet && me && (
+        <GamesSheet 
+          onClose={() => setShowGamesSheet(false)} 
+          userId={me._id} 
+          userName={me.name || me.username || "لاعب"} 
+          userBalance={me.coins ?? 0} 
+        />
+      )}
 
       {showEmojiSheet && (
         <EmojiSheet
@@ -2109,7 +1991,6 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
 
       {showNotifSheet && <SystemNotifSheet onClose={() => setShowNotifSheet(false)} />}
 
-      {/* [ezo-rocket-launch] Launch animation */}
       {launchAnimEvent && (
         <RocketLaunchOverlay
           rocket={{
@@ -2185,7 +2066,6 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
             if (key === "mini-chat") { setShowMiniChat(true); return; }
             if (key === "spend") { setShowSpend(true); return; }
             if (key === "deco") { setShowMicStyle(true); return; }
-            // باقي الميزات تحتاج مكونات خاصة - قريباً
             dialog.alert("هذه الميزة قيد التطوير — قريباً");
           }} />
       )}
@@ -2211,4 +2091,3 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
     </div>
   );
 }
-
