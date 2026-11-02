@@ -4,14 +4,11 @@ import { api } from "./_generated/api";
 
 const http = httpRouter();
 
-// إعدادات الأمان للسماح للعبة بالاتصال
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type",
 };
-
-// ============ كود المحفظة الجديد (Wallet API) ============
 
 http.route({
   path: "/api/wallet",
@@ -26,14 +23,12 @@ http.route({
   method: "POST",
   handler: httpAction(async (ctx, request) => {
     try {
-      const body = await request.json();
-      const { action, userId, amount } = body;
+      const { action, userId, amount } = await request.json();
 
       if (!userId || amount === undefined) {
         return new Response(JSON.stringify({ success: false, error: "بيانات ناقصة" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
-      // جلب المستخدم (سواء بالـ ID أو برقم الحساب)
       let user = null;
       try {
         user = await ctx.db.get(userId as any);
@@ -50,7 +45,6 @@ http.route({
 
       const currentCoins = (user as any).coins ?? 0;
 
-      // الخصم أو الإضافة
       if (action === "debit") {
         if (currentCoins < amount) {
           return new Response(JSON.stringify({ success: false, error: "رصيدك غير كافٍ" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -69,7 +63,6 @@ http.route({
   }),
 });
 
-// ============ كودك القديم (Leave API) ============
 http.route({
   path: "/api/leave",
   method: "POST",
@@ -77,10 +70,7 @@ http.route({
     try {
       const body: any = await request.json();
       if (body && body.roomId && body.tokenOverride) {
-        await ctx.runMutation(api.presence.leave, {
-          roomId: body.roomId,
-          tokenOverride: body.tokenOverride,
-        });
+        await ctx.runMutation(api.presence.leave, { roomId: body.roomId, tokenOverride: body.tokenOverride });
       }
       return new Response("ok", { status: 200 });
     } catch (e) {
