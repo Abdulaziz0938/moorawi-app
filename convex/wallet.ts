@@ -474,3 +474,45 @@ export const seedDefaultPackages = mutation({
     return { ok: true, created, updated };
   },
 });
+
+// ============================================================
+// [ezo-animal-game] Internal helpers for server-to-server calls
+// ============================================================
+
+export const getUser = internalQuery({
+  args: { userId: v.string() },
+  handler: async (ctx, args) => {
+    let user = null;
+    try {
+      user = await ctx.db.get(args.userId as any);
+    } catch (e) {}
+    if (!user) {
+      const num = parseInt(args.userId, 10);
+      if (!isNaN(num)) {
+        user = await ctx.db.query("users").withIndex("by_userNumber", (q) => q.eq("userNumber", num)).first();
+      }
+    }
+    return user;
+  }
+});
+
+export const updateCoins = internalMutation({
+  args: { userId: v.string(), newCoins: v.number() },
+  handler: async (ctx, args) => {
+    let user = null;
+    try {
+      user = await ctx.db.get(args.userId as any);
+    } catch (e) {}
+    if (!user) {
+      const num = parseInt(args.userId, 10);
+      if (!isNaN(num)) {
+        user = await ctx.db.query("users").withIndex("by_userNumber", (q) => q.eq("userNumber", num)).first();
+      }
+    }
+    if (user) {
+      await ctx.db.patch(user._id, { coins: args.newCoins });
+      return true;
+    }
+    return false;
+  }
+});
