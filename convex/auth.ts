@@ -186,6 +186,7 @@ export const me = query({
       authProvider: user.authProvider ?? "guest",
       isAdmin: user.isAdmin ?? false,
       adminRole: user.adminRole ?? null,
+      coins: user.coins ?? 0, // 👈 ضفنا الرصيد هون
     };
   },
 });
@@ -279,11 +280,6 @@ export const signout = mutation({
   },
 });
 
-// ============================================================
-// [ezo-auth] guestSignIn — دخول كزائر بـ deviceId
-// - لو المستخدم موجود → يرجع tokenIdentifier
-// - لو جديد → ينشئ مستخدم + يرجع deviceId
-// ============================================================
 export const guestSignIn = mutation({
   args: { deviceId: v.string() },
   handler: async (ctx, args) => {
@@ -291,23 +287,19 @@ export const guestSignIn = mutation({
       throw new ConvexError({ code: "BAD_REQUEST", message: "معرّف الجهاز غير صالح" });
     }
 
-    // ابحث عن المستخدم
     let user = await ctx.db
       .query("users")
       .withIndex("by_token", (q) => q.eq("tokenIdentifier", args.deviceId))
       .unique();
 
     if (user) {
-      // موجود — تحقق من الحظر
       if (user.banned) {
         throw new ConvexError({ code: "FORBIDDEN", message: "هذا الجهاز محظور" });
       }
-      // حدّث lastLoginAt
       await ctx.db.patch("users", user._id, { lastLoginAt: Date.now() });
       return { tokenIdentifier: args.deviceId, isNew: false, userId: user._id };
     }
 
-    // جديد — أنشئ مستخدم زائر
     const userNumber = await getNextUserNumber(ctx);
     const uid = await getNextUid(ctx);
     const id = await ctx.db.insert("users", {
