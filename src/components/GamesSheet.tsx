@@ -18,7 +18,6 @@ export default function GamesSheet({ onClose, userId, userName, userBalance }: P
     else onClose();
   });
 
-  // إذا تم اختيار لعبة الحيوانات، نفتحها ونمرر لها البيانات
   if (activeGame === "animals") {
     return (
       <AnimalKingdomSheet
@@ -30,7 +29,6 @@ export default function GamesSheet({ onClose, userId, userName, userBalance }: P
     );
   }
 
-  // إذا تم اختيار عجلة الحظ (مؤقتاً رسالة قريباً)
   if (activeGame === "wheel") {
     return (
       <div className="fixed inset-0 z-50 bg-black/90 flex flex-col items-center justify-center p-4">
@@ -41,7 +39,6 @@ export default function GamesSheet({ onClose, userId, userName, userBalance }: P
     );
   }
 
-  // القائمة الرئيسية للألعاب
   return (
     <div className="fixed inset-0 z-50 bg-black/80 flex items-end sm:items-center justify-center p-0 sm:p-4" dir="rtl">
       <div className="bg-slate-900 rounded-t-3xl sm:rounded-3xl w-full max-w-md p-6 relative border-t sm:border border-slate-700">
@@ -56,7 +53,6 @@ export default function GamesSheet({ onClose, userId, userName, userBalance }: P
         </div>
 
         <div className="grid grid-cols-2 gap-4">
-          {/* زر مملكة الحيوانات */}
           <button 
             onClick={() => setActiveGame("animals")} 
             className="bg-gradient-to-br from-emerald-600 to-emerald-900 border-2 border-emerald-500/50 p-4 rounded-2xl flex flex-col items-center justify-center shadow-lg active:scale-95 transition-all"
@@ -65,7 +61,6 @@ export default function GamesSheet({ onClose, userId, userName, userBalance }: P
             <span className="text-amber-300 font-black text-sm">مملكة الحيوانات</span>
           </button>
 
-          {/* زر عجلة الحظ (مؤقتاً) */}
           <button 
             onClick={() => setActiveGame("wheel")} 
             className="bg-gradient-to-br from-purple-600 to-purple-900 border-2 border-purple-500/50 p-4 rounded-2xl flex flex-col items-center justify-center shadow-lg active:scale-95 transition-all"
