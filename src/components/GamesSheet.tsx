@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 import { useBackButton } from "../lib/hooks/useBackButton";
-import AnimalKingdomSheet from "./AnimalKingdomSheet";
 
 interface Props { 
   onClose: () => void; 
@@ -16,16 +15,23 @@ export default function GamesSheet({ onClose, userId, userName, userBalance }: P
   useBackButton(() => {
     if (activeGame) setActiveGame(null);
     else onClose();
-  });
+  }, true); 
 
   if (activeGame === "animals") {
+    const gameUrl = `https://ezo-animal-game.vercel.app/?userId=${userId}&username=${encodeURIComponent(userName)}&balance=${userBalance}`;
+    
     return (
-      <AnimalKingdomSheet
-        onClose={() => setActiveGame(null)}
-        initialUserId={userId}
-        initialUserName={userName}
-        initialBalance={userBalance}
-      />
+      <div className="fixed inset-0 z-[9999] bg-black flex flex-col">
+        <div className="bg-slate-900 p-2 flex items-center justify-between border-b border-slate-700">
+          <span className="text-amber-400 font-bold text-sm">🦁 مملكة الحيوانات</span>
+          <button onClick={() => setActiveGame(null)} className="bg-rose-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold active:scale-90 transition">إغلاق ✕</button>
+        </div>
+        <iframe 
+          src={gameUrl} 
+          className="w-full flex-1 border-none bg-black" 
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        />
+      </div>
     );
   }
 
