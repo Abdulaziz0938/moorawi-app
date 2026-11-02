@@ -1,77 +1,78 @@
 import { useState } from "react";
-import { X, Dices, Loader2 } from "lucide-react";
+import { X } from "lucide-react";
 import { useBackButton } from "../lib/hooks/useBackButton";
-import LudoGame from "./games/LudoGame";
-import LuckyWheelSheet from "./LuckyWheelSheet";
-import TicTacToe from "./games/TicTacToe";
-import MemoryGame from "./games/MemoryGame";
-import SnakeGame from "./games/SnakeGame";
+import AnimalKingdomSheet from "./AnimalKingdomSheet";
 
-interface Props { onClose: () => void; }
+interface Props { 
+  onClose: () => void; 
+  userId: string; 
+  userName: string; 
+  userBalance: number; 
+}
 
-type GameKey = "ludo" | "snake" | "memory" | "tictactoe" | "wheel";
+export default function GamesSheet({ onClose, userId, userName, userBalance }: Props) {
+  const [activeGame, setActiveGame] = useState<"animals" | "wheel" | null>(null);
 
-const GAMES: { key: GameKey; label: string; emoji: string; soon?: boolean }[] = [
-  { key: "wheel",     label: "عجلة الحظ", emoji: "🎡" },
-  { key: "ludo",      label: "لودو",      emoji: "🎲" },
-  { key: "tictactoe", label: "إكس أو",    emoji: "⭕" },
-  { key: "snake",     label: "ثعبان",     emoji: "🐍" },
-  { key: "memory",    label: "ذاكرة",     emoji: "🧠" },
-];
+  useBackButton(() => {
+    if (activeGame) setActiveGame(null);
+    else onClose();
+  });
 
-export default function GamesSheet({ onClose }: Props) {
-  useBackButton(true, onClose);
-  const [active, setActive] = useState<GameKey>("ludo");
+  // إذا تم اختيار لعبة الحيوانات، نفتحها ونمرر لها البيانات
+  if (activeGame === "animals") {
+    return (
+      <AnimalKingdomSheet
+        onClose={() => setActiveGame(null)}
+        initialUserId={userId}
+        initialUserName={userName}
+        initialBalance={userBalance}
+      />
+    );
+  }
 
+  // إذا تم اختيار عجلة الحظ (مؤقتاً رسالة قريباً)
+  if (activeGame === "wheel") {
+    return (
+      <div className="fixed inset-0 z-50 bg-black/90 flex flex-col items-center justify-center p-4">
+        <div className="text-6xl mb-4">🎡</div>
+        <h2 className="text-white text-xl font-bold mb-6">عجلة الحظ قيد التطوير...</h2>
+        <button onClick={() => setActiveGame(null)} className="bg-rose-600 text-white px-6 py-2 rounded-xl">رجوع</button>
+      </div>
+    );
+  }
+
+  // القائمة الرئيسية للألعاب
   return (
-    <div className="fixed inset-0 z-[300] bg-black/80 backdrop-blur-sm flex items-end justify-center" dir="rtl" onClick={onClose}>
-      <div
-        className="w-full max-w-md bg-gradient-to-b from-slate-900 to-black rounded-t-3xl h-[92dvh] flex flex-col overflow-hidden border-t border-white/15"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
-          <div className="flex items-center gap-2">
-            <Dices size={20} className="text-amber-300" />
-            <h2 className="text-white text-base font-black">الألعاب</h2>
-          </div>
-          <button
-            onClick={onClose}
-            className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white active:scale-95"
-          >
-            <X size={18} />
+    <div className="fixed inset-0 z-50 bg-black/80 flex items-end sm:items-center justify-center p-0 sm:p-4" dir="rtl">
+      <div className="bg-slate-900 rounded-t-3xl sm:rounded-3xl w-full max-w-md p-6 relative border-t sm:border border-slate-700">
+        
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-white text-xl font-black flex items-center gap-2">
+            🎮 الألعاب
+          </h2>
+          <button onClick={onClose} className="text-slate-400 hover:text-white bg-slate-800 p-2 rounded-full">
+            <X size={20} />
           </button>
         </div>
 
-        {/* Game tabs */}
-        <div className="flex gap-2 px-3 py-2 border-b border-white/5 overflow-x-auto scrollbar-hide">
-          {GAMES.map((g) => (
-            <button
-              key={g.key}
-              onClick={() => !g.soon && setActive(g.key)}
-              disabled={g.soon}
-              className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-black transition ${
-                active === g.key
-                  ? "bg-purple-500/30 border border-purple-400/60 text-white"
-                  : g.soon
-                  ? "bg-white/5 border border-white/10 text-white/30 cursor-not-allowed"
-                  : "bg-white/5 border border-white/10 text-white/70 hover:bg-white/10"
-              }`}
-            >
-              <span className="ml-1">{g.emoji}</span>
-              {g.label}
-              {g.soon && <span className="mr-1 text-[9px]">(soon)</span>}
-            </button>
-          ))}
-        </div>
+        <div className="grid grid-cols-2 gap-4">
+          {/* زر مملكة الحيوانات */}
+          <button 
+            onClick={() => setActiveGame("animals")} 
+            className="bg-gradient-to-br from-emerald-600 to-emerald-900 border-2 border-emerald-500/50 p-4 rounded-2xl flex flex-col items-center justify-center shadow-lg active:scale-95 transition-all"
+          >
+            <span className="text-4xl mb-2 drop-shadow-md">🦁</span>
+            <span className="text-amber-300 font-black text-sm">مملكة الحيوانات</span>
+          </button>
 
-        {/* Active game */}
-        <div className="flex-1 overflow-hidden">
-          {active === "wheel" && <LuckyWheelSheet isOpen={true} onClose={onClose} />}
-          {active === "ludo" && <LudoGame onClose={onClose} />}
-            {active === "tictactoe" && <TicTacToe onClose={onClose} />}
-            {active === "memory" && <MemoryGame onClose={onClose} />}
-            {active === "snake" && <SnakeGame onClose={onClose} />}
+          {/* زر عجلة الحظ (مؤقتاً) */}
+          <button 
+            onClick={() => setActiveGame("wheel")} 
+            className="bg-gradient-to-br from-purple-600 to-purple-900 border-2 border-purple-500/50 p-4 rounded-2xl flex flex-col items-center justify-center shadow-lg active:scale-95 transition-all"
+          >
+            <span className="text-4xl mb-2 drop-shadow-md">🎡</span>
+            <span className="text-white font-black text-sm">عجلة الحظ</span>
+          </button>
         </div>
       </div>
     </div>
