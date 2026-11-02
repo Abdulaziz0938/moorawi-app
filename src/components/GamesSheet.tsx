@@ -12,10 +12,10 @@ interface Props {
 export default function GamesSheet({ onClose, userId, userName, userBalance }: Props) {
   const [activeGame, setActiveGame] = useState<"animals" | "wheel" | null>(null);
 
-  useBackButton(() => {
+  useBackButton(!!activeGame, () => {
     if (activeGame) setActiveGame(null);
     else onClose();
-  }, true); 
+  }); 
 
   if (activeGame === "animals") {
     const gameUrl = `https://ezo-animal-game.vercel.app/?userId=${userId}&username=${encodeURIComponent(userName)}&balance=${userBalance}`;
