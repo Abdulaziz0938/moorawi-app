@@ -1,3 +1,5 @@
+import { App as CapacitorApp } from '@capacitor/app';
+import { Capacitor } from '@capacitor/core';
 import { useState, useEffect } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
@@ -34,6 +36,8 @@ function App() {
     };
   }, []);
 
+
+  
   const [token, setToken] = useState<string>(() => getActiveToken());
   const [showAuth, setShowAuth] = useState<boolean>(() => !hasSession());
   const [currentRoomId, setCurrentRoomId] = useState<Id<"rooms"> | null>(null);
@@ -45,6 +49,36 @@ function App() {
   const [showDailyLogin, setShowDailyLogin] = useState(false);
   useEffect(() => { initHistoryGuard(); }, []);
 
+  // التحكم العام بزر الرجوع في الأندرويد
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      const backButtonListener = CapacitorApp.addListener('backButton', ({ canGoBack }) => {
+        // 1. إذا كان داخل غرفة، اترك الغرفة
+        if (currentRoomId) {
+          window.dispatchEvent(new CustomEvent("room-back-pressed"));
+        } 
+        // 2. إذا كان داخل بث مباشر، اخرج من البث
+        else if (currentLiveId) {
+          setCurrentLiveId(null);
+          setIsLiveHost(false);
+          setIsLiveCoHost(false);
+        } 
+        // 3. إذا كان في صفحة داخلية (مثل الإعدادات)، ارجع للخلف
+        else if (canGoBack) {
+          window.history.back();
+        } 
+        // 4. إذا كان في الصفحة الرئيسية (الرئيسية)، أغلق التطبيق
+        else {
+          CapacitorApp.exitApp();
+        }
+      });
+
+      return () => {
+        backButtonListener.then(listener => listener.remove());
+      };
+    }
+  }, [currentRoomId, currentLiveId]);
+  
   // Back button → leave room
   useBackButton(!!currentRoomId, () => window.dispatchEvent(new CustomEvent("room-back-pressed")));
   const [refreshKey, setRefreshKey] = useState(0);
