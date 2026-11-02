@@ -1,6 +1,6 @@
 import { httpRouter } from "convex/server";
 import { httpAction } from "./_generated/server";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 
 const http = httpRouter();
 
@@ -29,34 +29,29 @@ http.route({
         return new Response(JSON.stringify({ success: false, error: "بيانات ناقصة" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
-      let user = null;
-      try {
-        user = await ctx.db.get(userId as any);
-      } catch (e) {
-        const num = parseInt(userId, 10);
-        if (!isNaN(num)) {
-          user = await ctx.db.query("users").withIndex("by_userNumber", (q) => q.eq("userNumber", num)).first();
-        }
-      }
+      const user = await ctx.runQuery(internal.wallet.getUser, { userId });
 
       if (!user) {
         return new Response(JSON.stringify({ success: false, error: "المستخدم غير موجود" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
       const currentCoins = (user as any).coins ?? 0;
+      let newCoins = currentCoins;
 
       if (action === "debit") {
         if (currentCoins < amount) {
           return new Response(JSON.stringify({ success: false, error: "رصيدك غير كافٍ" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
-        await ctx.db.patch(user._id, { coins: currentCoins - amount });
+        newCoins = currentCoins - amount;
       } else if (action === "credit") {
-        await ctx.db.patch(user._id, { coins: currentCoins + amount });
+        newCoins = currentCoins + amount;
       } else {
-         return new Response(JSON.stringify({ success: false, error: "العملية غير معروفة" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        return new Response(JSON.stringify({ success: false, error: "العملية غير معروفة" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
-      return new Response(JSON.stringify({ success: true, newBalance: action === "debit" ? currentCoins - amount : currentCoins + amount }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      await ctx.runMutation(internal.wallet.updateCoins, { userId, newCoins });
+
+      return new Response(JSON.stringify({ success: true, newBalance: newCoins }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     } catch (e: any) {
       return new Response(JSON.stringify({ success: false, error: e.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
