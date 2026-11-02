@@ -41,12 +41,6 @@ if (typeof window !== "undefined") {
 // إجبار التطبيق على استخدام رابط الإنتاج
 const convexUrl = "https://quixotic-squid-253.convex.cloud";
 
-// رسالة تأكيد عشان نتأكد شو الرابط اللي عم يشتغل
-if (typeof window !== "undefined") {
-  console.log("🔥 CONVEX URL IS:", convexUrl);
-  alert("رابط الداتا بيس: " + convexUrl); 
-}
-
 const convex = new ConvexReactClient(convexUrl);
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
