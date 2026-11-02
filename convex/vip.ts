@@ -71,14 +71,24 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 export const myVip = query({
   args: { tokenOverride: v.optional(v.string()) },
   handler: async (ctx, args) => {
-    const me = await requireUser(ctx, args.tokenOverride);
-    const level = activeVipLevel(me);
-    return {
-      level,
-      expiresAt: me.vipExpiresAt ?? null,
-      active: level > 0,
-      plans: VIP_LEVELS,
-    };
+    try {
+      const me = await requireUser(ctx, args.tokenOverride);
+      const level = activeVipLevel(me);
+      return {
+        level,
+        expiresAt: me.vipExpiresAt ?? null,
+        active: level > 0,
+        plans: VIP_LEVELS,
+      };
+    } catch (error) {
+      // إذا كان المستخدم زائر أو غير موجود، لا نعمل كراش، بل نرجع بيانات افتراضية
+      return {
+        level: 0,
+        expiresAt: null,
+        active: false,
+        plans: VIP_LEVELS,
+      };
+    }
   },
 });
 
