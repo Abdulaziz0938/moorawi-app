@@ -1,4 +1,4 @@
-import { mutation, query } from "./_generated/server";
+import { mutation, query, internalQuery, internalMutation } from "./_generated/server";
 import { calculateEzoVipLevel } from "./vip";
 import { ConvexError, v } from "convex/values";
 import { requireUser } from "./lib/auth";
@@ -29,7 +29,6 @@ async function recordTx(
 // Queries
 // ============================================================
 
-// Get current user's balance + diamonds
 export const balance = query({
   args: { tokenOverride: v.optional(v.string()) },
   handler: async (ctx, args) => {
@@ -48,7 +47,6 @@ export const balance = query({
   },
 });
 
-// Transaction history (last 50)
 export const transactions = query({
   args: {
     tokenOverride: v.optional(v.string()),
@@ -75,7 +73,6 @@ export const transactions = query({
 // Mutations
 // ============================================================
 
-// Spend coins (deduct from balance)
 export const spend = mutation({
   args: {
     amount: v.number(),
@@ -102,7 +99,6 @@ export const spend = mutation({
   },
 });
 
-// Reward coins (from missions, level ups, etc.)
 export const reward = mutation({
   args: {
     amount: v.number(),
@@ -133,7 +129,6 @@ export const reward = mutation({
   },
 });
 
-// Admin recharge (simulates payment gateway for now)
 export const recharge = mutation({
   args: {
     amount: v.number(),
@@ -173,7 +168,6 @@ export const recharge = mutation({
   },
 });
 
-// Exchange diamonds → coins (1 diamond = 1 coin)
 export const exchangeDiamonds = mutation({
   args: {
     diamonds: v.number(),
@@ -207,9 +201,6 @@ export const exchangeDiamonds = mutation({
   },
 });
 
-// ═══════════════════════════════════════════════════════════
-// [ezo-recharge] طلب شحن — مستخدم عادي (pending)
-// ═══════════════════════════════════════════════════════════
 export const requestRecharge = mutation({
   args: {
     packageCode: v.optional(v.string()),
@@ -284,7 +275,6 @@ export const requestRecharge = mutation({
   },
 });
 
-// طلباتي
 export const myRechargeRequests = query({
   args: { tokenOverride: v.optional(v.string()), limit: v.optional(v.number()) },
   handler: async (ctx, args) => {
@@ -298,7 +288,6 @@ export const myRechargeRequests = query({
   },
 });
 
-// كل الطلبات — أدمن
 export const listRechargeRequests = query({
   args: {
     status: v.optional(v.union(v.literal("pending"), v.literal("approved"), v.literal("rejected"))),
@@ -318,7 +307,6 @@ export const listRechargeRequests = query({
   },
 });
 
-// موافقة — أدمن
 export const approveRecharge = mutation({
   args: { requestId: v.id("rechargeRequests"), adminNote: v.optional(v.string()), tokenOverride: v.optional(v.string()) },
   handler: async (ctx, args) => {
@@ -350,7 +338,6 @@ export const approveRecharge = mutation({
   },
 });
 
-// رفض — أدمن
 export const rejectRecharge = mutation({
   args: { requestId: v.id("rechargeRequests"), adminNote: v.optional(v.string()), tokenOverride: v.optional(v.string()) },
   handler: async (ctx, args) => {
@@ -371,7 +358,6 @@ export const rejectRecharge = mutation({
   },
 });
 
-// عرض الباقات (عام)
 export const listPackages = query({
   args: {},
   handler: async (ctx) => {
@@ -382,7 +368,6 @@ export const listPackages = query({
   },
 });
 
-// إدارة الباقات — أدمن
 export const upsertPackage = mutation({
   args: {
     code: v.string(),
@@ -428,8 +413,6 @@ export const upsertPackage = mutation({
   },
 });
 
-// بذر الباقات الافتراضية — أدمن
-// ✅ تم تعديل جميع الأسعار لتكون 1 دولار = 1000 عملة (السعر بالسنوات)
 export const seedDefaultPackages = mutation({
   args: { tokenOverride: v.optional(v.string()) },
   handler: async (ctx, args) => {
@@ -454,7 +437,6 @@ export const seedDefaultPackages = mutation({
         .withIndex("by_code", (q) => q.eq("code", d.code))
         .unique();
       if (existing) {
-        // تحديث الباقات القديمة لتتوافق مع السعر الجديد
         await ctx.db.patch("rechargePackages", existing._id, {
           ...d,
           totalCoins: d.coins + d.bonus,
@@ -474,10 +456,6 @@ export const seedDefaultPackages = mutation({
     return { ok: true, created, updated };
   },
 });
-
-// ============================================================
-// [ezo-animal-game] Internal helpers for server-to-server calls
-// ============================================================
 
 export const getUser = internalQuery({
   args: { userId: v.string() },
