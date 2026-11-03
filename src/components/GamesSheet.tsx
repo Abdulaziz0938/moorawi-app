@@ -2,6 +2,9 @@ import { useState } from "react";
 import { X } from "lucide-react";
 import { useBackButton } from "../lib/hooks/useBackButton";
 
+// 👈 رابط لعبة الحظ على Vercel
+const LUCKY_WHEEL_URL = "https://ezo-lucky-wheel.vercel.app";
+
 interface Props { 
   onClose: () => void; 
   userId: string; 
@@ -12,9 +15,14 @@ interface Props {
 export default function GamesSheet({ onClose, userId, userName, userBalance }: Props) {
   const [activeGame, setActiveGame] = useState<"animals" | "wheel" | null>(null);
 
-  // 🔒 نثبت رابط اللعبة أول ما يفتح عشان ما يتحدثش مع كل رهان ويطلع رسالة الخروج
+  // 🔒 نثبت رابط لعبة الحيوانات
   const [animalsGameUrl] = useState(() => {
     return `https://ezo-animal-game.vercel.app/?userId=${userId}&username=${encodeURIComponent(userName)}&balance=${userBalance}`;
+  });
+
+  // 🔒 نثبت رابط لعبة الحظ
+  const [wheelGameUrl] = useState(() => {
+    return `${LUCKY_WHEEL_URL}/?userId=${userId}&username=${encodeURIComponent(userName)}&balance=${userBalance}`;
   });
 
   useBackButton(!!activeGame, () => {
@@ -40,10 +48,16 @@ export default function GamesSheet({ onClose, userId, userName, userBalance }: P
 
   if (activeGame === "wheel") {
     return (
-      <div className="fixed inset-0 z-50 bg-black/90 flex flex-col items-center justify-center p-4">
-        <div className="text-6xl mb-4">🎡</div>
-        <h2 className="text-white text-xl font-bold mb-6">عجلة الحظ قيد التطوير...</h2>
-        <button type="button" onClick={() => setActiveGame(null)} className="bg-rose-600 text-white px-6 py-2 rounded-xl">رجوع</button>
+      <div className="fixed inset-0 z-[9999] bg-black flex flex-col">
+        <div className="bg-slate-900 p-2 flex items-center justify-between border-b border-slate-700">
+          <span className="text-purple-400 font-bold text-sm">🎡 عجلة الحظ 77</span>
+          <button type="button" onClick={() => setActiveGame(null)} className="bg-rose-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold active:scale-90 transition">إغلاق ✕</button>
+        </div>
+        <iframe 
+          src={wheelGameUrl} 
+          className="w-full flex-1 border-none bg-black" 
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        />
       </div>
     );
   }
