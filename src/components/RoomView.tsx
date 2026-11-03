@@ -32,7 +32,6 @@ import VipName from "./VipName";
 import VipEntryOverlay from "./VipEntryOverlay";
 import LeaderboardSheet from "./LeaderboardSheet";
 import MiniProfileSheet from "./MiniProfileSheet";
-import LuckyWheelSheet from "./LuckyWheelSheet";
 import ChatThreadSheet from "./ChatThreadSheet";
 import RoomInfoSheet from "./RoomInfoSheet";
 import MicRequestsSheet from "./MicRequestsSheet";
@@ -299,7 +298,6 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
   const [showMembers, setShowMembers] = useState(false);
   const [showActivity, setShowActivity] = useState(false);
   const [showEvents, setShowEvents] = useState(false);
-  const [showLuckyWheel, setShowLuckyWheel] = useState(false);
   const [miniProfileUserId, setMiniProfileUserId] = useState<string | null>(null);
   const [dmConversationId, setDmConversationId] = useState<string | null>(null);
   const [showRoomInfo, setShowRoomInfo] = useState(false);
