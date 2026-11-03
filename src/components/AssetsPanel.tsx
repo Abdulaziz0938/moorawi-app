@@ -95,7 +95,9 @@ const UI_SLOTS: { key: string; label: string }[] = [
   { key: "ui.service.support",   label: "خدمات — دعم" },
   { key: "ui.service.language",  label: "خدمات — لغة" },
   { key: "ui.service.settings",  label: "خدمات — إعدادات" },
-
+  // ===== Game Icons =====
+  { key: "ui.game.animal", label: "ألعاب — أيقونة مملكة الحيوانات" },
+  { key: "ui.game.wheel",  label: "ألعاب — أيقونة عجلة الحظ" },
   // ===== Sheet headers =====
   { key: "ui.sheet.visits",       label: "صفحة — الزيارات" },
   { key: "ui.sheet.support",      label: "صفحة — خدمة عملاء" },
