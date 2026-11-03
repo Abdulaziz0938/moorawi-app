@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 import { useBackButton } from "../lib/hooks/useBackButton";
+import { useAssets } from "../lib/assets"; // 👈 ضفنا هذا الاستيراد عشان نجيب الصور
 
-// 👈 رابط لعبة الحظ على Vercel
 const LUCKY_WHEEL_URL = "https://ezo-lucky-wheel.vercel.app";
 
 interface Props { 
@@ -14,13 +14,14 @@ interface Props {
 
 export default function GamesSheet({ onClose, userId, userName, userBalance }: Props) {
   const [activeGame, setActiveGame] = useState<"animals" | "wheel" | null>(null);
+  
+  // 👇 جلب الصور من لوحة الأصول (Assets)
+  const assets = useAssets();
 
-  // 🔒 نثبت رابط لعبة الحيوانات
   const [animalsGameUrl] = useState(() => {
     return `https://ezo-animal-game.vercel.app/?userId=${userId}&username=${encodeURIComponent(userName)}&balance=${userBalance}`;
   });
 
-  // 🔒 نثبت رابط لعبة الحظ
   const [wheelGameUrl] = useState(() => {
     return `${LUCKY_WHEEL_URL}/?userId=${userId}&username=${encodeURIComponent(userName)}&balance=${userBalance}`;
   });
@@ -76,21 +77,31 @@ export default function GamesSheet({ onClose, userId, userName, userBalance }: P
         </div>
 
         <div className="grid grid-cols-2 gap-4">
+          {/* لعبة الحيوانات */}
           <button 
             type="button"
             onClick={() => setActiveGame("animals")} 
             className="bg-gradient-to-br from-emerald-600 to-emerald-900 border-2 border-emerald-500/50 p-4 rounded-2xl flex flex-col items-center justify-center shadow-lg active:scale-95 transition-all"
           >
-            <span className="text-4xl mb-2 drop-shadow-md">🦁</span>
+            {assets["ui.game.animal"] ? (
+              <img src={assets["ui.game.animal"]} alt="Animals" className="w-16 h-16 object-contain drop-shadow-md mb-2" />
+            ) : (
+              <span className="text-4xl mb-2 drop-shadow-md">🦁</span>
+            )}
             <span className="text-amber-300 font-black text-sm">مملكة الحيوانات</span>
           </button>
 
+          {/* عجلة الحظ */}
           <button 
             type="button"
             onClick={() => setActiveGame("wheel")} 
             className="bg-gradient-to-br from-purple-600 to-purple-900 border-2 border-purple-500/50 p-4 rounded-2xl flex flex-col items-center justify-center shadow-lg active:scale-95 transition-all"
           >
-            <span className="text-4xl mb-2 drop-shadow-md">🎡</span>
+            {assets["ui.game.wheel"] ? (
+              <img src={assets["ui.game.wheel"]} alt="Wheel" className="w-16 h-16 object-contain drop-shadow-md mb-2" />
+            ) : (
+              <span className="text-4xl mb-2 drop-shadow-md">🎡</span>
+            )}
             <span className="text-white font-black text-sm">عجلة الحظ</span>
           </button>
         </div>
