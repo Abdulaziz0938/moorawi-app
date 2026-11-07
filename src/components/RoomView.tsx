@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import AssetVideo from "./ui/AssetVideo";
 import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
@@ -175,6 +175,26 @@ function bubbleClass(vip: number, customUrl?: string): string {
   return g[Math.min(vip - 1, g.length - 1)];
 }
 
+function getEntryBannerStyle(level: number) {
+  if (level <= 0) return {
+    bg: "bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800",
+    border: "border-gray-400",
+    text: "text-gray-200",
+    title: "عضو جديد",
+    icon: "🌟"
+  };
+  const styles = {
+    1: { bg: "from-emerald-500 to-teal-700", border: "border-emerald-300", text: "text-emerald-100", title: "VIP 1", icon: "💎" },
+    2: { bg: "from-blue-500 to-indigo-700", border: "border-blue-300", text: "text-blue-100", title: "VIP 2", icon: "💠" },
+    3: { bg: "from-purple-500 to-fuchsia-700", border: "border-purple-300", text: "text-purple-100", title: "VIP 3", icon: "🔮" },
+    4: { bg: "from-pink-500 to-rose-700", border: "border-pink-300", text: "text-pink-100", title: "VIP 4", icon: "🌸" },
+    5: { bg: "from-orange-500 to-red-700", border: "border-orange-300", text: "text-orange-100", title: "VIP 5", icon: "🔥" },
+    6: { bg: "from-yellow-400 to-amber-600", border: "border-yellow-200", text: "text-yellow-50", title: "VIP 6", icon: "👑" },
+    7: { bg: "from-cyan-400 via-purple-500 to-pink-500", border: "border-white", text: "text-white", title: "VIP 7", icon: "🏆" },
+  };
+  return styles[Math.min(level, 7) as keyof typeof styles] || styles[1];
+}
+
 function renderTextWithMentions(text: string | null | undefined) {
   if (!text) return null;
   const parts = text.split(/(@\S+)/g);
@@ -198,6 +218,7 @@ function triggerTestVip() {
   };
   window.dispatchEvent(new CustomEvent('trigger-vip-entry', { detail: mockEntry }));
 }
+
 export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
   const recordRoomEntry = useMutation(api.visits.recordRoomEntry);
   useEffect(() => {
@@ -236,7 +257,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
   (activeEmojis ?? []).forEach((e: any) => {
     emojiByUser[String(e.userId)] = { url: e.emojiUrl, id: String(e._id) };
   });
-  const msgSinceRef = useRef(Date.now());
+  const msgSinceRef = useRef(Date.now() - 5000);
   const messages = useQuery(api.messages.list, { roomId, since: msgSinceRef.current });
   const listeners = useQuery(api.mics.listeners, { roomId });
   const myInvite = useQuery(api.mics.myInvite, { roomId, tokenOverride: getActiveToken() ?? deviceId });
@@ -271,7 +292,7 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
     const key = `entered_${roomId}`;
     const existing = sessionStorage.getItem(key);
     if (existing) return Number(existing);
-    const now = Date.now();
+    const now = Date.now() - 5000;
     sessionStorage.setItem(key, String(now));
     return now;
   });
@@ -395,14 +416,23 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
     api.presence.recentEntries,
     { roomId, since: entrySinceRef.current }
   );
+  
   const [currentEntry, setCurrentEntry] = useState<any>(null);
+  const [entryTimeout, setEntryTimeout] = useState<any>(null);
 
   useEffect(() => {
     if (!recentEntries || recentEntries.length === 0) return;
     const latest = recentEntries[0];
     if (latest._id === currentEntry?._id) return;
+    
     setCurrentEntry(latest);
+    
+    // إخفاء الإشعار بعد 4 ثواني
+    if (entryTimeout) clearTimeout(entryTimeout);
+    const t = setTimeout(() => setCurrentEntry(null), 4000);
+    setEntryTimeout(t);
   }, [recentEntries]);
+
   const globalBroadcast = useQuery(api.gifts.latestGlobalBroadcast, { since: giftSinceRef.current });
   const [activeGlobalBanner, setActiveGlobalBanner] = useState<any>(null);
 
@@ -1499,10 +1529,28 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
             </div>
           )}
 
+          {/* 👇 التعديل هنا: الإشعار العلوي للهدايا الكبيرة مع التصميم الجديد والضغط 👇 */}
           {((activeGift.price ?? 0) >= 1000 || comboValue >= 950) && (activeGift.price ?? 0) < 30000 && (
-            <div key={activeGift._id} className="fixed top-4 left-0 right-0 z-[85] flex justify-center pointer-events-none animate-banner-floating">
-              <div className={`max-w-[360px] w-[calc(100%-20px)] bg-gradient-to-r from-purple-900/95 via-black/95 to-purple-900/95 backdrop-blur-xl rounded-2xl px-4 py-2.5 border border-purple-400/60 shadow-[0_0_30px_rgba(168,85,247,0.4)] flex items-center justify-between transition-transform duration-300 ${showComboPulse ? "scale-[1.06]" : "scale-100"}`}>
-                <div className="flex items-center gap-1.5 truncate">
+            <div 
+              key={activeGift._id} 
+              onClick={() => {
+                if (activeGift.roomId && activeGift.roomId !== roomId) {
+                  window.dispatchEvent(new CustomEvent('enter-room', { detail: activeGift.roomId }));
+                }
+              }}
+              className="fixed top-4 left-0 right-0 z-[85] flex justify-center pointer-events-auto cursor-pointer animate-banner-floating"
+            >
+              <div className={`relative max-w-[360px] w-[calc(100%-20px)] bg-gradient-to-r from-purple-900/95 via-black/95 to-purple-900/95 backdrop-blur-xl rounded-2xl px-4 py-3 border border-purple-400/60 shadow-[0_0_30px_rgba(168,85,247,0.4)] flex items-center justify-between transition-transform duration-300 hover:scale-105 active:scale-95 ${showComboPulse ? "scale-[1.06]" : "scale-100"}`}>
+                {/* صورة متحركة (نجمة) */}
+                <div className="absolute -top-8 left-1/2 -translate-x-1/2 w-16 h-16 pointer-events-none">
+                  <img
+                    src="https://cdn-icons-png.flaticon.com/512/616/616502.png"
+                    alt="effect"
+                    className="w-full h-full object-contain animate-pulse drop-shadow-[0_0_10px_rgba(250,204,21,0.8)]"
+                  />
+                </div>
+
+                <div className="flex items-center gap-1.5 truncate mt-2">
                   <div className="w-9 h-9 rounded-full overflow-hidden ring-2 ring-purple-400/80 flex-shrink-0 shadow-lg">
                     {activeGift.fromAvatar ? (
                       <img src={activeGift.fromAvatar} alt="" className="w-full h-full object-cover" />
@@ -1512,28 +1560,20 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
                   </div>
                   <span className="text-white text-xs font-bold truncate max-w-[60px]">{activeGift.fromName}</span>
                 </div>
-                <div className="flex flex-col items-center px-2 min-w-0">
+                <div className="flex flex-col items-center px-2 min-w-0 mt-2">
                   <div className="flex items-center gap-1 justify-center">
                     {activeGift.mediaUrl && (
-                      activeGift.mediaType === "video" ? (
-                        <video
-                          src={activeGift.mediaUrl}
-                          className="w-5 h-5 object-contain pointer-events-none"
-                          autoPlay muted loop playsInline
-                        />
-                      ) : (
-                        <img
-                          src={activeGift.mediaUrl}
-                          alt=""
-                          className="w-5 h-5 object-contain"
-                        />
-                      )
+                      <img
+                        src={activeGift.mediaUrl}
+                        alt=""
+                        className="w-6 h-6 object-contain animate-bounce"
+                      />
                     )}
                     <span className="text-purple-300 text-[10px] font-bold truncate max-w-[80px]">{activeGift.giftName}</span>
                   </div>
-                  <span className={`text-yellow-300 text-xs font-black ${showComboPulse ? "combo-pulse" : ""}`}>×{totalQuantity}</span>
+                  <span className={`text-yellow-300 text-sm font-black ${showComboPulse ? "combo-pulse" : ""}`}>×{totalQuantity}</span>
                 </div>
-                <div className="flex items-center gap-1.5 truncate">
+                <div className="flex items-center gap-1.5 truncate mt-2">
                   <span className="text-white text-xs font-bold truncate max-w-[60px]">{activeGift.toName}</span>
                   <div className="w-9 h-9 rounded-full overflow-hidden ring-2 ring-purple-400/80 flex-shrink-0 shadow-lg">
                     {activeGift.toAvatar ? (
@@ -1543,6 +1583,8 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
                     )}
                   </div>
                 </div>
+                {/* شريط تقدم سفلي */}
+                <div className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-yellow-400 to-purple-500 animate-[progress_3s_linear_forwards]" style={{ width: '100%' }}></div>
               </div>
             </div>
           )}
@@ -1968,7 +2010,6 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
 
       <MusicPlayer roomId={roomId} variant="hidden" />
       
-      {/* 👇👇👇 هذا هو السطر اللي تم تعديله 👇👇👇 */}
       {showGamesSheet && me && (
         <GamesSheet 
           onClose={() => setShowGamesSheet(false)} 
@@ -2079,12 +2120,28 @@ export default function RoomView({ roomId, onLeave, onMinimizeChange }: Props) {
           <p className="text-white text-sm font-black">تم نسخ رابط الغرفة</p>
         </div>
       )}
-      <VipEntryOverlay entry={currentEntry} />
-      {activeEntryUserId && (
-        <MemberEntryEffect
-          userId={activeEntryUserId}
-          onDone={() => setActiveEntryUserId(null)}
-        />
+      
+      {/* إشعار الدخول العائم الجديد */}
+      {currentEntry && (
+        <div className="fixed top-24 left-0 right-0 z-[150] flex justify-center pointer-events-none animate-in slide-in-from-top-10 fade-in duration-500">
+          <div className={`relative overflow-hidden rounded-full p-[2px] bg-gradient-to-r ${getEntryBannerStyle(currentEntry.level).bg} border-2 ${getEntryBannerStyle(currentEntry.level).border} shadow-[0_0_20px_rgba(255,255,255,0.3)]`}>
+            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20 mix-blend-overlay"></div>
+            <div className="bg-black/60 backdrop-blur-md rounded-full px-4 py-2 flex items-center gap-3">
+              <span className="text-xl animate-bounce">{getEntryBannerStyle(currentEntry.level).icon}</span>
+              <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/50">
+                <img src={currentEntry.avatarUrl || "/avatar.png"} alt="" className="w-full h-full object-cover" />
+              </div>
+              <div className="flex flex-col text-right">
+                <span className={`text-sm font-black ${getEntryBannerStyle(currentEntry.level).text}`}>
+                  {currentEntry.name}
+                </span>
+                <span className="text-[10px] text-white/80 font-bold">
+                  {currentEntry.level > 0 ? `دخل الغرفة بـ ${getEntryBannerStyle(currentEntry.level).title}` : "انضم إلى الغرفة"}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
