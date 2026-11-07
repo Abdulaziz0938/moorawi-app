@@ -36,8 +36,6 @@ function App() {
     };
   }, []);
 
-
-  
   const [token, setToken] = useState<string>(() => getActiveToken());
   const [showAuth, setShowAuth] = useState<boolean>(() => !hasSession());
   const [currentRoomId, setCurrentRoomId] = useState<Id<"rooms"> | null>(null);
@@ -47,6 +45,10 @@ function App() {
   const [isLiveCoHost, setIsLiveCoHost] = useState(false);
   const [myOriginalStreamId, setMyOriginalStreamId] = useState<string | null>(null);
   const [showDailyLogin, setShowDailyLogin] = useState(false);
+  
+  // [ezo-global-gift] حالة الإشعار العالمي للهدايا
+  const [activeGlobalGiftApp, setActiveGlobalGiftApp] = useState<any>(null);
+
   useEffect(() => { initHistoryGuard(); }, []);
 
   // التحكم العام بزر الرجوع في الأندرويد
@@ -84,7 +86,8 @@ function App() {
   const [refreshKey, setRefreshKey] = useState(0);
 
   const me = useQuery(api.auth.me, { tokenOverride: token });
-    // [ezo-splash] جلب صورة شاشة البداية وعرضها لمدة 5 ثوان
+  
+  // [ezo-splash] جلب صورة شاشة البداية وعرضها لمدة 5 ثوان
   const splashImageUrl = useQuery(api.splash.getSplashImage);
   const [showSplash, setShowSplash] = useState(true);
 
@@ -92,10 +95,12 @@ function App() {
     const timer = setTimeout(() => setShowSplash(false), 5000);
     return () => clearTimeout(timer);
   }, []);
+
   const notifs = useQuery(
     api.notifications.listMine,
     me ? { tokenOverride: token } : "skip" as any
   );
+
   // [ezo-live] الدعوة تظهر حتى لو كنت في بثك الخاص (الضيفة)
   const pkInvite = !currentRoomId
     ? (notifs ?? []).find(
@@ -104,6 +109,19 @@ function App() {
           !n.readAt
       )
     : null;
+
+  // [ezo-global-gift] استعلام للهدايا العالمية (يظهر في كل التطبيق)
+  const globalGiftBroadcast = useQuery(api.gifts.latestGlobalBroadcast, {
+    since: Date.now() - 10000, // آخر 10 ثواني
+  });
+
+  useEffect(() => {
+    if (globalGiftBroadcast) {
+      setActiveGlobalGiftApp(globalGiftBroadcast);
+      const timer = setTimeout(() => setActiveGlobalGiftApp(null), 6000);
+      return () => clearTimeout(timer);
+    }
+  }, [globalGiftBroadcast]);
 
   // [ezo-live] الاستماع لحدث تبديل البث (Migration/Swipe)
   useEffect(() => {
@@ -116,7 +134,7 @@ function App() {
     return () => window.removeEventListener('switch-live', handleSwitch);
   }, []);
 
-    // [ezo-live] الاستماع لحدث فتح بث من تبويب الغرف
+  // [ezo-live] الاستماع لحدث فتح بث من تبويب الغرف
   useEffect(() => {
     const handleOpenLive = (e: any) => {
       setCurrentLiveId(e.detail);
@@ -126,7 +144,7 @@ function App() {
     return () => window.removeEventListener("open-live-stream", handleOpenLive);
   }, []);
 
-    // [ezo-rooms] الاستماع لحدث الدخول للغرفة من لوحة التصنيفات
+  // [ezo-rooms] الاستماع لحدث الدخول للغرفة من لوحة التصنيفات أو من إشعار
   useEffect(() => {
     const handleEnterRoom = (e: any) => {
       setCurrentRoomId(e.detail);
@@ -310,6 +328,48 @@ function App() {
             setCurrentLiveId(streamId);
           }}
         />
+      )}
+
+      {/* 👇 الإشعار العالمي للهدايا (يظهر في كل التطبيق) 👇 */}
+      {activeGlobalGiftApp && (
+        <div 
+          className="fixed top-10 left-0 right-0 z-[9999] flex justify-center pointer-events-none animate-in slide-in-from-top-20 duration-500" 
+          dir="rtl"
+        >
+          <div className="relative max-w-[90%] w-[400px]">
+            {/* خلفية متوهجة */}
+            <div className="absolute inset-0 bg-gradient-to-r from-amber-500 via-yellow-300 to-amber-500 blur-xl opacity-70 animate-pulse"></div>
+            
+            <div className="relative bg-black/90 backdrop-blur-xl rounded-full p-[2px] border-2 border-yellow-400/50 shadow-2xl overflow-hidden">
+              <div className="flex items-center justify-between px-3 py-2">
+                
+                <div className="flex items-center gap-2">
+                  <img src={activeGlobalGiftApp.fromAvatar || "/avatar.png"} className="w-10 h-10 rounded-full border-2 border-yellow-400 object-cover" />
+                  <span className="text-yellow-300 text-sm font-black truncate max-w-[80px]">{activeGlobalGiftApp.fromName}</span>
+                </div>
+
+                <div className="flex flex-col items-center">
+                  <span className="text-white text-xs font-bold">أهدى</span>
+                  <div className="flex items-center gap-1">
+                    <img src={activeGlobalGiftApp.giftIcon} className="w-6 h-6 object-contain animate-spin" style={{ animationDuration: '3s' }} />
+                    <span className="text-white text-xs font-black truncate max-w-[80px]">{activeGlobalGiftApp.giftName}</span>
+                    <span className="text-yellow-400 text-lg font-black">×{activeGlobalGiftApp.quantity}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-yellow-300 text-sm font-black truncate max-w-[80px]">{activeGlobalGiftApp.toName}</span>
+                  <img src={activeGlobalGiftApp.toAvatar || "/avatar.png"} className="w-10 h-10 rounded-full border-2 border-yellow-400 object-cover" />
+                </div>
+
+              </div>
+              {/* شريط التحميل السفلي */}
+              <div className="h-1 bg-yellow-500/20 w-full">
+                <div className="h-full bg-yellow-400 animate-[progress_6s_linear_forwards]" style={{ width: '100%' }}></div>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
